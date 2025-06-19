@@ -98,7 +98,22 @@ export class PromptManager extends EventEmitter {
     );
 
     if (resolved.sources.length === 0) {
-      throw new Error("No valid source directories found");
+      logger.warn("No valid source directories found");
+      const emptyResult: CopyResult = {
+        success: false,
+        totalFiles: 0,
+        copiedFiles: 0,
+        failedFiles: 0,
+        skippedFiles: 0,
+        errors: [{
+          file: "source",
+          error: "No valid source directories found",
+          phase: "read"
+        }],
+        duration: 0,
+      };
+      this.emit("copyError", new Error("No valid source directories found"));
+      return emptyResult;
     }
 
     // Build copy options
@@ -205,7 +220,7 @@ export class PromptManager extends EventEmitter {
   }
 
   private async validateDirectory(dirPath: string, issues: ValidationReport["issues"]): Promise<void> {
-    const fs = require("fs").promises;
+    const fs = await import("fs/promises");
     
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
@@ -294,6 +309,8 @@ export class PromptManager extends EventEmitter {
       destination,
       conflictResolution: "overwrite",
       verify: options.compareHashes,
+      // Disable parallel in test environment to avoid worker thread issues
+      parallel: process.env.NODE_ENV === 'test' ? false : true,
     });
   }
 
@@ -322,7 +339,7 @@ export class PromptManager extends EventEmitter {
     const sources = await Promise.all(
       resolved.sources.map(async (sourcePath) => {
         try {
-          const fs = require("fs").promises;
+          const fs = await import("fs/promises");
           const stats = await fs.stat(sourcePath);
           
           if (!stats.isDirectory()) {

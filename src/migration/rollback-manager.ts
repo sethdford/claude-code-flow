@@ -5,6 +5,7 @@
 import * as fs from "fs-extra";
 import * as path from "path";
 import * as crypto from "crypto";
+import { stat, readFile, readdir, chmod, writeFile } from "node:fs/promises";
 import { MigrationBackup, BackupFile } from "./types";
 import { logger } from "./logger";
 import chalk from "chalk";
@@ -54,7 +55,7 @@ export class RollbackManager {
       const targetPath = path.join(backupPath, target);
 
       if (await fs.pathExists(sourcePath)) {
-        const stats = await fs.stat(sourcePath);
+        const stats = await stat(sourcePath);
 
         if (stats.isDirectory()) {
           await this.backupDirectory(sourcePath, targetPath, backup);
@@ -66,7 +67,7 @@ export class RollbackManager {
 
     // Save backup manifest
     const manifestPath = path.join(backupPath, "backup-manifest.json");
-    await fs.writeJson(manifestPath, backup, { spaces: 2 });
+    await writeFile(manifestPath, JSON.stringify(backup, null, 2));
 
     // Update backup index
     await this.updateBackupIndex(backup);
@@ -78,12 +79,12 @@ export class RollbackManager {
   private async backupDirectory(sourcePath: string, targetPath: string, backup: MigrationBackup): Promise<void> {
     await fs.ensureDir(targetPath);
     
-    const entries = await fs.readdir(sourcePath);
+    const entries = await readdir(sourcePath);
     
     for (const entry of entries) {
       const entrySource = path.join(sourcePath, entry);
       const entryTarget = path.join(targetPath, entry);
-      const stats = await fs.stat(entrySource);
+      const stats = await stat(entrySource);
 
       if (stats.isDirectory()) {
         await this.backupDirectory(entrySource, entryTarget, backup);
@@ -95,17 +96,17 @@ export class RollbackManager {
   }
 
   private async backupFile(sourcePath: string, targetPath: string, backup: MigrationBackup, relativePath: string): Promise<void> {
-    const content = await fs.readFile(sourcePath, "utf-8");
+    const content = await readFile(sourcePath, "utf-8");
     const checksum = crypto.createHash("sha256").update(content).digest("hex");
     
     await fs.ensureDir(path.dirname(targetPath));
-    await fs.writeFile(targetPath, content);
+    await writeFile(targetPath, content);
 
     const backupFile: BackupFile = {
       path: relativePath,
       content,
       checksum,
-      permissions: (await fs.stat(sourcePath)).mode.toString(8),
+      permissions: (await stat(sourcePath)).mode.toString(8),
     };
 
     backup.files.push(backupFile);
@@ -116,7 +117,7 @@ export class RollbackManager {
       return [];
     }
 
-    const backupFolders = await fs.readdir(this.backupDir);
+    const backupFolders = await readdir(this.backupDir);
     const backups: MigrationBackup[] = [];
 
     for (const folder of backupFolders.sort().reverse()) {
@@ -124,7 +125,10 @@ export class RollbackManager {
       
       if (await fs.pathExists(manifestPath)) {
         try {
-          const backup = await fs.readJson(manifestPath);
+          const manifestContent = await readFile(manifestPath, 'utf-8');
+          const backup = JSON.parse(manifestContent);
+          // Convert timestamp string back to Date
+          backup.timestamp = new Date(backup.timestamp);
           backups.push(backup);
         } catch (error) {
           logger.warn(`Invalid backup manifest in ${folder}: ${(error as Error).message}`);
@@ -233,12 +237,12 @@ export class RollbackManager {
       logger.debug(`Restoring ${file.path}`);
       
       await fs.ensureDir(path.dirname(targetPath));
-      await fs.writeFile(targetPath, file.content);
+      await writeFile(targetPath, file.content);
       
       // Restore permissions if available
       if (file.permissions) {
         try {
-          await fs.chmod(targetPath, parseInt(file.permissions, 8));
+          await chmod(targetPath, parseInt(file.permissions, 8));
         } catch (error) {
           logger.warn(`Could not restore permissions for ${file.path}: ${(error as Error).message}`);
         }
@@ -259,7 +263,7 @@ export class RollbackManager {
         continue;
       }
 
-      const content = await fs.readFile(filePath, "utf-8");
+      const content = await readFile(filePath, "utf-8");
       const checksum = crypto.createHash("sha256").update(content).digest("hex");
 
       if (checksum !== file.checksum) {
@@ -334,7 +338,10 @@ export class RollbackManager {
       throw new Error("Invalid backup: missing manifest");
     }
 
-    const backup = await fs.readJson(manifestPath);
+    const manifestContent = await readFile(manifestPath, 'utf-8');
+    const backup = JSON.parse(manifestContent);
+    // Convert timestamp string back to Date
+    backup.timestamp = new Date(backup.timestamp);
     const backupPath = path.join(this.backupDir, backup.metadata.backupId);
 
     await fs.copy(importPath, backupPath);
@@ -349,7 +356,8 @@ export class RollbackManager {
     
     let index: Record<string, any> = {};
     if (await fs.pathExists(indexPath)) {
-      index = await fs.readJson(indexPath);
+      const indexContent = await readFile(indexPath, 'utf-8');
+      index = JSON.parse(indexContent);
     }
 
     index[backup.metadata.backupId] = {
@@ -359,7 +367,7 @@ export class RollbackManager {
       metadata: backup.metadata,
     };
 
-    await fs.writeJson(indexPath, index, { spaces: 2 });
+    await writeFile(indexPath, JSON.stringify(index, null, 2));
   }
 
   printBackupSummary(backups: MigrationBackup[]): void {

@@ -6,7 +6,8 @@ import { Command } from "../cliffy-compat.js";
 import chalk from "chalk";
 import Table from "cli-table3";
 import { formatHealthStatus, formatDuration, formatStatusIndicator } from "../formatter.js";
-import { Deno, existsSync } from "../../utils/deno-compat.js";
+import { existsSync } from "node:fs";
+import { promises as fs } from "node:fs";
 
 // Color compatibility
 const colors = {
@@ -424,8 +425,8 @@ async function getRealSystemStatus(): Promise<any | null> {
 
 async function getPidFromFile(): Promise<number | null> {
   try {
-    if (await existsSync(".claude-flow.pid")) {
-      const pidData = await Deno.readTextFile(".claude-flow.pid");
+    if (existsSync(".claude-flow.pid")) {
+      const pidData = await fs.readFile(".claude-flow.pid", "utf-8");
       const data = JSON.parse(pidData);
       return data.pid || null;
     }
@@ -437,8 +438,8 @@ async function getPidFromFile(): Promise<number | null> {
 
 async function getLastKnownStatus(): Promise<any | null> {
   try {
-    if (await existsSync(".claude-flow-last-status.json")) {
-      const statusData = await Deno.readTextFile(".claude-flow-last-status.json");
+    if (existsSync(".claude-flow-last-status.json")) {
+      const statusData = await fs.readFile(".claude-flow-last-status.json", "utf-8");
       return JSON.parse(statusData);
     }
   } catch {

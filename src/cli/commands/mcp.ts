@@ -8,7 +8,7 @@ import { logger } from "../../core/logger.js";
 import { configManager } from "../../core/config.js";
 import { MCPServer } from "../../mcp/server.js";
 import { eventBus } from "../../core/event-bus.js";
-import { Deno } from "../../utils/deno-compat.js";
+
 
 // Color compatibility
 const colors = {
@@ -61,7 +61,7 @@ export const mcpCommand = new Command()
       console.log(colors.cyan(`📚 API documentation: http://${options.host}:${options.port}/docs`));
     } catch (error) {
       console.error(colors.red(`❌ Failed to start MCP server: ${(error as Error).message}`));
-      Deno.exit(1);
+      process.exit(1);
     }
   })
   .command("stop")
@@ -77,7 +77,7 @@ export const mcpCommand = new Command()
       }
     } catch (error) {
       console.error(colors.red(`❌ Failed to stop MCP server: ${(error as Error).message}`));
-      Deno.exit(1);
+      process.exit(1);
     }
   })
   .command("status")
@@ -100,6 +100,7 @@ export const mcpCommand = new Command()
       }
     } catch (error) {
       console.error(colors.red(`❌ Failed to get MCP status: ${(error as Error).message}`));
+      process.exit(1);
     }
   })
   .command("tools")
@@ -137,6 +138,7 @@ export const mcpCommand = new Command()
       console.log(JSON.stringify(config.mcp, null, 2));
     } catch (error) {
       console.error(colors.red(`❌ Failed to show MCP config: ${(error as Error).message}`));
+      process.exit(1);
     }
   })
   .command("restart")
@@ -156,7 +158,7 @@ export const mcpCommand = new Command()
       console.log(colors.green(`✅ MCP server restarted on ${config.mcp.host}:${config.mcp.port}`));
     } catch (error) {
       console.error(colors.red(`❌ Failed to restart MCP server: ${(error as Error).message}`));
-      Deno.exit(1);
+      process.exit(1);
     }
   })
   .command("logs")

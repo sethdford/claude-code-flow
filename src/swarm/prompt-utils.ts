@@ -1,4 +1,5 @@
 import * as fs from "fs/promises";
+import * as fsSync from "fs";
 import * as path from "path";
 import { Logger } from "../core/logger.js";
 
@@ -33,7 +34,7 @@ export const DEFAULT_CONFIG: PromptConfig = {
     parallel: true,
     maxWorkers: 4,
     conflictResolution: "backup",
-    includePatterns: ["*.md", "*.txt", "*.prompt", "*.prompts", "*.json"],
+    includePatterns: ["*.md", "*.txt", "*.prompt", "*.prompts", "*.json", "**/*.md", "**/*.txt", "**/*.prompt", "**/*.prompts", "**/*.json"],
     excludePatterns: ["**/node_modules/**", "**/.git/**", "**/dist/**", "**/build/**"],
   },
   profiles: {
@@ -139,19 +140,25 @@ export class PromptPathResolver {
     destination: string;
   } {
     const sources = sourceDirectories
-      .map(dir => path.resolve(this.basePath, dir))
+      .map(dir => {
+        // Handle both absolute and relative paths
+        const resolvedPath = path.isAbsolute(dir) ? dir : path.resolve(this.basePath, dir);
+        return resolvedPath;
+      })
       .filter(dir => this.directoryExists(dir));
     
-    const destination = path.resolve(this.basePath, destinationDirectory);
+    const destination = path.isAbsolute(destinationDirectory) 
+      ? destinationDirectory 
+      : path.resolve(this.basePath, destinationDirectory);
     
     return { sources, destination };
   }
 
   private directoryExists(dirPath: string): boolean {
     try {
-      const stats = require("fs").statSync(dirPath);
+      const stats = fsSync.statSync(dirPath);
       return stats.isDirectory();
-    } catch {
+    } catch (error) {
       return false;
     }
   }

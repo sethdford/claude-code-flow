@@ -1,6 +1,6 @@
 # 📚 Claude-Flow Documentation Hub
 
-Welcome to the comprehensive documentation for Claude-Flow v1.0.50!
+Welcome to the comprehensive documentation for Claude-Flow v1.0.71!
 
 ## 🚀 Getting Started
 
@@ -29,38 +29,13 @@ Welcome to the comprehensive documentation for Claude-Flow v1.0.50!
 
 ## 🛠️ Specialized Guides
 
-### Setup & Initialization
-- **[Batch Initialization](./batch-initialization.md)** - Batch project setup
-- **[Initialization Scenarios](./initialization-scenarios.md)** - Common setup scenarios
+### Setup & Troubleshooting
 - **[Initialization Troubleshooting](./initialization-troubleshooting.md)** - Solving setup issues
-- **[Optimized Initialization](./optimized-initialization.md)** - Performance optimizations
-- **[Template Customization](./template-customization.md)** - Customizing project templates
-
-### Performance & Monitoring
-- **[Performance Comparison](./performance-comparison.md)** - Benchmarks and optimizations
 - **[Troubleshooting](./09-troubleshooting.md)** - Common issues and solutions
 
-## 📊 Reports & Analysis
-
-### Test Reports
-- **[CLI Test Results](./reports/CLI_TEST_RESULTS_REPORT.md)** - CLI functionality validation
-- **[Comprehensive Test Results](./reports/COMPREHENSIVE_TEST_RESULTS.md)** - Full test suite analysis
-
-### Implementation Documentation  
-- **[Migration System Summary](./implementation/MIGRATION_SYSTEM_SUMMARY.md)** - System migration details
-- **[Optimized Init Summary](./implementation/OPTIMIZED-INIT-SUMMARY.md)** - Initialization optimizations
-- **[Prompt Copier Implementation](./implementation/PROMPT-COPIER-IMPLEMENTATION.md)** - Prompt management system
-
-## 🎮 User Guides
-
-### Essential Guides
+### User Guides
 - **[Coordination Guide](./guides/coordination.md)** - Multi-agent coordination
 - **[Memory Bank Guide](./guides/memory-bank.md)** - Using the memory system
-- **[Optimized Init Usage](./optimized-init-usage-guide.md)** - Efficient project setup
-
-### UI & Interfaces
-- **[Swarm Blessed UI](./swarm-blessed-ui.md)** - Terminal UI interface
-- **[Start Command Consolidation](./start-command-consolidation.md)** - Command management
 
 ## 🔧 Development & API
 
@@ -74,12 +49,12 @@ Welcome to the comprehensive documentation for Claude-Flow v1.0.50!
 
 ## 📝 Version History
 
-### v1.0.50 Highlights
-- **BatchTool Integration**: 10 concurrent agents support
-- **TypeScript Improvements**: 91% error reduction (379→32)
-- **Enhanced Testing**: Parallel test execution framework
-- **Performance Optimization**: 71% faster parallel execution
-- **Build Process**: Streamlined Deno compilation
+### v1.0.71 Highlights
+- **Node.js SEA Support**: Single executable applications with 70MB binaries
+- **Removed Legacy Code**: Cleaned up deprecated pkg and Deno implementations
+- **Memory Module**: Git submodule architecture for better modularity
+- **NPM Publishing**: Automated GitHub Actions CI/CD pipeline
+- **TypeScript Optimization**: Full ES modules support with better compatibility
 
 ## 🤝 Contributing
 

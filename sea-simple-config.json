@@ -1,9 +1,0 @@
-{
-  "main": "dist/cli/simple-cli.js",
-  "output": "dist/sea-simple-prep.blob",
-  "disableExperimentalSEAWarning": true,
-  "useCodeCache": true,
-  "assets": {
-    "package.json": "/Users/sethford/Downloads/Projects/flow/claude-code-flow/package.json"
-  }
-}

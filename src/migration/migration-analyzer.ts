@@ -5,10 +5,11 @@
 import * as path from "node:path";
 import * as fs from "fs-extra";
 import * as crypto from "crypto";
+import { readFile } from "node:fs/promises";
 import { MigrationAnalysis, MigrationRisk } from "./types";
 import { logger } from "./logger";
 import chalk from "chalk";
-import { glob } from "glob";
+import glob from "glob";
 import { MigrationValidator } from "./migration-validator";
 import { ProgressReporter } from "./progress-reporter";
 
@@ -97,7 +98,7 @@ export class MigrationAnalyzer {
     // Check for CLAUDE.md
     const claudeMdPath = path.join(projectPath, "CLAUDE.md");
     if (await fs.pathExists(claudeMdPath)) {
-      const content = await fs.readFile(claudeMdPath, "utf-8");
+      const content = await readFile(claudeMdPath, "utf-8");
       analysis.customConfigurations["CLAUDE.md"] = {
         exists: true,
         size: content.length,
@@ -140,7 +141,7 @@ export class MigrationAnalyzer {
     for (const file of potentialConflicts) {
       const filePath = path.join(projectPath, file);
       if (await fs.pathExists(filePath)) {
-        const content = await fs.readFile(filePath, "utf-8");
+        const content = await readFile(filePath, "utf-8");
         const checksum = crypto.createHash("md5").update(content).digest("hex");
         
         // Check if it's a custom version

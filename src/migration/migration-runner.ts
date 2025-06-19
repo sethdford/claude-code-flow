@@ -5,6 +5,7 @@
 import * as fs from "fs-extra";
 import * as path from "node:path";
 import * as crypto from "crypto";
+import { fileURLToPath } from "node:url";
 import { 
   MigrationOptions, 
   MigrationResult, 
@@ -18,9 +19,13 @@ import { MigrationAnalyzer } from "./migration-analyzer";
 import { logger } from "./logger";
 import { ProgressReporter } from "./progress-reporter";
 import { MigrationValidator } from "./migration-validator";
-import { glob } from "glob";
+import glob from "glob";
 import inquirer from "inquirer";
 import chalk from "chalk";
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const BACKUP_DIR = ".migration-backup";
 

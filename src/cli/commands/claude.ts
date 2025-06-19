@@ -6,7 +6,7 @@ import { Command } from "../cliffy-compat.js";
 import chalk from "chalk";
 import { spawn } from "node:child_process";
 import { generateId } from "../../utils/helpers.js";
-import { Deno } from "../../utils/deno-compat.js";
+import { promises as fs } from "node:fs";
 
 // Color compatibility
 const colors = {
@@ -117,7 +117,7 @@ export const claudeCommand = new Command()
   .option("--dry-run", "Show what would be executed without running")
   .action(async (options: any, workflowFile: string) => {
     try {
-      const content = await Deno.readTextFile(workflowFile);
+      const content = await fs.readFile(workflowFile, "utf-8");
       const workflow = JSON.parse(content);
         
       console.log(colors.green("Loading workflow:"), workflow.name || "Unnamed");

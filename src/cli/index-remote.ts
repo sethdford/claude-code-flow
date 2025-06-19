@@ -4,7 +4,7 @@
  * This version can be run directly from GitHub
  */
 
-import { Deno } from "../utils/deno-compat.js";
+
 
 const VERSION = "1.0.71";
 
@@ -54,7 +54,7 @@ EXAMPLES:
   claude-flow memory store key "value"
   claude-flow status                  # Check system status
 
-For more info: https://github.com/ruvnet/claude-code-flow
+For more info: https://github.com/sethdford/claude-code-flow
 `);
 }
 
@@ -71,7 +71,7 @@ function printWarning(message: string) {
 }
 
 async function main() {
-  const { args } = Deno;
+  const args = process.argv.slice(2);
   const command = args[0] || "help";
   const subArgs = args.slice(1);
 
@@ -131,9 +131,16 @@ async function main() {
   }
 }
 
-if (typeof Deno !== "undefined" && import.meta && (import.meta as any).main) {
+// Check if this is the main module being run
+const isMainModule = import.meta.url === `file://${process.argv[1]}` || 
+  process.argv[1]?.endsWith("/claude-flow") ||
+  process.argv[1]?.endsWith("\\claude-flow") ||
+  process.argv[1]?.endsWith("/index-remote.js") ||
+  process.argv[1]?.endsWith("\\index-remote.js");
+
+if (isMainModule) {
   main().catch((error) => {
     printError(`Error: ${error.message}`);
-    Deno.exit(1);
+    process.exit(1);
   });
 }

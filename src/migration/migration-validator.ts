@@ -5,7 +5,8 @@
 import * as fs from "fs-extra";
 import * as path from "node:path";
 import chalk from "chalk";
-import { glob } from "glob";
+import { readFile } from "node:fs/promises";
+import glob from "glob";
 import { MigrationManifest, ValidationResult, ValidationCheck } from "./types";
 import { logger } from "./logger";
 
@@ -124,7 +125,7 @@ export class MigrationValidator {
 
   private async validateCommandFileContent(filePath: string, command: string, result: ValidationResult): Promise<void> {
     try {
-      const content = await fs.readFile(filePath, "utf-8");
+      const content = await readFile(filePath, "utf-8");
       
       // Check for minimum content requirements
       const hasDescription = content.includes("description") || content.includes("Description");
@@ -161,7 +162,7 @@ export class MigrationValidator {
     // Check CLAUDE.md
     const claudeMdPath = path.join(projectPath, "CLAUDE.md");
     if (await fs.pathExists(claudeMdPath)) {
-      const content = await fs.readFile(claudeMdPath, "utf-8");
+      const content = await readFile(claudeMdPath, "utf-8");
       
       // Check for SPARC configuration
       if (!content.includes("SPARC")) {
@@ -221,7 +222,7 @@ export class MigrationValidator {
       
       for (const file of files) {
         try {
-          const content = await fs.readFile(file, "utf-8");
+          const content = await readFile(file, "utf-8");
           
           // Basic integrity checks
           if (content.length === 0) {

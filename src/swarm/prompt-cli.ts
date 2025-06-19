@@ -140,7 +140,8 @@ program
   .option("--recursive", "Validate recursively")
   .action(async (filePath, options) => {
     try {
-      const stats = await require("fs").promises.stat(filePath);
+      const { stat } = await import("fs/promises");
+      const stats = await stat(filePath);
       const files: string[] = [];
       
       if (stats.isFile()) {
@@ -148,7 +149,8 @@ program
       } else if (stats.isDirectory()) {
         // Scan directory for prompt files
         const scanDir = async (dir: string) => {
-          const entries = await require("fs").promises.readdir(dir, { withFileTypes: true });
+          const { readdir } = await import("fs/promises");
+          const entries = await readdir(dir, { withFileTypes: true });
           
           for (const entry of entries) {
             const fullPath = path.join(dir, entry.name);

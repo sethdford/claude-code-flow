@@ -568,8 +568,8 @@ function startWebUI(host: string, port: number) {
     const rootDir = path.resolve(__dirname, "../..");
     const cliPath = path.join(rootDir, "bin", "claude-flow");
     
-    // Spawn the command
-    const child = spawn("node", [path.join(rootDir, "src/cli/simple-cli.js"), ...cmdArgs], {
+    // Spawn the command using the main TypeScript CLI
+    const child = spawn("node", [path.join(rootDir, "dist/cli/main.js"), ...cmdArgs], {
       stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env, CLAUDE_FLOW_WEB_MODE: "true" },
     });

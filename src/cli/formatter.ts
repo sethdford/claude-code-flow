@@ -4,7 +4,7 @@
 
 import chalk from "chalk";
 import Table from "cli-table3";
-import { Deno } from "../utils/deno-compat.js";
+
 // Box is not available in the current cliffy version
 import { AgentProfile, Task, MemoryEntry, HealthStatus } from "../utils/types.js";
 

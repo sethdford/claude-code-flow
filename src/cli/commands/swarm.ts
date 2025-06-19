@@ -9,7 +9,7 @@ import { BackgroundExecutor } from "../../coordination/background-executor.js";
 import { SwarmMemoryManager } from "../../memory/swarm-memory.js";
 
 import { existsSync } from "node:fs";
-import { stat, readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { spawn } from "node:child_process";
 
 export async function swarmAction(ctx: CommandContext) {
@@ -82,41 +82,10 @@ export async function swarmAction(ctx: CommandContext) {
     return;
   }
   
-  // If UI mode is requested, use the blessed UI version
+  // UI mode is not currently implemented
   if (options.ui) {
-    try {
-      // Get the path to claude-flow binary
-      const scriptPath = new URL(import.meta.url).pathname;
-      const projectRoot = scriptPath.substring(0, scriptPath.indexOf("/src/"));
-      const uiScriptPath = `${projectRoot}/src/cli/simple-commands/swarm-ui.js`;
-      
-      // Check if the UI script exists
-      try {
-        await stat(uiScriptPath);
-      } catch {
-        warning("Swarm UI script not found. Falling back to standard mode.");
-        options.ui = false;
-      }
-      
-      if (options.ui) {
-        const process = spawn("node", [uiScriptPath], {
-          stdio: "inherit",
-        });
-        
-        const code = await new Promise<number>((resolve) => {
-          process.on("exit", (exitCode) => resolve(exitCode || 0));
-        });
-        
-        if (code !== 0) {
-          error(`Swarm UI exited with code ${code}`);
-        }
-        return;
-      }
-    } catch (err) {
-      warning(`Failed to launch blessed UI: ${(err as Error).message}`);
-      console.log("Falling back to standard mode...");
-      options.ui = false;
-    }
+    warning("UI mode is not currently implemented. Using standard mode.");
+    options.ui = false;
   }
   
   success(`🐝 Initializing Claude Swarm: ${swarmId}`);

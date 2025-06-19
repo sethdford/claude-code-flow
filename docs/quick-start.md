@@ -4,7 +4,7 @@ Get up and running with Claude-Flow in just a few minutes! This guide will walk 
 
 ## Prerequisites
 
-- **Node.js 18+** or **Deno 1.40+**
+- **Node.js 18+** 
 - **Terminal access** (Command Prompt, PowerShell, Terminal, etc.)
 - **Internet connection** for package installation
 
@@ -34,12 +34,13 @@ Verify installation:
 claude-flow --version
 ```
 
-### Option 3: Deno Installation
+### Option 3: Download Binary
 
-For Deno users:
+Download pre-built binaries from GitHub releases:
 
 ```bash
-deno install --allow-all --name claude-flow https://raw.githubusercontent.com/ruvnet/claude-code-flow/main/src/cli/index.ts
+# Download for your platform from GitHub releases
+# https://github.com/sethdford/vibex-claude-code-flow/releases
 ```
 
 ## First Run

@@ -1049,38 +1049,7 @@ async function showSwarmResults(
 }
 
 async function launchSwarmUI(objective: string, options: any): Promise<void> {
-  try {
-    const scriptPath = new URL(import.meta.url).pathname;
-    const projectRoot = scriptPath.substring(0, scriptPath.indexOf("/src/"));
-    const uiScriptPath = `${projectRoot}/src/cli/simple-commands/swarm-ui.js`;
-    
-    // Check if the UI script exists
-    try {
-      await fs.stat(uiScriptPath);
-    } catch {
-      warning("Swarm UI script not found. Falling back to standard mode.");
-      return;
-    }
-    
-    const { spawn } = await import("node:child_process");
-    const child = spawn("node", [
-      uiScriptPath, objective, ...buildUIArgs(options),
-    ], {
-      stdio: "inherit",
-    });
-    
-    await new Promise<void>((resolve) => {
-      child.on("close", (code) => {
-        if (code !== 0) {
-          error(`Swarm UI exited with code ${code}`);
-        }
-        resolve();
-      });
-    });
-  } catch (err) {
-    warning(`Failed to launch swarm UI: ${(err as Error).message}`);
-    console.log("Falling back to standard mode...");
-  }
+  warning("Swarm UI is not currently implemented. Using standard mode.");
 }
 
 function buildUIArgs(options: any): string[] {

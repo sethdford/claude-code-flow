@@ -5,7 +5,7 @@
 import { Command } from "../cliffy-compat.js";
 import chalk from "chalk";
 import { Table } from "../cliffy-compat.js";
-import { Deno } from "../../utils/deno-compat.js";
+
 import inquirer from "inquirer";
 
 // Color compatibility

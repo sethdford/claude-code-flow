@@ -1,5 +1,5 @@
 // init/index.ts - Main init command orchestrator
-import { printSuccess, printError } from "../utils.js";
+import { success as printSuccess, error as printError } from "../cli-core.js";
 import { createDirectoryStructure } from "./directory-structure.js";
 import { createSwarmCommands } from "./swarm-commands.js";
 import { createSparcEnvironment } from "./sparc-environment.js";

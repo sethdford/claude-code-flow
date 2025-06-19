@@ -75,7 +75,7 @@ export class PromptCopier extends EventEmitter {
       verify: options.verify ?? true,
       preservePermissions: options.preservePermissions ?? true,
       excludePatterns: options.excludePatterns ?? [],
-      includePatterns: options.includePatterns ?? ["*.md", "*.txt", "*.prompt", "*.prompts"],
+      includePatterns: options.includePatterns ?? ["*.md", "*.txt", "*.prompt", "*.prompts", "**/*.md", "**/*.txt", "**/*.prompt", "**/*.prompts"],
       parallel: options.parallel ?? true,
       maxWorkers: options.maxWorkers ?? 4,
       dryRun: options.dryRun ?? false,
@@ -208,13 +208,15 @@ export class PromptCopier extends EventEmitter {
   }
 
   private matchPattern(filePath: string, pattern: string): boolean {
-    // Simple glob pattern matching
+    // Enhanced glob pattern matching that handles ** correctly
     const regex = pattern
       .replace(/\./g, "\\.")
-      .replace(/\*/g, ".*")
+      .replace(/\*\*/g, "DOUBLE_STAR") // Temporarily replace ** to avoid conflict
+      .replace(/\*/g, "[^/]*")          // * matches anything except path separator
+      .replace(/DOUBLE_STAR/g, ".*")    // ** matches anything including path separators
       .replace(/\?/g, ".");
     
-    return new RegExp(regex).test(filePath);
+    return new RegExp(`^${regex}$`).test(filePath);
   }
 
   private async ensureDestinationDirectories(): Promise<void> {

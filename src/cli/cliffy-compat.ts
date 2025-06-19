@@ -128,15 +128,7 @@ export const Number = {
   },
 };
 
-// Deno API compatibility
-export const Deno = {
-  exit: (code: number = 0) => process.exit(code),
-  stat: (path: string) => import("fs").then(fs => fs.promises.stat(path)),
-  writeTextFile: (path: string, content: string) => 
-    import("fs").then(fs => fs.promises.writeFile(path, content, "utf-8")),
-  readTextFile: (path: string) => 
-    import("fs").then(fs => fs.promises.readFile(path, "utf-8")),
-};
+
 
 // Export everything for easy importing
 export { TableCompat as Table };
@@ -148,5 +140,4 @@ export default {
   Select,
   Input,
   Number,
-  Deno,
 };

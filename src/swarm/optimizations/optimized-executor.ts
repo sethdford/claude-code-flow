@@ -179,21 +179,24 @@ export class OptimizedExecutor extends EventEmitter {
         }
         
         // Create task result
+        // Ensure minimum execution time of 1ms for metrics calculation
+        const executionTime = Math.max(1, Date.now() - startTime);
+        
         const taskResult: TaskResult = {
           output: executionResult.output,
           artifacts: {},
           metadata: {
             agentId: agentId.id,
             success: executionResult.success,
-            executionTime: Date.now() - startTime,
+            executionTime,
             tokensUsed: executionResult.usage,
           },
           quality: 1.0,
           completeness: 1.0,
           accuracy: 1.0,
-          executionTime: Date.now() - startTime,
+          executionTime,
           resourcesUsed: {
-            cpuTime: Date.now() - startTime,
+            cpuTime: executionTime,
             maxMemory: 0,
             diskIO: 0,
             networkIO: 0,
@@ -215,7 +218,7 @@ export class OptimizedExecutor extends EventEmitter {
         // Record in history
         this.executionHistory.push({
           taskId: task.id.id,
-          duration: taskResult.executionTime,
+          duration: executionTime,
           status: "success",
           timestamp: new Date(),
         });
@@ -237,6 +240,9 @@ export class OptimizedExecutor extends EventEmitter {
         this.metrics.totalExecuted++;
         this.metrics.totalFailed++;
         
+        // Ensure minimum execution time of 1ms for metrics calculation
+        const errorExecutionTime = Math.max(1, Date.now() - startTime);
+        
         const errorResult: TaskResult = {
           output: "",
           artifacts: {},
@@ -256,9 +262,9 @@ export class OptimizedExecutor extends EventEmitter {
           quality: 0.0,
           completeness: 0.0,
           accuracy: 0.0,
-          executionTime: Date.now() - startTime,
+          executionTime: errorExecutionTime,
           resourcesUsed: {
-            cpuTime: Date.now() - startTime,
+            cpuTime: errorExecutionTime,
             maxMemory: 0,
             diskIO: 0,
             networkIO: 0,
@@ -270,7 +276,7 @@ export class OptimizedExecutor extends EventEmitter {
         // Record in history
         this.executionHistory.push({
           taskId: task.id.id,
-          duration: errorResult.executionTime,
+          duration: errorExecutionTime,
           status: "failed",
           timestamp: new Date(),
         });

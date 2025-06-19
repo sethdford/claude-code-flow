@@ -6,7 +6,7 @@
 import chalk from "chalk";
 import { ProcessManager } from "./process-manager.js";
 import { ProcessInfo, ProcessStatus, SystemStats } from "./types.js";
-import { Deno } from "../../../utils/deno-compat.js";
+
 
 // Color compatibility
 const colors = {

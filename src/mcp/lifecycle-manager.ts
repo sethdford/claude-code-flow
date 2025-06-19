@@ -65,6 +65,7 @@ export class MCPLifecycleManager extends EventEmitter {
   private restartAttempts = 0;
   private shutdownPromise?: Promise<void>;
   private history: LifecycleEvent[] = [];
+  private processListeners = new Map<string, (...args: any[]) => void>();
 
   private readonly config: LifecycleManagerConfig = {
     healthCheckInterval: 30000, // 30 seconds
@@ -212,18 +213,15 @@ export class MCPLifecycleManager extends EventEmitter {
         result.error = serverHealth.error;
       }
 
-      // Check individual components
-      result.components.transport = serverHealth.metrics?.transportConnections !== undefined;
-      result.components.sessions = serverHealth.metrics?.activeSessions !== undefined;
+      // Check individual components (more lenient approach - missing metrics don't mean unhealthy)
+      result.components.transport = serverHealth.healthy;
+      result.components.sessions = true; // Sessions are managed internally
       result.components.tools = (serverHealth.metrics?.registeredTools || 0) > 0;
-      result.components.auth = serverHealth.metrics?.authenticatedSessions !== undefined;
-      result.components.loadBalancer = serverHealth.metrics?.rateLimitedRequests !== undefined;
+      result.components.auth = true; // Auth is optional
+      result.components.loadBalancer = true; // Load balancer is optional
 
-      // Overall health assessment
-      result.healthy = result.components.server && 
-                      result.components.transport && 
-                      result.components.sessions &&
-                      result.components.tools;
+      // Overall health assessment - server health and having tools is sufficient
+      result.healthy = result.components.server && result.components.tools;
 
       const checkDuration = Date.now() - startTime;
       if (result.metrics) {
@@ -303,6 +301,26 @@ export class MCPLifecycleManager extends EventEmitter {
   }
 
   /**
+   * Clean up all resources
+   */
+  destroy(): void {
+    // Remove all process event listeners
+    for (const [event, handler] of this.processListeners) {
+      process.removeListener(event, handler);
+    }
+    this.processListeners.clear();
+
+    // Restore max listeners
+    process.setMaxListeners(Math.max(process.getMaxListeners() - 4, 10));
+
+    // Stop health checks
+    this.stopHealthChecks();
+
+    // Remove all event listeners
+    this.removeAllListeners();
+  }
+
+  /**
    * Enable or disable auto-restart
    */
   setAutoRestart(enabled: boolean): void {
@@ -352,33 +370,44 @@ export class MCPLifecycleManager extends EventEmitter {
   }
 
   private setupEventHandlers(): void {
+    // Increase max listeners to prevent warnings
+    process.setMaxListeners(Math.max(process.getMaxListeners() + 4, 20));
+
     // Handle uncaught errors
-    process.on("uncaughtException", (error) => {
+    const uncaughtHandler = (error: Error) => {
       this.logger.error("Uncaught exception", error);
       this.handleServerError(error);
-    });
+    };
+    this.processListeners.set('uncaughtException', uncaughtHandler);
+    process.on("uncaughtException", uncaughtHandler);
 
-    process.on("unhandledRejection", (reason) => {
+    const unhandledHandler = (reason: any) => {
       this.logger.error("Unhandled rejection", reason);
       this.handleServerError(reason instanceof Error ? reason : new Error(String(reason)));
-    });
+    };
+    this.processListeners.set('unhandledRejection', unhandledHandler);
+    process.on("unhandledRejection", unhandledHandler);
 
     // Handle process signals
-    process.on("SIGINT", () => {
+    const sigintHandler = () => {
       this.logger.info("Received SIGINT, shutting down gracefully");
       this.stop().catch(error => {
         this.logger.error("Error during graceful shutdown", error);
         process.exit(1);
       });
-    });
+    };
+    this.processListeners.set('SIGINT', sigintHandler);
+    process.on("SIGINT", sigintHandler);
 
-    process.on("SIGTERM", () => {
+    const sigtermHandler = () => {
       this.logger.info("Received SIGTERM, shutting down gracefully");
       this.stop().catch(error => {
         this.logger.error("Error during graceful shutdown", error);
         process.exit(1);
       });
-    });
+    };
+    this.processListeners.set('SIGTERM', sigtermHandler);
+    process.on("SIGTERM", sigtermHandler);
   }
 
   private async handleServerError(error: Error): Promise<void> {

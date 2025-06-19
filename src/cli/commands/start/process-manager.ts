@@ -18,7 +18,7 @@ import { CoordinationManager } from "../../../coordination/manager.js";
 import { MCPServer } from "../../../mcp/server.js";
 import { eventBus } from "../../../core/event-bus.js";
 import { logger } from "../../../core/logger.js";
-import { Deno } from "../../../utils/deno-compat.js";
+
 
 // Color compatibility
 const colors = {
@@ -118,7 +118,7 @@ export class ProcessManager extends EventEmitter {
       switch (process.type) {
         case ProcessType.EVENT_BUS:
           // Event bus is already initialized globally
-          process.pid = typeof Deno !== "undefined" && "pid" in Deno ? (Deno as any).pid : process.pid;
+          // Use Node.js process.pid directly
           break;
 
         case ProcessType.MEMORY_MANAGER:

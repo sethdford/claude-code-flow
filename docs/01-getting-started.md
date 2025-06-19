@@ -14,10 +14,11 @@ npm install -g claude-flow
 claude-flow --version
 ```
 
-### Option 2: Deno Installation
+### Option 2: Download Binary
 ```bash
-# Install with Deno
-deno install --allow-all --name claude-flow https://raw.githubusercontent.com/ruvnet/claude-code-flow/main/src/cli/index.ts
+# Download pre-built binaries from GitHub releases
+# Visit: https://github.com/sethdford/vibex-claude-code-flow/releases
+# Extract and add to PATH
 
 # Verify installation
 claude-flow --help
@@ -26,14 +27,15 @@ claude-flow --help
 ### Option 3: From Source
 ```bash
 # Clone the repository
-git clone https://github.com/ruvnet/claude-code-flow.git
-cd claude-code-flow
+git clone https://github.com/sethdford/vibex-claude-code-flow.git
+cd vibex-claude-code-flow
 
 # Install dependencies and build
-deno task install
+npm install
+npm run build
 
 # Run from source
-deno task dev
+npm run start
 ```
 
 ## Initial Setup

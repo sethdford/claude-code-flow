@@ -18,12 +18,10 @@
     "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
     "prepare": "npm run build:ts",
-    "test:deno": "deno task test",
     "lint": "eslint src --ext .ts,.js",
     "format": "prettier --write src",
     "postinstall": "node scripts/install.js",
-    "prepublishOnly": "node scripts/prepare-publish.js",
-    "prepare-publish": "node scripts/prepare-publish.js"
+    "prepublishOnly": "node scripts/prepare-publish.js"
   },
   "keywords": [
     "ai",
@@ -42,12 +40,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/claude-code-flow.git"
+    "url": "https://github.com/sethdford/vibex-claude-code-flow.git"
   },
   "bugs": {
-    "url": "https://github.com/ruvnet/claude-code-flow/issues"
+    "url": "https://github.com/sethdford/vibex-claude-code-flow/issues"
   },
-  "homepage": "https://github.com/ruvnet/claude-code-flow#readme",
+  "homepage": "https://github.com/sethdford/vibex-claude-code-flow#readme",
   "engines": {
     "node": ">=18.0.0"
   },
@@ -58,8 +56,6 @@
     "package.json"
   ],
   "dependencies": {
-    "@types/better-sqlite3": "^7.6.13",
-    "better-sqlite3": "^11.10.0",
     "blessed": "^0.1.81",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.3",

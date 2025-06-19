@@ -6,7 +6,7 @@ import { Command } from "../cliffy-compat.js";
 import chalk from "chalk";
 import { Table } from "../cliffy-compat.js";
 import { formatProgressBar, formatDuration, formatStatusIndicator } from "../formatter.js";
-import { Deno, existsSync } from "../../utils/deno-compat.js";
+import { existsSync } from "node:fs";
 import { promises as fs } from "node:fs";
 
 // Color compatibility
@@ -557,8 +557,10 @@ class Dashboard {
         alerts: this.alerts,
       };
       
-      await Deno.writeTextFile(this.options.export, JSON.stringify(exportData, null, 2));
-      console.log(colors.green(`✓ Monitoring data exported to ${this.options.export}`));
+      if (this.options.export) {
+        await fs.writeFile(this.options.export, JSON.stringify(exportData, null, 2), "utf-8");
+        console.log(`📊 Metrics exported to: ${this.options.export}`);
+      }
     } catch (error) {
       console.error(colors.red("Failed to export data:"), (error as Error).message);
     }
@@ -580,8 +582,8 @@ async function startMonitorDashboard(options: any): Promise<void> {
   if (options.export) {
     // Check if export path is writable
     try {
-      await Deno.writeTextFile(options.export, "");
-      await Deno.remove(options.export);
+      await fs.writeFile(options.export, "", "utf-8");
+      await fs.unlink(options.export);
     } catch {
       console.error(colors.red(`Cannot write to export file: ${options.export}`));
       return;

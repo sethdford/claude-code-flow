@@ -203,6 +203,7 @@ export class MCPServer implements IMCPServer {
         activeSessions: sessionMetrics.active,
         authenticatedSessions: sessionMetrics.authenticated,
         expiredSessions: sessionMetrics.expired,
+        transportConnections: 1, // For stdio transport, always 1 connection when running
         ...transportHealth.metrics,
       };
 

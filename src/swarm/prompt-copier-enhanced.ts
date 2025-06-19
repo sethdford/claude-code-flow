@@ -1,10 +1,14 @@
 import * as fs from "fs/promises";
+import * as fsSync from "fs";
 import * as path from "path";
 import { Worker } from "worker_threads";
+import { fileURLToPath } from "url";
 import { PromptCopier, CopyOptions, CopyResult, FileInfo } from "./prompt-copier";
 import { Logger } from "../core/logger.js";
 
 const logger = Logger.getInstance();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface WorkerPool {
   workers: Worker[];
@@ -23,14 +27,32 @@ export class EnhancedPromptCopier extends PromptCopier {
   protected override async copyFilesParallel(): Promise<void> {
     const workerCount = Math.min(this.options.maxWorkers, this.fileQueue.length);
     
-    // Initialize worker pool
-    this.workerPool = await this.initializeWorkerPool(workerCount);
-    
     try {
-      // Process files using worker pool
-      await this.processWithWorkerPool();
+      // Initialize worker pool
+      this.workerPool = await this.initializeWorkerPool(workerCount);
+      
+      // Process files using worker pool with a timeout
+      const timeout = 30000; // 30 seconds timeout
+      await Promise.race([
+        this.processWithWorkerPool(),
+        new Promise<void>((_, reject) => 
+          setTimeout(() => reject(new Error("Worker pool processing timeout")), timeout)
+        )
+      ]);
+    } catch (error) {
+      logger.error("Error in parallel file copy:", error);
+      
+      // If workers failed, fall back to sequential copy
+      if (error instanceof Error && (error.message?.includes('Worker file not found') || 
+          error.message?.includes('worker_threads'))) {
+        logger.warn("Worker threads not available, falling back to sequential copy");
+        // Implement simple sequential fallback
+        await this.fallbackSequentialCopy();
+      } else {
+        throw error;
+      }
     } finally {
-      // Cleanup workers
+      // Always cleanup workers if they were created
       await this.terminateWorkers();
     }
   }
@@ -45,10 +67,43 @@ export class EnhancedPromptCopier extends PromptCopier {
     
     // Create workers
     for (let i = 0; i < workerCount; i++) {
-      const worker = new Worker(
+      // Determine the correct worker path based on the environment
+      let workerPath: string;
+      
+      // Try multiple possible paths for the worker
+      const possiblePaths = [
         path.join(__dirname, "workers", "copy-worker.js"),
+        path.join(__dirname, "..", "..", "dist", "swarm", "workers", "copy-worker.js"),
+        path.join(process.cwd(), "dist", "swarm", "workers", "copy-worker.js"),
+        path.join(process.cwd(), "src", "swarm", "workers", "copy-worker.js")
+      ];
+      
+      // Find the first existing worker file
+      for (const tryPath of possiblePaths) {
+        try {
+          fsSync.accessSync(tryPath);
+          workerPath = tryPath;
+          break;
+        } catch (e) {
+          // Continue to next path
+        }
+      }
+      
+      if (!workerPath!) {
+        throw new Error(`Worker file not found. Tried: ${possiblePaths.join(", ")}`);
+      }
+      
+      // Additional check to see if we can actually create workers
+      if (typeof Worker === 'undefined') {
+        throw new Error('Worker threads not available in this environment');
+      }
+      
+      const worker = new Worker(
+        workerPath,
         {
           workerData: { workerId: i },
+          // Use eval to handle both .js and .ts files in development
+          eval: __filename.endsWith('.ts'),
         },
       );
       
@@ -64,6 +119,16 @@ export class EnhancedPromptCopier extends PromptCopier {
           error: error.message,
           phase: "write",
         });
+        // Mark worker as no longer busy if it errors
+        pool.busy.delete(i);
+      });
+      
+      worker.on("exit", (code) => {
+        if (code !== 0) {
+          logger.warn(`Worker ${i} exited with code ${code}`);
+        }
+        // Clean up the worker from the pool
+        pool.busy.delete(i);
       });
       
       workers.push(worker);
@@ -176,14 +241,62 @@ export class EnhancedPromptCopier extends PromptCopier {
     logger.debug(`Worker ${workerId} result:`, result);
   }
 
+  private async fallbackSequentialCopy(): Promise<void> {
+    logger.info("Performing sequential file copy fallback...");
+    let completed = 0;
+    
+    for (const file of this.fileQueue) {
+      try {
+        // Copy file using the same logic as parent class but accessible here
+        const destPath = path.join(this.options.destination, file.relativePath);
+        
+        // Ensure destination directory exists
+        await fs.mkdir(path.dirname(destPath), { recursive: true });
+        
+        // Copy the file
+        await fs.copyFile(file.path, destPath);
+        
+        // Preserve permissions if requested
+        if (this.options.preservePermissions && file.permissions) {
+          await fs.chmod(destPath, file.permissions);
+        }
+        
+        this.copiedFiles.add(file.path);
+        completed++;
+        this.reportProgress(completed);
+      } catch (error) {
+        this.errors.push({
+          file: file.path,
+          error: error instanceof Error ? error.message : String(error),
+          phase: "write",
+        });
+      }
+    }
+  }
+
   private async terminateWorkers(): Promise<void> {
     if (!this.workerPool) return;
     
-    const terminationPromises = this.workerPool.workers.map(worker => 
-      worker.terminate(),
-    );
+    // Clear the queue first
+    this.workerPool.queue = [];
     
-    await Promise.all(terminationPromises);
+    // Terminate all workers with a timeout
+    const terminationPromises = this.workerPool.workers.map(async (worker, index) => {
+      try {
+        // Remove all listeners to prevent memory leaks
+        worker.removeAllListeners();
+        
+        // Give worker a chance to finish gracefully
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Terminate the worker
+        await worker.terminate();
+      } catch (error) {
+        logger.warn(`Failed to terminate worker ${index}:`, error);
+      }
+    });
+    
+    await Promise.allSettled(terminationPromises);
     this.workerPool = undefined;
   }
 

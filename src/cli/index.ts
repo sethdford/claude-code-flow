@@ -4,12 +4,10 @@
  * This redirects to simple-cli.ts for remote execution compatibility
  */
 
-// Import and run the simple CLI which doesn't have external dependencies
-import "./simple-cli.js";
+// Note: simple-cli.js has been removed as it was a legacy implementation
 // Spinner import removed - not available in current cliffy version
 import { logger } from "../core/logger.js";
 import { configManager } from "../core/config.js";
-import { Deno } from "../utils/deno-compat.js";
 import { Command } from "./cliffy-compat.js";
 import { startCommand } from "./commands/start.js";
 import { agentCommand } from "./commands/agent.js";
@@ -123,7 +121,7 @@ async function handleError(error: unknown, options?: any): Promise<void> {
   }
   
   // Show stack trace in debug mode or verbose
-  if (Deno.env.get("CLAUDE_FLOW_DEBUG") === "true" || options?.verbose) {
+  if (process.env.CLAUDE_FLOW_DEBUG === "true" || options?.verbose) {
     console.error(colors.gray("\nStack trace:"));
     console.error(error);
   }
@@ -134,7 +132,7 @@ async function handleError(error: unknown, options?: any): Promise<void> {
     console.error(colors.gray('Or use "claude-flow help" to see available commands'));
   }
   
-  Deno.exit(1);
+  process.exit(1);
 }
 
 // Setup logging and configuration based on CLI options
@@ -179,7 +177,7 @@ async function setupLogging(options: any): Promise<void> {
 function setupSignalHandlers(): void {
   const gracefulShutdown = () => {
     console.log(`\n${  colors.gray("Gracefully shutting down...")}`);
-    Deno.exit(0);
+    process.exit(0);
   };
   
   process.on("SIGINT", gracefulShutdown);
@@ -202,7 +200,7 @@ if (isMainModule) {
     setupSignalHandlers();
     
     // Pre-parse global options for error handling
-    const { args } = Deno;
+    const args = process.argv.slice(2);
     globalOptions = {
       verbose: args.includes("-v") || args.includes("--verbose"),
       quiet: args.includes("-q") || args.includes("--quiet"),

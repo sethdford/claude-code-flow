@@ -5,7 +5,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import colors from "chalk";
-import { Deno } from "../../utils/deno-compat.js";
+import { promises as fs } from "node:fs";
 
 interface MemoryEntry {
   key: string;
@@ -18,19 +18,14 @@ export class SimpleMemoryManager {
   private filePath = "./memory/memory-store.json";
   private data: Record<string, MemoryEntry[]> = {};
 
-  async load() {
-    try {
-      const content = await readFile(this.filePath, "utf-8");
-      this.data = JSON.parse(content);
-    } catch {
-      // File doesn't exist yet
-      this.data = {};
-    }
+  async load(): Promise<void> {
+    const content = await fs.readFile(this.filePath, "utf-8");
+    this.data = JSON.parse(content);
   }
 
-  async save() {
+  async save(): Promise<void> {
     await mkdir("./memory", { recursive: true });
-    await writeFile(this.filePath, JSON.stringify(this.data, null, 2), "utf-8");
+    await fs.writeFile(this.filePath, JSON.stringify(this.data, null, 2), "utf-8");
   }
 
   async store(key: string, value: string, namespace: string = "default") {
@@ -94,11 +89,11 @@ export class SimpleMemoryManager {
 
   async exportData(filePath: string) {
     await this.load();
-    await Deno.writeTextFile(filePath, JSON.stringify(this.data, null, 2));
+    await fs.writeFile(filePath, JSON.stringify(this.data, null, 2), "utf-8");
   }
 
   async importData(filePath: string) {
-    const content = await Deno.readTextFile(filePath);
+    const content = await fs.readFile(filePath, "utf-8");
     this.data = JSON.parse(content);
     await this.save();
   }
