@@ -2,7 +2,7 @@
 
 > Advanced AI agent orchestration system for multi-agent coordination
 
-[![npm version](https://badge.fury.io/js/claude-flow.svg)](https://badge.fury.io/js/claude-flow)
+[![npm version](https://badge.fury.io/js/@sethdford/claude-flow.svg)](https://badge.fury.io/js/@sethdford/claude-flow)
 [![Build Status](https://github.com/ruvnet/claude-code-flow/workflows/CI/badge.svg)](https://github.com/ruvnet/claude-code-flow/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -25,10 +25,10 @@ Claude Flow is a powerful command-line tool and framework for orchestrating AI a
 
 ```bash
 # Install globally via npm
-npm install -g claude-flow
+npm install -g @sethdford/claude-flow
 
 # Or run directly with npx
-npx claude-flow --help
+npx @sethdford/claude-flow --help
 ```
 
 ### Basic Usage
@@ -38,10 +38,10 @@ npx claude-flow --help
 claude-flow
 
 # Show version
-claude-flow --version
+@sethdford/claude-flow --version
 
 # Get help
-claude-flow help
+@sethdford/claude-flow help
 
 # Start a new workflow
 claude-flow start --config my-workflow.json
