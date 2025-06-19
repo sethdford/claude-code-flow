@@ -598,7 +598,7 @@ function getConfigTemplate(templateName: string): any {
         commandTimeout: 300000,
       },
       memory: {
-        backend: "sqlite",
+        backend: "markdown",
         cacheSizeMB: 10,
         syncInterval: 10000,
         conflictResolution: "timestamp",

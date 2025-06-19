@@ -43,35 +43,35 @@ echo ""
 
 # Test 1: Store data
 run_test "Memory Store" \
-    "../claude-flow memory store '$TEST_KEY' '$TEST_VALUE' 2>&1 | grep -q 'Stored successfully'" \
+    "../bin/claude-flow memory store '$TEST_KEY' '$TEST_VALUE' 2>&1 | grep -q 'Stored successfully'" \
     ""
 
 # Test 2: Query data
-output=$(../claude-flow memory query "$TEST_KEY" 2>&1)
+output=$(../bin/claude-flow memory query "$TEST_KEY" 2>&1)
 run_test "Memory Query" \
     "[[ '$output' == *'$TEST_VALUE'* ]]" \
     ""
 
 # Test 3: List keys
 run_test "Memory List" \
-    "../claude-flow memory list 2>&1 | grep -q 'default'" \
+    "../bin/claude-flow memory list 2>&1 | grep -q 'default'" \
     ""
 
 # Test 4: Update data
 NEW_VALUE="Updated at $(date)"
 run_test "Memory Update" \
-    "../claude-flow memory store '$TEST_KEY' '$NEW_VALUE' 2>&1 | grep -q 'Stored successfully'" \
+    "../bin/claude-flow memory store '$TEST_KEY' '$NEW_VALUE' 2>&1 | grep -q 'Stored successfully'" \
     ""
 
 # Test 5: Verify update
-output=$(../claude-flow memory query "$TEST_KEY" 2>&1)
+output=$(../bin/claude-flow memory query "$TEST_KEY" 2>&1)
 run_test "Verify Update" \
     "[[ '$output' == *'Updated at'* ]]" \
     ""
 
 # Test 6: Delete data (using clear since delete might not exist)
 run_test "Memory Delete" \
-    "../claude-flow memory clear --namespace default 2>&1 | grep -q -i 'clear'" \
+    "../bin/claude-flow memory clear --namespace default 2>&1 | grep -q -i 'clear'" \
     ""
 
 # Test 7: Verify deletion (skip since we cleared namespace)
@@ -86,21 +86,21 @@ echo ""
 
 # Store multiple items
 for i in {1..5}; do
-    ../claude-flow memory store "bulk_test_$i" "Bulk data $i" >/dev/null 2>&1
+    ../bin/claude-flow memory store "bulk_test_$i" "Bulk data $i" >/dev/null 2>&1
 done
 
 run_test "Bulk Store" \
-    "[[ $(../claude-flow memory list | grep -c 'bulk_test_') -eq 5 ]]" \
+    "[[ $(../bin/claude-flow memory list | grep -c 'bulk_test_') -eq 5 ]]" \
     ""
 
 # Test 9: Memory stats
 run_test "Memory Stats" \
-    "../claude-flow memory stats | grep -q 'Total entries'" \
+    "../bin/claude-flow memory stats | grep -q 'Total entries'" \
     ""
 
 # Test 10: Export/Import
 run_test "Memory Export" \
-    "../claude-flow memory export /tmp/memory_test.json" \
+    "../bin/claude-flow memory export /tmp/memory_test.json" \
     ""
 
 run_test "Export File Exists" \
@@ -109,7 +109,7 @@ run_test "Export File Exists" \
 
 # Clean up bulk items
 for i in {1..5}; do
-    ../claude-flow memory delete "bulk_test_$i" >/dev/null 2>&1
+    ../bin/claude-flow memory delete "bulk_test_$i" >/dev/null 2>&1
 done
 
 # Summary

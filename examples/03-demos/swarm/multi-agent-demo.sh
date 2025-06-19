@@ -61,7 +61,7 @@ show_agent_activity "Backend Dev" "Adjusting endpoints based on Frontend needs"
 
 # Actually create the application
 echo -e "\n🏗️ Building the application..."
-../claude-flow swarm create \
+../bin/claude-flow swarm create \
   "Build a real-time dashboard with:
    - Live data updates
    - Multiple chart types

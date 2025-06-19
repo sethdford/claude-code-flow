@@ -68,30 +68,30 @@ echo ""
 
 # Benchmark 1: Simple task execution
 benchmark "Simple Task" \
-    "../claude-flow task 'Write hello world to file' --output /tmp/bench_simple"
+    "../bin/claude-flow task 'Write hello world to file' --output /tmp/bench_simple"
 
 # Benchmark 2: Memory operations
 benchmark "Memory Store/Query" \
-    "../claude-flow memory store bench_key 'test data' && ../claude-flow memory query bench_key"
+    "../bin/claude-flow memory store bench_key 'test data' && ../bin/claude-flow memory query bench_key"
 
 # Benchmark 3: Small swarm
 benchmark "Small Swarm (2 agents)" \
-    "../claude-flow swarm create 'Create simple calculator' --agents 2 --output /tmp/bench_swarm_small"
+    "../bin/claude-flow swarm create 'Create simple calculator' --agents 2 --output /tmp/bench_swarm_small"
 
 # Benchmark 4: Medium swarm
 benchmark "Medium Swarm (5 agents)" \
-    "../claude-flow swarm create 'Create TODO app' --agents 5 --output /tmp/bench_swarm_medium" \
+    "../bin/claude-flow swarm create 'Create TODO app' --agents 5 --output /tmp/bench_swarm_medium" \
     2
 
 # Benchmark 5: SPARC mode
 benchmark "SPARC TDD Mode" \
-    "../claude-flow sparc run tdd 'Create add function' --output /tmp/bench_sparc" \
+    "../bin/claude-flow sparc run tdd 'Create add function' --output /tmp/bench_sparc" \
     2
 
 # Benchmark 6: Workflow orchestration
 if [[ -f "./02-workflows/simple/hello-world-workflow.json" ]]; then
     benchmark "Workflow Orchestration" \
-        "../claude-flow orchestrate ./02-workflows/simple/hello-world-workflow.json --output /tmp/bench_workflow" \
+        "../bin/claude-flow orchestrate ./02-workflows/simple/hello-world-workflow.json --output /tmp/bench_workflow" \
         2
 fi
 
@@ -148,7 +148,7 @@ fi
 echo ""
 echo "💾 Resource Usage:"
 MEMORY_BEFORE=$(free -m | awk '/^Mem:/ {print $3}')
-../claude-flow swarm create "Test memory usage" --agents 5 --output /tmp/bench_memory >/dev/null 2>&1 &
+../bin/claude-flow swarm create "Test memory usage" --agents 5 --output /tmp/bench_memory >/dev/null 2>&1 &
 SWARM_PID=$!
 sleep 3
 MEMORY_DURING=$(free -m | awk '/^Mem:/ {print $3}')
@@ -162,7 +162,7 @@ echo "   Estimated memory per swarm: ~${MEMORY_USED}MB"
 echo ""
 echo "🧹 Cleaning up benchmark files..."
 rm -rf /tmp/bench_*
-../claude-flow memory delete bench_key >/dev/null 2>&1
+../bin/claude-flow memory delete bench_key >/dev/null 2>&1
 
 echo ""
 echo "✅ Benchmark complete!"

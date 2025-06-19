@@ -98,12 +98,12 @@ export class SwarmMemoryManager extends EventEmitter {
     this.agentMemories = new Map();
 
     const memoryConfig: MemoryConfig = {
-      backend: "sqlite",  // Use sqlite as default backend
+      backend: "markdown",  // Use markdown as default backend (no external deps)
       cacheSizeMB: 100,
       syncInterval: 30000,
       conflictResolution: "last-write",
       retentionDays: 30,
-      sqlitePath: path.join(this.config.persistencePath, "swarm.db"),
+      sqlitePath: path.join(this.config.persistencePath, "memory"),
     };
 
     const eventBus = EventBus.getInstance();

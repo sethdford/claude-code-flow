@@ -416,7 +416,7 @@ export class ConfigManager {
           destination: "file",
         },
         memory: {
-          backend: "sqlite",
+          backend: "markdown",
           cacheSizeMB: 500,
           syncInterval: 10000,
           conflictResolution: "timestamp",

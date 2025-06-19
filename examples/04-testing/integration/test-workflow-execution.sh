@@ -47,7 +47,7 @@ test_step "Workflow file exists" "[[ -f '$WORKFLOW_FILE' ]]"
 # Test 2: Execute workflow
 echo ""
 echo "🚀 Executing workflow..."
-if ../claude-flow orchestrate "$WORKFLOW_FILE" --output "$OUTPUT_DIR" --quiet; then
+if ../bin/claude-flow orchestrate "$WORKFLOW_FILE" --output "$OUTPUT_DIR" --quiet; then
     test_step "Workflow execution" "true"
 else
     test_step "Workflow execution" "false"
@@ -71,8 +71,8 @@ test_step "Agent logs created" "[[ -d '$OUTPUT_DIR/logs' ]] || [[ -f '$OUTPUT_DI
 echo ""
 echo "🧠 Testing memory persistence..."
 MEMORY_KEY="workflow_test_$TEST_ID"
-../claude-flow memory store "$MEMORY_KEY" "Workflow test data" >/dev/null 2>&1
-test_step "Memory storage during workflow" "../claude-flow memory query '$MEMORY_KEY' >/dev/null 2>&1"
+../bin/claude-flow memory store "$MEMORY_KEY" "Workflow test data" >/dev/null 2>&1
+test_step "Memory storage during workflow" "../bin/claude-flow memory query '$MEMORY_KEY' >/dev/null 2>&1"
 
 # Test 8: Parallel workflow test
 echo ""
@@ -80,7 +80,7 @@ echo "⚡ Testing parallel execution..."
 PARALLEL_WORKFLOW="./02-workflows/parallel/data-processing-workflow.json"
 if [[ -f "$PARALLEL_WORKFLOW" ]]; then
     PARALLEL_OUTPUT="$OUTPUT_DIR/parallel"
-    ../claude-flow orchestrate "$PARALLEL_WORKFLOW" --output "$PARALLEL_OUTPUT" --monitor --quiet &
+    ../bin/claude-flow orchestrate "$PARALLEL_WORKFLOW" --output "$PARALLEL_OUTPUT" --monitor --quiet &
     PID=$!
     
     # Give it time to start
@@ -103,7 +103,7 @@ echo ""
 echo "🛡️ Testing error handling..."
 INVALID_WORKFLOW="/tmp/invalid_workflow_$TEST_ID.json"
 echo '{"invalid": "workflow"}' > "$INVALID_WORKFLOW"
-if ! ../claude-flow orchestrate "$INVALID_WORKFLOW" --output "$OUTPUT_DIR/error" 2>/dev/null; then
+if ! ../bin/claude-flow orchestrate "$INVALID_WORKFLOW" --output "$OUTPUT_DIR/error" 2>/dev/null; then
     test_step "Invalid workflow rejection" "true"
 else
     test_step "Invalid workflow rejection" "false"
@@ -143,7 +143,7 @@ echo "📈 Success Rate: $(( PASSED * 100 / (PASSED + FAILED) ))%"
 echo ""
 echo "🧹 Cleaning up test artifacts..."
 rm -rf "$OUTPUT_DIR"
-../claude-flow memory delete "$MEMORY_KEY" >/dev/null 2>&1
+../bin/claude-flow memory delete "$MEMORY_KEY" >/dev/null 2>&1
 
 # Exit code
 [[ $FAILED -eq 0 ]] && exit 0 || exit 1
