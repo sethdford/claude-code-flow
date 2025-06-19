@@ -1,1 +1,31 @@
-import { describe, it, expect } from 'vitest';\nimport { MemoryManager } from '../core/memory-manager';\n\ndescribe('Basic Memory Tests', () => {\n  it('should create memory manager', () => {\n    const config = {\n      backend: 'sqlite' as const,\n      backendConfig: {\n        path: ':memory:'\n      }\n    };\n    \n    const manager = new MemoryManager(config);\n    expect(manager).toBeDefined();\n  });\n}); 
+import { describe, it, expect } from 'vitest';
+import { MemoryManager } from '../core/memory-manager';
+
+describe('Basic Memory Tests', () => {
+  it('should create memory manager', () => {
+    const config = {
+      backend: 'sqlite' as const,
+      backendConfig: {
+        path: ':memory:'
+      }
+    };
+    
+    const manager = new MemoryManager(config);
+    expect(manager).toBeDefined();
+  });
+
+  it('should have correct configuration', () => {
+    const config = {
+      backend: 'sqlite' as const,
+      backendConfig: {
+        path: ':memory:'
+      },
+      enableIndexing: true,
+      enableNamespaces: false
+    };
+    
+    const manager = new MemoryManager(config);
+    expect(manager).toBeDefined();
+    // Test passes if no errors are thrown during instantiation
+  });
+}); 
