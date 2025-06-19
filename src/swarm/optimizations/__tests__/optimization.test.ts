@@ -140,14 +140,6 @@ describe('Swarm Optimizations', () => {
     
     beforeEach(() => {
       fileManager = new AsyncFileManager();
-      
-      // Mock fs operations
-      jest.mock('node:fs/promises', () => ({
-        writeFile: jest.fn().mockResolvedValue(undefined),
-        readFile: jest.fn().mockResolvedValue('{"id":1,"name":"test","values":[1,2,3]}'),
-        stat: jest.fn().mockResolvedValue({ size: 100 }),
-        mkdir: jest.fn().mockResolvedValue(undefined),
-      }));
     });
     
     afterEach(() => {
@@ -156,12 +148,6 @@ describe('Swarm Optimizations', () => {
     
     it('should handle concurrent write operations', async () => {
       const writes = [];
-      
-      // Mock the file system operations for testing
-      const fs = require('node:fs/promises');
-      jest.spyOn(fs, 'writeFile').mockResolvedValue(undefined);
-      jest.spyOn(fs, 'stat').mockResolvedValue({ size: 100 });
-      jest.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
       
       // Queue multiple writes
       for (let i = 0; i < 5; i++) {
@@ -183,12 +169,9 @@ describe('Swarm Optimizations', () => {
       const testData = { id: 1, name: 'test', values: [1, 2, 3] };
       const path = `${testDir}/test.json`;
       
-      // Mock the file system operations
+      // Update the mock to return proper JSON for this test
       const fs = require('node:fs/promises');
-      jest.spyOn(fs, 'writeFile').mockResolvedValue(undefined);
-      jest.spyOn(fs, 'readFile').mockResolvedValue(JSON.stringify(testData));
-      jest.spyOn(fs, 'stat').mockResolvedValue({ size: 100 });
-      jest.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
+      (fs.readFile as jest.MockedFunction<typeof fs.readFile>).mockResolvedValueOnce(JSON.stringify(testData));
       
       const writeResult = await fileManager.writeJSON(path, testData);
       expect(writeResult.success).toBe(true);
@@ -260,24 +243,6 @@ describe('Swarm Optimizations', () => {
     let executor: OptimizedExecutor;
     
     beforeEach(() => {
-      // Mock the ClaudeConnectionPool execute method
-      jest.mock('../connection-pool', () => ({
-        ClaudeConnectionPool: jest.fn().mockImplementation(() => ({
-          execute: jest.fn().mockResolvedValue({
-            success: true,
-            output: 'Test output',
-            usage: { inputTokens: 10, outputTokens: 20 }
-          }),
-          drain: jest.fn().mockResolvedValue(undefined),
-          getStats: jest.fn().mockReturnValue({
-            total: 2,
-            inUse: 0,
-            available: 2,
-            waiting: 0
-          })
-        }))
-      }));
-      
       executor = new OptimizedExecutor({
         connectionPool: { min: 1, max: 2 },
         concurrency: 2,
@@ -294,6 +259,13 @@ describe('Swarm Optimizations', () => {
           })
         };
         return callback(mockApi);
+      });
+      pool.drain = jest.fn().mockResolvedValue(undefined);
+      pool.getStats = jest.fn().mockReturnValue({
+        total: 2,
+        inUse: 0,
+        available: 2,
+        waiting: 0
       });
     });
     
