@@ -2,7 +2,7 @@
  * SPARC Memory Bank - Cache Tests
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from 'vitest';
 import { MemoryCache } from '../cache/memory-cache';
 import { MemoryItem } from '../types';
 

@@ -41,8 +41,8 @@ export class ReplicationManager extends EventEmitter {
   private nodeClients: Map<string, AxiosInstance> = new Map();
   private nodeStatus: Map<string, NodeStatus> = new Map();
   private replicationQueue: ReplicationMessage[] = [];
-  private syncInterval?: NodeJS.Timer;
-  private healthCheckInterval?: NodeJS.Timer;
+  private syncInterval?: NodeJS.Timeout;
+  private healthCheckInterval?: NodeJS.Timeout;
   private stats: ReplicationStats;
   private isReplicating: boolean = false;
 
@@ -458,18 +458,18 @@ export class ReplicationManager extends EventEmitter {
 
     // Find items to pull from remote
     const toPull: MemoryItem[] = [];
-    for (const [key, remoteItem] of remoteMap) {
-      const localItem = localMap.get(key);
+    for (const [keyStr, remoteItem] of remoteMap) {
+      const localItem = localMap.get(keyStr as string);
       
-      if (!localItem || this.shouldPullRemote(localItem, remoteItem)) {
-        toPull.push(remoteItem);
+      if (remoteItem && (!localItem || this.shouldPullRemote(localItem, remoteItem as MemoryItem))) {
+        toPull.push(remoteItem as MemoryItem);
       }
     }
 
     // Find items to push to remote
     const toPush: MemoryItem[] = [];
-    for (const [key, localItem] of localMap) {
-      const remoteItem = remoteMap.get(key);
+    for (const [keyStr, localItem] of localMap) {
+      const remoteItem = remoteMap.get(keyStr as string) as MemoryItem | undefined;
       
       if (!remoteItem || this.shouldPushLocal(localItem, remoteItem)) {
         toPush.push(localItem);

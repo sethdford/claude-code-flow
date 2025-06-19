@@ -2,7 +2,7 @@
  * SPARC Memory Bank - Memory Manager Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MemoryManager } from '../core/memory-manager';
 import { MemoryItem } from '../types';
 import * as fs from 'fs/promises';

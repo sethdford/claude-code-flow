@@ -22,10 +22,10 @@ interface VectorIndex {
 
 export class MemoryIndexer extends EventEmitter {
   private backend: MemoryBackend;
-  private index: Index;
+  private indexData: Index;
   private config: IndexConfig;
   private updateQueue: Set<string> = new Set();
-  private updateInterval?: NodeJS.Timer;
+  private updateInterval?: NodeJS.Timeout;
   private isIndexing: boolean = false;
 
   constructor(config: IndexConfig) {
@@ -33,7 +33,7 @@ export class MemoryIndexer extends EventEmitter {
     this.config = config;
     this.backend = config.backend;
     
-    this.index = {
+    this.indexData = {
       byCategory: new Map(),
       byTag: new Map(),
       byNamespace: new Map(),
@@ -41,7 +41,7 @@ export class MemoryIndexer extends EventEmitter {
     };
 
     if (config.enableVectorSearch) {
-      this.index.vectors = {
+      this.indexData.vectors = {
         dimensions: config.vectorDimensions || 384,
         vectors: new Map(),
         metadata: new Map()
@@ -71,27 +71,27 @@ export class MemoryIndexer extends EventEmitter {
     const id = `${item.category}:${item.key}`;
 
     // Update category index
-    if (!this.index.byCategory.has(item.category)) {
-      this.index.byCategory.set(item.category, new Set());
+    if (!this.indexData.byCategory.has(item.category)) {
+      this.indexData.byCategory.set(item.category, new Set());
     }
-    this.index.byCategory.get(item.category)!.add(id);
+    this.indexData.byCategory.get(item.category)!.add(id);
 
     // Update tag index
     if (item.metadata?.tags) {
       for (const tag of item.metadata.tags) {
-        if (!this.index.byTag.has(tag)) {
-          this.index.byTag.set(tag, new Set());
+        if (!this.indexData.byTag.has(tag)) {
+          this.indexData.byTag.set(tag, new Set());
         }
-        this.index.byTag.get(tag)!.add(id);
+        this.indexData.byTag.get(tag)!.add(id);
       }
     }
 
     // Update namespace index
     const namespace = item.metadata?.namespace || 'default';
-    if (!this.index.byNamespace.has(namespace)) {
-      this.index.byNamespace.set(namespace, new Set());
+    if (!this.indexData.byNamespace.has(namespace)) {
+      this.indexData.byNamespace.set(namespace, new Set());
     }
-    this.index.byNamespace.get(namespace)!.add(id);
+    this.indexData.byNamespace.get(namespace)!.add(id);
 
     // Update timestamp index
     if (item.metadata?.timestamp) {
@@ -99,12 +99,12 @@ export class MemoryIndexer extends EventEmitter {
     }
 
     // Update vector index
-    if (this.index.vectors && item.vectorEmbedding) {
-      this.index.vectors.vectors.set(
+    if (this.indexData.vectors && item.vectorEmbedding) {
+      this.indexData.vectors.vectors.set(
         id,
         new Float32Array(item.vectorEmbedding)
       );
-      this.index.vectors.metadata.set(id, {
+      this.indexData.vectors.metadata.set(id, {
         category: item.category,
         key: item.key
       });
@@ -125,39 +125,39 @@ export class MemoryIndexer extends EventEmitter {
     const id = `${category}:${key}`;
 
     // Remove from category index
-    const categorySet = this.index.byCategory.get(category);
+    const categorySet = this.indexData.byCategory.get(category);
     if (categorySet) {
       categorySet.delete(id);
       if (categorySet.size === 0) {
-        this.index.byCategory.delete(category);
+        this.indexData.byCategory.delete(category);
       }
     }
 
     // Remove from tag index
-    for (const [tag, tagSet] of this.index.byTag) {
+    for (const [tag, tagSet] of this.indexData.byTag) {
       tagSet.delete(id);
       if (tagSet.size === 0) {
-        this.index.byTag.delete(tag);
+        this.indexData.byTag.delete(tag);
       }
     }
 
     // Remove from namespace index
-    for (const [ns, nsSet] of this.index.byNamespace) {
+    for (const [ns, nsSet] of this.indexData.byNamespace) {
       nsSet.delete(id);
       if (nsSet.size === 0) {
-        this.index.byNamespace.delete(ns);
+        this.indexData.byNamespace.delete(ns);
       }
     }
 
     // Remove from timestamp index
-    this.index.byTimestamp = this.index.byTimestamp.filter(
+    this.indexData.byTimestamp = this.indexData.byTimestamp.filter(
       entry => entry.id !== id
     );
 
     // Remove from vector index
-    if (this.index.vectors) {
-      this.index.vectors.vectors.delete(id);
-      this.index.vectors.metadata.delete(id);
+    if (this.indexData.vectors) {
+      this.indexData.vectors.vectors.delete(id);
+      this.indexData.vectors.metadata.delete(id);
     }
 
     this.emit('removed', { category, key });
@@ -167,7 +167,7 @@ export class MemoryIndexer extends EventEmitter {
    * Perform vector search
    */
   async vectorSearch(query: MemoryQuery): Promise<MemoryItem[]> {
-    if (!query.vectorSearch || !this.index.vectors) {
+    if (!query.vectorSearch || !this.indexData.vectors) {
       return [];
     }
 
@@ -175,14 +175,14 @@ export class MemoryIndexer extends EventEmitter {
     const results: VectorSearchResult[] = [];
 
     // Calculate similarity scores
-    for (const [id, vector] of this.index.vectors.vectors) {
+    for (const [id, vector] of this.indexData.vectors.vectors) {
       const score = this.cosineSimilarity(queryVector, vector);
       
       if (query.vectorSearch.threshold && score < query.vectorSearch.threshold) {
         continue;
       }
 
-      const metadata = this.index.vectors.metadata.get(id);
+      const metadata = this.indexData.vectors.metadata.get(id);
       if (metadata) {
         results.push({
           item: null as any, // Will be populated below
@@ -225,7 +225,7 @@ export class MemoryIndexer extends EventEmitter {
     // Filter by category
     if (query.categories && query.categories.length > 0) {
       for (const category of query.categories) {
-        const categoryIds = this.index.byCategory.get(category);
+        const categoryIds = this.indexData.byCategory.get(category);
         if (categoryIds) {
           if (!initialized) {
             candidates = new Set(categoryIds);
@@ -244,7 +244,7 @@ export class MemoryIndexer extends EventEmitter {
     if (query.tags && query.tags.length > 0) {
       const tagSets: Set<string>[] = [];
       for (const tag of query.tags) {
-        const tagIds = this.index.byTag.get(tag);
+        const tagIds = this.indexData.byTag.get(tag);
         if (tagIds) {
           tagSets.push(tagIds);
         }
@@ -265,7 +265,7 @@ export class MemoryIndexer extends EventEmitter {
 
     // Filter by namespace
     if (query.namespace) {
-      const namespaceIds = this.index.byNamespace.get(query.namespace);
+      const namespaceIds = this.indexData.byNamespace.get(query.namespace);
       if (namespaceIds) {
         if (!initialized) {
           candidates = new Set(namespaceIds);
@@ -280,7 +280,7 @@ export class MemoryIndexer extends EventEmitter {
 
     // If no filters applied, use all items
     if (!initialized) {
-      for (const categoryIds of this.index.byCategory.values()) {
+      for (const categoryIds of this.indexData.byCategory.values()) {
         for (const id of categoryIds) {
           candidates.add(id);
         }
@@ -294,7 +294,7 @@ export class MemoryIndexer extends EventEmitter {
    * Check if vector search is supported
    */
   supportsVectorSearch(): boolean {
-    return !!this.index.vectors;
+    return !!this.indexData.vectors;
   }
 
   /**
@@ -302,11 +302,11 @@ export class MemoryIndexer extends EventEmitter {
    */
   getStats(): any {
     return {
-      categories: this.index.byCategory.size,
-      tags: this.index.byTag.size,
-      namespaces: this.index.byNamespace.size,
-      timestamps: this.index.byTimestamp.length,
-      vectors: this.index.vectors ? this.index.vectors.vectors.size : 0,
+      categories: this.indexData.byCategory.size,
+      tags: this.indexData.byTag.size,
+      namespaces: this.indexData.byNamespace.size,
+      timestamps: this.indexData.byTimestamp.length,
+      vectors: this.indexData.vectors ? this.indexData.vectors.vectors.size : 0,
       updateQueueSize: this.updateQueue.size
     };
   }
@@ -335,14 +335,14 @@ export class MemoryIndexer extends EventEmitter {
     this.emit('rebuild-start');
 
     // Clear existing indexes
-    this.index.byCategory.clear();
-    this.index.byTag.clear();
-    this.index.byNamespace.clear();
-    this.index.byTimestamp = [];
+    this.indexData.byCategory.clear();
+    this.indexData.byTag.clear();
+    this.indexData.byNamespace.clear();
+    this.indexData.byTimestamp = [];
     
-    if (this.index.vectors) {
-      this.index.vectors.vectors.clear();
-      this.index.vectors.metadata.clear();
+    if (this.indexData.vectors) {
+      this.indexData.vectors.vectors.clear();
+      this.indexData.vectors.metadata.clear();
     }
 
     // Query all items from backend
@@ -389,20 +389,20 @@ export class MemoryIndexer extends EventEmitter {
    */
   private updateTimestampIndex(id: string, timestamp: number): void {
     // Remove existing entry
-    this.index.byTimestamp = this.index.byTimestamp.filter(
+    this.indexData.byTimestamp = this.indexData.byTimestamp.filter(
       entry => entry.id !== id
     );
 
     // Add new entry
-    this.index.byTimestamp.push({ id, timestamp });
+    this.indexData.byTimestamp.push({ id, timestamp });
 
     // Keep sorted by timestamp
-    this.index.byTimestamp.sort((a, b) => a.timestamp - b.timestamp);
+    this.indexData.byTimestamp.sort((a, b) => a.timestamp - b.timestamp);
 
     // Limit size to prevent unbounded growth
     const maxSize = 10000;
-    if (this.index.byTimestamp.length > maxSize) {
-      this.index.byTimestamp = this.index.byTimestamp.slice(-maxSize);
+    if (this.indexData.byTimestamp.length > maxSize) {
+      this.indexData.byTimestamp = this.indexData.byTimestamp.slice(-maxSize);
     }
   }
 
@@ -454,7 +454,7 @@ export class MemoryIndexer extends EventEmitter {
     // This is a placeholder - in production, you would use a real embedding model
     // like OpenAI's text-embedding-ada-002 or a local model
     
-    const dimensions = this.index.vectors?.dimensions || 384;
+    const dimensions = this.indexData.vectors?.dimensions || 384;
     const embedding = new Array(dimensions);
     
     // Simple hash-based pseudo-embedding for demonstration

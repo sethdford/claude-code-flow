@@ -2,7 +2,7 @@
  * SPARC Memory Bank - Namespace Manager Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from 'vitest';
 import { NamespaceManager } from '../namespaces/namespace-manager';
 import { SqliteBackend } from '../backends/sqlite-backend';
 import { MemoryNamespace } from '../types';

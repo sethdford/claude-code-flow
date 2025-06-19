@@ -124,6 +124,9 @@ export class MemoryManager extends EventEmitter {
 
     // Apply namespace if manager is enabled
     if (this.namespaceManager && namespace) {
+      if (!fullItem.metadata) {
+        fullItem.metadata = {};
+      }
       fullItem.metadata.namespace = namespace;
     }
 
@@ -445,7 +448,7 @@ class CRDTConflictResolution implements ConflictResolution {
       ...existing.metadata,
       ...incoming.metadata,
       mergedAt: Date.now(),
-      mergedFrom: [existing.metadata?.nodeId, incoming.metadata?.nodeId]
+      mergedFrom: [existing.metadata?.nodeId || '', incoming.metadata?.nodeId || ''].filter(id => id)
     };
     
     return merged;

@@ -311,7 +311,12 @@ export class NamespaceManager extends EventEmitter {
       id: targetId,
       name: targetName,
       description: `Cloned from ${source.name}`,
-      permissions: { ...source.permissions },
+      permissions: source.permissions ? { 
+        read: source.permissions.read || [],
+        write: source.permissions.write || [],
+        delete: source.permissions.delete || [],
+        admin: source.permissions.admin || []
+      } : undefined,
       metadata: {
         ...source.metadata,
         clonedFrom: sourceId,
@@ -386,7 +391,7 @@ export class NamespaceManager extends EventEmitter {
           metadata: {
             ...item.metadata,
             namespace: targetId,
-            mergedFrom: sourceId
+            mergedFrom: [sourceId]
           }
         };
 

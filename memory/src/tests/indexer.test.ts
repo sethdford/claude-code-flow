@@ -2,7 +2,7 @@
  * SPARC Memory Bank - Indexer Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from 'vitest';
 import { MemoryIndexer } from '../indexer/memory-indexer';
 import { SqliteBackend } from '../backends/sqlite-backend';
 import { MemoryItem } from '../types';

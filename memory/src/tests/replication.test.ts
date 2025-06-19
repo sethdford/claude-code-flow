@@ -2,7 +2,7 @@
  * SPARC Memory Bank - Replication Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from 'vitest';
 import { ReplicationManager } from '../replication/replication-manager';
 import { SqliteBackend } from '../backends/sqlite-backend';
 import { MemoryItem, ReplicationConfig } from '../types';
