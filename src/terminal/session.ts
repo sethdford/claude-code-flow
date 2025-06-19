@@ -2,11 +2,11 @@
  * Terminal session management
  */
 
-import { Terminal } from './adapters/base.js';
-import { AgentProfile } from '../utils/types.js';
-import { ILogger } from '../core/logger.js';
-import { TerminalCommandError } from '../utils/errors.js';
-import { generateId, timeout } from '../utils/helpers.js';
+import { Terminal } from "./adapters/base.js";
+import { AgentProfile } from "../utils/types.js";
+import { ILogger } from "../core/logger.js";
+import { TerminalCommandError } from "../utils/errors.js";
+import { generateId, timeout } from "../utils/helpers.js";
 
 /**
  * Terminal session wrapper
@@ -25,7 +25,7 @@ export class TerminalSession {
     private commandTimeout: number,
     private logger: ILogger,
   ) {
-    this.id = generateId('session');
+    this.id = generateId("session");
     this.startTime = new Date();
   }
 
@@ -38,7 +38,7 @@ export class TerminalSession {
       return;
     }
 
-    this.logger.debug('Initializing terminal session', { 
+    this.logger.debug("Initializing terminal session", { 
       sessionId: this.id,
       agentId: this.profile.id,
     });
@@ -52,26 +52,26 @@ export class TerminalSession {
 
       this.initialized = true;
       
-      this.logger.info('Terminal session initialized', { 
+      this.logger.info("Terminal session initialized", { 
         sessionId: this.id,
         agentId: this.profile.id,
       });
     } catch (error) {
-      this.logger.error('Failed to initialize terminal session', error);
+      this.logger.error("Failed to initialize terminal session", error);
       throw error;
     }
   }
 
   async executeCommand(command: string): Promise<string> {
     if (!this.initialized) {
-      throw new TerminalCommandError('Session not initialized');
+      throw new TerminalCommandError("Session not initialized");
     }
 
     if (!this.terminal.isAlive()) {
-      throw new TerminalCommandError('Terminal is not alive');
+      throw new TerminalCommandError("Terminal is not alive");
     }
 
-    this.logger.debug('Executing command', { 
+    this.logger.debug("Executing command", { 
       sessionId: this.id,
       command: command.substring(0, 100),
     });
@@ -94,19 +94,19 @@ export class TerminalSession {
       this.commandHistory.push(command);
       this.lastCommandTime = new Date();
 
-      this.logger.debug('Command executed successfully', { 
+      this.logger.debug("Command executed successfully", { 
         sessionId: this.id,
         outputLength: result.length,
       });
 
       return result;
     } catch (error) {
-      this.logger.error('Command execution failed', { 
+      this.logger.error("Command execution failed", { 
         sessionId: this.id,
         command,
         error,
       });
-      throw new TerminalCommandError('Command execution failed', { 
+      throw new TerminalCommandError("Command execution failed", { 
         command,
         error,
       });
@@ -114,13 +114,13 @@ export class TerminalSession {
   }
 
   async cleanup(): Promise<void> {
-    this.logger.debug('Cleaning up terminal session', { sessionId: this.id });
+    this.logger.debug("Cleaning up terminal session", { sessionId: this.id });
 
     try {
       // Run cleanup commands
       await this.runCleanupCommands();
     } catch (error) {
-      this.logger.warn('Error during session cleanup', { 
+      this.logger.warn("Error during session cleanup", { 
         sessionId: this.id,
         error,
       });
@@ -138,7 +138,7 @@ export class TerminalSession {
       if (timeSinceLastCommand > 300000) { // 5 minutes
         // Terminal might be stale, do a health check
         this.performHealthCheck().catch((error) => {
-          this.logger.warn('Health check failed', { sessionId: this.id, error });
+          this.logger.warn("Health check failed", { sessionId: this.id, error });
         });
       }
     }
@@ -202,11 +202,11 @@ export class TerminalSession {
       const result = await timeout(
         this.terminal.executeCommand('echo "HEALTH_CHECK_OK"'),
         5000,
-        'Health check timeout',
+        "Health check timeout",
       );
 
-      if (!result.includes('HEALTH_CHECK_OK')) {
-        throw new Error('Invalid health check response');
+      if (!result.includes("HEALTH_CHECK_OK")) {
+        throw new Error("Invalid health check response");
       }
 
       this.lastCommandTime = new Date();
@@ -243,7 +243,7 @@ export class TerminalSession {
       try {
         listener(output);
       } catch (error) {
-        this.logger.error('Error in output listener', { sessionId: this.id, error });
+        this.logger.error("Error in output listener", { sessionId: this.id, error });
       }
     });
   }

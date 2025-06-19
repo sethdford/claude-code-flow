@@ -15,22 +15,22 @@ import {
   MCPProtocolVersion,
   MCPCapabilities,
   MCPContext,
-} from '../utils/types.js';
-import { IEventBus } from '../core/event-bus.js';
-import { ILogger } from '../core/logger.js';
-import { MCPError as MCPErrorClass, MCPMethodNotFoundError } from '../utils/errors.js';
-import { ITransport } from './transports/base.js';
-import { StdioTransport } from './transports/stdio.js';
-import { HttpTransport } from './transports/http.js';
-import { ToolRegistry } from './tools.js';
-import { RequestRouter } from './router.js';
-import { SessionManager, ISessionManager } from './session-manager.js';
-import { AuthManager, IAuthManager } from './auth.js';
-import { LoadBalancer, ILoadBalancer, RequestQueue } from './load-balancer.js';
-import { createClaudeFlowTools, ClaudeFlowToolContext } from './claude-flow-tools.js';
-import { createSwarmTools, SwarmToolContext } from './swarm-tools.js';
-import { platform, arch } from 'node:os';
-import { performance } from 'node:perf_hooks';
+} from "../utils/types.js";
+import { IEventBus } from "../core/event-bus.js";
+import { ILogger } from "../core/logger.js";
+import { MCPError as MCPErrorClass, MCPMethodNotFoundError } from "../utils/errors.js";
+import { ITransport } from "./transports/base.js";
+import { StdioTransport } from "./transports/stdio.js";
+import { HttpTransport } from "./transports/http.js";
+import { ToolRegistry } from "./tools.js";
+import { RequestRouter } from "./router.js";
+import { SessionManager, ISessionManager } from "./session-manager.js";
+import { AuthManager, IAuthManager } from "./auth.js";
+import { LoadBalancer, ILoadBalancer, RequestQueue } from "./load-balancer.js";
+import { createClaudeFlowTools, ClaudeFlowToolContext } from "./claude-flow-tools.js";
+// import { createSwarmTools, SwarmToolContext } from './swarm-tools.js'; // File missing, temporarily disabled
+import { platform, arch } from "node:os";
+import { performance } from "node:perf_hooks";
 
 export interface IMCPServer {
   start(): Promise<void>;
@@ -62,8 +62,8 @@ export class MCPServer implements IMCPServer {
   private currentSession?: MCPSession | undefined;
 
   private readonly serverInfo = {
-    name: 'Claude-Flow MCP Server',
-    version: '1.0.0',
+    name: "Claude-Flow MCP Server",
+    version: "1.0.0",
   };
 
   private readonly supportedProtocolVersion: MCPProtocolVersion = {
@@ -74,7 +74,7 @@ export class MCPServer implements IMCPServer {
 
   private readonly serverCapabilities: MCPCapabilities = {
     logging: {
-      level: 'info',
+      level: "info",
     },
     tools: {
       listChanged: true,
@@ -92,12 +92,12 @@ export class MCPServer implements IMCPServer {
     private config: MCPConfig,
     private eventBus: IEventBus,
     private logger: ILogger,
-    private orchestrator?: any, // Reference to orchestrator instance
-    private swarmCoordinator?: any, // Reference to swarm coordinator instance
-    private agentManager?: any, // Reference to agent manager instance
-    private resourceManager?: any, // Reference to resource manager instance
-    private messagebus?: any, // Reference to message bus instance
-    private monitor?: any, // Reference to real-time monitor instance
+    private orchestrator?: unknown, // Reference to orchestrator instance
+    private swarmCoordinator?: unknown, // Reference to swarm coordinator instance
+    private agentManager?: unknown, // Reference to agent manager instance
+    private resourceManager?: unknown, // Reference to resource manager instance
+    private messagebus?: unknown, // Reference to message bus instance
+    private monitor?: unknown, // Reference to real-time monitor instance
   ) {
     // Initialize transport
     this.transport = this.createTransport();
@@ -109,7 +109,7 @@ export class MCPServer implements IMCPServer {
     this.sessionManager = new SessionManager(config, logger);
     
     // Initialize auth manager
-    this.authManager = new AuthManager(config.auth || { enabled: false, method: 'token' }, logger);
+    this.authManager = new AuthManager(config.auth || { enabled: false, method: "token" }, logger);
     
     // Initialize load balancer if enabled
     if (config.loadBalancer?.enabled) {
@@ -123,10 +123,10 @@ export class MCPServer implements IMCPServer {
 
   async start(): Promise<void> {
     if (this.running) {
-      throw new MCPErrorClass('MCP server already running');
+      throw new MCPErrorClass("MCP server already running");
     }
 
-    this.logger.info('Starting MCP server', { transport: this.config.transport });
+    this.logger.info("Starting MCP server", { transport: this.config.transport });
 
     try {
       // Set up request handler
@@ -141,10 +141,10 @@ export class MCPServer implements IMCPServer {
       this.registerBuiltInTools();
 
       this.running = true;
-      this.logger.info('MCP server started successfully');
+      this.logger.info("MCP server started successfully");
     } catch (error) {
-      this.logger.error('Failed to start MCP server', error);
-      throw new MCPErrorClass('Failed to start MCP server', { error });
+      this.logger.error("Failed to start MCP server", error);
+      throw new MCPErrorClass("Failed to start MCP server", { error });
     }
   }
 
@@ -153,14 +153,14 @@ export class MCPServer implements IMCPServer {
       return;
     }
 
-    this.logger.info('Stopping MCP server');
+    this.logger.info("Stopping MCP server");
 
     try {
       // Stop transport
       await this.transport.stop();
 
       // Clean up session manager
-      if (this.sessionManager && 'destroy' in this.sessionManager) {
+      if (this.sessionManager && "destroy" in this.sessionManager) {
         (this.sessionManager as any).destroy();
       }
 
@@ -171,16 +171,16 @@ export class MCPServer implements IMCPServer {
 
       this.running = false;
       this.currentSession = undefined;
-      this.logger.info('MCP server stopped');
+      this.logger.info("MCP server stopped");
     } catch (error) {
-      this.logger.error('Error stopping MCP server', error);
+      this.logger.error("Error stopping MCP server", error);
       throw error;
     }
   }
 
   registerTool(tool: MCPTool): void {
     this.toolRegistry.register(tool);
-    this.logger.info('Tool registered', { name: tool.name });
+    this.logger.info("Tool registered", { name: tool.name });
   }
 
   async getHealthStatus(): Promise<{ 
@@ -225,7 +225,7 @@ export class MCPServer implements IMCPServer {
     } catch (error) {
       return {
         healthy: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -263,14 +263,14 @@ export class MCPServer implements IMCPServer {
   }
 
   private async handleRequest(request: MCPRequest): Promise<MCPResponse> {
-    this.logger.debug('Handling MCP request', { 
+    this.logger.debug("Handling MCP request", { 
       id: request.id,
       method: request.method,
     });
 
     try {
       // Handle initialization request separately
-      if (request.method === 'initialize') {
+      if (request.method === "initialize") {
         return await this.handleInitialize(request);
       }
 
@@ -280,11 +280,11 @@ export class MCPServer implements IMCPServer {
       // Check if session is initialized for non-initialize requests
       if (!session.isInitialized) {
         return {
-          jsonrpc: '2.0',
+          jsonrpc: "2.0",
           id: request.id,
           error: {
             code: -32002,
-            message: 'Server not initialized',
+            message: "Server not initialized",
           },
         };
       }
@@ -297,11 +297,11 @@ export class MCPServer implements IMCPServer {
         const allowed = await this.loadBalancer.shouldAllowRequest(session, request);
         if (!allowed) {
           return {
-            jsonrpc: '2.0',
+            jsonrpc: "2.0",
             id: request.id,
             error: {
               code: -32000,
-              message: 'Rate limit exceeded or circuit breaker open',
+              message: "Rate limit exceeded or circuit breaker open",
             },
           };
         }
@@ -315,7 +315,7 @@ export class MCPServer implements IMCPServer {
         const result = await this.router.route(request);
         
         const response: MCPResponse = {
-          jsonrpc: '2.0',
+          jsonrpc: "2.0",
           id: request.id,
           result,
         };
@@ -334,14 +334,14 @@ export class MCPServer implements IMCPServer {
         throw error;
       }
     } catch (error) {
-      this.logger.error('Error handling MCP request', { 
+      this.logger.error("Error handling MCP request", { 
         id: request.id,
         method: request.method,
         error,
       });
 
       return {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: request.id,
         error: this.errorToMCPError(error),
       };
@@ -354,11 +354,11 @@ export class MCPServer implements IMCPServer {
       
       if (!params) {
         return {
-          jsonrpc: '2.0',
+          jsonrpc: "2.0",
           id: request.id,
           error: {
             code: -32602,
-            message: 'Invalid params',
+            message: "Invalid params",
           },
         };
       }
@@ -375,24 +375,24 @@ export class MCPServer implements IMCPServer {
         protocolVersion: this.supportedProtocolVersion,
         capabilities: this.serverCapabilities,
         serverInfo: this.serverInfo,
-        instructions: 'Claude-Flow MCP Server ready for tool execution',
+        instructions: "Claude-Flow MCP Server ready for tool execution",
       };
 
-      this.logger.info('Session initialized', {
+      this.logger.info("Session initialized", {
         sessionId: session.id,
         clientInfo: params.clientInfo,
         protocolVersion: params.protocolVersion,
       });
 
       return {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: request.id,
         result,
       };
     } catch (error) {
-      this.logger.error('Error during initialization', error);
+      this.logger.error("Error during initialization", error);
       return {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: request.id,
         error: this.errorToMCPError(error),
       };
@@ -412,12 +412,12 @@ export class MCPServer implements IMCPServer {
 
   private createTransport(): ITransport {
     switch (this.config.transport) {
-      case 'stdio':
+      case "stdio":
         return new StdioTransport(this.logger);
       
-      case 'http':
+      case "http":
         return new HttpTransport(
-          this.config.host || 'localhost',
+          this.config.host || "localhost",
           this.config.port || 3000,
           this.config.tlsEnabled || false,
           this.logger,
@@ -431,18 +431,18 @@ export class MCPServer implements IMCPServer {
   private registerBuiltInTools(): void {
     // System information tool
     this.registerTool({
-      name: 'system/info',
-      description: 'Get system information',
+      name: "system/info",
+      description: "Get system information",
       inputSchema: {
-        type: 'object',
+        type: "object",
         properties: {},
       },
       handler: async () => {
         return {
-          version: '1.0.0',
+          version: "1.0.0",
           platform: platform(),
           arch: arch(),
-          runtime: 'Node.js',
+          runtime: "Node.js",
           uptime: performance.now(),
         };
       },
@@ -450,10 +450,10 @@ export class MCPServer implements IMCPServer {
 
     // Health check tool
     this.registerTool({
-      name: 'system/health',
-      description: 'Get system health status',
+      name: "system/health",
+      description: "Get system health status",
       inputSchema: {
-        type: 'object',
+        type: "object",
         properties: {},
       },
       handler: async () => {
@@ -463,10 +463,10 @@ export class MCPServer implements IMCPServer {
 
     // List tools
     this.registerTool({
-      name: 'tools/list',
-      description: 'List all available tools',
+      name: "tools/list",
+      description: "List all available tools",
       inputSchema: {
-        type: 'object',
+        type: "object",
         properties: {},
       },
       handler: async () => {
@@ -476,14 +476,14 @@ export class MCPServer implements IMCPServer {
 
     // Tool schema
     this.registerTool({
-      name: 'tools/schema',
-      description: 'Get schema for a specific tool',
+      name: "tools/schema",
+      description: "Get schema for a specific tool",
       inputSchema: {
-        type: 'object',
+        type: "object",
         properties: {
-          name: { type: 'string' },
+          name: { type: "string" },
         },
-        required: ['name'],
+        required: ["name"],
       },
       handler: async (input: any) => {
         const tool = this.toolRegistry.getTool(input.name);
@@ -517,38 +517,38 @@ export class MCPServer implements IMCPServer {
         this.registerTool(tool);
       }
       
-      this.logger.info('Registered Claude-Flow tools', { count: claudeFlowTools.length });
+      this.logger.info("Registered Claude-Flow tools", { count: claudeFlowTools.length });
     } else {
-      this.logger.warn('Orchestrator not available - Claude-Flow tools not registered');
+      this.logger.warn("Orchestrator not available - Claude-Flow tools not registered");
     }
 
     // Register Swarm-specific tools if swarm components are available
-    if (this.swarmCoordinator || this.agentManager || this.resourceManager) {
-      const swarmTools = createSwarmTools(this.logger);
-      
-      for (const tool of swarmTools) {
-        // Wrap the handler to inject swarm context
-        const originalHandler = tool.handler;
-        tool.handler = async (input: unknown, context?: MCPContext) => {
-          const swarmContext: SwarmToolContext = {
-            ...context,
-            swarmCoordinator: this.swarmCoordinator,
-            agentManager: this.agentManager,
-            resourceManager: this.resourceManager,
-            messageBus: this.messagebus,
-            monitor: this.monitor,
-          } as SwarmToolContext;
-          
-          return await originalHandler(input, swarmContext);
-        };
-        
-        this.registerTool(tool);
-      }
-      
-      this.logger.info('Registered Swarm tools', { count: swarmTools.length });
-    } else {
-      this.logger.warn('Swarm components not available - Swarm tools not registered');
-    }
+    // TODO: Implement swarm-specific tools when swarm-tools.ts is created
+    // Currently using claude-flow-tools which provides basic functionality
+    // if (this.swarmCoordinator || this.agentManager || this.resourceManager) {
+    //   const swarmTools = createSwarmTools(this.logger);
+    //   
+    //   for (const tool of swarmTools) {
+    //     // Wrap the handler to inject swarm context
+    //     const originalHandler = tool.handler;
+    //     tool.handler = async (input: unknown, context?: MCPContext) => {
+    //       const swarmContext: SwarmToolContext = {
+    //         ...context,
+    //         swarmCoordinator: this.swarmCoordinator,
+    //         agentManager: this.agentManager,
+    //         resourceManager: this.resourceManager,
+    //         messageBus: this.messagebus,
+    //         monitor: this.monitor,
+    //       } as SwarmToolContext;
+    //       
+    //       return await originalHandler(input, swarmContext);
+    //     };
+    //     
+    //     this.registerTool(tool);
+    //   }
+    //   
+    //   this.logger.info('Registered Swarm tools', { count: swarmTools.length });
+    // }
   }
 
   private errorToMCPError(error: unknown): MCPError {
@@ -577,7 +577,7 @@ export class MCPServer implements IMCPServer {
 
     return {
       code: -32603,
-      message: 'Internal error',
+      message: "Internal error",
       data: error,
     };
   }

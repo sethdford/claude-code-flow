@@ -1,9 +1,12 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { createHash } from 'crypto';
-import { Worker } from 'worker_threads';
-import { EventEmitter } from 'events';
-import { logger } from '../logger';
+import * as fs from "fs/promises";
+import { createReadStream } from "fs";
+import * as path from "path";
+import { createHash } from "crypto";
+import { Worker } from "worker_threads";
+import { EventEmitter } from "events";
+import { Logger } from "../core/logger.js";
+
+const logger = Logger.getInstance();
 
 export interface CopyOptions {
   source: string;
@@ -17,7 +20,7 @@ export interface CopyOptions {
   parallel?: boolean;
   maxWorkers?: number;
   dryRun?: boolean;
-  conflictResolution?: 'skip' | 'overwrite' | 'backup' | 'merge';
+  conflictResolution?: "skip" | "overwrite" | "backup" | "merge";
   progressCallback?: (progress: CopyProgress) => void;
 }
 
@@ -44,7 +47,7 @@ export interface CopyResult {
 export interface CopyError {
   file: string;
   error: string;
-  phase: 'read' | 'write' | 'verify' | 'backup';
+  phase: "read" | "write" | "verify" | "backup";
 }
 
 export interface FileInfo {
@@ -56,10 +59,10 @@ export interface FileInfo {
 }
 
 export class PromptCopier extends EventEmitter {
-  private options: Required<CopyOptions>;
-  private fileQueue: FileInfo[] = [];
-  private copiedFiles: Set<string> = new Set();
-  private errors: CopyError[] = [];
+  protected options: Required<CopyOptions>;
+  protected fileQueue: FileInfo[] = [];
+  protected copiedFiles: Set<string> = new Set();
+  protected errors: CopyError[] = [];
   private backupMap: Map<string, string> = new Map();
   private rollbackStack: Array<() => Promise<void>> = [];
 
@@ -72,12 +75,12 @@ export class PromptCopier extends EventEmitter {
       verify: options.verify ?? true,
       preservePermissions: options.preservePermissions ?? true,
       excludePatterns: options.excludePatterns ?? [],
-      includePatterns: options.includePatterns ?? ['*.md', '*.txt', '*.prompt', '*.prompts'],
+      includePatterns: options.includePatterns ?? ["*.md", "*.txt", "*.prompt", "*.prompts"],
       parallel: options.parallel ?? true,
       maxWorkers: options.maxWorkers ?? 4,
       dryRun: options.dryRun ?? false,
-      conflictResolution: options.conflictResolution ?? 'backup',
-      progressCallback: options.progressCallback ?? (() => {})
+      conflictResolution: options.conflictResolution ?? "backup",
+      progressCallback: options.progressCallback ?? (() => {}),
     };
   }
 
@@ -86,7 +89,7 @@ export class PromptCopier extends EventEmitter {
     
     try {
       // Phase 1: Discovery
-      logger.info('Starting prompt discovery phase...');
+      logger.info("Starting prompt discovery phase...");
       await this.discoverFiles();
       
       if (this.fileQueue.length === 0) {
@@ -96,7 +99,8 @@ export class PromptCopier extends EventEmitter {
           copiedFiles: 0,
           failedFiles: 0,
           skippedFiles: 0,
-          duration: Date.now() - startTime
+          errors: [],
+          duration: Date.now() - startTime,
         };
       }
 
@@ -126,7 +130,7 @@ export class PromptCopier extends EventEmitter {
         failedFiles: this.errors.length,
         skippedFiles: this.fileQueue.length - this.copiedFiles.size - this.errors.length,
         errors: this.errors,
-        duration
+        duration,
       };
 
       if (this.backupMap.size > 0) {
@@ -137,7 +141,7 @@ export class PromptCopier extends EventEmitter {
       return result;
 
     } catch (error) {
-      logger.error('Copy operation failed', error);
+      logger.error("Copy operation failed", error);
       
       if (!this.options.dryRun) {
         await this.rollback();
@@ -154,7 +158,7 @@ export class PromptCopier extends EventEmitter {
       throw new Error(`Source path ${this.options.source} is not a directory`);
     }
 
-    await this.scanDirectory(this.options.source, '');
+    await this.scanDirectory(this.options.source, "");
     
     // Sort by size for better parallel distribution
     this.fileQueue.sort((a, b) => b.size - a.size);
@@ -175,7 +179,7 @@ export class PromptCopier extends EventEmitter {
           path: fullPath,
           relativePath: relPath,
           size: stats.size,
-          permissions: stats.mode
+          permissions: stats.mode,
         });
       }
     }
@@ -206,9 +210,9 @@ export class PromptCopier extends EventEmitter {
   private matchPattern(filePath: string, pattern: string): boolean {
     // Simple glob pattern matching
     const regex = pattern
-      .replace(/\./g, '\\.')
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.');
+      .replace(/\./g, "\\.")
+      .replace(/\*/g, ".*")
+      .replace(/\?/g, ".");
     
     return new RegExp(regex).test(filePath);
   }
@@ -240,14 +244,14 @@ export class PromptCopier extends EventEmitter {
       } catch (error) {
         this.errors.push({
           file: file.path,
-          error: error.message,
-          phase: 'write'
+          error: error instanceof Error ? error.message : String(error),
+          phase: "write",
         });
       }
     }
   }
 
-  private async copyFilesParallel(): Promise<void> {
+  protected async copyFilesParallel(): Promise<void> {
     const workerCount = Math.min(this.options.maxWorkers, this.fileQueue.length);
     const chunkSize = Math.ceil(this.fileQueue.length / workerCount);
     const workers: Promise<void>[] = [];
@@ -274,8 +278,8 @@ export class PromptCopier extends EventEmitter {
       } catch (error) {
         this.errors.push({
           file: file.path,
-          error: error.message,
-          phase: 'write'
+          error: error instanceof Error ? error.message : String(error),
+          phase: "write",
         });
       }
     }
@@ -294,19 +298,19 @@ export class PromptCopier extends EventEmitter {
     
     if (destExists) {
       switch (this.options.conflictResolution) {
-        case 'skip':
+        case "skip":
           logger.info(`Skipping existing file: ${destPath}`);
           return;
           
-        case 'backup':
+        case "backup":
           await this.backupFile(destPath);
           break;
           
-        case 'merge':
+        case "merge":
           await this.mergeFiles(file.path, destPath);
           return;
           
-        case 'overwrite':
+        case "overwrite":
           // Continue with copy
           break;
       }
@@ -341,10 +345,10 @@ export class PromptCopier extends EventEmitter {
   }
 
   private async backupFile(filePath: string): Promise<void> {
-    const backupDir = path.join(this.options.destination, '.prompt-backups');
+    const backupDir = path.join(this.options.destination, ".prompt-backups");
     await fs.mkdir(backupDir, { recursive: true });
     
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const backupName = `${path.basename(filePath)}.${timestamp}.bak`;
     const backupPath = path.join(backupDir, backupName);
     
@@ -354,18 +358,18 @@ export class PromptCopier extends EventEmitter {
 
   private async mergeFiles(sourcePath: string, destPath: string): Promise<void> {
     // Simple merge strategy: append source to destination with separator
-    const sourceContent = await fs.readFile(sourcePath, 'utf-8');
-    const destContent = await fs.readFile(destPath, 'utf-8');
+    const sourceContent = await fs.readFile(sourcePath, "utf-8");
+    const destContent = await fs.readFile(destPath, "utf-8");
     
-    const separator = '\n\n--- MERGED CONTENT ---\n\n';
+    const separator = "\n\n--- MERGED CONTENT ---\n\n";
     const mergedContent = destContent + separator + sourceContent;
     
     await this.backupFile(destPath);
-    await fs.writeFile(destPath, mergedContent, 'utf-8');
+    await fs.writeFile(destPath, mergedContent, "utf-8");
   }
 
-  private async verifyFiles(): Promise<void> {
-    logger.info('Verifying copied files...');
+  protected async verifyFiles(): Promise<void> {
+    logger.info("Verifying copied files...");
     
     for (const file of this.fileQueue) {
       if (!this.copiedFiles.has(file.path)) continue;
@@ -375,7 +379,7 @@ export class PromptCopier extends EventEmitter {
         
         // Verify file exists
         if (!await this.fileExists(destPath)) {
-          throw new Error('Destination file not found');
+          throw new Error("Destination file not found");
         }
         
         // Verify size
@@ -397,19 +401,23 @@ export class PromptCopier extends EventEmitter {
       } catch (error) {
         this.errors.push({
           file: file.path,
-          error: error.message,
-          phase: 'verify'
+          error: error instanceof Error ? error.message : String(error),
+          phase: "verify",
         });
       }
     }
   }
 
-  private async calculateFileHash(filePath: string): Promise<string> {
-    const content = await fs.readFile(filePath);
-    return createHash('sha256').update(content).digest('hex');
+  protected async calculateFileHash(filePath: string): Promise<string> {
+    const hash = createHash("sha256");
+    const stream = createReadStream(filePath);
+    for await (const chunk of stream) {
+      hash.update(chunk);
+    }
+    return hash.digest("hex");
   }
 
-  private async fileExists(filePath: string): Promise<boolean> {
+  protected async fileExists(filePath: string): Promise<boolean> {
     try {
       await fs.access(filePath);
       return true;
@@ -421,64 +429,38 @@ export class PromptCopier extends EventEmitter {
   private async createBackupManifest(): Promise<string> {
     const manifestPath = path.join(
       this.options.destination,
-      '.prompt-backups',
-      `manifest-${Date.now()}.json`
+      ".prompt-backups",
+      `manifest-${Date.now()}.json`,
     );
     
-    const manifest = {
-      timestamp: new Date().toISOString(),
-      source: this.options.source,
-      destination: this.options.destination,
-      backups: Array.from(this.backupMap.entries()).map(([original, backup]) => ({
-        original,
-        backup
-      }))
-    };
-    
-    await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+    await fs.writeFile(manifestPath, JSON.stringify(Object.fromEntries(this.backupMap), null, 2));
     return manifestPath;
   }
 
   private async rollback(): Promise<void> {
-    logger.warn('Rolling back changes...');
-    
-    // Execute rollback operations in reverse order
+    logger.warn("Rolling back changes...");
     for (let i = this.rollbackStack.length - 1; i >= 0; i--) {
-      try {
-        await this.rollbackStack[i]();
-      } catch (error) {
-        logger.error(`Rollback operation ${i} failed:`, error);
-      }
+      await this.rollbackStack[i]();
     }
-    
-    // Clean up backup directory if empty
-    try {
-      const backupDir = path.join(this.options.destination, '.prompt-backups');
-      const entries = await fs.readdir(backupDir);
-      if (entries.length === 0) {
-        await fs.rmdir(backupDir);
-      }
-    } catch {
-      // Ignore cleanup errors
-    }
+    this.rollbackStack = [];
+    logger.info("Rollback complete.");
   }
 
-  private reportProgress(completed: number): void {
+  protected reportProgress(completed: number): void {
     const progress: CopyProgress = {
       total: this.fileQueue.length,
       completed,
       failed: this.errors.length,
       skipped: this.fileQueue.length - completed - this.errors.length,
-      percentage: Math.round((completed / this.fileQueue.length) * 100)
+      percentage: this.fileQueue.length > 0 ? (completed / this.fileQueue.length) * 100 : 0,
     };
-    
-    this.emit('progress', progress);
+    this.emit("progress", progress);
     this.options.progressCallback(progress);
   }
 
   // Utility method to restore from backup
   async restoreFromBackup(manifestPath: string): Promise<void> {
-    const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf-8'));
+    const manifest = JSON.parse(await fs.readFile(manifestPath, "utf-8"));
     
     for (const { original, backup } of manifest.backups) {
       try {

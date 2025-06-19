@@ -2,13 +2,13 @@
  * Simple orchestrator implementation for Node.js compatibility
  */
 
-import { EventEmitter } from 'events';
-import express from 'express';
-import { WebSocketServer } from 'ws';
-import { createServer } from 'http';
-import { spawn } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { EventEmitter } from "events";
+import express from "express";
+import { WebSocketServer } from "ws";
+import { createServer } from "http";
+import { spawn } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,7 +29,7 @@ const componentStatus = {
   terminalPool: false,
   mcpServer: false,
   coordinationManager: false,
-  webUI: false
+  webUI: false,
 };
 
 // Simple MCP server
@@ -51,7 +51,7 @@ function startWebUI(host: string, port: number) {
   const activeConnections: Set<any> = new Set();
   
   // CLI output capture system
-  let cliProcess: any = null;
+  const cliProcess: any = null;
   
   const consoleHTML = `
     <!DOCTYPE html>
@@ -338,130 +338,130 @@ function startWebUI(host: string, port: number) {
     </html>
   `;
 
-  app.get('/', (req, res) => {
+  app.get("/", (req, res) => {
     res.send(consoleHTML);
   });
 
   // API endpoints
-  app.get('/api/status', (req, res) => {
+  app.get("/api/status", (req, res) => {
     res.json({
       components: componentStatus,
       metrics: {
         agents: agents.size,
         tasks: tasks.size,
         memory: memory.size,
-        connectedClients: activeConnections.size
-      }
+        connectedClients: activeConnections.size,
+      },
     });
   });
   
-  app.get('/api/history', (req, res) => {
+  app.get("/api/history", (req, res) => {
     const limit = parseInt(req.query.limit as string) || 100;
     res.json({
       history: outputHistory.slice(-limit),
-      total: outputHistory.length
+      total: outputHistory.length,
     });
   });
   
-  app.post('/api/command', express.json(), (req, res) => {
+  app.post("/api/command", express.json(), (req, res) => {
     const { command } = req.body;
     if (!command) {
-      return res.status(400).json({ error: 'Command is required' });
+      return res.status(400).json({ error: "Command is required" });
     }
     
     // Execute command and return immediately
     // Output will be sent via WebSocket
     try {
       broadcastToClients({
-        type: 'output',
-        data: `<span class="prompt">API> </span>${command}\\n`
+        type: "output",
+        data: `<span class="prompt">API> </span>${command}\\n`,
       });
       
       executeCliCommand(command, null);
       
-      res.json({ success: true, message: 'Command executed' });
+      return res.json({ success: true, message: "Command executed" });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: (error as Error).message });
     }
   });
   
-  app.get('/api/agents', (req, res) => {
+  app.get("/api/agents", (req, res) => {
     const agentList = Array.from(agents.entries()).map(([id, agent]) => ({
       id,
-      ...agent
+      ...agent,
     }));
     res.json(agentList);
   });
   
-  app.get('/api/tasks', (req, res) => {
+  app.get("/api/tasks", (req, res) => {
     const taskList = Array.from(tasks.entries()).map(([id, task]) => ({
       id,
-      ...task
+      ...task,
     }));
     res.json(taskList);
   });
   
-  app.get('/api/memory', (req, res) => {
+  app.get("/api/memory", (req, res) => {
     const memoryList = Array.from(memory.entries()).map(([key, value]) => ({
       key,
       value,
       type: typeof value,
-      size: JSON.stringify(value).length
+      size: JSON.stringify(value).length,
     }));
     res.json(memoryList);
   });
   
   // Health check endpoint
-  app.get('/health', (req, res) => {
+  app.get("/health", (req, res) => {
     res.json({
-      status: 'healthy',
+      status: "healthy",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      components: componentStatus
+      components: componentStatus,
     });
   });
 
   // WebSocket for real-time CLI interaction
-  wss.on('connection', (ws) => {
-    console.log('🔌 WebSocket client connected');
+  wss.on("connection", (ws) => {
+    console.log("🔌 WebSocket client connected");
     activeConnections.add(ws);
     
     // Send initial status and history
     ws.send(JSON.stringify({
-      type: 'status',
-      data: { ...componentStatus, cliActive: true }
+      type: "status",
+      data: { ...componentStatus, cliActive: true },
     }));
     
     // Send recent output history
     outputHistory.slice(-50).forEach(line => {
       ws.send(JSON.stringify({
-        type: 'output',
-        data: line
+        type: "output",
+        data: line,
       }));
     });
 
     // Handle incoming commands
-    ws.on('message', (message) => {
+    ws.on("message", (message) => {
       try {
         const data = JSON.parse(message.toString());
-        if (data.type === 'command') {
+        if (data.type === "command") {
           handleCliCommand(data.data, ws);
         }
       } catch (error) {
         ws.send(JSON.stringify({
-          type: 'error',
-          data: `Invalid message format: ${error.message}`
+          type: "error",
+          data: `Invalid message format: ${(error as Error).message}`,
         }));
       }
     });
 
-    ws.on('close', () => {
-      console.log('🔌 WebSocket client disconnected');
+    ws.on("close", () => {
+      console.log("🔌 WebSocket client disconnected");
       activeConnections.delete(ws);
     });
     
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
       activeConnections.delete(ws);
     });
   });
@@ -485,19 +485,19 @@ function startWebUI(host: string, port: number) {
       
       // Broadcast to all connected clients
       broadcastToClients({
-        type: 'output',
-        data: `<span class="dim">[${timestamp}]</span> <span class="info">Executing:</span> ${command}\\n`
+        type: "output",
+        data: `<span class="dim">[${timestamp}]</span> <span class="info">Executing:</span> ${command}\\n`,
       });
       
       // Execute the command
       executeCliCommand(command, ws);
       
     } catch (error) {
-      const errorMsg = `Error executing command: ${error.message}`;
+      const errorMsg = `Error executing command: ${(error as Error).message}`;
       outputHistory.push(errorMsg);
       sendResponse(ws, {
-        type: 'error',
-        data: errorMsg
+        type: "error",
+        data: errorMsg,
       });
     }
   }
@@ -505,7 +505,7 @@ function startWebUI(host: string, port: number) {
   // Execute CLI commands and capture output
   function executeCliCommand(command: string, ws: any) {
     // Handle built-in commands first
-    if (command === 'help') {
+    if (command === "help") {
       const helpText = `<span class="success">Available Commands:</span>
 • <span class="info">help</span> - Show this help message
 • <span class="info">status</span> - Show system status
@@ -520,31 +520,31 @@ function startWebUI(host: string, port: number) {
 <span class="warning">Note:</span> This is a web console interface for claude-flow CLI commands.
 `;
       sendResponse(ws, {
-        type: 'output',
-        data: helpText
+        type: "output",
+        data: helpText,
       });
-      sendResponse(ws, { type: 'command_complete' });
+      sendResponse(ws, { type: "command_complete" });
       return;
     }
     
-    if (command === 'clear') {
+    if (command === "clear") {
       sendResponse(ws, {
-        type: 'output',
-        data: '\\x1b[2J\\x1b[H' // ANSI clear screen
+        type: "output",
+        data: "\\x1b[2J\\x1b[H", // ANSI clear screen
       });
-      sendResponse(ws, { type: 'command_complete' });
+      sendResponse(ws, { type: "command_complete" });
       return;
     }
     
-    if (command === 'status') {
+    if (command === "status") {
       const statusText = `<span class="success">System Status:</span>
-• Event Bus: <span class="${componentStatus.eventBus ? 'success' : 'error'}">${componentStatus.eventBus ? 'Active' : 'Inactive'}</span>
-• Orchestrator: <span class="${componentStatus.orchestrator ? 'success' : 'error'}">${componentStatus.orchestrator ? 'Active' : 'Inactive'}</span>
-• Memory Manager: <span class="${componentStatus.memoryManager ? 'success' : 'error'}">${componentStatus.memoryManager ? 'Active' : 'Inactive'}</span>
-• Terminal Pool: <span class="${componentStatus.terminalPool ? 'success' : 'error'}">${componentStatus.terminalPool ? 'Active' : 'Inactive'}</span>
-• MCP Server: <span class="${componentStatus.mcpServer ? 'success' : 'error'}">${componentStatus.mcpServer ? 'Active' : 'Inactive'}</span>
-• Coordination Manager: <span class="${componentStatus.coordinationManager ? 'success' : 'error'}">${componentStatus.coordinationManager ? 'Active' : 'Inactive'}</span>
-• Web UI: <span class="${componentStatus.webUI ? 'success' : 'error'}">${componentStatus.webUI ? 'Active' : 'Inactive'}</span>
+• Event Bus: <span class="${componentStatus.eventBus ? "success" : "error"}">${componentStatus.eventBus ? "Active" : "Inactive"}</span>
+• Orchestrator: <span class="${componentStatus.orchestrator ? "success" : "error"}">${componentStatus.orchestrator ? "Active" : "Inactive"}</span>
+• Memory Manager: <span class="${componentStatus.memoryManager ? "success" : "error"}">${componentStatus.memoryManager ? "Active" : "Inactive"}</span>
+• Terminal Pool: <span class="${componentStatus.terminalPool ? "success" : "error"}">${componentStatus.terminalPool ? "Active" : "Inactive"}</span>
+• MCP Server: <span class="${componentStatus.mcpServer ? "success" : "error"}">${componentStatus.mcpServer ? "Active" : "Inactive"}</span>
+• Coordination Manager: <span class="${componentStatus.coordinationManager ? "success" : "error"}">${componentStatus.coordinationManager ? "Active" : "Inactive"}</span>
+• Web UI: <span class="${componentStatus.webUI ? "success" : "error"}">${componentStatus.webUI ? "Active" : "Inactive"}</span>
 
 <span class="info">Metrics:</span>
 • Active Agents: ${agents.size}
@@ -552,30 +552,30 @@ function startWebUI(host: string, port: number) {
 • Memory Entries: ${memory.size}
 `;
       sendResponse(ws, {
-        type: 'output',
-        data: statusText
+        type: "output",
+        data: statusText,
       });
-      sendResponse(ws, { type: 'command_complete' });
+      sendResponse(ws, { type: "command_complete" });
       return;
     }
     
     // For other commands, spawn a subprocess
-    const args = command.split(' ');
+    const args = command.split(" ");
     const cmd = args[0];
     const cmdArgs = args.slice(1);
     
     // Determine the correct claude-flow executable path
-    const rootDir = path.resolve(__dirname, '../..');
-    const cliPath = path.join(rootDir, 'bin', 'claude-flow');
+    const rootDir = path.resolve(__dirname, "../..");
+    const cliPath = path.join(rootDir, "bin", "claude-flow");
     
     // Spawn the command
-    const child = spawn('node', [path.join(rootDir, 'src/cli/simple-cli.js'), ...cmdArgs], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, CLAUDE_FLOW_WEB_MODE: 'true' }
+    const child = spawn("node", [path.join(rootDir, "src/cli/simple-cli.js"), ...cmdArgs], {
+      stdio: ["pipe", "pipe", "pipe"],
+      env: { ...process.env, CLAUDE_FLOW_WEB_MODE: "true" },
     });
     
     // Handle stdout
-    child.stdout.on('data', (data) => {
+    child.stdout.on("data", (data) => {
       const output = data.toString();
       outputHistory.push(output);
       
@@ -583,46 +583,46 @@ function startWebUI(host: string, port: number) {
       const htmlOutput = convertAnsiToHtml(output);
       
       broadcastToClients({
-        type: 'output',
-        data: htmlOutput
+        type: "output",
+        data: htmlOutput,
       });
     });
     
     // Handle stderr
-    child.stderr.on('data', (data) => {
+    child.stderr.on("data", (data) => {
       const error = data.toString();
       outputHistory.push(error);
       
       broadcastToClients({
-        type: 'error',
-        data: convertAnsiToHtml(error)
+        type: "error",
+        data: convertAnsiToHtml(error),
       });
     });
     
     // Handle process exit
-    child.on('close', (code) => {
+    child.on("close", (code) => {
       const exitMsg = code === 0 ? 
-        `<span class="success">Command completed successfully</span>` :
+        "<span class=\"success\">Command completed successfully</span>" :
         `<span class="error">Command failed with exit code ${code}</span>`;
       
       broadcastToClients({
-        type: 'output',
-        data: `\\n${exitMsg}\\n`
+        type: "output",
+        data: `\\n${exitMsg}\\n`,
       });
       
-      sendResponse(ws, { type: 'command_complete' });
+      sendResponse(ws, { type: "command_complete" });
     });
     
-    child.on('error', (error) => {
+    child.on("error", (error) => {
       const errorMsg = `<span class="error">Failed to execute command: ${error.message}</span>`;
       outputHistory.push(errorMsg);
       
       sendResponse(ws, {
-        type: 'error',
-        data: errorMsg
+        type: "error",
+        data: errorMsg,
       });
       
-      sendResponse(ws, { type: 'command_complete' });
+      sendResponse(ws, { type: "command_complete" });
     });
   }
   
@@ -639,7 +639,7 @@ function startWebUI(host: string, port: number) {
   // Convert ANSI escape codes to HTML
   function convertAnsiToHtml(text: string): string {
     return text
-      .replace(/\x1b\[0m/g, '</span>')
+      .replace(/\x1b\[0m/g, "</span>")
       .replace(/\x1b\[1m/g, '<span style="font-weight: bold;">')
       .replace(/\x1b\[31m/g, '<span class="error">')
       .replace(/\x1b\[32m/g, '<span class="success">')
@@ -649,24 +649,24 @@ function startWebUI(host: string, port: number) {
       .replace(/\x1b\[36m/g, '<span style="color: #06b6d4;">')
       .replace(/\x1b\[37m/g, '<span class="dim">')
       .replace(/\x1b\[90m/g, '<span class="dim">')
-      .replace(/\x1b\[[0-9;]*m/g, '') // Remove any remaining ANSI codes
-      .replace(/\n/g, '\\n')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/&lt;span/g, '<span')
-      .replace(/span&gt;/g, 'span>');
+      .replace(/\x1b\[[0-9;]*m/g, "") // Remove any remaining ANSI codes
+      .replace(/\n/g, "\\n")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/&lt;span/g, "<span")
+      .replace(/span&gt;/g, "span>");
   }
 
   return new Promise((resolve, reject) => {
-    server.on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
+    server.on("error", (err: any) => {
+      if (err.code === "EADDRINUSE") {
         console.error(`\n❌ Port ${port} is already in use`);
         console.log(`💡 Try a different port: claude-flow start --ui --port ${port + 1}`);
         console.log(`💡 Or stop the process using port ${port}: lsof -ti:${port} | xargs kill -9`);
         componentStatus.webUI = false;
         reject(err);
       } else {
-        console.error('❌ Web UI server error:', err.message);
+        console.error("❌ Web UI server error:", err.message);
         reject(err);
       }
     });
@@ -681,65 +681,65 @@ function startWebUI(host: string, port: number) {
 
 // Start all components
 export async function startOrchestrator(options: any) {
-  console.log('\n🚀 Starting orchestration components...\n');
+  console.log("\n🚀 Starting orchestration components...\n");
 
   // Start Event Bus
-  console.log('⚡ Starting Event Bus...');
+  console.log("⚡ Starting Event Bus...");
   componentStatus.eventBus = true;
-  eventBus.emit('system:start');
-  console.log('✅ Event Bus started');
+  eventBus.emit("system:start");
+  console.log("✅ Event Bus started");
 
   // Start Orchestrator Engine
-  console.log('🧠 Starting Orchestrator Engine...');
+  console.log("🧠 Starting Orchestrator Engine...");
   componentStatus.orchestrator = true;
-  console.log('✅ Orchestrator Engine started');
+  console.log("✅ Orchestrator Engine started");
 
   // Start Memory Manager
-  console.log('💾 Starting Memory Manager...');
+  console.log("💾 Starting Memory Manager...");
   componentStatus.memoryManager = true;
-  console.log('✅ Memory Manager started');
+  console.log("✅ Memory Manager started");
 
   // Start Terminal Pool
-  console.log('🖥️  Starting Terminal Pool...');
+  console.log("🖥️  Starting Terminal Pool...");
   componentStatus.terminalPool = true;
-  console.log('✅ Terminal Pool started');
+  console.log("✅ Terminal Pool started");
 
   // Start MCP Server
   const mcpPort = options.mcpPort || 3001;
   startMCPServer(mcpPort);
-  console.log('✅ MCP Server started');
+  console.log("✅ MCP Server started");
 
   // Start Coordination Manager
-  console.log('🔄 Starting Coordination Manager...');
+  console.log("🔄 Starting Coordination Manager...");
   componentStatus.coordinationManager = true;
-  console.log('✅ Coordination Manager started');
+  console.log("✅ Coordination Manager started");
 
   // Start Web UI if requested
   if (options.ui && !options.noUi) {
-    const host = options.host || 'localhost';
+    const host = options.host || "localhost";
     const port = options.port || 3000;
     try {
       await startWebUI(host, port);
     } catch (err: any) {
-      if (err.code === 'EADDRINUSE') {
-        console.log('\n⚠️  Web UI could not start due to port conflict');
-        console.log('   Orchestrator is running without Web UI');
+      if (err.code === "EADDRINUSE") {
+        console.log("\n⚠️  Web UI could not start due to port conflict");
+        console.log("   Orchestrator is running without Web UI");
       } else {
-        console.error('\n⚠️  Web UI failed to start:', err.message);
+        console.error("\n⚠️  Web UI failed to start:", err.message);
       }
     }
   }
 
-  console.log('\n✅ All components started successfully!');
-  console.log('\n📊 System Status:');
-  console.log('   • Event Bus: Active');
-  console.log('   • Orchestrator: Active');
-  console.log('   • Memory Manager: Active');
-  console.log('   • Terminal Pool: Active');
-  console.log('   • MCP Server: Active');
-  console.log('   • Coordination Manager: Active');
+  console.log("\n✅ All components started successfully!");
+  console.log("\n📊 System Status:");
+  console.log("   • Event Bus: Active");
+  console.log("   • Orchestrator: Active");
+  console.log("   • Memory Manager: Active");
+  console.log("   • Terminal Pool: Active");
+  console.log("   • MCP Server: Active");
+  console.log("   • Coordination Manager: Active");
   if (options.ui && !options.noUi) {
-    console.log(`   • Web UI: Active at http://${options.host || 'localhost'}:${options.port || 3000}`);
+    console.log(`   • Web UI: Active at http://${options.host || "localhost"}:${options.port || 3000}`);
   }
 
   console.log('\n💡 Use "claude-flow status" to check system status');
@@ -747,11 +747,11 @@ export async function startOrchestrator(options: any) {
   
   // Keep the process running
   if (!options.daemon) {
-    console.log('\n📌 Press Ctrl+C to stop the orchestrator...\n');
+    console.log("\n📌 Press Ctrl+C to stop the orchestrator...\n");
     
     // Handle graceful shutdown
-    process.on('SIGINT', () => {
-      console.log('\n\n🛑 Shutting down orchestrator...');
+    process.on("SIGINT", () => {
+      console.log("\n\n🛑 Shutting down orchestrator...");
       process.exit(0);
     });
   }

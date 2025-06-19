@@ -2,10 +2,10 @@
  * Request router for MCP
  */
 
-import { MCPRequest } from '../utils/types.js';
-import { ILogger } from '../core/logger.js';
-import { MCPMethodNotFoundError } from '../utils/errors.js';
-import { ToolRegistry } from './tools.js';
+import { MCPRequest } from "../utils/types.js";
+import { ILogger } from "../core/logger.js";
+import { MCPMethodNotFoundError } from "../utils/errors.js";
+import { ToolRegistry } from "./tools.js";
 
 /**
  * Request router implementation
@@ -31,12 +31,12 @@ export class RequestRouter {
       const { method, params } = request;
 
       // Handle built-in methods
-      if (method.startsWith('rpc.')) {
+      if (method.startsWith("rpc.")) {
         return await this.handleRPCMethod(method, params);
       }
 
       // Handle tool invocations
-      if (method.startsWith('tools.')) {
+      if (method.startsWith("tools.")) {
         return await this.handleToolMethod(method, params);
       }
 
@@ -63,7 +63,7 @@ export class RequestRouter {
     totalRequests: number;
     successfulRequests: number;
     failedRequests: number;
-  } {
+    } {
     return {
       totalRequests: this.totalRequests,
       successfulRequests: this.successfulRequests,
@@ -76,13 +76,13 @@ export class RequestRouter {
    */
   private async handleRPCMethod(method: string, params: unknown): Promise<unknown> {
     switch (method) {
-      case 'rpc.discover':
+      case "rpc.discover":
         return this.discoverMethods();
 
-      case 'rpc.ping':
+      case "rpc.ping":
         return { pong: true };
 
-      case 'rpc.describe':
+      case "rpc.describe":
         return this.describeMethod(params);
 
       default:
@@ -95,13 +95,13 @@ export class RequestRouter {
    */
   private async handleToolMethod(method: string, params: unknown): Promise<unknown> {
     switch (method) {
-      case 'tools.list':
+      case "tools.list":
         return this.toolRegistry.listTools();
 
-      case 'tools.invoke':
+      case "tools.invoke":
         return await this.invokeTool(params);
 
-      case 'tools.describe':
+      case "tools.describe":
         return this.describeTool(params);
 
       default:
@@ -114,12 +114,12 @@ export class RequestRouter {
    */
   private discoverMethods(): Record<string, string> {
     const methods: Record<string, string> = {
-      'rpc.discover': 'Discover all available methods',
-      'rpc.ping': 'Ping the server',
-      'rpc.describe': 'Describe a specific method',
-      'tools.list': 'List all available tools',
-      'tools.invoke': 'Invoke a specific tool',
-      'tools.describe': 'Describe a specific tool',
+      "rpc.discover": "Discover all available methods",
+      "rpc.ping": "Ping the server",
+      "rpc.describe": "Describe a specific method",
+      "tools.list": "List all available tools",
+      "tools.invoke": "Invoke a specific tool",
+      "tools.describe": "Describe a specific tool",
     };
 
     // Add all registered tools
@@ -134,8 +134,8 @@ export class RequestRouter {
    * Describes a specific method
    */
   private describeMethod(params: unknown): unknown {
-    if (!params || typeof params !== 'object' || !('method' in params)) {
-      throw new Error('Invalid params: method required');
+    if (!params || typeof params !== "object" || !("method" in params)) {
+      throw new Error("Invalid params: method required");
     }
 
     const { method } = params as { method: string };
@@ -152,47 +152,47 @@ export class RequestRouter {
 
     // Check built-in methods
     const builtInMethods: Record<string, unknown> = {
-      'rpc.discover': {
-        description: 'Discover all available methods',
-        inputSchema: { type: 'object', properties: {} },
+      "rpc.discover": {
+        description: "Discover all available methods",
+        inputSchema: { type: "object", properties: {} },
       },
-      'rpc.ping': {
-        description: 'Ping the server',
-        inputSchema: { type: 'object', properties: {} },
+      "rpc.ping": {
+        description: "Ping the server",
+        inputSchema: { type: "object", properties: {} },
       },
-      'rpc.describe': {
-        description: 'Describe a specific method',
+      "rpc.describe": {
+        description: "Describe a specific method",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            method: { type: 'string' },
+            method: { type: "string" },
           },
-          required: ['method'],
+          required: ["method"],
         },
       },
-      'tools.list': {
-        description: 'List all available tools',
-        inputSchema: { type: 'object', properties: {} },
+      "tools.list": {
+        description: "List all available tools",
+        inputSchema: { type: "object", properties: {} },
       },
-      'tools.invoke': {
-        description: 'Invoke a specific tool',
+      "tools.invoke": {
+        description: "Invoke a specific tool",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            tool: { type: 'string' },
-            input: { type: 'object' },
+            tool: { type: "string" },
+            input: { type: "object" },
           },
-          required: ['tool', 'input'],
+          required: ["tool", "input"],
         },
       },
-      'tools.describe': {
-        description: 'Describe a specific tool',
+      "tools.describe": {
+        description: "Describe a specific tool",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            tool: { type: 'string' },
+            tool: { type: "string" },
           },
-          required: ['tool'],
+          required: ["tool"],
         },
       },
     };
@@ -208,8 +208,8 @@ export class RequestRouter {
    * Invokes a tool
    */
   private async invokeTool(params: unknown): Promise<unknown> {
-    if (!params || typeof params !== 'object' || !('tool' in params)) {
-      throw new Error('Invalid params: tool required');
+    if (!params || typeof params !== "object" || !("tool" in params)) {
+      throw new Error("Invalid params: tool required");
     }
 
     const { tool, input } = params as { tool: string; input?: unknown };
@@ -220,8 +220,8 @@ export class RequestRouter {
    * Describes a specific tool
    */
   private describeTool(params: unknown): unknown {
-    if (!params || typeof params !== 'object' || !('tool' in params)) {
-      throw new Error('Invalid params: tool required');
+    if (!params || typeof params !== "object" || !("tool" in params)) {
+      throw new Error("Invalid params: tool required");
     }
 
     const { tool: toolName } = params as { tool: string };

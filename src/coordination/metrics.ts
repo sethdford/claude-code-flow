@@ -2,9 +2,9 @@
  * Metrics and monitoring for coordination performance
  */
 
-import { ILogger } from '../core/logger.js';
-import { IEventBus } from '../core/event-bus.js';
-import { SystemEvents } from '../utils/types.js';
+import { ILogger } from "../core/logger.js";
+import { IEventBus } from "../core/event-bus.js";
+import { SystemEvents } from "../utils/types.js";
 
 export interface CoordinationMetrics {
   timestamp: Date;
@@ -80,7 +80,7 @@ export class CoordinationMetricsCollector {
   private taskStartTimes = new Map<string, Date>();
   private messageStartTimes = new Map<string, Date>();
   private lockStartTimes = new Map<string, Date>();
-  private collectionInterval?: number;
+  private collectionInterval?: NodeJS.Timeout;
   
   // Counters
   private counters = {
@@ -130,7 +130,7 @@ export class CoordinationMetricsCollector {
    * Start metrics collection
    */
   start(): void {
-    this.logger.info('Starting coordination metrics collection');
+    this.logger.info("Starting coordination metrics collection");
     
     this.collectionInterval = setInterval(() => {
       this.collectMetrics();
@@ -146,7 +146,7 @@ export class CoordinationMetricsCollector {
       delete this.collectionInterval;
     }
     
-    this.logger.info('Stopped coordination metrics collection');
+    this.logger.info("Stopped coordination metrics collection");
   }
 
   /**
@@ -180,8 +180,8 @@ export class CoordinationMetricsCollector {
     
     // Calculate throughput (items per minute)
     const recentSamples = this.samples.filter(s => s.timestamp >= minuteAgo);
-    const taskCompletions = recentSamples.filter(s => s.metric === 'task.completed').length;
-    const errorCount = recentSamples.filter(s => s.metric === 'error').length;
+    const taskCompletions = recentSamples.filter(s => s.metric === "task.completed").length;
+    const errorCount = recentSamples.filter(s => s.metric === "error").length;
     
     return {
       timestamp: now,
@@ -245,7 +245,7 @@ export class CoordinationMetricsCollector {
     const cutoff = since || new Date(Date.now() - 3600000); // 1 hour ago
     
     return this.samples.filter(s => 
-      s.metric === metric && s.timestamp >= cutoff
+      s.metric === metric && s.timestamp >= cutoff,
     );
   }
 
@@ -254,7 +254,7 @@ export class CoordinationMetricsCollector {
    */
   getTopMetrics(limit = 10): Array<{ metric: string; value: number; timestamp: Date }> {
     const recent = this.samples.filter(s => 
-      s.timestamp >= new Date(Date.now() - 300000) // 5 minutes
+      s.timestamp >= new Date(Date.now() - 300000), // 5 minutes
     );
     
     const byMetric = new Map<string, number>();
@@ -282,13 +282,13 @@ export class CoordinationMetricsCollector {
     // Task events
     this.eventBus.on(SystemEvents.TASK_CREATED, () => {
       this.counters.totalTasks++;
-      this.recordMetric('task.created', 1);
+      this.recordMetric("task.created", 1);
     });
 
     this.eventBus.on(SystemEvents.TASK_STARTED, (data: any) => {
       this.taskStartTimes.set(data.taskId, new Date());
       this.gauges.activeTasks++;
-      this.recordMetric('task.started', 1);
+      this.recordMetric("task.started", 1);
     });
 
     this.eventBus.on(SystemEvents.TASK_COMPLETED, (data: any) => {
@@ -302,44 +302,44 @@ export class CoordinationMetricsCollector {
         this.taskStartTimes.delete(data.taskId);
       }
       
-      this.recordMetric('task.completed', 1);
+      this.recordMetric("task.completed", 1);
     });
 
     this.eventBus.on(SystemEvents.TASK_FAILED, (data: any) => {
       this.counters.failedTasks++;
       this.gauges.activeTasks = Math.max(0, this.gauges.activeTasks - 1);
       this.taskStartTimes.delete(data.taskId);
-      this.recordMetric('task.failed', 1);
+      this.recordMetric("task.failed", 1);
     });
 
     this.eventBus.on(SystemEvents.TASK_CANCELLED, (data: any) => {
       this.counters.cancelledTasks++;
       this.gauges.activeTasks = Math.max(0, this.gauges.activeTasks - 1);
       this.taskStartTimes.delete(data.taskId);
-      this.recordMetric('task.cancelled', 1);
+      this.recordMetric("task.cancelled", 1);
     });
 
     // Agent events
     this.eventBus.on(SystemEvents.AGENT_SPAWNED, () => {
       this.gauges.activeAgents++;
-      this.recordMetric('agent.spawned', 1);
+      this.recordMetric("agent.spawned", 1);
     });
 
     this.eventBus.on(SystemEvents.AGENT_TERMINATED, () => {
       this.gauges.activeAgents = Math.max(0, this.gauges.activeAgents - 1);
-      this.recordMetric('agent.terminated', 1);
+      this.recordMetric("agent.terminated", 1);
     });
 
     this.eventBus.on(SystemEvents.AGENT_IDLE, () => {
       this.gauges.idleAgents++;
       this.gauges.busyAgents = Math.max(0, this.gauges.busyAgents - 1);
-      this.recordMetric('agent.idle', 1);
+      this.recordMetric("agent.idle", 1);
     });
 
     this.eventBus.on(SystemEvents.AGENT_ACTIVE, () => {
       this.gauges.busyAgents++;
       this.gauges.idleAgents = Math.max(0, this.gauges.idleAgents - 1);
-      this.recordMetric('agent.active', 1);
+      this.recordMetric("agent.active", 1);
     });
 
     // Resource events
@@ -347,7 +347,7 @@ export class CoordinationMetricsCollector {
       this.lockStartTimes.set(data.resourceId, new Date());
       this.gauges.lockedResources++;
       this.gauges.freeResources = Math.max(0, this.gauges.freeResources - 1);
-      this.recordMetric('resource.acquired', 1);
+      this.recordMetric("resource.acquired", 1);
     });
 
     this.eventBus.on(SystemEvents.RESOURCE_RELEASED, (data: any) => {
@@ -361,20 +361,20 @@ export class CoordinationMetricsCollector {
         this.lockStartTimes.delete(data.resourceId);
       }
       
-      this.recordMetric('resource.released', 1);
+      this.recordMetric("resource.released", 1);
     });
 
     // Deadlock events
     this.eventBus.on(SystemEvents.DEADLOCK_DETECTED, () => {
       this.counters.deadlockCount++;
-      this.recordMetric('deadlock.detected', 1);
+      this.recordMetric("deadlock.detected", 1);
     });
 
     // Message events
     this.eventBus.on(SystemEvents.MESSAGE_SENT, (data: any) => {
       this.counters.messagesSent++;
       this.messageStartTimes.set(data.message.id, new Date());
-      this.recordMetric('message.sent', 1);
+      this.recordMetric("message.sent", 1);
     });
 
     this.eventBus.on(SystemEvents.MESSAGE_RECEIVED, (data: any) => {
@@ -387,38 +387,38 @@ export class CoordinationMetricsCollector {
         this.messageStartTimes.delete(data.message.id);
       }
       
-      this.recordMetric('message.received', 1);
+      this.recordMetric("message.received", 1);
     });
 
     // Conflict events
-    this.eventBus.on('conflict:resource', () => {
+    this.eventBus.on("conflict:resource", () => {
       this.counters.conflictsDetected++;
-      this.recordMetric('conflict.detected', 1);
+      this.recordMetric("conflict.detected", 1);
     });
 
-    this.eventBus.on('conflict:resolved', () => {
+    this.eventBus.on("conflict:resolved", () => {
       this.counters.conflictsResolved++;
-      this.recordMetric('conflict.resolved', 1);
+      this.recordMetric("conflict.resolved", 1);
     });
 
     // Work stealing events
-    this.eventBus.on('workstealing:request', () => {
+    this.eventBus.on("workstealing:request", () => {
       this.counters.workStealingEvents++;
-      this.recordMetric('workstealing.event', 1);
+      this.recordMetric("workstealing.event", 1);
     });
 
     // Circuit breaker events
-    this.eventBus.on('circuitbreaker:state-change', (data: any) => {
-      if (data.to === 'open') {
+    this.eventBus.on("circuitbreaker:state-change", (data: any) => {
+      if (data.to === "open") {
         this.counters.circuitBreakerTrips++;
-        this.recordMetric('circuitbreaker.trip', 1);
+        this.recordMetric("circuitbreaker.trip", 1);
       }
     });
 
     // Error events
     this.eventBus.on(SystemEvents.SYSTEM_ERROR, () => {
       this.counters.errors++;
-      this.recordMetric('error', 1);
+      this.recordMetric("error", 1);
     });
   }
 
@@ -429,10 +429,10 @@ export class CoordinationMetricsCollector {
     const metrics = this.getCurrentMetrics();
     
     // Emit metrics event
-    this.eventBus.emit('metrics:coordination', metrics);
+    this.eventBus.emit("metrics:coordination", metrics);
     
     // Log summary
-    this.logger.debug('Coordination metrics collected', {
+    this.logger.debug("Coordination metrics collected", {
       activeTasks: metrics.taskMetrics.activeTasks,
       activeAgents: metrics.agentMetrics.activeAgents,
       lockedResources: metrics.resourceMetrics.lockedResources,
@@ -452,12 +452,12 @@ export class CoordinationMetricsCollector {
    * Get tasks grouped by priority
    */
   private getTasksByPriority(): Record<string, number> {
-    const priorities = ['low', 'medium', 'high', 'critical'];
+    const priorities = ["low", "medium", "high", "critical"];
     const result: Record<string, number> = {};
     
     for (const priority of priorities) {
       result[priority] = this.samples.filter(s => 
-        s.metric === 'task.created' && s.tags?.priority === priority
+        s.metric === "task.created" && s.tags?.priority === priority,
       ).length;
     }
     
@@ -471,7 +471,7 @@ export class CoordinationMetricsCollector {
     const types = new Set<string>();
     
     for (const sample of this.samples) {
-      if (sample.metric === 'task.created' && sample.tags?.type) {
+      if (sample.metric === "task.created" && sample.tags?.type) {
         types.add(sample.tags.type);
       }
     }
@@ -479,7 +479,7 @@ export class CoordinationMetricsCollector {
     const result: Record<string, number> = {};
     for (const type of types) {
       result[type] = this.samples.filter(s => 
-        s.metric === 'task.created' && s.tags?.type === type
+        s.metric === "task.created" && s.tags?.type === type,
       ).length;
     }
     
@@ -493,7 +493,7 @@ export class CoordinationMetricsCollector {
     const types = new Set<string>();
     
     for (const sample of this.samples) {
-      if (sample.metric === 'agent.spawned' && sample.tags?.type) {
+      if (sample.metric === "agent.spawned" && sample.tags?.type) {
         types.add(sample.tags.type);
       }
     }
@@ -501,7 +501,7 @@ export class CoordinationMetricsCollector {
     const result: Record<string, number> = {};
     for (const type of types) {
       result[type] = this.samples.filter(s => 
-        s.metric === 'agent.spawned' && s.tags?.type === type
+        s.metric === "agent.spawned" && s.tags?.type === type,
       ).length;
     }
     
@@ -539,7 +539,7 @@ export class CoordinationMetricsCollector {
    * Get current memory usage in MB
    */
   private getMemoryUsage(): number {
-    if (typeof process !== 'undefined' && process.memoryUsage) {
+    if (typeof process !== "undefined" && process.memoryUsage) {
       return process.memoryUsage().heapUsed / 1024 / 1024;
     }
     return 0;
@@ -549,7 +549,7 @@ export class CoordinationMetricsCollector {
    * Get current CPU usage percentage
    */
   private getCpuUsage(): number {
-    if (typeof process !== 'undefined' && process.cpuUsage) {
+    if (typeof process !== "undefined" && process.cpuUsage) {
       const usage = process.cpuUsage();
       return (usage.user + usage.system) / 1000000; // Convert to seconds
     }
@@ -580,6 +580,6 @@ export class CoordinationMetricsCollector {
       (this.histograms as any)[key] = [];
     }
     
-    this.logger.info('Coordination metrics cleared');
+    this.logger.info("Coordination metrics cleared");
   }
 }

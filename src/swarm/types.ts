@@ -2,7 +2,7 @@
  * Comprehensive types and interfaces for the swarm system
  */
 
-import { EventEmitter } from 'node:events';
+import { EventEmitter } from "node:events";
 
 // ===== CORE SWARM TYPES =====
 
@@ -29,25 +29,25 @@ export interface TaskId {
 // ===== AGENT TYPES =====
 
 export type AgentType = 
-  | 'coordinator'    // Orchestrates and manages other agents
-  | 'researcher'     // Performs research and data gathering
-  | 'developer'      // Writes and maintains code
-  | 'analyzer'       // Analyzes data and generates insights
-  | 'reviewer'       // Reviews and validates work
-  | 'tester'         // Tests and validates functionality
-  | 'documenter'     // Creates and maintains documentation
-  | 'monitor'        // Monitors system health and performance
-  | 'specialist';    // Domain-specific specialized agent
+  | "coordinator"    // Orchestrates and manages other agents
+  | "researcher"     // Performs research and data gathering
+  | "developer"      // Writes and maintains code
+  | "analyzer"       // Analyzes data and generates insights
+  | "reviewer"       // Reviews and validates work
+  | "tester"         // Tests and validates functionality
+  | "documenter"     // Creates and maintains documentation
+  | "monitor"        // Monitors system health and performance
+  | "specialist";    // Domain-specific specialized agent
 
 export type AgentStatus = 
-  | 'initializing'   // Agent is starting up
-  | 'idle'           // Available for tasks
-  | 'busy'           // Currently executing task
-  | 'paused'         // Temporarily unavailable
-  | 'error'          // In error state
-  | 'offline'        // Not available
-  | 'terminating'    // Shutting down
-  | 'terminated';    // Shut down
+  | "initializing"   // Agent is starting up
+  | "idle"           // Available for tasks
+  | "busy"           // Currently executing task
+  | "paused"         // Temporarily unavailable
+  | "error"          // In error state
+  | "offline"        // Not available
+  | "terminating"    // Shutting down
+  | "terminated";    // Shut down
 
 export interface AgentCapabilities {
   // Core capabilities
@@ -163,22 +163,117 @@ export interface AgentConfig {
 
 export interface AgentEnvironment {
   // Runtime environment
-  runtime: 'deno' | 'node' | 'claude' | 'browser';
+  runtime: "deno" | "node" | "claude" | "browser" | "docker" | "kubernetes";
   version: string;
+  nodeVersion?: string;
+  denoVersion?: string;
   
   // Available resources
   workingDirectory: string;
   tempDirectory: string;
   logDirectory: string;
+  dataDirectory?: string;
+  configDirectory?: string;
   
   // Network configuration
   apiEndpoints: Record<string, string>;
   credentials: Record<string, string>;
+  networkConfig?: NetworkConfig;
   
   // Tool access
   availableTools: string[];
   toolConfigs: Record<string, any>;
+  toolVersions?: Record<string, string>;
+  
+  // System capabilities
+  systemInfo?: SystemInfo;
+  resourceLimits?: ResourceLimits;
+  
+  // Security settings
+  securityConfig?: SecurityConfig;
+  
+  // Environment variables
+  environmentVariables?: Record<string, string>;
+  
+  // Container/isolation settings
+  containerConfig?: ContainerConfig;
+  
+  // Performance monitoring
+  monitoringConfig?: MonitoringConfig;
 }
+
+export interface NetworkConfig {
+  maxConnections?: number;
+  timeout?: number;
+  retryPolicy?: RetryPolicy;
+  proxyConfig?: ProxyConfig;
+  rateLimits?: Record<string, number>;
+}
+
+export interface RetryPolicy {
+  maxRetries: number;
+  backoffMultiplier: number;
+  maxBackoffTime: number;
+  retryableStatusCodes?: number[];
+}
+
+export interface ProxyConfig {
+  httpProxy?: string;
+  httpsProxy?: string;
+  noProxy?: string[];
+}
+
+export interface SystemInfo {
+  platform: string;
+  architecture: string;
+  cpuCores: number;
+  totalMemory: number;
+  availableMemory: number;
+  diskSpace: number;
+  osVersion?: string;
+}
+
+export interface ResourceLimits {
+  maxMemoryUsage?: number;
+  maxCpuUsage?: number;
+  maxDiskUsage?: number;
+  maxNetworkBandwidth?: number;
+  maxFileDescriptors?: number;
+  maxProcesses?: number;
+}
+
+export interface SecurityConfig {
+  allowedDomains?: string[];
+  blockedDomains?: string[];
+  allowFileSystem?: boolean;
+  allowNetworkAccess?: boolean;
+  allowProcessExecution?: boolean;
+  sandboxed?: boolean;
+  permissions?: string[];
+}
+
+export interface ContainerConfig {
+  isContainerized: boolean;
+  containerRuntime?: "docker" | "podman" | "containerd";
+  imageName?: string;
+  volumes?: VolumeMount[];
+  networkMode?: string;
+  resourceConstraints?: ResourceConstraints;
+}
+
+export interface VolumeMount {
+  hostPath: string;
+  containerPath: string;
+  readOnly?: boolean;
+}
+
+export interface ResourceConstraints {
+  cpuLimit?: string;
+  memoryLimit?: string;
+  diskLimit?: string;
+}
+
+// MonitoringConfig is defined later in the file with full interface definition
 
 export interface AgentError {
   timestamp: Date;
@@ -186,48 +281,48 @@ export interface AgentError {
   message: string;
   stack?: string;
   context: Record<string, any>;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   resolved: boolean;
 }
 
 // ===== TASK TYPES =====
 
 export type TaskType = 
-  | 'research'       // Information gathering and research
-  | 'analysis'       // Data analysis and insights
-  | 'coding'         // Code generation and modification
-  | 'testing'        // Test creation and execution
-  | 'review'         // Code and content review
-  | 'documentation'  // Documentation creation
-  | 'deployment'     // Deployment and operations
-  | 'monitoring'     // System monitoring
-  | 'coordination'   // Cross-agent coordination
-  | 'communication'  // External communication
-  | 'maintenance'    // System maintenance
-  | 'optimization'   // Performance optimization
-  | 'validation'     // Validation and verification
-  | 'integration'    // System integration
-  | 'custom';        // Custom task type
+  | "research"       // Information gathering and research
+  | "analysis"       // Data analysis and insights
+  | "coding"         // Code generation and modification
+  | "testing"        // Test creation and execution
+  | "review"         // Code and content review
+  | "documentation"  // Documentation creation
+  | "deployment"     // Deployment and operations
+  | "monitoring"     // System monitoring
+  | "coordination"   // Cross-agent coordination
+  | "communication"  // External communication
+  | "maintenance"    // System maintenance
+  | "optimization"   // Performance optimization
+  | "validation"     // Validation and verification
+  | "integration"    // System integration
+  | "custom";        // Custom task type
 
 export type TaskStatus = 
-  | 'created'        // Task has been created
-  | 'queued'         // Waiting for assignment
-  | 'assigned'       // Assigned to an agent
-  | 'running'        // Currently being executed
-  | 'paused'         // Temporarily paused
-  | 'completed'      // Successfully completed
-  | 'failed'         // Failed with error
-  | 'cancelled'      // Cancelled by user/system
-  | 'timeout'        // Timed out
-  | 'retrying'       // Being retried
-  | 'blocked';       // Blocked by dependencies
+  | "created"        // Task has been created
+  | "queued"         // Waiting for assignment
+  | "assigned"       // Assigned to an agent
+  | "running"        // Currently being executed
+  | "paused"         // Temporarily paused
+  | "completed"      // Successfully completed
+  | "failed"         // Failed with error
+  | "cancelled"      // Cancelled by user/system
+  | "timeout"        // Timed out
+  | "retrying"       // Being retried
+  | "blocked";       // Blocked by dependencies
 
 export type TaskPriority = 
-  | 'critical'       // Must be done immediately
-  | 'high'           // Important, do soon
-  | 'normal'         // Standard priority
-  | 'low'            // Can be delayed
-  | 'background';    // Run when resources available
+  | "critical"       // Must be done immediately
+  | "high"           // Important, do soon
+  | "normal"         // Standard priority
+  | "low"            // Can be delayed
+  | "background";    // Run when resources available
 
 export interface TaskRequirements {
   // Agent requirements
@@ -296,6 +391,9 @@ export interface TaskResult {
   // Follow-up
   recommendations?: string[];
   nextSteps?: string[];
+  
+  // Error information (optional)
+  error?: any;
 }
 
 export interface TaskDefinition {
@@ -318,6 +416,9 @@ export interface TaskDefinition {
   context: Record<string, any>;
   examples?: any[];
   
+  // Enhanced metadata properties
+  metadata?: TaskMetadata;
+  
   // Tracking
   status: TaskStatus;
   createdAt: Date;
@@ -338,6 +439,66 @@ export interface TaskDefinition {
   statusHistory: TaskStatusChange[];
 }
 
+export interface TaskMetadata {
+  // Strategy-specific metadata
+  researchType?: "web-search" | "data-extraction" | "analysis" | "synthesis";
+  analysisType?: "clustering" | "pattern-recognition" | "statistical" | "semantic";
+  implementationType?: "component" | "service" | "integration" | "optimization";
+  
+  // Execution metadata
+  batchId?: string;
+  parallelGroup?: string;
+  executionHints?: string[];
+  optimizations?: string[];
+  
+  // Quality metadata
+  qualityRequirements?: QualityRequirements;
+  reviewCriteria?: string[];
+  testingRequirements?: TestingRequirements;
+  
+  // Resource metadata
+  resourceHints?: ResourceHints;
+  performanceTargets?: PerformanceTargets;
+  
+  // Coordination metadata
+  coordinationMode?: "independent" | "synchronized" | "sequential";
+  communicationChannels?: string[];
+  sharedResources?: string[];
+  
+  // Custom metadata
+  customProperties?: Record<string, any>;
+}
+
+export interface QualityRequirements {
+  minQualityScore?: number;
+  codeQualityRules?: string[];
+  documentationRequired?: boolean;
+  peerReviewRequired?: boolean;
+}
+
+export interface TestingRequirements {
+  unitTestsRequired?: boolean;
+  integrationTestsRequired?: boolean;
+  performanceTestsRequired?: boolean;
+  securityTestsRequired?: boolean;
+  coverageThreshold?: number;
+}
+
+export interface ResourceHints {
+  preferredAgentTypes?: AgentType[];
+  memoryIntensive?: boolean;
+  computeIntensive?: boolean;
+  networkIntensive?: boolean;
+  storageIntensive?: boolean;
+}
+
+export interface PerformanceTargets {
+  maxExecutionTime?: number;
+  maxMemoryUsage?: number;
+  maxCpuUsage?: number;
+  throughputTarget?: number;
+}
+
 export interface TaskAttempt {
   attemptNumber: number;
   agent: AgentId;
@@ -354,7 +515,7 @@ export interface TaskStatusChange {
   from: TaskStatus;
   to: TaskStatus;
   reason: string;
-  triggeredBy: AgentId | 'system' | 'user';
+  triggeredBy: AgentId | "system" | "user";
 }
 
 export interface TaskError {
@@ -370,21 +531,21 @@ export interface TaskError {
 // ===== SWARM TYPES =====
 
 export type SwarmMode = 
-  | 'centralized'    // Single coordinator manages all
-  | 'distributed'    // Multiple coordinators
-  | 'hierarchical'   // Tree structure of coordinators
-  | 'mesh'           // Peer-to-peer coordination
-  | 'hybrid';        // Mixed coordination strategies
+  | "centralized"    // Single coordinator manages all
+  | "distributed"    // Multiple coordinators
+  | "hierarchical"   // Tree structure of coordinators
+  | "mesh"           // Peer-to-peer coordination
+  | "hybrid";        // Mixed coordination strategies
 
 export type SwarmStrategy = 
-  | 'auto'           // Automatically determine approach
-  | 'research'       // Research-focused strategy
-  | 'development'    // Development-focused strategy
-  | 'analysis'       // Analysis-focused strategy
-  | 'testing'        // Testing-focused strategy
-  | 'optimization'   // Performance optimization
-  | 'maintenance'    // System maintenance
-  | 'custom';        // Custom strategy
+  | "auto"           // Automatically determine approach
+  | "research"       // Research-focused strategy
+  | "development"    // Development-focused strategy
+  | "analysis"       // Analysis-focused strategy
+  | "testing"        // Testing-focused strategy
+  | "optimization"   // Performance optimization
+  | "maintenance"    // System maintenance
+  | "custom";        // Custom strategy
 
 export interface SwarmObjective {
   id: string;
@@ -473,20 +634,20 @@ export interface SwarmMilestone {
 export interface TimeWindow {
   start: Date;
   end: Date;
-  type: 'maintenance' | 'blackout' | 'preferred';
+  type: "maintenance" | "blackout" | "preferred";
   description: string;
 }
 
 export type SwarmStatus = 
-  | 'planning'       // Decomposing objectives into tasks
-  | 'initializing'   // Setting up agents and resources
-  | 'executing'      // Running tasks
-  | 'paused'         // Temporarily paused
-  | 'completed'      // Successfully completed
-  | 'failed'         // Failed to complete
-  | 'cancelled'      // Cancelled by user
-  | 'recovering'     // Recovering from failure
-  | 'optimizing';    // Optimizing performance
+  | "planning"       // Decomposing objectives into tasks
+  | "initializing"   // Setting up agents and resources
+  | "executing"      // Running tasks
+  | "paused"         // Temporarily paused
+  | "completed"      // Successfully completed
+  | "failed"         // Failed to complete
+  | "cancelled"      // Cancelled by user
+  | "recovering"     // Recovering from failure
+  | "optimizing";    // Optimizing performance
 
 export interface SwarmProgress {
   // Task progress
@@ -575,13 +736,13 @@ export interface TaskDependency {
 }
 
 export type DependencyType = 
-  | 'finish-start'   // Must finish before next starts
-  | 'start-start'    // Must start before next starts
-  | 'finish-finish'  // Must finish before next finishes
-  | 'start-finish'   // Must start before next finishes
-  | 'resource'       // Shares a resource
-  | 'data'          // Data dependency
-  | 'approval';     // Requires approval
+  | "finish-start"   // Must finish before next starts
+  | "start-start"    // Must start before next starts
+  | "finish-finish"  // Must finish before next finishes
+  | "start-finish"   // Must start before next finishes
+  | "resource"       // Shares a resource
+  | "data"          // Data dependency
+  | "approval";     // Requires approval
 
 export interface CoordinationStrategy {
   name: string;
@@ -604,49 +765,49 @@ export interface CoordinationStrategy {
 }
 
 export type AgentSelectionStrategy = 
-  | 'capability-based'   // Select based on capabilities
-  | 'load-based'        // Select based on current load
-  | 'performance-based' // Select based on performance history
-  | 'random'           // Random selection
-  | 'round-robin'      // Round-robin selection
-  | 'affinity-based'   // Prefer agents with domain affinity
-  | 'cost-based'       // Select based on cost
-  | 'hybrid';          // Combination of strategies
+  | "capability-based"   // Select based on capabilities
+  | "load-based"        // Select based on current load
+  | "performance-based" // Select based on performance history
+  | "random"           // Random selection
+  | "round-robin"      // Round-robin selection
+  | "affinity-based"   // Prefer agents with domain affinity
+  | "cost-based"       // Select based on cost
+  | "hybrid";          // Combination of strategies
 
 export type TaskSchedulingStrategy = 
-  | 'fifo'             // First in, first out
-  | 'priority'         // Priority-based scheduling
-  | 'deadline'         // Earliest deadline first
-  | 'shortest-job'     // Shortest job first
-  | 'critical-path'    // Critical path method
-  | 'resource-aware'   // Consider resource availability
-  | 'adaptive';        // Adaptive scheduling
+  | "fifo"             // First in, first out
+  | "priority"         // Priority-based scheduling
+  | "deadline"         // Earliest deadline first
+  | "shortest-job"     // Shortest job first
+  | "critical-path"    // Critical path method
+  | "resource-aware"   // Consider resource availability
+  | "adaptive";        // Adaptive scheduling
 
 export type LoadBalancingStrategy = 
-  | 'work-stealing'    // Agents steal work from busy agents
-  | 'work-sharing'     // Work is proactively shared
-  | 'centralized'      // Central dispatcher
-  | 'distributed'      // Distributed load balancing
-  | 'predictive'       // Predict and prevent overload
-  | 'reactive';        // React to overload conditions
+  | "work-stealing"    // Agents steal work from busy agents
+  | "work-sharing"     // Work is proactively shared
+  | "centralized"      // Central dispatcher
+  | "distributed"      // Distributed load balancing
+  | "predictive"       // Predict and prevent overload
+  | "reactive";        // React to overload conditions
 
 export type FaultToleranceStrategy = 
-  | 'retry'            // Retry failed tasks
-  | 'redundancy'       // Redundant execution
-  | 'checkpoint'       // Checkpoint and recovery
-  | 'circuit-breaker'  // Circuit breaker pattern
-  | 'bulkhead'         // Isolate failures
-  | 'timeout'          // Timeout protection
-  | 'graceful-degradation'; // Degrade gracefully
+  | "retry"            // Retry failed tasks
+  | "redundancy"       // Redundant execution
+  | "checkpoint"       // Checkpoint and recovery
+  | "circuit-breaker"  // Circuit breaker pattern
+  | "bulkhead"         // Isolate failures
+  | "timeout"          // Timeout protection
+  | "graceful-degradation"; // Degrade gracefully
 
 export type CommunicationStrategy = 
-  | 'direct'           // Direct agent-to-agent
-  | 'broadcast'        // Broadcast to all
-  | 'publish-subscribe' // Pub/sub messaging
-  | 'request-response' // Request/response
-  | 'event-driven'     // Event-driven communication
-  | 'gossip'           // Gossip protocol
-  | 'hierarchical';    // Hierarchical communication
+  | "direct"           // Direct agent-to-agent
+  | "broadcast"        // Broadcast to all
+  | "publish-subscribe" // Pub/sub messaging
+  | "request-response" // Request/response
+  | "event-driven"     // Event-driven communication
+  | "gossip"           // Gossip protocol
+  | "hierarchical";    // Hierarchical communication
 
 // ===== MEMORY TYPES =====
 
@@ -693,14 +854,14 @@ export interface MemoryPartition {
 }
 
 export type MemoryType = 
-  | 'knowledge'        // Knowledge base
-  | 'state'           // Agent state
-  | 'cache'           // Temporary cache
-  | 'logs'            // Log entries
-  | 'results'         // Task results
-  | 'communication'   // Communication history
-  | 'configuration'   // Configuration data
-  | 'metrics';        // Performance metrics
+  | "knowledge"        // Knowledge base
+  | "state"           // Agent state
+  | "cache"           // Temporary cache
+  | "logs"            // Log entries
+  | "results"         // Task results
+  | "communication"   // Communication history
+  | "configuration"   // Configuration data
+  | "metrics";        // Performance metrics
 
 export interface MemoryEntry {
   id: string;
@@ -730,11 +891,11 @@ export interface MemoryEntry {
 }
 
 export type AccessLevel = 
-  | 'private'          // Only owner can access
-  | 'team'            // Team members can access
-  | 'swarm'           // All swarm agents can access
-  | 'public'          // Publicly accessible
-  | 'system';         // System-level access
+  | "private"          // Only owner can access
+  | "team"            // Team members can access
+  | "swarm"           // All swarm agents can access
+  | "public"          // Publicly accessible
+  | "system";         // System-level access
 
 export interface MemoryPermissions {
   read: AccessLevel;
@@ -744,10 +905,10 @@ export interface MemoryPermissions {
 }
 
 export type ConsistencyLevel = 
-  | 'strong'          // Strong consistency
-  | 'eventual'        // Eventual consistency
-  | 'weak'            // Weak consistency
-  | 'session';        // Session consistency
+  | "strong"          // Strong consistency
+  | "eventual"        // Eventual consistency
+  | "weak"            // Weak consistency
+  | "session";        // Session consistency
 
 // ===== MONITORING TYPES =====
 
@@ -826,20 +987,20 @@ export interface Alert {
 }
 
 export type AlertLevel = 
-  | 'info'            // Informational
-  | 'warning'         // Warning condition
-  | 'error'           // Error condition
-  | 'critical';       // Critical condition
+  | "info"            // Informational
+  | "warning"         // Warning condition
+  | "error"           // Error condition
+  | "critical";       // Critical condition
 
 export type AlertType = 
-  | 'system'          // System-level alert
-  | 'performance'     // Performance issue
-  | 'resource'        // Resource issue
-  | 'security'        // Security issue
-  | 'agent'           // Agent-specific issue
-  | 'task'            // Task-specific issue
-  | 'swarm'           // Swarm-level issue
-  | 'custom';         // Custom alert type
+  | "system"          // System-level alert
+  | "performance"     // Performance issue
+  | "resource"        // Resource issue
+  | "security"        // Security issue
+  | "agent"           // Agent-specific issue
+  | "task"            // Task-specific issue
+  | "swarm"           // Swarm-level issue
+  | "custom";         // Custom alert type
 
 // ===== EVENT TYPES =====
 
@@ -867,46 +1028,46 @@ export interface SwarmEvent {
 
 export type EventType = 
   // Swarm events
-  | 'swarm.created'
-  | 'swarm.started'
-  | 'swarm.paused'
-  | 'swarm.resumed'
-  | 'swarm.completed'
-  | 'swarm.failed'
-  | 'swarm.cancelled'
+  | "swarm.created"
+  | "swarm.started"
+  | "swarm.paused"
+  | "swarm.resumed"
+  | "swarm.completed"
+  | "swarm.failed"
+  | "swarm.cancelled"
   
   // Agent events
-  | 'agent.created'
-  | 'agent.started'
-  | 'agent.stopped'
-  | 'agent.error'
-  | 'agent.heartbeat'
+  | "agent.created"
+  | "agent.started"
+  | "agent.stopped"
+  | "agent.error"
+  | "agent.heartbeat"
   
   // Task events
-  | 'task.created'
-  | 'task.assigned'
-  | 'task.started'
-  | 'task.paused'
-  | 'task.resumed'
-  | 'task.completed'
-  | 'task.failed'
-  | 'task.cancelled'
-  | 'task.retried'
+  | "task.created"
+  | "task.assigned"
+  | "task.started"
+  | "task.paused"
+  | "task.resumed"
+  | "task.completed"
+  | "task.failed"
+  | "task.cancelled"
+  | "task.retried"
   
   // Coordination events
-  | 'coordination.load_balanced'
-  | 'coordination.work_stolen'
-  | 'coordination.agent_selected'
-  | 'coordination.dependency_resolved'
+  | "coordination.load_balanced"
+  | "coordination.work_stolen"
+  | "coordination.agent_selected"
+  | "coordination.dependency_resolved"
   
   // System events
-  | 'system.startup'
-  | 'system.shutdown'
-  | 'system.resource_limit'
-  | 'system.performance_degradation'
+  | "system.startup"
+  | "system.shutdown"
+  | "system.resource_limit"
+  | "system.performance_degradation"
   
   // Custom events
-  | 'custom.user_defined';
+  | "custom.user_defined";
 
 // ===== INTERFACE EXTENSIONS =====
 
@@ -1018,7 +1179,7 @@ export interface ValidationError {
   field: string;
   message: string;
   code: string;
-  severity: 'error' | 'critical';
+  severity: "error" | "critical";
 }
 
 export interface ValidationWarning {
@@ -1031,23 +1192,200 @@ export interface ValidationWarning {
 // ===== TYPE GUARDS =====
 
 export function isAgentId(obj: any): obj is AgentId {
-  return obj && typeof obj.id === 'string' && typeof obj.swarmId === 'string';
+  return obj && typeof obj.id === "string" && typeof obj.swarmId === "string";
 }
 
 export function isTaskId(obj: any): obj is TaskId {
-  return obj && typeof obj.id === 'string' && typeof obj.swarmId === 'string';
+  return obj && typeof obj.id === "string" && typeof obj.swarmId === "string";
 }
 
 export function isSwarmEvent(obj: any): obj is SwarmEvent {
-  return obj && typeof obj.id === 'string' && typeof obj.type === 'string';
+  return obj && typeof obj.id === "string" && typeof obj.type === "string";
 }
 
 export function isTaskDefinition(obj: any): obj is TaskDefinition {
-  return obj && isTaskId(obj.id) && typeof obj.type === 'string';
+  return obj && isTaskId(obj.id) && typeof obj.type === "string";
 }
 
 export function isAgentState(obj: any): obj is AgentState {
-  return obj && isAgentId(obj.id) && typeof obj.status === 'string';
+  return obj && isAgentId(obj.id) && typeof obj.status === "string";
+}
+
+// Enhanced type guards for new interfaces
+
+export function isTaskMetadata(obj: any): obj is TaskMetadata {
+  return obj && typeof obj === "object" && !Array.isArray(obj);
+}
+
+export function isQualityRequirements(obj: any): obj is QualityRequirements {
+  return obj && typeof obj === "object" && 
+    (obj.minQualityScore === undefined || typeof obj.minQualityScore === "number") &&
+    (obj.codeQualityRules === undefined || Array.isArray(obj.codeQualityRules)) &&
+    (obj.documentationRequired === undefined || typeof obj.documentationRequired === "boolean") &&
+    (obj.peerReviewRequired === undefined || typeof obj.peerReviewRequired === "boolean");
+}
+
+export function isTestingRequirements(obj: any): obj is TestingRequirements {
+  return obj && typeof obj === "object" &&
+    (obj.unitTestsRequired === undefined || typeof obj.unitTestsRequired === "boolean") &&
+    (obj.integrationTestsRequired === undefined || typeof obj.integrationTestsRequired === "boolean") &&
+    (obj.performanceTestsRequired === undefined || typeof obj.performanceTestsRequired === "boolean") &&
+    (obj.securityTestsRequired === undefined || typeof obj.securityTestsRequired === "boolean") &&
+    (obj.coverageThreshold === undefined || typeof obj.coverageThreshold === "number");
+}
+
+export function isResourceHints(obj: any): obj is ResourceHints {
+  return obj && typeof obj === "object" &&
+    (obj.preferredAgentTypes === undefined || Array.isArray(obj.preferredAgentTypes)) &&
+    (obj.memoryIntensive === undefined || typeof obj.memoryIntensive === "boolean") &&
+    (obj.computeIntensive === undefined || typeof obj.computeIntensive === "boolean") &&
+    (obj.networkIntensive === undefined || typeof obj.networkIntensive === "boolean") &&
+    (obj.storageIntensive === undefined || typeof obj.storageIntensive === "boolean");
+}
+
+export function isPerformanceTargets(obj: any): obj is PerformanceTargets {
+  return obj && typeof obj === "object" &&
+    (obj.maxExecutionTime === undefined || typeof obj.maxExecutionTime === "number") &&
+    (obj.maxMemoryUsage === undefined || typeof obj.maxMemoryUsage === "number") &&
+    (obj.maxCpuUsage === undefined || typeof obj.maxCpuUsage === "number") &&
+    (obj.throughputTarget === undefined || typeof obj.throughputTarget === "number");
+}
+
+export function isAgentEnvironment(obj: any): obj is AgentEnvironment {
+  return obj && typeof obj === "object" &&
+    typeof obj.runtime === "string" &&
+    typeof obj.version === "string" &&
+    typeof obj.workingDirectory === "string" &&
+    typeof obj.tempDirectory === "string" &&
+    typeof obj.logDirectory === "string" &&
+    typeof obj.apiEndpoints === "object" &&
+    typeof obj.credentials === "object" &&
+    Array.isArray(obj.availableTools) &&
+    typeof obj.toolConfigs === "object";
+}
+
+export function isNetworkConfig(obj: any): obj is NetworkConfig {
+  return obj && typeof obj === "object" &&
+    (obj.maxConnections === undefined || typeof obj.maxConnections === "number") &&
+    (obj.timeout === undefined || typeof obj.timeout === "number") &&
+    (obj.rateLimits === undefined || typeof obj.rateLimits === "object");
+}
+
+export function isSystemInfo(obj: any): obj is SystemInfo {
+  return obj && typeof obj === "object" &&
+    typeof obj.platform === "string" &&
+    typeof obj.architecture === "string" &&
+    typeof obj.cpuCores === "number" &&
+    typeof obj.totalMemory === "number" &&
+    typeof obj.availableMemory === "number" &&
+    typeof obj.diskSpace === "number";
+}
+
+export function isResourceLimits(obj: any): obj is ResourceLimits {
+  return obj && typeof obj === "object" &&
+    (obj.maxMemoryUsage === undefined || typeof obj.maxMemoryUsage === "number") &&
+    (obj.maxCpuUsage === undefined || typeof obj.maxCpuUsage === "number") &&
+    (obj.maxDiskUsage === undefined || typeof obj.maxDiskUsage === "number") &&
+    (obj.maxNetworkBandwidth === undefined || typeof obj.maxNetworkBandwidth === "number") &&
+    (obj.maxFileDescriptors === undefined || typeof obj.maxFileDescriptors === "number") &&
+    (obj.maxProcesses === undefined || typeof obj.maxProcesses === "number");
+}
+
+export function isSecurityConfig(obj: any): obj is SecurityConfig {
+  return obj && typeof obj === "object" &&
+    (obj.allowedDomains === undefined || Array.isArray(obj.allowedDomains)) &&
+    (obj.blockedDomains === undefined || Array.isArray(obj.blockedDomains)) &&
+    (obj.allowFileSystem === undefined || typeof obj.allowFileSystem === "boolean") &&
+    (obj.allowNetworkAccess === undefined || typeof obj.allowNetworkAccess === "boolean") &&
+    (obj.allowProcessExecution === undefined || typeof obj.allowProcessExecution === "boolean") &&
+    (obj.sandboxed === undefined || typeof obj.sandboxed === "boolean") &&
+    (obj.permissions === undefined || Array.isArray(obj.permissions));
+}
+
+export function isContainerConfig(obj: any): obj is ContainerConfig {
+  return obj && typeof obj === "object" &&
+    typeof obj.isContainerized === "boolean" &&
+    (obj.containerRuntime === undefined || typeof obj.containerRuntime === "string") &&
+    (obj.imageName === undefined || typeof obj.imageName === "string") &&
+    (obj.volumes === undefined || Array.isArray(obj.volumes)) &&
+    (obj.networkMode === undefined || typeof obj.networkMode === "string");
+}
+
+export function isMonitoringConfig(obj: any): obj is MonitoringConfig {
+  return obj && typeof obj === "object" &&
+    typeof obj.metricsEnabled === "boolean" &&
+    typeof obj.logLevel === "string" &&
+    ["debug", "info", "warn", "error"].includes(obj.logLevel) &&
+    (obj.healthCheckInterval === undefined || typeof obj.healthCheckInterval === "number") &&
+    (obj.performanceTracking === undefined || typeof obj.performanceTracking === "boolean") &&
+    (obj.alertThresholds === undefined || typeof obj.alertThresholds === "object");
+}
+
+// Validation helpers for enhanced interfaces
+export function validateTaskDefinitionWithMetadata(obj: any): string[] {
+  const errors: string[] = [];
+  
+  if (!isTaskDefinition(obj)) {
+    errors.push("Invalid TaskDefinition structure");
+    return errors;
+  }
+  
+  if (obj.metadata && !isTaskMetadata(obj.metadata)) {
+    errors.push("Invalid TaskMetadata structure");
+  }
+  
+  if (obj.metadata?.qualityRequirements && !isQualityRequirements(obj.metadata.qualityRequirements)) {
+    errors.push("Invalid QualityRequirements in metadata");
+  }
+  
+  if (obj.metadata?.testingRequirements && !isTestingRequirements(obj.metadata.testingRequirements)) {
+    errors.push("Invalid TestingRequirements in metadata");
+  }
+  
+  if (obj.metadata?.resourceHints && !isResourceHints(obj.metadata.resourceHints)) {
+    errors.push("Invalid ResourceHints in metadata");
+  }
+  
+  if (obj.metadata?.performanceTargets && !isPerformanceTargets(obj.metadata.performanceTargets)) {
+    errors.push("Invalid PerformanceTargets in metadata");
+  }
+  
+  return errors;
+}
+
+export function validateAgentEnvironment(obj: any): string[] {
+  const errors: string[] = [];
+  
+  if (!isAgentEnvironment(obj)) {
+    errors.push("Invalid AgentEnvironment structure");
+    return errors;
+  }
+  
+  if (obj.networkConfig && !isNetworkConfig(obj.networkConfig)) {
+    errors.push("Invalid NetworkConfig in environment");
+  }
+  
+  if (obj.systemInfo && !isSystemInfo(obj.systemInfo)) {
+    errors.push("Invalid SystemInfo in environment");
+  }
+  
+  if (obj.resourceLimits && !isResourceLimits(obj.resourceLimits)) {
+    errors.push("Invalid ResourceLimits in environment");
+  }
+  
+  if (obj.securityConfig && !isSecurityConfig(obj.securityConfig)) {
+    errors.push("Invalid SecurityConfig in environment");
+  }
+  
+  if (obj.containerConfig && !isContainerConfig(obj.containerConfig)) {
+    errors.push("Invalid ContainerConfig in environment");
+  }
+  
+  if (obj.monitoringConfig && !isMonitoringConfig(obj.monitoringConfig)) {
+    errors.push("Invalid MonitoringConfig in environment");
+  }
+  
+  return errors;
 }
 
 // ===== CONSTANTS =====

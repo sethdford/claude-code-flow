@@ -2,8 +2,8 @@
  * Memory indexer for fast querying
  */
 
-import { MemoryEntry, MemoryQuery } from '../utils/types.js';
-import { ILogger } from '../core/logger.js';
+import { MemoryEntry, MemoryQuery } from "../utils/types.js";
+import { ILogger } from "../core/logger.js";
 
 interface Index<T> {
   get(key: T): Set<string>;
@@ -65,7 +65,7 @@ export class MemoryIndexer {
    * Builds index from a list of entries
    */
   async buildIndex(entries: MemoryEntry[]): Promise<void> {
-    this.logger.info('Building memory index', { entries: entries.length });
+    this.logger.info("Building memory index", { entries: entries.length });
 
     this.clear();
 
@@ -73,7 +73,7 @@ export class MemoryIndexer {
       this.addEntry(entry);
     }
 
-    this.logger.info('Memory index built', { 
+    this.logger.info("Memory index built", { 
       totalEntries: this.entries.size,
       agents: this.agentIndex.keys().length,
       sessions: this.sessionIndex.keys().length,
@@ -185,7 +185,7 @@ export class MemoryIndexer {
   getMetrics(): {
     totalEntries: number;
     indexSizes: Record<string, number>;
-  } {
+    } {
     return {
       totalEntries: this.entries.size,
       indexSizes: {

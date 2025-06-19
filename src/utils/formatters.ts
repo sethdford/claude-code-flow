@@ -11,10 +11,10 @@ export function formatDuration(ms: number): string {
 }
 
 export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
@@ -32,7 +32,7 @@ export function formatRelativeTime(date: Date): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   
-  if (diff < 60000) return 'just now';
+  if (diff < 60000) return "just now";
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
   return `${Math.floor(diff / 86400000)}d ago`;
@@ -51,7 +51,7 @@ export function formatRate(rate: number): string {
 
 export function truncate(str: string, length: number): string {
   if (str.length <= length) return str;
-  return str.substring(0, length - 3) + '...';
+  return `${str.substring(0, length - 3)  }...`;
 }
 
 export function formatStatus(status: string): string {
@@ -60,10 +60,10 @@ export function formatStatus(status: string): string {
 
 export function formatHealth(health: number): string {
   const percentage = Math.round(health * 100);
-  let emoji = '🟢';
+  let emoji = "🟢";
   
-  if (health < 0.3) emoji = '🔴';
-  else if (health < 0.7) emoji = '🟡';
+  if (health < 0.3) emoji = "🔴";
+  else if (health < 0.7) emoji = "🟡";
   
   return `${emoji} ${percentage}%`;
 }

@@ -21,7 +21,7 @@ async function main() {
 // Check if this module is being run directly (Node.js equivalent of import.meta.main)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const isMainModule = process.argv[1] === __filename || process.argv[1].endsWith('/main.js');
+const isMainModule = process.argv[1] === __filename || process.argv[1].endsWith("/main.js");
 
 if (isMainModule) {
   main().catch((error) => {

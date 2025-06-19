@@ -2,8 +2,8 @@
  * Circuit breaker pattern for fault tolerance
  */
 
-import { ILogger } from '../core/logger.js';
-import { IEventBus } from '../core/event-bus.js';
+import { ILogger } from "../core/logger.js";
+import { IEventBus } from "../core/event-bus.js";
 
 export interface CircuitBreakerConfig {
   failureThreshold: number; // Number of failures before opening
@@ -13,9 +13,9 @@ export interface CircuitBreakerConfig {
 }
 
 export enum CircuitState {
-  CLOSED = 'closed',
-  OPEN = 'open',
-  HALF_OPEN = 'half-open',
+  CLOSED = "closed",
+  OPEN = "open",
+  HALF_OPEN = "half-open",
 }
 
 export interface CircuitBreakerMetrics {
@@ -60,7 +60,7 @@ export class CircuitBreaker {
     if (!this.canExecute()) {
       this.rejectedRequests++;
       const error = new Error(`Circuit breaker '${this.name}' is OPEN`);
-      this.logStateChange('Request rejected');
+      this.logStateChange("Request rejected");
       throw error;
     }
 
@@ -199,7 +199,7 @@ export class CircuitBreaker {
 
     // Emit state change event
     if (this.eventBus) {
-      this.eventBus.emit('circuitbreaker:state-change', {
+      this.eventBus.emit("circuitbreaker:state-change", {
         name: this.name,
         from: oldState,
         to: newState,

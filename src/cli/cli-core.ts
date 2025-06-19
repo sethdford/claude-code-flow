@@ -130,18 +130,18 @@ class CLI {
     while (i < args.length) {
       const arg = args[i];
       
-      if (arg.startsWith('--')) {
+      if (arg.startsWith("--")) {
         const key = arg.slice(2);
-        if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
+        if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
           result[key] = args[i + 1];
           i += 2;
         } else {
           result[key] = true;
           i++;
         }
-      } else if (arg.startsWith('-')) {
+      } else if (arg.startsWith("-")) {
         const key = arg.slice(1);
-        if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
+        if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
           result[key] = args[i + 1];
           i += 2;
         } else {
@@ -160,7 +160,7 @@ class CLI {
   private async loadConfig(configPath?: string): Promise<Record<string, unknown> | undefined> {
     const configFile = configPath || "claude-flow.config.json";
     try {
-      const content = await fs.readFile(configFile, 'utf8');
+      const content = await fs.readFile(configFile, "utf8");
       return JSON.parse(content);
     } catch {
       return undefined;
@@ -289,7 +289,7 @@ export type { Command, CommandContext, Option };
 
 // Main CLI setup if running directly
 async function main() {
-  if (process.argv[1] && (process.argv[1].endsWith('cli-core.js') || process.argv[1].endsWith('cli-core.ts'))) {
+  if (process.argv[1] && (process.argv[1].endsWith("cli-core.js") || process.argv[1].endsWith("cli-core.ts"))) {
     const cli = new CLI("claude-flow", "Advanced AI Agent Orchestration System");
 
     // Import and register all commands

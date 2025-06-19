@@ -1,25 +1,25 @@
 // init/directory-structure.ts - Directory structure creation
 export async function createDirectoryStructure(): Promise<void> {
-  const fs = await import('fs/promises');
-  const path = await import('path');
+  const fs = await import("fs/promises");
+  const path = await import("path");
   
   // Define directory structure
   const directories = [
-    '.claude',
-    '.claude/commands',
-    '.claude/commands/swarm',
-    '.claude/commands/sparc',
-    '.claude/logs',
-    '.claude/memory',
-    '.claude/configs',
-    'memory',
-    'memory/agents',
-    'memory/sessions',
-    'coordination',
-    'coordination/memory_bank',
-    'coordination/subtasks',
-    'coordination/orchestration',
-    'reports'
+    ".claude",
+    ".claude/commands",
+    ".claude/commands/swarm",
+    ".claude/commands/sparc",
+    ".claude/logs",
+    ".claude/memory",
+    ".claude/configs",
+    "memory",
+    "memory/agents",
+    "memory/sessions",
+    "coordination",
+    "coordination/memory_bank",
+    "coordination/subtasks",
+    "coordination/orchestration",
+    "reports",
   ];
   
   // Create directories
@@ -28,7 +28,7 @@ export async function createDirectoryStructure(): Promise<void> {
       await fs.mkdir(dir, { recursive: true });
       console.log(`  ✅ Created ${dir}/ directory`);
     } catch (error) {
-      if (error.code !== 'EEXIST') {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
         throw error;
       }
     }
@@ -36,10 +36,10 @@ export async function createDirectoryStructure(): Promise<void> {
   
   // Create README files for key directories
   const readmeFiles = {
-    'memory/agents/README.md': createAgentsReadme(),
-    'memory/sessions/README.md': createSessionsReadme(),
-    'coordination/README.md': createCoordinationReadme(),
-    'reports/README.md': createReportsReadme()
+    "memory/agents/README.md": createAgentsReadme(),
+    "memory/sessions/README.md": createSessionsReadme(),
+    "coordination/README.md": createCoordinationReadme(),
+    "reports/README.md": createReportsReadme(),
   };
   
   for (const [filePath, content] of Object.entries(readmeFiles)) {
@@ -53,11 +53,11 @@ export async function createDirectoryStructure(): Promise<void> {
     tasks: [],
     swarms: [],
     lastUpdated: Date.now(),
-    version: "1.0.71"
+    version: "1.0.71",
   };
   
-  await fs.writeFile('memory/claude-flow-data.json', JSON.stringify(initialData, null, 2));
-  console.log('  ✅ Created memory/claude-flow-data.json (persistence database)');
+  await fs.writeFile("memory/claude-flow-data.json", JSON.stringify(initialData, null, 2));
+  console.log("  ✅ Created memory/claude-flow-data.json (persistence database)");
 }
 
 function createAgentsReadme(): string {

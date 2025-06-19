@@ -2,15 +2,15 @@
  * Terminal manager interface and implementation
  */
 
-import { AgentProfile, AgentSession, TerminalConfig } from '../utils/types.js';
-import { IEventBus } from '../core/event-bus.js';
-import { ILogger } from '../core/logger.js';
-import { TerminalError, TerminalSpawnError } from '../utils/errors.js';
-import { ITerminalAdapter } from './adapters/base.js';
-import { VSCodeAdapter } from './adapters/vscode.js';
-import { NativeAdapter } from './adapters/native.js';
-import { TerminalPool } from './pool.js';
-import { TerminalSession } from './session.js';
+import { AgentProfile, AgentSession, TerminalConfig } from "../utils/types.js";
+import { IEventBus } from "../core/event-bus.js";
+import { ILogger } from "../core/logger.js";
+import { TerminalError, TerminalSpawnError } from "../utils/errors.js";
+import { ITerminalAdapter } from "./adapters/base.js";
+import { VSCodeAdapter } from "./adapters/vscode.js";
+import { NativeAdapter } from "./adapters/native.js";
+import { TerminalPool } from "./pool.js";
+import { TerminalSession } from "./session.js";
 
 export interface ITerminalManager {
   initialize(): Promise<void>;
@@ -53,7 +53,7 @@ export class TerminalManager implements ITerminalManager {
       return;
     }
 
-    this.logger.info('Initializing terminal manager...');
+    this.logger.info("Initializing terminal manager...");
 
     try {
       // Initialize adapter
@@ -63,10 +63,10 @@ export class TerminalManager implements ITerminalManager {
       await this.pool.initialize();
 
       this.initialized = true;
-      this.logger.info('Terminal manager initialized');
+      this.logger.info("Terminal manager initialized");
     } catch (error) {
-      this.logger.error('Failed to initialize terminal manager', error);
-      throw new TerminalError('Terminal manager initialization failed', { error });
+      this.logger.error("Failed to initialize terminal manager", error);
+      throw new TerminalError("Terminal manager initialization failed", { error });
     }
   }
 
@@ -75,7 +75,7 @@ export class TerminalManager implements ITerminalManager {
       return;
     }
 
-    this.logger.info('Shutting down terminal manager...');
+    this.logger.info("Shutting down terminal manager...");
 
     try {
       // Terminate all sessions
@@ -91,19 +91,19 @@ export class TerminalManager implements ITerminalManager {
       await this.adapter.shutdown();
 
       this.initialized = false;
-      this.logger.info('Terminal manager shutdown complete');
+      this.logger.info("Terminal manager shutdown complete");
     } catch (error) {
-      this.logger.error('Error during terminal manager shutdown', error);
+      this.logger.error("Error during terminal manager shutdown", error);
       throw error;
     }
   }
 
   async spawnTerminal(profile: AgentProfile): Promise<string> {
     if (!this.initialized) {
-      throw new TerminalError('Terminal manager not initialized');
+      throw new TerminalError("Terminal manager not initialized");
     }
 
-    this.logger.debug('Spawning terminal', { agentId: profile.id });
+    this.logger.debug("Spawning terminal", { agentId: profile.id });
 
     try {
       // Get terminal from pool
@@ -123,15 +123,15 @@ export class TerminalManager implements ITerminalManager {
       // Store session
       this.sessions.set(session.id, session);
 
-      this.logger.info('Terminal spawned', { 
+      this.logger.info("Terminal spawned", { 
         terminalId: session.id, 
         agentId: profile.id,
       });
 
       return session.id;
     } catch (error) {
-      this.logger.error('Failed to spawn terminal', error);
-      throw new TerminalSpawnError('Failed to spawn terminal', { error });
+      this.logger.error("Failed to spawn terminal", error);
+      throw new TerminalSpawnError("Failed to spawn terminal", { error });
     }
   }
 
@@ -141,7 +141,7 @@ export class TerminalManager implements ITerminalManager {
       throw new TerminalError(`Terminal not found: ${terminalId}`);
     }
 
-    this.logger.debug('Terminating terminal', { terminalId });
+    this.logger.debug("Terminating terminal", { terminalId });
 
     try {
       // Cleanup session
@@ -153,9 +153,9 @@ export class TerminalManager implements ITerminalManager {
       // Remove session
       this.sessions.delete(terminalId);
 
-      this.logger.info('Terminal terminated', { terminalId });
+      this.logger.info("Terminal terminated", { terminalId });
     } catch (error) {
-      this.logger.error('Failed to terminate terminal', error);
+      this.logger.error("Failed to terminate terminal", error);
       throw error;
     }
   }
@@ -199,13 +199,13 @@ export class TerminalManager implements ITerminalManager {
         return {
           healthy,
           metrics,
-          error: 'Some terminals are unhealthy',
+          error: "Some terminals are unhealthy",
         };
       }
     } catch (error) {
       return {
         healthy: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -215,7 +215,7 @@ export class TerminalManager implements ITerminalManager {
       return;
     }
 
-    this.logger.debug('Performing terminal manager maintenance');
+    this.logger.debug("Performing terminal manager maintenance");
 
     try {
       // Clean up dead sessions
@@ -223,9 +223,9 @@ export class TerminalManager implements ITerminalManager {
         .filter(([_, session]) => !session.isHealthy());
 
       for (const [terminalId, _] of deadSessions) {
-        this.logger.warn('Cleaning up dead terminal session', { terminalId });
+        this.logger.warn("Cleaning up dead terminal session", { terminalId });
         await this.terminateTerminal(terminalId).catch(error => 
-          this.logger.error('Failed to clean up terminal', { terminalId, error })
+          this.logger.error("Failed to clean up terminal", { terminalId, error }),
         );
       }
 
@@ -233,15 +233,15 @@ export class TerminalManager implements ITerminalManager {
       await this.pool.performMaintenance();
 
       // Emit maintenance event
-      this.eventBus.emit('terminal:maintenance', {
+      this.eventBus.emit("terminal:maintenance", {
         deadSessions: deadSessions.length,
         activeSessions: this.sessions.size,
         poolStatus: await this.pool.getHealthStatus(),
       });
 
-      this.logger.debug('Terminal manager maintenance completed');
+      this.logger.debug("Terminal manager maintenance completed");
     } catch (error) {
-      this.logger.error('Error during terminal manager maintenance', error);
+      this.logger.error("Error during terminal manager maintenance", error);
     }
   }
 
@@ -254,9 +254,9 @@ export class TerminalManager implements ITerminalManager {
       agentId: session.profile.id,
       terminalId: session.terminal.id,
       startTime: session.startTime,
-      status: session.isHealthy() ? 'active' : 'error',
+      status: session.isHealthy() ? "active" : "error",
       lastActivity: session.lastActivity,
-      memoryBankId: '', // TODO: Link to memory bank
+      memoryBankId: "", // TODO: Link to memory bank
     }));
   }
 
@@ -281,17 +281,17 @@ export class TerminalManager implements ITerminalManager {
 
   private createAdapter(): ITerminalAdapter {
     switch (this.config.type) {
-      case 'vscode':
+      case "vscode":
         return new VSCodeAdapter(this.logger);
-      case 'native':
+      case "native":
         return new NativeAdapter(this.logger);
-      case 'auto':
+      case "auto":
         // Detect environment and choose appropriate adapter
         if (this.isVSCodeEnvironment()) {
-          this.logger.info('Detected VSCode environment, using VSCode adapter');
+          this.logger.info("Detected VSCode environment, using VSCode adapter");
           return new VSCodeAdapter(this.logger);
         } else {
-          this.logger.info('Using native terminal adapter');
+          this.logger.info("Using native terminal adapter");
           return new NativeAdapter(this.logger);
         }
       default:
@@ -301,7 +301,7 @@ export class TerminalManager implements ITerminalManager {
 
   private isVSCodeEnvironment(): boolean {
     // Check for VSCode-specific environment variables
-    return process.env.TERM_PROGRAM === 'vscode' ||
+    return process.env.TERM_PROGRAM === "vscode" ||
            process.env.VSCODE_PID !== undefined ||
            process.env.VSCODE_IPC_HOOK !== undefined;
   }

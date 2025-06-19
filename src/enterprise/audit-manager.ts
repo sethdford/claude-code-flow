@@ -1,16 +1,16 @@
-import { EventEmitter } from 'events';
-import { writeFile, readFile, mkdir, readdir } from 'fs/promises';
-import { join } from 'path';
-import { createHash } from 'crypto';
-import { Logger } from '../core/logger.js';
-import { ConfigManager } from '../core/config.js';
+import { EventEmitter } from "events";
+import { writeFile, readFile, mkdir, readdir } from "fs/promises";
+import { join } from "path";
+import { createHash } from "crypto";
+import { Logger } from "../core/logger.js";
+import { ConfigManager } from "../core/config.js";
 
 export interface AuditEntry {
   id: string;
   timestamp: Date;
   eventType: string;
-  category: 'authentication' | 'authorization' | 'data-access' | 'system-change' | 'security' | 'compliance' | 'business';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  category: "authentication" | "authorization" | "data-access" | "system-change" | "security" | "compliance" | "business";
+  severity: "low" | "medium" | "high" | "critical";
   userId?: string;
   sessionId?: string;
   resource: {
@@ -20,7 +20,7 @@ export interface AuditEntry {
     path?: string;
   };
   action: string;
-  outcome: 'success' | 'failure' | 'partial' | 'denied';
+  outcome: "success" | "failure" | "partial" | "denied";
   details: Record<string, any>;
   context: {
     ipAddress?: string;
@@ -33,7 +33,7 @@ export interface AuditEntry {
     frameworks: string[];
     controls: string[];
     retention: string;
-    classification: 'public' | 'internal' | 'confidential' | 'restricted';
+    classification: "public" | "internal" | "confidential" | "restricted";
   };
   integrity: {
     hash: string;
@@ -48,9 +48,9 @@ export interface ComplianceFramework {
   name: string;
   version: string;
   description: string;
-  type: 'regulatory' | 'industry' | 'internal' | 'certification';
+  type: "regulatory" | "industry" | "internal" | "certification";
   requirements: ComplianceRequirement[];
-  auditFrequency: 'continuous' | 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
+  auditFrequency: "continuous" | "daily" | "weekly" | "monthly" | "quarterly" | "annually";
   retentionPeriod: string;
   reportingRequirements: {
     frequency: string;
@@ -59,7 +59,7 @@ export interface ComplianceFramework {
     automated: boolean;
   };
   controls: ComplianceControl[];
-  status: 'active' | 'inactive' | 'pending' | 'deprecated';
+  status: "active" | "inactive" | "pending" | "deprecated";
   implementationDate: Date;
   nextReview: Date;
   responsible: string;
@@ -70,8 +70,8 @@ export interface ComplianceRequirement {
   title: string;
   description: string;
   category: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'compliant' | 'non-compliant' | 'partial' | 'not-applicable' | 'pending';
+  priority: "low" | "medium" | "high" | "critical";
+  status: "compliant" | "non-compliant" | "partial" | "not-applicable" | "pending";
   evidence: string[];
   gaps: string[];
   remediation: {
@@ -95,23 +95,23 @@ export interface ComplianceControl {
   id: string;
   name: string;
   description: string;
-  type: 'preventive' | 'detective' | 'corrective' | 'compensating';
-  automationType: 'manual' | 'semi-automated' | 'automated';
-  effectiveness: 'low' | 'medium' | 'high';
+  type: "preventive" | "detective" | "corrective" | "compensating";
+  automationType: "manual" | "semi-automated" | "automated";
+  effectiveness: "low" | "medium" | "high";
   frequency: string;
   owner: string;
   evidence: string[];
   testingProcedure: string;
   lastTested: Date;
   nextTest: Date;
-  status: 'effective' | 'ineffective' | 'needs-improvement' | 'not-tested';
+  status: "effective" | "ineffective" | "needs-improvement" | "not-tested";
 }
 
 export interface AuditReport {
   id: string;
   title: string;
   description: string;
-  type: 'compliance' | 'security' | 'operational' | 'financial' | 'investigation' | 'custom';
+  type: "compliance" | "security" | "operational" | "financial" | "investigation" | "custom";
   scope: {
     timeRange: { start: Date; end: Date };
     systems: string[];
@@ -125,14 +125,14 @@ export interface AuditReport {
     totalEvents: number;
     criticalFindings: number;
     complianceScore: number;
-    riskLevel: 'low' | 'medium' | 'high' | 'critical';
+    riskLevel: "low" | "medium" | "high" | "critical";
   };
   methodology: string;
   limitations: string[];
   reviewers: string[];
   approvers: string[];
-  status: 'draft' | 'under-review' | 'approved' | 'published' | 'archived';
-  confidentiality: 'public' | 'internal' | 'confidential' | 'restricted';
+  status: "draft" | "under-review" | "approved" | "published" | "archived";
+  confidentiality: "public" | "internal" | "confidential" | "restricted";
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
@@ -143,7 +143,7 @@ export interface AuditFinding {
   id: string;
   title: string;
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   category: string;
   risk: string;
   impact: string;
@@ -156,30 +156,30 @@ export interface AuditFinding {
     penalties?: string[];
   };
   remediation: {
-    priority: 'low' | 'medium' | 'high' | 'immediate';
+    priority: "low" | "medium" | "high" | "immediate";
     owner: string;
     actions: string[];
     timeline: string;
     cost?: number;
   };
-  status: 'open' | 'in-progress' | 'resolved' | 'accepted-risk' | 'false-positive';
+  status: "open" | "in-progress" | "resolved" | "accepted-risk" | "false-positive";
 }
 
 export interface AuditEvidence {
   id: string;
-  type: 'log-entry' | 'screenshot' | 'document' | 'system-output' | 'witness-statement' | 'data-export';
+  type: "log-entry" | "screenshot" | "document" | "system-output" | "witness-statement" | "data-export";
   description: string;
   source: string;
   timestamp: Date;
   hash: string;
   location: string;
-  preservationStatus: 'intact' | 'modified' | 'corrupted' | 'missing';
+  preservationStatus: "intact" | "modified" | "corrupted" | "missing";
   chainOfCustody: ChainOfCustodyEntry[];
 }
 
 export interface ChainOfCustodyEntry {
   timestamp: Date;
-  action: 'collected' | 'accessed' | 'analyzed' | 'transferred' | 'stored' | 'destroyed';
+  action: "collected" | "accessed" | "analyzed" | "transferred" | "stored" | "destroyed";
   user: string;
   reason: string;
   hash: string;
@@ -189,18 +189,18 @@ export interface AuditRecommendation {
   id: string;
   title: string;
   description: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  category: 'policy' | 'process' | 'technology' | 'training' | 'governance';
+  priority: "low" | "medium" | "high" | "critical";
+  category: "policy" | "process" | "technology" | "training" | "governance";
   implementation: {
-    effort: 'low' | 'medium' | 'high';
-    cost: 'low' | 'medium' | 'high';
+    effort: "low" | "medium" | "high";
+    cost: "low" | "medium" | "high";
     timeline: string;
     dependencies: string[];
     risks: string[];
   };
   expectedBenefit: string;
   owner: string;
-  status: 'proposed' | 'approved' | 'in-progress' | 'completed' | 'rejected';
+  status: "proposed" | "approved" | "in-progress" | "completed" | "rejected";
   tracking: {
     milestones: string[];
     progress: number;
@@ -253,10 +253,10 @@ export interface AuditTrail {
 
 export interface TamperEvidence {
   timestamp: Date;
-  type: 'checksum-mismatch' | 'unauthorized-access' | 'missing-entries' | 'timestamp-anomaly';
+  type: "checksum-mismatch" | "unauthorized-access" | "missing-entries" | "timestamp-anomaly";
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  investigationStatus: 'pending' | 'investigating' | 'resolved' | 'false-alarm';
+  severity: "low" | "medium" | "high" | "critical";
+  investigationStatus: "pending" | "investigating" | "resolved" | "false-alarm";
   evidence: string[];
 }
 
@@ -273,17 +273,17 @@ export interface AuditConfiguration {
     bufferSize: number;
     batchSize: number;
     flushInterval: number;
-    failureHandling: 'ignore' | 'retry' | 'alert' | 'stop';
+    failureHandling: "ignore" | "retry" | "alert" | "stop";
   };
   storage: {
     primaryLocation: string;
     backupLocation?: string;
     archivalLocation?: string;
-    partitioning: 'daily' | 'weekly' | 'monthly';
+    partitioning: "daily" | "weekly" | "monthly";
     indexing: boolean;
   };
   integrity: {
-    checksumAlgorithm: 'sha256' | 'sha512' | 'blake2b';
+    checksumAlgorithm: "sha256" | "sha512" | "blake2b";
     verificationFrequency: string;
     digitalSignatures: boolean;
     immutableStorage: boolean;
@@ -342,7 +342,7 @@ export interface AuditMetrics {
       nonCompliant: number;
       total: number;
     }>;
-    trending: 'improving' | 'stable' | 'declining';
+    trending: "improving" | "stable" | "declining";
   };
   integrity: {
     verificationSuccess: number;
@@ -375,13 +375,13 @@ export class AuditManager extends EventEmitter {
   private configuration: AuditConfiguration;
 
   constructor(
-    auditPath: string = './audit',
+    auditPath: string = "./audit",
     logger?: Logger,
-    config?: ConfigManager
+    config?: ConfigManager,
   ) {
     super();
     this.auditPath = auditPath;
-    this.logger = logger || new Logger({ level: 'info', format: 'text', destination: 'console' });
+    this.logger = logger || new Logger({ level: "info", format: "text", destination: "console" });
     this.config = config || ConfigManager.getInstance();
     this.configuration = this.getDefaultConfiguration();
   }
@@ -389,38 +389,38 @@ export class AuditManager extends EventEmitter {
   async initialize(): Promise<void> {
     try {
       await mkdir(this.auditPath, { recursive: true });
-      await mkdir(join(this.auditPath, 'trails'), { recursive: true });
-      await mkdir(join(this.auditPath, 'frameworks'), { recursive: true });
-      await mkdir(join(this.auditPath, 'reports'), { recursive: true });
-      await mkdir(join(this.auditPath, 'evidence'), { recursive: true });
-      await mkdir(join(this.auditPath, 'exports'), { recursive: true });
+      await mkdir(join(this.auditPath, "trails"), { recursive: true });
+      await mkdir(join(this.auditPath, "frameworks"), { recursive: true });
+      await mkdir(join(this.auditPath, "reports"), { recursive: true });
+      await mkdir(join(this.auditPath, "evidence"), { recursive: true });
+      await mkdir(join(this.auditPath, "exports"), { recursive: true });
       
       await this.loadConfigurations();
       await this.initializeDefaultFrameworks();
       await this.startAuditProcessing();
       
-      this.logger.info('Audit Manager initialized successfully');
+      this.logger.info("Audit Manager initialized successfully");
     } catch (error) {
-      this.logger.error('Failed to initialize Audit Manager', { error });
+      this.logger.error("Failed to initialize Audit Manager", { error });
       throw error;
     }
   }
 
   async logAuditEvent(eventData: {
     eventType: string;
-    category: AuditEntry['category'];
-    severity?: AuditEntry['severity'];
+    category: AuditEntry["category"];
+    severity?: AuditEntry["severity"];
     userId?: string;
     sessionId?: string;
-    resource: AuditEntry['resource'];
+    resource: AuditEntry["resource"];
     action: string;
-    outcome: AuditEntry['outcome'];
+    outcome: AuditEntry["outcome"];
     details: Record<string, any>;
-    context: Partial<AuditEntry['context']>;
+    context: Partial<AuditEntry["context"]>;
     compliance?: {
       frameworks?: string[];
       controls?: string[];
-      classification?: AuditEntry['compliance']['classification'];
+      classification?: AuditEntry["compliance"]["classification"];
     };
   }): Promise<AuditEntry> {
     const entry: AuditEntry = {
@@ -428,7 +428,7 @@ export class AuditManager extends EventEmitter {
       timestamp: new Date(),
       eventType: eventData.eventType,
       category: eventData.category,
-      severity: eventData.severity || 'medium',
+      severity: eventData.severity || "medium",
       userId: eventData.userId,
       sessionId: eventData.sessionId,
       resource: eventData.resource,
@@ -436,20 +436,20 @@ export class AuditManager extends EventEmitter {
       outcome: eventData.outcome,
       details: eventData.details,
       context: {
-        source: 'system',
-        ...eventData.context
+        source: "system",
+        ...eventData.context,
       },
       compliance: {
         frameworks: eventData.compliance?.frameworks || [],
         controls: eventData.compliance?.controls || [],
         retention: this.calculateRetentionPeriod(eventData.category, eventData.compliance?.frameworks),
-        classification: eventData.compliance?.classification || 'internal'
+        classification: eventData.compliance?.classification || "internal",
       },
       integrity: {
-        hash: '',
-        verified: false
+        hash: "",
+        verified: false,
       },
-      metadata: {}
+      metadata: {},
     };
 
     // Calculate integrity hash
@@ -460,7 +460,7 @@ export class AuditManager extends EventEmitter {
     this.auditBuffer.push(entry);
 
     // Immediate processing for critical events
-    if (entry.severity === 'critical') {
+    if (entry.severity === "critical") {
       await this.processAuditEntry(entry);
       await this.generateSecurityAlert(entry);
     }
@@ -470,7 +470,7 @@ export class AuditManager extends EventEmitter {
       await this.flushAuditBuffer();
     }
 
-    this.emit('audit:logged', entry);
+    this.emit("audit:logged", entry);
     return entry;
   }
 
@@ -478,10 +478,10 @@ export class AuditManager extends EventEmitter {
     name: string;
     version: string;
     description: string;
-    type: ComplianceFramework['type'];
-    requirements: Omit<ComplianceRequirement, 'id'>[];
-    controls: Omit<ComplianceControl, 'id'>[];
-    auditFrequency: ComplianceFramework['auditFrequency'];
+    type: ComplianceFramework["type"];
+    requirements: Omit<ComplianceRequirement, "id">[];
+    controls: Omit<ComplianceControl, "id">[];
+    auditFrequency: ComplianceFramework["auditFrequency"];
     retentionPeriod: string;
     responsible: string;
   }): Promise<ComplianceFramework> {
@@ -495,46 +495,46 @@ export class AuditManager extends EventEmitter {
         id: `req-${Date.now()}-${index}`,
         ...req,
         automatedCheck: {
-          enabled: false,
-          frequency: 'daily',
-          query: '',
-          ...req.automatedCheck
-        }
+          ...(req.automatedCheck || {}),
+          enabled: req.automatedCheck?.enabled ?? false,
+          frequency: req.automatedCheck?.frequency ?? "daily" as const,
+          query: req.automatedCheck?.query ?? "",
+        },
       })),
       auditFrequency: frameworkData.auditFrequency,
       retentionPeriod: frameworkData.retentionPeriod,
       reportingRequirements: {
-        frequency: 'quarterly',
+        frequency: "quarterly",
         recipients: [],
-        format: ['pdf', 'json'],
-        automated: false
+        format: ["pdf", "json"],
+        automated: false,
       },
       controls: frameworkData.controls.map((control, index) => ({
         id: `control-${Date.now()}-${index}`,
-        ...control
+        ...control,
       })),
-      status: 'active',
+      status: "active",
       implementationDate: new Date(),
       nextReview: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-      responsible: frameworkData.responsible
+      responsible: frameworkData.responsible,
     };
 
     this.frameworks.set(framework.id, framework);
     await this.saveFramework(framework);
 
     await this.logAuditEvent({
-      eventType: 'compliance_framework_created',
-      category: 'compliance',
-      severity: 'medium',
-      resource: { type: 'compliance-framework', id: framework.id, name: framework.name },
-      action: 'create',
-      outcome: 'success',
+      eventType: "compliance_framework_created",
+      category: "compliance",
+      severity: "medium",
+      resource: { type: "compliance-framework", id: framework.id, name: framework.name },
+      action: "create",
+      outcome: "success",
       details: { frameworkType: framework.type, requirementsCount: framework.requirements.length },
-      context: { source: 'audit-manager' },
-      compliance: { frameworks: [framework.id] }
+      context: { source: "audit-manager" },
+      compliance: { frameworks: [framework.id] },
     });
 
-    this.emit('framework:created', framework);
+    this.emit("framework:created", framework);
     this.logger.info(`Compliance framework created: ${framework.name} (${framework.id})`);
 
     return framework;
@@ -543,10 +543,10 @@ export class AuditManager extends EventEmitter {
   async generateAuditReport(reportConfig: {
     title: string;
     description: string;
-    type: AuditReport['type'];
-    scope: AuditReport['scope'];
+    type: AuditReport["type"];
+    scope: AuditReport["scope"];
     includeRecommendations?: boolean;
-    confidentiality?: AuditReport['confidentiality'];
+    confidentiality?: AuditReport["confidentiality"];
   }): Promise<AuditReport> {
     const report: AuditReport = {
       id: `report-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -560,17 +560,17 @@ export class AuditManager extends EventEmitter {
         totalEvents: 0,
         criticalFindings: 0,
         complianceScore: 0,
-        riskLevel: 'low'
+        riskLevel: "low",
       },
-      methodology: 'Automated analysis of audit trail data with manual review of findings',
+      methodology: "Automated analysis of audit trail data with manual review of findings",
       limitations: [],
       reviewers: [],
       approvers: [],
-      status: 'draft',
-      confidentiality: reportConfig.confidentiality || 'internal',
+      status: "draft",
+      confidentiality: reportConfig.confidentiality || "internal",
       createdAt: new Date(),
       updatedAt: new Date(),
-      createdBy: 'audit-manager'
+      createdBy: "audit-manager",
     };
 
     // Collect relevant audit entries
@@ -580,13 +580,13 @@ export class AuditManager extends EventEmitter {
     // Analyze entries for findings
     const findings = await this.analyzeAuditEntries(auditEntries, reportConfig.type);
     report.findings = findings;
-    report.summary.criticalFindings = findings.filter(f => f.severity === 'critical').length;
+    report.summary.criticalFindings = findings.filter(f => f.severity === "critical").length;
 
     // Calculate compliance score
     if (reportConfig.scope.compliance && reportConfig.scope.compliance.length > 0) {
       report.summary.complianceScore = await this.calculateComplianceScore(
         reportConfig.scope.compliance,
-        auditEntries
+        auditEntries,
       );
     }
 
@@ -602,30 +602,30 @@ export class AuditManager extends EventEmitter {
     await this.saveReport(report);
 
     await this.logAuditEvent({
-      eventType: 'audit_report_generated',
-      category: 'compliance',
-      severity: 'medium',
-      resource: { type: 'audit-report', id: report.id, name: report.title },
-      action: 'generate',
-      outcome: 'success',
+      eventType: "audit_report_generated",
+      category: "compliance",
+      severity: "medium",
+      resource: { type: "audit-report", id: report.id, name: report.title },
+      action: "generate",
+      outcome: "success",
       details: {
         reportType: report.type,
         totalEvents: report.summary.totalEvents,
         findingsCount: report.findings.length,
-        complianceScore: report.summary.complianceScore
+        complianceScore: report.summary.complianceScore,
       },
-      context: { source: 'audit-manager' },
-      compliance: { frameworks: reportConfig.scope.compliance || [] }
+      context: { source: "audit-manager" },
+      compliance: { frameworks: reportConfig.scope.compliance || [] },
     });
 
-    this.emit('report:generated', report);
+    this.emit("report:generated", report);
     this.logger.info(`Audit report generated: ${report.title} (${report.id})`);
 
     return report;
   }
 
   async exportAuditData(exportConfig: {
-    format: 'json' | 'csv' | 'xml' | 'pdf';
+    format: "json" | "csv" | "xml" | "pdf";
     scope: {
       timeRange: { start: Date; end: Date };
       categories?: string[];
@@ -639,21 +639,21 @@ export class AuditManager extends EventEmitter {
     const entries = await this.queryAuditEntries(exportConfig.scope);
     
     let exportData: string;
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `audit-export-${timestamp}.${exportConfig.format}`;
-    const filepath = join(this.auditPath, 'exports', filename);
+    const filepath = join(this.auditPath, "exports", filename);
 
     switch (exportConfig.format) {
-      case 'json':
+      case "json":
         exportData = JSON.stringify(entries, null, 2);
         break;
-      case 'csv':
+      case "csv":
         exportData = this.convertToCSV(entries);
         break;
-      case 'xml':
+      case "xml":
         exportData = this.convertToXML(entries);
         break;
-      case 'pdf':
+      case "pdf":
         exportData = await this.convertToPDF(entries);
         break;
       default:
@@ -673,23 +673,23 @@ export class AuditManager extends EventEmitter {
     await writeFile(filepath, exportData);
 
     await this.logAuditEvent({
-      eventType: 'audit_data_exported',
-      category: 'data-access',
-      severity: 'medium',
-      resource: { type: 'audit-data', id: 'export', path: filepath },
-      action: 'export',
-      outcome: 'success',
+      eventType: "audit_data_exported",
+      category: "data-access",
+      severity: "medium",
+      resource: { type: "audit-data", id: "export", path: filepath },
+      action: "export",
+      outcome: "success",
       details: {
         format: exportConfig.format,
         recordCount: entries.length,
         timeRange: exportConfig.scope.timeRange,
         compressed: exportConfig.compression || false,
-        encrypted: exportConfig.encryption || false
+        encrypted: exportConfig.encryption || false,
       },
-      context: { source: 'audit-manager' }
+      context: { source: "audit-manager" },
     });
 
-    this.emit('data:exported', { filepath, format: exportConfig.format, recordCount: entries.length });
+    this.emit("data:exported", { filepath, format: exportConfig.format, recordCount: entries.length });
     this.logger.info(`Audit data exported: ${filename} (${entries.length} records)`);
 
     return filepath;
@@ -709,10 +709,10 @@ export class AuditManager extends EventEmitter {
     let totalEntries = 0;
     let verifiedEntries = 0;
     let corruptedEntries = 0;
-    let missingEntries = 0;
+    const missingEntries = 0;
 
     const trails = trailId ? [this.auditTrails.get(trailId)].filter(Boolean) as AuditTrail[] : 
-                            Array.from(this.auditTrails.values());
+      Array.from(this.auditTrails.values());
 
     for (const trail of trails) {
       for (const entry of trail.entries) {
@@ -726,11 +726,11 @@ export class AuditManager extends EventEmitter {
           corruptedEntries++;
           issues.push({
             timestamp: new Date(),
-            type: 'checksum-mismatch',
+            type: "checksum-mismatch",
             description: `Hash mismatch for audit entry ${entry.id}`,
-            severity: 'high',
-            investigationStatus: 'pending',
-            evidence: [`Expected: ${entry.integrity.hash}`, `Calculated: ${calculatedHash}`]
+            severity: "high",
+            investigationStatus: "pending",
+            evidence: [`Expected: ${entry.integrity.hash}`, `Calculated: ${calculatedHash}`],
           });
         }
       }
@@ -746,23 +746,23 @@ export class AuditManager extends EventEmitter {
     const verified = issues.length === 0;
 
     await this.logAuditEvent({
-      eventType: 'audit_integrity_verification',
-      category: 'security',
-      severity: verified ? 'low' : 'high',
-      resource: { type: 'audit-trail', id: trailId || 'all' },
-      action: 'verify',
-      outcome: verified ? 'success' : 'failure',
+      eventType: "audit_integrity_verification",
+      category: "security",
+      severity: verified ? "low" : "high",
+      resource: { type: "audit-trail", id: trailId || "all" },
+      action: "verify",
+      outcome: verified ? "success" : "failure",
       details: {
         totalEntries,
         verifiedEntries,
         corruptedEntries,
-        issuesFound: issues.length
+        issuesFound: issues.length,
       },
-      context: { source: 'audit-manager' }
+      context: { source: "audit-manager" },
     });
 
     if (!verified) {
-      this.emit('integrity:compromised', { issues, summary: { totalEntries, verifiedEntries, corruptedEntries, missingEntries } });
+      this.emit("integrity:compromised", { issues, summary: { totalEntries, verifiedEntries, corruptedEntries, missingEntries } });
       this.logger.error(`Audit integrity verification failed: ${issues.length} issues found`);
     } else {
       this.logger.info(`Audit integrity verification successful: ${totalEntries} entries verified`);
@@ -771,16 +771,16 @@ export class AuditManager extends EventEmitter {
     return {
       verified,
       issues,
-      summary: { totalEntries, verifiedEntries, corruptedEntries, missingEntries }
+      summary: { totalEntries, verifiedEntries, corruptedEntries, missingEntries },
     };
   }
 
   async getAuditMetrics(
-    timeRange?: { start: Date; end: Date }
+    timeRange?: { start: Date; end: Date },
   ): Promise<AuditMetrics> {
     const range = timeRange || {
       start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-      end: new Date()
+      end: new Date(),
     };
 
     const entries = await this.queryAuditEntries({ timeRange: range });
@@ -790,15 +790,15 @@ export class AuditManager extends EventEmitter {
       totalEntries: entries.length,
       dailyAverage: entries.length / 30,
       peakHourly: this.calculatePeakHourly(entries),
-      byCategory: this.groupBy(entries, 'category'),
-      bySeverity: this.groupBy(entries, 'severity')
+      byCategory: this.groupBy(entries, "category"),
+      bySeverity: this.groupBy(entries, "severity"),
     };
 
     // Compliance metrics
     const complianceMetrics = {
       overallScore: 85, // Would be calculated from actual compliance data
       byFramework: {} as Record<string, any>,
-      trending: 'stable' as const
+      trending: "stable" as const,
     };
 
     // Calculate compliance scores by framework
@@ -806,18 +806,18 @@ export class AuditManager extends EventEmitter {
       const score = await this.calculateComplianceScore([framework.id], entries);
       complianceMetrics.byFramework[framework.id] = {
         score,
-        compliant: framework.requirements.filter(r => r.status === 'compliant').length,
-        nonCompliant: framework.requirements.filter(r => r.status === 'non-compliant').length,
-        total: framework.requirements.length
+        compliant: framework.requirements.filter(r => r.status === "compliant").length,
+        nonCompliant: framework.requirements.filter(r => r.status === "non-compliant").length,
+        total: framework.requirements.length,
       };
     }
 
     // Integrity metrics
     const integrityMetrics = {
       verificationSuccess: 99.5,
-      tamperAttempts: entries.filter(e => e.eventType === 'unauthorized_access').length,
+      tamperAttempts: entries.filter(e => e.eventType === "unauthorized_access").length,
       dataLoss: 0,
-      corruptionEvents: 0
+      corruptionEvents: 0,
     };
 
     // Performance metrics
@@ -825,23 +825,23 @@ export class AuditManager extends EventEmitter {
       ingestionRate: entries.length / 24, // entries per hour
       queryResponseTime: 150, // ms
       storageEfficiency: 85, // percentage
-      availabilityPercentage: 99.9
+      availabilityPercentage: 99.9,
     };
 
     // Security metrics
     const securityMetrics = {
       unauthorizedAccess: entries.filter(e => 
-        e.outcome === 'denied' || e.eventType === 'unauthorized_access'
+        e.outcome === "denied" || e.eventType === "unauthorized_access",
       ).length,
       privilegedActions: entries.filter(e => 
-        e.details.privileged === true
+        e.details.privileged === true,
       ).length,
       suspiciousPatterns: entries.filter(e => 
-        e.severity === 'critical'
+        e.severity === "critical",
       ).length,
       escalatedIncidents: entries.filter(e => 
-        e.category === 'security' && e.severity === 'critical'
-      ).length
+        e.category === "security" && e.severity === "critical",
+      ).length,
     };
 
     return {
@@ -849,7 +849,7 @@ export class AuditManager extends EventEmitter {
       compliance: complianceMetrics,
       integrity: integrityMetrics,
       performance: performanceMetrics,
-      security: securityMetrics
+      security: securityMetrics,
     };
   }
 
@@ -858,190 +858,190 @@ export class AuditManager extends EventEmitter {
     return {
       general: {
         enabled: true,
-        defaultRetention: '7y',
+        defaultRetention: "7y",
         compressionEnabled: true,
         encryptionEnabled: true,
-        realTimeProcessing: true
+        realTimeProcessing: true,
       },
       collection: {
         automaticCapture: true,
         bufferSize: 10000,
         batchSize: 1000,
         flushInterval: 60000,
-        failureHandling: 'retry'
+        failureHandling: "retry",
       },
       storage: {
-        primaryLocation: join(this.auditPath, 'trails'),
-        partitioning: 'daily',
-        indexing: true
+        primaryLocation: join(this.auditPath, "trails"),
+        partitioning: "daily",
+        indexing: true,
       },
       integrity: {
-        checksumAlgorithm: 'sha256',
-        verificationFrequency: 'daily',
+        checksumAlgorithm: "sha256",
+        verificationFrequency: "daily",
         digitalSignatures: false,
-        immutableStorage: true
+        immutableStorage: true,
       },
       compliance: {
         frameworks: [],
         automaticClassification: true,
         retentionPolicies: {
-          'authentication': '3y',
-          'data-access': '7y',
-          'system-change': '5y',
-          'security': '7y',
-          'compliance': '10y'
+          "authentication": "3y",
+          "data-access": "7y",
+          "system-change": "5y",
+          "security": "7y",
+          "compliance": "10y",
         },
-        exportFormats: ['json', 'csv', 'pdf']
+        exportFormats: ["json", "csv", "pdf"],
       },
       monitoring: {
         alerting: {
           enabled: true,
-          channels: ['email', 'webhook'],
+          channels: ["email", "webhook"],
           thresholds: {
             failedLogins: 5,
             privilegedAccess: 10,
             dataExfiltration: 1,
-            configChanges: 20
-          }
+            configChanges: 20,
+          },
         },
         reporting: {
           automated: true,
-          frequency: 'weekly',
+          frequency: "weekly",
           recipients: [],
-          dashboards: []
-        }
+          dashboards: [],
+        },
       },
       privacy: {
         piiDetection: true,
         anonymization: false,
         masking: {
           enabled: true,
-          patterns: ['\\b\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}\\b'] // Credit card pattern
+          patterns: ["\\b\\d{4}[- ]?\\d{4}[- ]?\\d{4}[- ]?\\d{4}\\b"], // Credit card pattern
         },
         consent: {
           required: false,
-          tracking: false
-        }
-      }
+          tracking: false,
+        },
+      },
     };
   }
 
   private async loadConfigurations(): Promise<void> {
     try {
       // Load frameworks
-      const frameworkFiles = await readdir(join(this.auditPath, 'frameworks'));
-      for (const file of frameworkFiles.filter(f => f.endsWith('.json'))) {
-        const content = await readFile(join(this.auditPath, 'frameworks', file), 'utf-8');
+      const frameworkFiles = await readdir(join(this.auditPath, "frameworks"));
+      for (const file of frameworkFiles.filter(f => f.endsWith(".json"))) {
+        const content = await readFile(join(this.auditPath, "frameworks", file), "utf-8");
         const framework: ComplianceFramework = JSON.parse(content);
         this.frameworks.set(framework.id, framework);
       }
 
       // Load audit trails
-      const trailFiles = await readdir(join(this.auditPath, 'trails'));
-      for (const file of trailFiles.filter(f => f.endsWith('.json'))) {
-        const content = await readFile(join(this.auditPath, 'trails', file), 'utf-8');
+      const trailFiles = await readdir(join(this.auditPath, "trails"));
+      for (const file of trailFiles.filter(f => f.endsWith(".json"))) {
+        const content = await readFile(join(this.auditPath, "trails", file), "utf-8");
         const trail: AuditTrail = JSON.parse(content);
         this.auditTrails.set(trail.id, trail);
       }
 
       // Load reports
-      const reportFiles = await readdir(join(this.auditPath, 'reports'));
-      for (const file of reportFiles.filter(f => f.endsWith('.json'))) {
-        const content = await readFile(join(this.auditPath, 'reports', file), 'utf-8');
+      const reportFiles = await readdir(join(this.auditPath, "reports"));
+      for (const file of reportFiles.filter(f => f.endsWith(".json"))) {
+        const content = await readFile(join(this.auditPath, "reports", file), "utf-8");
         const report: AuditReport = JSON.parse(content);
         this.reports.set(report.id, report);
       }
 
       this.logger.info(`Loaded ${this.frameworks.size} frameworks, ${this.auditTrails.size} trails, ${this.reports.size} reports`);
     } catch (error) {
-      this.logger.warn('Failed to load some audit configurations', { error });
+      this.logger.warn("Failed to load some audit configurations", { error });
     }
   }
 
   private async initializeDefaultFrameworks(): Promise<void> {
     const defaultFrameworks = [
       {
-        name: 'SOC 2 Type II',
-        version: '2017',
-        description: 'Service Organization Control 2 Type II compliance framework',
-        type: 'certification' as const,
+        name: "SOC 2 Type II",
+        version: "2017",
+        description: "Service Organization Control 2 Type II compliance framework",
+        type: "certification" as const,
         requirements: [
           {
-            title: 'Security Principle - Logical and Physical Access Controls',
-            description: 'The entity restricts logical and physical access to the system',
-            category: 'access-control',
-            priority: 'high' as const,
-            status: 'compliant' as const,
+            title: "Security Principle - Logical and Physical Access Controls",
+            description: "The entity restricts logical and physical access to the system",
+            category: "access-control",
+            priority: "high" as const,
+            status: "compliant" as const,
             evidence: [],
             gaps: [],
             remediation: {
               actions: [],
-              owner: 'security-team',
-              dueDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+              owner: "security-team",
+              dueDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
             },
             lastAssessed: new Date(),
             nextAssessment: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
             automatedCheck: {
               enabled: true,
-              frequency: 'daily',
-              query: 'category:authentication AND outcome:failure',
-              threshold: 10
-            }
-          }
+              frequency: "daily",
+              query: "category:authentication AND outcome:failure",
+              threshold: 10,
+            },
+          },
         ],
         controls: [
           {
-            name: 'Multi-Factor Authentication',
-            description: 'MFA is required for all user accounts',
-            type: 'preventive' as const,
-            automationType: 'automated' as const,
-            effectiveness: 'high' as const,
-            frequency: 'continuous',
-            owner: 'security-team',
+            name: "Multi-Factor Authentication",
+            description: "MFA is required for all user accounts",
+            type: "preventive" as const,
+            automationType: "automated" as const,
+            effectiveness: "high" as const,
+            frequency: "continuous",
+            owner: "security-team",
             evidence: [],
-            testingProcedure: 'Verify MFA is enabled for all user accounts',
+            testingProcedure: "Verify MFA is enabled for all user accounts",
             lastTested: new Date(),
             nextTest: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-            status: 'effective' as const
-          }
+            status: "effective" as const,
+          },
         ],
-        auditFrequency: 'quarterly' as const,
-        retentionPeriod: '7y',
-        responsible: 'compliance-officer'
+        auditFrequency: "quarterly" as const,
+        retentionPeriod: "7y",
+        responsible: "compliance-officer",
       },
       {
-        name: 'GDPR',
-        version: '2018',
-        description: 'General Data Protection Regulation compliance framework',
-        type: 'regulatory' as const,
+        name: "GDPR",
+        version: "2018",
+        description: "General Data Protection Regulation compliance framework",
+        type: "regulatory" as const,
         requirements: [
           {
-            title: 'Data Processing Records',
-            description: 'Maintain records of all data processing activities',
-            category: 'data-protection',
-            priority: 'critical' as const,
-            status: 'compliant' as const,
+            title: "Data Processing Records",
+            description: "Maintain records of all data processing activities",
+            category: "data-protection",
+            priority: "critical" as const,
+            status: "compliant" as const,
             evidence: [],
             gaps: [],
             remediation: {
               actions: [],
-              owner: 'data-protection-officer',
-              dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+              owner: "data-protection-officer",
+              dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             },
             lastAssessed: new Date(),
             nextAssessment: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
             automatedCheck: {
               enabled: true,
-              frequency: 'daily',
-              query: 'category:data-access AND details.pii:true'
-            }
-          }
+              frequency: "daily",
+              query: "category:data-access AND details.pii:true",
+            },
+          },
         ],
         controls: [],
-        auditFrequency: 'annually' as const,
-        retentionPeriod: '6y',
-        responsible: 'data-protection-officer'
-      }
+        auditFrequency: "annually" as const,
+        retentionPeriod: "6y",
+        responsible: "data-protection-officer",
+      },
     ];
 
     for (const frameworkData of defaultFrameworks) {
@@ -1064,7 +1064,7 @@ export class AuditManager extends EventEmitter {
       await this.verifyAuditIntegrity();
     }, 24 * 60 * 60 * 1000); // Daily
 
-    this.logger.info('Started audit processing timers');
+    this.logger.info("Started audit processing timers");
   }
 
   private async flushAuditBuffer(): Promise<void> {
@@ -1080,10 +1080,10 @@ export class AuditManager extends EventEmitter {
       
       this.logger.debug(`Flushed ${entries.length} audit entries`);
     } catch (error) {
-      this.logger.error('Failed to flush audit buffer', { error });
+      this.logger.error("Failed to flush audit buffer", { error });
       
       // Re-add entries to buffer for retry if configured
-      if (this.configuration.collection.failureHandling === 'retry') {
+      if (this.configuration.collection.failureHandling === "retry") {
         this.auditBuffer.unshift(...entries);
       }
     }
@@ -1117,7 +1117,7 @@ export class AuditManager extends EventEmitter {
 
   private determineAuditTrail(entry: AuditEntry): string {
     // Use category and date for trail determination
-    const date = entry.timestamp.toISOString().split('T')[0];
+    const date = entry.timestamp.toISOString().split("T")[0];
     return `${entry.category}-${date}`;
   }
 
@@ -1134,35 +1134,35 @@ export class AuditManager extends EventEmitter {
         encryption: this.configuration.general.encryptionEnabled,
         archival: {
           enabled: true,
-          location: join(this.auditPath, 'archive'),
-          schedule: 'yearly'
+          location: join(this.auditPath, "archive"),
+          schedule: "yearly",
         },
         monitoring: {
           realTime: this.configuration.general.realTimeProcessing,
           alerting: this.configuration.monitoring.alerting.enabled,
-          dashboards: []
-        }
+          dashboards: [],
+        },
       },
       integrity: {
         verified: true,
         lastVerification: new Date(),
-        checksum: '',
-        tamperEvidence: []
+        checksum: "",
+        tamperEvidence: [],
       },
       access: {
         viewers: [],
-        admins: ['audit-admin'],
+        admins: ["audit-admin"],
         readonly: false,
-        auditAccess: true
+        auditAccess: true,
       },
       compliance: {
         frameworks: [],
         retention: this.configuration.compliance.retentionPolicies[category] || this.configuration.general.defaultRetention,
         exportRequirements: [],
-        immutable: this.configuration.integrity.immutableStorage
+        immutable: this.configuration.integrity.immutableStorage,
       },
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.auditTrails.set(trail.id, trail);
@@ -1181,19 +1181,19 @@ export class AuditManager extends EventEmitter {
       resource: entry.resource,
       action: entry.action,
       outcome: entry.outcome,
-      details: entry.details
+      details: entry.details,
     };
     
     return createHash(this.configuration.integrity.checksumAlgorithm)
       .update(JSON.stringify(data))
-      .digest('hex');
+      .digest("hex");
   }
 
   private calculateTrailChecksum(trail: AuditTrail): string {
-    const data = trail.entries.map(e => e.integrity.hash).join('');
+    const data = trail.entries.map(e => e.integrity.hash).join("");
     return createHash(this.configuration.integrity.checksumAlgorithm)
       .update(data)
-      .digest('hex');
+      .digest("hex");
   }
 
   private calculateRetentionPeriod(category: string, frameworks?: string[]): string {
@@ -1223,9 +1223,9 @@ export class AuditManager extends EventEmitter {
     const unit = match[2];
     
     switch (unit) {
-      case 'y': return value * 365;
-      case 'm': return value * 30;
-      case 'd': return value;
+      case "y": return value * 365;
+      case "m": return value * 30;
+      case "d": return value;
       default: return 0;
     }
   }
@@ -1249,7 +1249,7 @@ export class AuditManager extends EventEmitter {
     if (scope.timeRange) {
       entries = entries.filter(e => 
         e.timestamp >= scope.timeRange!.start && 
-        e.timestamp <= scope.timeRange!.end
+        e.timestamp <= scope.timeRange!.end,
       );
     }
 
@@ -1271,7 +1271,7 @@ export class AuditManager extends EventEmitter {
 
     if (scope.compliance) {
       entries = entries.filter(e => 
-        e.compliance.frameworks.some(f => scope.compliance!.includes(f))
+        e.compliance.frameworks.some(f => scope.compliance!.includes(f)),
       );
     }
 
@@ -1282,71 +1282,71 @@ export class AuditManager extends EventEmitter {
     const findings: AuditFinding[] = [];
 
     // Security-focused analysis
-    if (reportType === 'security') {
+    if (reportType === "security") {
       // Check for failed login patterns
       const failedLogins = entries.filter(e => 
-        e.eventType === 'user_login' && e.outcome === 'failure'
+        e.eventType === "user_login" && e.outcome === "failure",
       );
       
       if (failedLogins.length > 10) {
         findings.push({
           id: `finding-${Date.now()}-1`,
-          title: 'Excessive Failed Login Attempts',
+          title: "Excessive Failed Login Attempts",
           description: `${failedLogins.length} failed login attempts detected`,
-          severity: 'high',
-          category: 'authentication',
-          risk: 'Potential brute force attack',
-          impact: 'Unauthorized access attempt',
-          likelihood: 'medium',
+          severity: "high",
+          category: "authentication",
+          risk: "Potential brute force attack",
+          impact: "Unauthorized access attempt",
+          likelihood: "medium",
           evidence: [],
           relatedEvents: failedLogins.map(e => e.id),
           complianceImpact: {
-            frameworks: ['SOC2'],
-            violations: ['Access Control'],
-            penalties: []
+            frameworks: ["SOC2"],
+            violations: ["Access Control"],
+            penalties: [],
           },
           remediation: {
-            priority: 'high',
-            owner: 'security-team',
-            actions: ['Implement account lockout', 'Enable MFA', 'Review access logs'],
-            timeline: '7 days'
+            priority: "high",
+            owner: "security-team",
+            actions: ["Implement account lockout", "Enable MFA", "Review access logs"],
+            timeline: "7 days",
           },
-          status: 'open'
+          status: "open",
         });
       }
     }
 
     // Compliance-focused analysis
-    if (reportType === 'compliance') {
+    if (reportType === "compliance") {
       // Check for data access patterns
       const dataAccess = entries.filter(e => 
-        e.category === 'data-access' && e.details.pii === true
+        e.category === "data-access" && e.details.pii === true,
       );
       
       if (dataAccess.length > 0) {
         findings.push({
           id: `finding-${Date.now()}-2`,
-          title: 'PII Data Access Events',
+          title: "PII Data Access Events",
           description: `${dataAccess.length} events involving PII data access`,
-          severity: 'medium',
-          category: 'data-protection',
-          risk: 'Privacy compliance risk',
-          impact: 'Potential GDPR violation',
-          likelihood: 'low',
+          severity: "medium",
+          category: "data-protection",
+          risk: "Privacy compliance risk",
+          impact: "Potential GDPR violation",
+          likelihood: "low",
           evidence: [],
           relatedEvents: dataAccess.map(e => e.id),
           complianceImpact: {
-            frameworks: ['GDPR'],
-            violations: ['Data Processing'],
-            penalties: ['Administrative fine']
+            frameworks: ["GDPR"],
+            violations: ["Data Processing"],
+            penalties: ["Administrative fine"],
           },
           remediation: {
-            priority: 'medium',
-            owner: 'data-protection-officer',
-            actions: ['Review data access justification', 'Update privacy notices'],
-            timeline: '30 days'
+            priority: "medium",
+            owner: "data-protection-officer",
+            actions: ["Review data access justification", "Update privacy notices"],
+            timeline: "30 days",
           },
-          status: 'open'
+          status: "open",
         });
       }
     }
@@ -1365,7 +1365,7 @@ export class AuditManager extends EventEmitter {
       for (const requirement of framework.requirements) {
         totalRequirements++;
         
-        if (requirement.status === 'compliant') {
+        if (requirement.status === "compliant") {
           metRequirements++;
         } else if (requirement.automatedCheck.enabled) {
           // Check if automated requirement is met based on audit data
@@ -1384,8 +1384,8 @@ export class AuditManager extends EventEmitter {
     // Simplified automated compliance checking
     // In a real implementation, this would parse the query and evaluate against entries
     const violations = entries.filter(e => {
-      if (requirement.automatedCheck.query.includes('outcome:failure')) {
-        return e.outcome === 'failure';
+      if (requirement.automatedCheck.query.includes("outcome:failure")) {
+        return e.outcome === "failure";
       }
       return false;
     });
@@ -1393,42 +1393,42 @@ export class AuditManager extends EventEmitter {
     return violations;
   }
 
-  private calculateRiskLevel(findings: AuditFinding[]): 'low' | 'medium' | 'high' | 'critical' {
-    const criticalFindings = findings.filter(f => f.severity === 'critical').length;
-    const highFindings = findings.filter(f => f.severity === 'high').length;
+  private calculateRiskLevel(findings: AuditFinding[]): "low" | "medium" | "high" | "critical" {
+    const criticalFindings = findings.filter(f => f.severity === "critical").length;
+    const highFindings = findings.filter(f => f.severity === "high").length;
 
-    if (criticalFindings > 0) return 'critical';
-    if (highFindings > 2) return 'high';
-    if (findings.length > 5) return 'medium';
-    return 'low';
+    if (criticalFindings > 0) return "critical";
+    if (highFindings > 2) return "high";
+    if (findings.length > 5) return "medium";
+    return "low";
   }
 
   private async generateRecommendations(findings: AuditFinding[], reportType: string): Promise<AuditRecommendation[]> {
     const recommendations: AuditRecommendation[] = [];
 
     // Generic security recommendations
-    if (findings.some(f => f.category === 'authentication')) {
+    if (findings.some(f => f.category === "authentication")) {
       recommendations.push({
         id: `rec-${Date.now()}-1`,
-        title: 'Strengthen Authentication Controls',
-        description: 'Implement additional authentication security measures',
-        priority: 'high',
-        category: 'technology',
+        title: "Strengthen Authentication Controls",
+        description: "Implement additional authentication security measures",
+        priority: "high",
+        category: "technology",
         implementation: {
-          effort: 'medium',
-          cost: 'medium',
-          timeline: '30 days',
-          dependencies: ['Identity Provider Integration'],
-          risks: ['User experience impact']
+          effort: "medium",
+          cost: "medium",
+          timeline: "30 days",
+          dependencies: ["Identity Provider Integration"],
+          risks: ["User experience impact"],
         },
-        expectedBenefit: 'Reduced risk of unauthorized access',
-        owner: 'security-team',
-        status: 'proposed',
+        expectedBenefit: "Reduced risk of unauthorized access",
+        owner: "security-team",
+        status: "proposed",
         tracking: {
-          milestones: ['MFA deployment', 'Policy update', 'User training'],
+          milestones: ["MFA deployment", "Policy update", "User training"],
           progress: 0,
-          nextReview: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        }
+          nextReview: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
       });
     }
 
@@ -1444,11 +1444,11 @@ export class AuditManager extends EventEmitter {
         if (requirement.automatedCheck.enabled) {
           const violations = this.checkAutomatedRequirement(requirement, [entry]);
           if (violations.length > 0) {
-            this.emit('compliance:violation', {
+            this.emit("compliance:violation", {
               framework: frameworkId,
               requirement: requirement.id,
               entry,
-              severity: requirement.priority
+              severity: requirement.priority,
             });
           }
         }
@@ -1457,27 +1457,27 @@ export class AuditManager extends EventEmitter {
   }
 
   private async checkSecurityAlerts(entry: AuditEntry): Promise<void> {
-    const thresholds = this.configuration.monitoring.alerting.thresholds;
+    const { thresholds } = this.configuration.monitoring.alerting;
 
     // Check for specific alert conditions
-    if (entry.eventType === 'user_login' && entry.outcome === 'failure') {
+    if (entry.eventType === "user_login" && entry.outcome === "failure") {
       // Would implement failed login threshold checking
     }
 
-    if (entry.category === 'data-access' && entry.details.privileged) {
-      this.emit('security:alert', {
-        type: 'privileged-access',
+    if (entry.category === "data-access" && entry.details.privileged) {
+      this.emit("security:alert", {
+        type: "privileged-access",
         entry,
-        severity: 'medium'
+        severity: "medium",
       });
     }
   }
 
   private async generateSecurityAlert(entry: AuditEntry): Promise<void> {
-    this.emit('security:critical', {
+    this.emit("security:critical", {
       entry,
       message: `Critical security event: ${entry.eventType}`,
-      action: 'immediate-review-required'
+      action: "immediate-review-required",
     });
   }
 
@@ -1501,19 +1501,19 @@ export class AuditManager extends EventEmitter {
   }
 
   private convertToCSV(entries: AuditEntry[]): string {
-    const headers = ['timestamp', 'eventType', 'category', 'severity', 'userId', 'action', 'outcome', 'resource'];
+    const headers = ["timestamp", "eventType", "category", "severity", "userId", "action", "outcome", "resource"];
     const rows = entries.map(entry => [
       entry.timestamp.toISOString(),
       entry.eventType,
       entry.category,
       entry.severity,
-      entry.userId || '',
+      entry.userId || "",
       entry.action,
       entry.outcome,
-      `${entry.resource.type}:${entry.resource.id}`
+      `${entry.resource.type}:${entry.resource.id}`,
     ]);
     
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    return [headers, ...rows].map(row => row.join(",")).join("\n");
   }
 
   private convertToXML(entries: AuditEntry[]): string {
@@ -1527,30 +1527,30 @@ export class AuditManager extends EventEmitter {
       xml += `    <severity>${entry.severity}</severity>\n`;
       xml += `    <action>${entry.action}</action>\n`;
       xml += `    <outcome>${entry.outcome}</outcome>\n`;
-      xml += `  </entry>\n`;
+      xml += "  </entry>\n";
     }
     
-    xml += '</auditEntries>';
+    xml += "</auditEntries>";
     return xml;
   }
 
   private async convertToPDF(entries: AuditEntry[]): Promise<string> {
     // Would implement PDF generation
-    return 'PDF generation not implemented';
+    return "PDF generation not implemented";
   }
 
   private async saveFramework(framework: ComplianceFramework): Promise<void> {
-    const filePath = join(this.auditPath, 'frameworks', `${framework.id}.json`);
+    const filePath = join(this.auditPath, "frameworks", `${framework.id}.json`);
     await writeFile(filePath, JSON.stringify(framework, null, 2));
   }
 
   private async saveAuditTrail(trail: AuditTrail): Promise<void> {
-    const filePath = join(this.auditPath, 'trails', `${trail.id}.json`);
+    const filePath = join(this.auditPath, "trails", `${trail.id}.json`);
     await writeFile(filePath, JSON.stringify(trail, null, 2));
   }
 
   private async saveReport(report: AuditReport): Promise<void> {
-    const filePath = join(this.auditPath, 'reports', `${report.id}.json`);
+    const filePath = join(this.auditPath, "reports", `${report.id}.json`);
     await writeFile(filePath, JSON.stringify(report, null, 2));
   }
 }

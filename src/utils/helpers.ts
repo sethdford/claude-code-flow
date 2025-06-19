@@ -38,7 +38,7 @@ export function timeout<T>(promise: Promise<T>, ms: number, message?: string): P
     timeoutId = setTimeout(() => {
       if (!completed) {
         completed = true;
-        reject(new Error(message || 'Operation timed out'));
+        reject(new Error(message || "Operation timed out"));
       }
     }, ms);
   });
@@ -119,7 +119,7 @@ export async function retry<T>(
 /**
  * Debounces a function
  */
-export function debounce<T extends (...args: unknown[]) => unknown>(
+export function debounce<T extends(...args: unknown[]) => unknown>(
   fn: T,
   delayMs: number,
 ): (...args: Parameters<T>) => void {
@@ -140,7 +140,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 /**
  * Throttles a function
  */
-export function throttle<T extends (...args: unknown[]) => unknown>(
+export function throttle<T extends(...args: unknown[]) => unknown>(
   fn: T,
   limitMs: number,
 ): (...args: Parameters<T>) => void {
@@ -169,7 +169,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
  * Deep clones an object
  */
 export function deepClone<T>(obj: T): T {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
@@ -245,7 +245,7 @@ export function deepMerge<T extends Record<string, unknown>>(
  * Checks if a value is a plain object
  */
 function isObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 /**
@@ -296,20 +296,20 @@ export class TypedEventEmitter<T extends Record<string, unknown>> {
  * Formats bytes to human-readable string
  */
 export function formatBytes(bytes: number, decimals = 2): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
 
   // Handle negative numbers
   const absBytes = Math.abs(bytes);
   const i = Math.floor(Math.log(absBytes) / Math.log(k));
 
   const value = parseFloat((absBytes / Math.pow(k, i)).toFixed(dm));
-  const sign = bytes < 0 ? '-' : '';
+  const sign = bytes < 0 ? "-" : "";
   
-  return sign + value + ' ' + sizes[i];
+  return `${sign + value  } ${  sizes[i]}`;
 }
 
 /**
@@ -325,15 +325,15 @@ export function parseDuration(duration: string): number {
   const unit = match[2];
 
   switch (unit) {
-    case 'ms':
+    case "ms":
       return value;
-    case 's':
+    case "s":
       return value * 1000;
-    case 'm':
+    case "m":
       return value * 60 * 1000;
-    case 'h':
+    case "h":
       return value * 60 * 60 * 1000;
-    case 'd':
+    case "d":
       return value * 24 * 60 * 60 * 1000;
     default:
       throw new Error(`Unknown duration unit: ${unit}`);
@@ -371,7 +371,7 @@ export function createDeferred<T>(): {
   promise: Promise<T>;
   resolve: (value: T) => void;
   reject: (reason?: unknown) => void;
-} {
+  } {
   let resolve: (value: T) => void;
   let reject: (reason?: unknown) => void;
 
@@ -401,7 +401,7 @@ export function safeParseJSON<T>(json: string, fallback?: T): T | undefined {
 export interface CircuitBreakerState {
   failureCount: number;
   lastFailureTime: number;
-  state: 'closed' | 'open' | 'half-open';
+  state: "closed" | "open" | "half-open";
 }
 
 /**
@@ -425,24 +425,24 @@ export interface CircuitBreaker {
 /**
  * Simple calculator function with basic operations
  */
-export function calculator(a: number, b: number, operation: '+' | '-' | '*' | '/' | '^' | '%'): number {
+export function calculator(a: number, b: number, operation: "+" | "-" | "*" | "/" | "^" | "%"): number {
   switch (operation) {
-    case '+':
+    case "+":
       return a + b;
-    case '-':
+    case "-":
       return a - b;
-    case '*':
+    case "*":
       return a * b;
-    case '/':
+    case "/":
       if (b === 0) {
-        throw new Error('Division by zero');
+        throw new Error("Division by zero");
       }
       return a / b;
-    case '^':
+    case "^":
       return Math.pow(a, b);
-    case '%':
+    case "%":
       if (b === 0) {
-        throw new Error('Modulo by zero');
+        throw new Error("Modulo by zero");
       }
       return a % b;
     default:
@@ -460,14 +460,14 @@ export function circuitBreaker(
   const state: CircuitBreakerState = {
     failureCount: 0,
     lastFailureTime: 0,
-    state: 'closed',
+    state: "closed",
   };
 
   const isOpen = (): boolean => {
-    if (state.state === 'open') {
+    if (state.state === "open") {
       const now = Date.now();
       if (now - state.lastFailureTime >= options.resetTimeout) {
-        state.state = 'half-open';
+        state.state = "half-open";
         return false;
       }
       return true;
@@ -477,7 +477,7 @@ export function circuitBreaker(
 
   const recordSuccess = (): void => {
     state.failureCount = 0;
-    state.state = 'closed';
+    state.state = "closed";
   };
 
   const recordFailure = (): void => {
@@ -485,7 +485,7 @@ export function circuitBreaker(
     state.lastFailureTime = Date.now();
     
     if (state.failureCount >= options.threshold) {
-      state.state = 'open';
+      state.state = "open";
     }
   };
 
@@ -512,7 +512,7 @@ export function circuitBreaker(
     reset(): void {
       state.failureCount = 0;
       state.lastFailureTime = 0;
-      state.state = 'closed';
+      state.state = "closed";
     },
   };
 }
@@ -523,35 +523,35 @@ export function circuitBreaker(
 export function greeting(name?: string, options?: {
   timeOfDay?: boolean;
   formal?: boolean;
-  locale?: 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ja' | 'zh';
+  locale?: "en" | "es" | "fr" | "de" | "it" | "pt" | "ja" | "zh";
 }): string {
   const opts = {
     timeOfDay: false,
     formal: false,
-    locale: 'en' as const,
-    ...options
+    locale: "en" as const,
+    ...options,
   };
 
   // Determine time-based greeting
   const getTimeGreeting = (): string => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    if (hour < 21) return 'Good evening';
-    return 'Good night';
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    if (hour < 21) return "Good evening";
+    return "Good night";
   };
 
   // Get greeting by locale
   const getLocaleGreeting = (): string => {
     const greetings: Record<string, { informal: string; formal: string }> = {
-      en: { informal: 'Hello', formal: 'Greetings' },
-      es: { informal: 'Hola', formal: 'Saludos' },
-      fr: { informal: 'Salut', formal: 'Bonjour' },
-      de: { informal: 'Hallo', formal: 'Guten Tag' },
-      it: { informal: 'Ciao', formal: 'Salve' },
-      pt: { informal: 'Olá', formal: 'Saudações' },
-      ja: { informal: 'こんにちは', formal: 'ご挨拶' },
-      zh: { informal: '你好', formal: '您好' }
+      en: { informal: "Hello", formal: "Greetings" },
+      es: { informal: "Hola", formal: "Saludos" },
+      fr: { informal: "Salut", formal: "Bonjour" },
+      de: { informal: "Hallo", formal: "Guten Tag" },
+      it: { informal: "Ciao", formal: "Salve" },
+      pt: { informal: "Olá", formal: "Saudações" },
+      ja: { informal: "こんにちは", formal: "ご挨拶" },
+      zh: { informal: "你好", formal: "您好" },
     };
 
     const localeGreeting = greetings[opts.locale] || greetings.en;
@@ -565,7 +565,7 @@ export function greeting(name?: string, options?: {
     greetingText += `, ${name}`;
   }
   
-  greetingText += '!';
+  greetingText += "!";
   
   return greetingText;
 }

@@ -2,16 +2,16 @@
  * Distributed Memory System with Cross-Agent Sharing
  */
 
-import { EventEmitter } from 'node:events';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import * as crypto from 'node:crypto';
-import { Logger } from '../core/logger.js';
-import { generateId } from '../utils/helpers.js';
+import { EventEmitter } from "node:events";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import * as crypto from "node:crypto";
+import { Logger } from "../core/logger.js";
+import { generateId } from "../utils/helpers.js";
 import {
   MemoryEntry, MemoryPartition, SwarmMemory, AccessLevel, ConsistencyLevel,
-  MemoryType, MemoryPermissions, AgentId, SwarmEvent, SWARM_CONSTANTS
-} from './types.js';
+  MemoryType, MemoryPermissions, AgentId, SwarmEvent, SWARM_CONSTANTS,
+} from "./types.js";
 
 export interface MemoryQuery {
   namespace?: string;
@@ -26,8 +26,8 @@ export interface MemoryQuery {
   expiresAfter?: Date;
   limit?: number;
   offset?: number;
-  sortBy?: 'createdAt' | 'updatedAt' | 'key' | 'relevance';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "createdAt" | "updatedAt" | "key" | "relevance";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface MemorySearchOptions {
@@ -103,13 +103,13 @@ export class SwarmMemoryManager extends EventEmitter {
     super();
     
     // Configure logger based on config or default to quiet mode
-    const logLevel = config.logging?.level || 'error';
-    const logFormat = config.logging?.format || 'text';
-    const logDestination = config.logging?.destination || 'console';
+    const logLevel = config.logging?.level || "error";
+    const logFormat = config.logging?.format || "text";
+    const logDestination = config.logging?.destination || "console";
     
     this.logger = new Logger(
       { level: logLevel, format: logFormat, destination: logDestination },
-      { component: 'SwarmMemoryManager' }
+      { component: "SwarmMemoryManager" },
     );
     this.config = this.mergeWithDefaults(config);
     
@@ -118,17 +118,17 @@ export class SwarmMemoryManager extends EventEmitter {
       namespace: this.config.namespace,
       partitions: [],
       permissions: {
-        read: 'swarm',
-        write: 'team',
-        delete: 'private',
-        share: 'team'
+        read: "swarm",
+        write: "team",
+        delete: "private",
+        share: "team",
       },
       persistent: true,
       backupEnabled: true,
       distributed: this.config.enableDistribution,
       consistency: this.config.consistencyLevel,
       cacheEnabled: this.config.enableCaching,
-      compressionEnabled: this.config.enableCompression
+      compressionEnabled: this.config.enableCompression,
     };
 
     // Initialize subsystems
@@ -146,7 +146,7 @@ export class SwarmMemoryManager extends EventEmitter {
       return;
     }
 
-    this.logger.info('Initializing swarm memory manager...');
+    this.logger.info("Initializing swarm memory manager...");
 
     try {
       // Initialize subsystems
@@ -166,20 +166,20 @@ export class SwarmMemoryManager extends EventEmitter {
       
       this.isInitialized = true;
       
-      this.emit('memory:initialized', {
+      this.emit("memory:initialized", {
         namespace: this.config.namespace,
         entriesLoaded: this.entries.size,
-        partitionsLoaded: this.partitions.size
+        partitionsLoaded: this.partitions.size,
       });
       
-      this.logger.info('Swarm memory manager initialized', {
+      this.logger.info("Swarm memory manager initialized", {
         namespace: this.config.namespace,
         entries: this.entries.size,
-        partitions: this.partitions.size
+        partitions: this.partitions.size,
       });
 
     } catch (error) {
-      this.logger.error('Failed to initialize memory manager', { error });
+      this.logger.error("Failed to initialize memory manager", { error: (error as Error).message });
       throw error;
     }
   }
@@ -189,7 +189,7 @@ export class SwarmMemoryManager extends EventEmitter {
       return;
     }
 
-    this.logger.info('Shutting down swarm memory manager...');
+    this.logger.info("Shutting down swarm memory manager...");
 
     try {
       // Stop background processes
@@ -205,11 +205,11 @@ export class SwarmMemoryManager extends EventEmitter {
       
       this.isInitialized = false;
       
-      this.emit('memory:shutdown');
-      this.logger.info('Swarm memory manager shut down');
+      this.emit("memory:shutdown");
+      this.logger.info("Swarm memory manager shut down");
 
     } catch (error) {
-      this.logger.error('Error during memory manager shutdown', { error });
+      this.logger.error("Error during memory manager shutdown", { error: (error as Error).message });
     }
   }
 
@@ -226,20 +226,20 @@ export class SwarmMemoryManager extends EventEmitter {
       accessLevel: AccessLevel;
       ttl: number;
       metadata: Record<string, any>;
-    }> = {}
+    }> = {},
   ): Promise<string> {
     this.ensureInitialized();
 
-    const entryId = generateId('mem');
+    const entryId = generateId("mem");
     const now = new Date();
     
     // Validate access permissions
     if (options.owner) {
-      await this.validateAccess(options.owner, 'write', options.partition);
+      await this.validateAccess(options.owner, "write", options.partition);
     }
 
     // Determine partition
-    const partitionName = options.partition || 'default';
+    const partitionName = options.partition || "default";
     const partition = await this.getOrCreatePartition(partitionName);
 
     // Create memory entry
@@ -247,16 +247,16 @@ export class SwarmMemoryManager extends EventEmitter {
       id: entryId,
       key,
       value: await this.serializeValue(value),
-      type: options.type || 'knowledge',
+      type: options.type || "knowledge",
       tags: options.tags || [],
-      owner: options.owner || { id: 'system', swarmId: '', type: 'coordinator', instance: 0 },
-      accessLevel: options.accessLevel || 'team',
+      owner: options.owner || { id: "system", swarmId: "", type: "coordinator", instance: 0 },
+      accessLevel: options.accessLevel || "team",
       createdAt: now,
       updatedAt: now,
       expiresAt: options.ttl ? new Date(now.getTime() + options.ttl) : undefined,
       version: 1,
       references: [],
-      dependencies: []
+      dependencies: [],
     };
 
     // Validate entry size
@@ -286,20 +286,20 @@ export class SwarmMemoryManager extends EventEmitter {
     }
 
     // Emit event
-    this.emit('memory:stored', {
+    this.emit("memory:stored", {
       entryId,
       key,
       partition: partitionName,
       type: entry.type,
-      size: entrySize
+      size: entrySize,
     });
 
-    this.logger.debug('Stored memory entry', {
+    this.logger.debug("Stored memory entry", {
       entryId,
       key,
       partition: partitionName,
       type: entry.type,
-      size: entrySize
+      size: entrySize,
     });
 
     return entryId;
@@ -311,7 +311,7 @@ export class SwarmMemoryManager extends EventEmitter {
       partition: string;
       requester: AgentId;
       includeMetadata: boolean;
-    }> = {}
+    }> = {},
   ): Promise<any> {
     this.ensureInitialized();
 
@@ -320,7 +320,7 @@ export class SwarmMemoryManager extends EventEmitter {
       const cached = this.cache.get(key);
       if (cached && !this.isExpired(cached)) {
         if (options.requester) {
-          await this.validateAccess(options.requester, 'read', options.partition);
+          await this.validateAccess(options.requester, "read", options.partition);
         }
         return options.includeMetadata ? cached : await this.deserializeValue(cached.value);
       }
@@ -340,7 +340,7 @@ export class SwarmMemoryManager extends EventEmitter {
 
     // Validate access
     if (options.requester) {
-      await this.validateAccess(options.requester, 'read', options.partition);
+      await this.validateAccess(options.requester, "read", options.partition);
     }
 
     // Update cache
@@ -349,10 +349,10 @@ export class SwarmMemoryManager extends EventEmitter {
     }
 
     // Emit event
-    this.emit('memory:retrieved', {
+    this.emit("memory:retrieved", {
       entryId: entry.id,
       key,
-      requester: options.requester?.id
+      requester: options.requester?.id,
     });
 
     return options.includeMetadata ? entry : await this.deserializeValue(entry.value);
@@ -366,7 +366,7 @@ export class SwarmMemoryManager extends EventEmitter {
       updater: AgentId;
       metadata: Record<string, any>;
       incrementVersion: boolean;
-    }> = {}
+    }> = {},
   ): Promise<boolean> {
     this.ensureInitialized();
 
@@ -377,7 +377,7 @@ export class SwarmMemoryManager extends EventEmitter {
 
     // Validate access
     if (options.updater) {
-      await this.validateAccess(options.updater, 'write', options.partition);
+      await this.validateAccess(options.updater, "write", options.partition);
     }
 
     // Create backup of old version
@@ -411,11 +411,11 @@ export class SwarmMemoryManager extends EventEmitter {
       await this.replication.replicate(entry);
     }
 
-    this.emit('memory:updated', {
+    this.emit("memory:updated", {
       entryId: entry.id,
       key,
       version: entry.version,
-      updater: options.updater?.id
+      updater: options.updater?.id,
     });
 
     return true;
@@ -427,7 +427,7 @@ export class SwarmMemoryManager extends EventEmitter {
       partition: string;
       deleter: AgentId;
       force: boolean;
-    }> = {}
+    }> = {},
   ): Promise<boolean> {
     this.ensureInitialized();
 
@@ -438,7 +438,7 @@ export class SwarmMemoryManager extends EventEmitter {
 
     // Validate access
     if (options.deleter && !options.force) {
-      await this.validateAccess(options.deleter, 'delete', options.partition);
+      await this.validateAccess(options.deleter, "delete", options.partition);
     }
 
     return await this.deleteEntry(entry.id);
@@ -478,7 +478,7 @@ export class SwarmMemoryManager extends EventEmitter {
 
     if (query.tags && query.tags.length > 0) {
       results = results.filter(e => 
-        query.tags!.some(tag => e.tags.includes(tag))
+        query.tags!.some(tag => e.tags.includes(tag)),
       );
     }
 
@@ -492,7 +492,7 @@ export class SwarmMemoryManager extends EventEmitter {
 
     if (query.expiresAfter) {
       results = results.filter(e => 
-        e.expiresAt && e.expiresAt >= query.expiresAfter!
+        e.expiresAt && e.expiresAt >= query.expiresAfter!,
       );
     }
 
@@ -505,20 +505,20 @@ export class SwarmMemoryManager extends EventEmitter {
         let compareValue = 0;
         
         switch (query.sortBy) {
-          case 'createdAt':
+          case "createdAt":
             compareValue = a.createdAt.getTime() - b.createdAt.getTime();
             break;
-          case 'updatedAt':
+          case "updatedAt":
             compareValue = a.updatedAt.getTime() - b.updatedAt.getTime();
             break;
-          case 'key':
+          case "key":
             compareValue = a.key.localeCompare(b.key);
             break;
           default:
             compareValue = 0;
         }
         
-        return query.sortOrder === 'desc' ? -compareValue : compareValue;
+        return query.sortOrder === "desc" ? -compareValue : compareValue;
       });
     }
 
@@ -545,7 +545,7 @@ export class SwarmMemoryManager extends EventEmitter {
       sharer: AgentId;
       accessLevel: AccessLevel;
       expiresAt: Date;
-    }> = {}
+    }> = {},
   ): Promise<string> {
     this.ensureInitialized();
 
@@ -556,11 +556,11 @@ export class SwarmMemoryManager extends EventEmitter {
 
     // Validate sharing permissions
     if (options.sharer) {
-      await this.validateAccess(options.sharer, 'share', options.partition);
+      await this.validateAccess(options.sharer, "share", options.partition);
     }
 
     // Create shared copy
-    const sharedEntryId = generateId('shared-mem');
+    const sharedEntryId = generateId("shared-mem");
     const sharedEntry: MemoryEntry = {
       ...entry,
       id: sharedEntryId,
@@ -569,7 +569,7 @@ export class SwarmMemoryManager extends EventEmitter {
       createdAt: new Date(),
       updatedAt: new Date(),
       expiresAt: options.expiresAt,
-      references: [...entry.references, entry.id]
+      references: [...entry.references, entry.id],
     };
 
     // Store shared entry
@@ -580,19 +580,19 @@ export class SwarmMemoryManager extends EventEmitter {
     const targetPartition = await this.getOrCreatePartition(`agent_${targetAgent.id}`);
     targetPartition.entries.push(sharedEntry);
 
-    this.emit('memory:shared', {
+    this.emit("memory:shared", {
       originalId: entry.id,
       sharedId: sharedEntryId,
       key,
       sharer: options.sharer?.id,
-      target: targetAgent.id
+      target: targetAgent.id,
     });
 
-    this.logger.info('Shared memory entry', {
+    this.logger.info("Shared memory entry", {
       key,
       from: options.sharer?.id,
       to: targetAgent.id,
-      sharedId: sharedEntryId
+      sharedId: sharedEntryId,
     });
 
     return sharedEntryId;
@@ -605,7 +605,7 @@ export class SwarmMemoryManager extends EventEmitter {
       partition: string;
       broadcaster: AgentId;
       accessLevel: AccessLevel;
-    }> = {}
+    }> = {},
   ): Promise<string[]> {
     this.ensureInitialized();
 
@@ -615,23 +615,23 @@ export class SwarmMemoryManager extends EventEmitter {
       try {
         const sharedId = await this.shareMemory(key, targetAgent, {
           ...options,
-          sharer: options.broadcaster
+          sharer: options.broadcaster,
         });
         sharedIds.push(sharedId);
       } catch (error) {
-        this.logger.warn('Failed to share memory with agent', {
+        this.logger.warn("Failed to share memory with agent", {
           key,
           targetAgent: targetAgent.id,
-          error: error.message
+          error: (error as Error).message,
         });
       }
     }
 
-    this.emit('memory:broadcasted', {
+    this.emit("memory:broadcasted", {
       key,
       broadcaster: options.broadcaster?.id,
       targets: targetAgents.map(a => a.id),
-      sharedCount: sharedIds.length
+      sharedCount: sharedIds.length,
     });
 
     return sharedIds;
@@ -641,22 +641,22 @@ export class SwarmMemoryManager extends EventEmitter {
     targetNode: string,
     options: Partial<{
       partition: string;
-      direction: 'pull' | 'push' | 'bidirectional';
+      direction: "pull" | "push" | "bidirectional";
       filter: MemoryQuery;
-    }> = {}
+    }> = {},
   ): Promise<void> {
     this.ensureInitialized();
 
     if (!this.config.enableDistribution) {
-      throw new Error('Distribution not enabled');
+      throw new Error("Distribution not enabled");
     }
 
     await this.replication.synchronizeWith(targetNode, options);
 
-    this.emit('memory:synchronized', {
+    this.emit("memory:synchronized", {
       targetNode,
-      direction: options.direction || 'bidirectional',
-      partition: options.partition
+      direction: options.direction || "bidirectional",
+      partition: options.partition,
     });
   }
 
@@ -673,7 +673,7 @@ export class SwarmMemoryManager extends EventEmitter {
       indexed: boolean;
       compressed: boolean;
     }> = {},
-    skipInitCheck: boolean = false
+    skipInitCheck: boolean = false,
   ): Promise<string> {
     if (!skipInitCheck) {
       this.ensureInitialized();
@@ -684,31 +684,31 @@ export class SwarmMemoryManager extends EventEmitter {
     }
 
     const partition: MemoryPartition = {
-      id: generateId('partition'),
+      id: generateId("partition"),
       name,
-      type: options.type || 'knowledge',
+      type: options.type || "knowledge",
       entries: [],
       maxSize: options.maxSize || this.config.maxMemorySize,
       ttl: options.ttl,
       readOnly: options.readOnly || false,
       shared: options.shared || true,
       indexed: options.indexed !== false,
-      compressed: options.compressed || this.config.enableCompression
+      compressed: options.compressed || this.config.enableCompression,
     };
 
     this.partitions.set(name, partition);
     this.memory.partitions.push(partition);
 
-    this.emit('memory:partition-created', {
+    this.emit("memory:partition-created", {
       partitionId: partition.id,
       name,
-      type: partition.type
+      type: partition.type,
     });
 
-    this.logger.info('Created memory partition', {
+    this.logger.info("Created memory partition", {
       name,
       type: partition.type,
-      maxSize: partition.maxSize
+      maxSize: partition.maxSize,
     });
 
     return partition.id;
@@ -734,9 +734,9 @@ export class SwarmMemoryManager extends EventEmitter {
     this.partitions.delete(name);
     this.memory.partitions = this.memory.partitions.filter(p => p.id !== partition.id);
 
-    this.emit('memory:partition-deleted', {
+    this.emit("memory:partition-deleted", {
       partitionId: partition.id,
-      name
+      name,
     });
 
     return true;
@@ -757,27 +757,27 @@ export class SwarmMemoryManager extends EventEmitter {
 
     const backup: MemoryBackup = {
       timestamp: new Date(),
-      version: '1.0.0',
-      checksum: '',
+      version: "1.0.0",
+      checksum: "",
       metadata: {
         namespace: this.config.namespace,
         entryCount: this.entries.size,
-        partitionCount: this.partitions.size
+        partitionCount: this.partitions.size,
       },
       entries: Array.from(this.entries.values()),
-      partitions: Array.from(this.partitions.values())
+      partitions: Array.from(this.partitions.values()),
     };
 
     // Calculate checksum
     backup.checksum = this.calculateChecksum(backup);
 
-    const backupId = generateId('backup');
+    const backupId = generateId("backup");
     await this.persistence.saveBackup(backupId, backup);
 
-    this.emit('memory:backup-created', {
+    this.emit("memory:backup-created", {
       backupId,
       entryCount: backup.entries.length,
-      size: JSON.stringify(backup).length
+      size: JSON.stringify(backup).length,
     });
 
     return backupId;
@@ -794,7 +794,7 @@ export class SwarmMemoryManager extends EventEmitter {
     // Verify checksum
     const calculatedChecksum = this.calculateChecksum(backup);
     if (calculatedChecksum !== backup.checksum) {
-      throw new Error('Backup checksum verification failed');
+      throw new Error("Backup checksum verification failed");
     }
 
     // Clear current state
@@ -815,16 +815,16 @@ export class SwarmMemoryManager extends EventEmitter {
 
     this.memory.partitions = backup.partitions;
 
-    this.emit('memory:backup-restored', {
+    this.emit("memory:backup-restored", {
       backupId,
       entryCount: backup.entries.length,
-      partitionCount: backup.partitions.length
+      partitionCount: backup.partitions.length,
     });
 
-    this.logger.info('Restored from backup', {
+    this.logger.info("Restored from backup", {
       backupId,
       entries: backup.entries.length,
-      partitions: backup.partitions.length
+      partitions: backup.partitions.length,
     });
   }
 
@@ -842,7 +842,7 @@ export class SwarmMemoryManager extends EventEmitter {
       results: 0,
       communication: 0,
       configuration: 0,
-      metrics: 0
+      metrics: 0,
     };
 
     const entriesByAccess: Record<AccessLevel, number> = {
@@ -850,7 +850,7 @@ export class SwarmMemoryManager extends EventEmitter {
       team: 0,
       swarm: 0,
       public: 0,
-      system: 0
+      system: 0,
     };
 
     let totalSize = 0;
@@ -859,8 +859,12 @@ export class SwarmMemoryManager extends EventEmitter {
     let expiringEntries = 0;
 
     for (const entry of validEntries) {
-      entriesByType[entry.type]++;
-      entriesByAccess[entry.accessLevel]++;
+      if (entry.type in entriesByType) {
+        entriesByType[entry.type as MemoryType]++;
+      }
+      if (entry.accessLevel in entriesByAccess) {
+        entriesByAccess[entry.accessLevel as AccessLevel]++;
+      }
       
       const entrySize = this.calculateEntrySize(entry);
       totalSize += entrySize;
@@ -887,16 +891,16 @@ export class SwarmMemoryManager extends EventEmitter {
       averageSize: validEntries.length > 0 ? totalSize / validEntries.length : 0,
       oldestEntry,
       newestEntry,
-      expiringEntries
+      expiringEntries,
     };
   }
 
   async exportMemory(
     options: Partial<{
-      format: 'json' | 'csv';
+      format: "json" | "csv";
       includeExpired: boolean;
       filter: MemoryQuery;
-    }> = {}
+    }> = {},
   ): Promise<string> {
     this.ensureInitialized();
 
@@ -912,7 +916,7 @@ export class SwarmMemoryManager extends EventEmitter {
       entries = entries.filter(e => filteredIds.has(e.id));
     }
 
-    if (options.format === 'csv') {
+    if (options.format === "csv") {
       return this.entriesToCSV(entries);
     } else {
       return JSON.stringify({
@@ -921,8 +925,8 @@ export class SwarmMemoryManager extends EventEmitter {
         entryCount: entries.length,
         entries: entries.map(e => ({
           ...e,
-          value: e.value // Value is already serialized
-        }))
+          value: e.value, // Value is already serialized
+        })),
       }, null, 2);
     }
   }
@@ -931,7 +935,7 @@ export class SwarmMemoryManager extends EventEmitter {
 
   private ensureInitialized(): void {
     if (!this.isInitialized) {
-      throw new Error('Memory manager not initialized');
+      throw new Error("Memory manager not initialized");
     }
   }
 
@@ -940,7 +944,7 @@ export class SwarmMemoryManager extends EventEmitter {
       if (entry.key === key) {
         if (partition) {
           const part = this.partitions.get(partition);
-          if (part && part.entries.find(e => e.id === entry.id)) {
+          if (part?.entries.find(e => e.id === entry.id)) {
             return entry;
           }
         } else {
@@ -973,9 +977,9 @@ export class SwarmMemoryManager extends EventEmitter {
       this.cache.delete(entry.key);
     }
 
-    this.emit('memory:deleted', {
+    this.emit("memory:deleted", {
       entryId,
-      key: entry.key
+      key: entry.key,
     });
 
     return true;
@@ -987,8 +991,8 @@ export class SwarmMemoryManager extends EventEmitter {
 
   private async validateAccess(
     agent: AgentId,
-    operation: 'read' | 'write' | 'delete' | 'share',
-    partition?: string
+    operation: "read" | "write" | "delete" | "share",
+    partition?: string,
   ): Promise<void> {
     // Implement access control logic here
     // For now, allow all operations
@@ -1064,7 +1068,7 @@ export class SwarmMemoryManager extends EventEmitter {
     }
     
     if (expiredEntries.length > 0) {
-      this.logger.info('Cleaned up expired entries', { count: expiredEntries.length });
+      this.logger.info("Cleaned up expired entries", { count: expiredEntries.length });
     }
   }
 
@@ -1081,7 +1085,7 @@ export class SwarmMemoryManager extends EventEmitter {
         break;
       }
       
-      if (entry.accessLevel !== 'system') { // Don't evict system entries
+      if (entry.accessLevel !== "system") { // Don't evict system entries
         const entrySize = this.calculateEntrySize(entry);
         await this.deleteEntry(entry.id);
         freedSpace += entrySize;
@@ -1089,23 +1093,23 @@ export class SwarmMemoryManager extends EventEmitter {
       }
     }
     
-    this.logger.warn('Evicted old entries for space', {
+    this.logger.warn("Evicted old entries for space", {
       evictedCount,
       freedSpace,
-      requiredSpace
+      requiredSpace,
     });
   }
 
   private calculateChecksum(backup: MemoryBackup): string {
     const content = JSON.stringify({
       entries: backup.entries,
-      partitions: backup.partitions
+      partitions: backup.partitions,
     });
-    return crypto.createHash('sha256').update(content).digest('hex');
+    return crypto.createHash("sha256").update(content).digest("hex");
   }
 
   private entriesToCSV(entries: MemoryEntry[]): string {
-    const headers = ['id', 'key', 'type', 'accessLevel', 'createdAt', 'updatedAt', 'owner', 'tags'];
+    const headers = ["id", "key", "type", "accessLevel", "createdAt", "updatedAt", "owner", "tags"];
     const rows = entries.map(entry => [
       entry.id,
       entry.key,
@@ -1114,10 +1118,10 @@ export class SwarmMemoryManager extends EventEmitter {
       entry.createdAt.toISOString(),
       entry.updatedAt.toISOString(),
       entry.owner.id,
-      entry.tags.join(';')
+      entry.tags.join(";"),
     ]);
     
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    return [headers, ...rows].map(row => row.join(",")).join("\n");
   }
 
   private async loadMemoryState(): Promise<void> {
@@ -1137,13 +1141,13 @@ export class SwarmMemoryManager extends EventEmitter {
         
         this.memory.partitions = state.partitions || [];
         
-        this.logger.info('Loaded memory state', {
+        this.logger.info("Loaded memory state", {
           entries: this.entries.size,
-          partitions: this.partitions.size
+          partitions: this.partitions.size,
         });
       }
     } catch (error) {
-      this.logger.warn('Failed to load memory state', { error });
+      this.logger.warn("Failed to load memory state", { error: (error as Error).message });
     }
   }
 
@@ -1153,21 +1157,21 @@ export class SwarmMemoryManager extends EventEmitter {
         namespace: this.config.namespace,
         timestamp: new Date(),
         entries: Array.from(this.entries.values()),
-        partitions: Array.from(this.partitions.values())
+        partitions: Array.from(this.partitions.values()),
       };
       
       await this.persistence.saveState(state);
     } catch (error) {
-      this.logger.error('Failed to save memory state', { error });
+      this.logger.error("Failed to save memory state", { error: (error as Error).message });
     }
   }
 
   private async createDefaultPartitions(): Promise<void> {
     const defaultPartitions = [
-      { name: 'default', type: 'knowledge' as MemoryType },
-      { name: 'system', type: 'configuration' as MemoryType },
-      { name: 'cache', type: 'cache' as MemoryType },
-      { name: 'logs', type: 'logs' as MemoryType }
+      { name: "default", type: "knowledge" as MemoryType },
+      { name: "system", type: "configuration" as MemoryType },
+      { name: "cache", type: "cache" as MemoryType },
+      { name: "logs", type: "logs" as MemoryType },
     ];
     
     for (const partition of defaultPartitions) {
@@ -1179,14 +1183,14 @@ export class SwarmMemoryManager extends EventEmitter {
 
   private mergeWithDefaults(config: Partial<MemoryConfig>): MemoryConfig {
     return {
-      namespace: 'default',
-      persistencePath: './swarm-memory',
+      namespace: "default",
+      persistencePath: "./swarm-memory",
       maxMemorySize: 100 * 1024 * 1024, // 100MB
       maxEntrySize: 10 * 1024 * 1024,   // 10MB
       defaultTtl: 24 * 60 * 60 * 1000,  // 24 hours
       enableCompression: false,
       enableEncryption: false,
-      consistencyLevel: 'eventual',
+      consistencyLevel: "eventual",
       syncInterval: 60000,      // 1 minute
       backupInterval: 3600000,  // 1 hour
       maxBackups: 24,
@@ -1196,7 +1200,7 @@ export class SwarmMemoryManager extends EventEmitter {
       enableCaching: true,
       cacheSize: 1000,
       cacheTtl: 300000, // 5 minutes
-      ...config
+      ...config,
     };
   }
 
@@ -1205,16 +1209,16 @@ export class SwarmMemoryManager extends EventEmitter {
     if (this.config.syncInterval > 0) {
       this.syncTimer = setInterval(() => {
         this.performSync();
-      }, this.config.syncInterval);
+      }, this.config.syncInterval) as any;
     }
     
     // Backup process
     if (this.config.backupInterval > 0) {
       this.backupTimer = setInterval(() => {
         this.createBackup().catch(error => {
-          this.logger.error('Background backup failed', { error });
+          this.logger.error("Background backup failed", { error: (error as Error).message });
         });
-      }, this.config.backupInterval);
+      }, this.config.backupInterval) as any;
     }
     
     // Cleanup process
@@ -1248,21 +1252,21 @@ export class SwarmMemoryManager extends EventEmitter {
         await this.replication.sync();
       }
     } catch (error) {
-      this.logger.error('Background sync failed', { error });
+      this.logger.error("Background sync failed", { error: (error as Error).message });
     }
   }
 
   private setupEventHandlers(): void {
     // Handle replication events
-    this.replication.on('entry-received', async (data: any) => {
+    this.replication.on("entry-received", async (data: any) => {
       const entry = data.entry as MemoryEntry;
       this.entries.set(entry.id, entry);
       await this.index.addEntry(entry);
       
-      this.emit('memory:replicated', {
+      this.emit("memory:replicated", {
         entryId: entry.id,
         key: entry.key,
-        source: data.source
+        source: data.source,
       });
     });
   }
@@ -1328,12 +1332,14 @@ class MemoryCache {
     // Evict if at capacity
     if (this.cache.size >= this.maxSize) {
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (oldestKey !== undefined) {
+        this.cache.delete(oldestKey);
+      }
     }
     
     this.cache.set(key, {
       entry,
-      expiry: Date.now() + this.ttl
+      expiry: Date.now() + this.ttl,
     });
   }
 
@@ -1401,14 +1407,14 @@ class MemoryPersistence {
   }
 
   async saveState(state: any): Promise<void> {
-    const statePath = path.join(this.config.persistencePath, 'state.json');
+    const statePath = path.join(this.config.persistencePath, "state.json");
     await fs.writeFile(statePath, JSON.stringify(state, null, 2));
   }
 
   async loadState(): Promise<any> {
     try {
-      const statePath = path.join(this.config.persistencePath, 'state.json');
-      const content = await fs.readFile(statePath, 'utf-8');
+      const statePath = path.join(this.config.persistencePath, "state.json");
+      const content = await fs.readFile(statePath, "utf-8");
       return JSON.parse(content);
     } catch (error) {
       return null;
@@ -1416,15 +1422,15 @@ class MemoryPersistence {
   }
 
   async saveBackup(backupId: string, backup: MemoryBackup): Promise<void> {
-    const backupPath = path.join(this.config.persistencePath, 'backups', `${backupId}.json`);
+    const backupPath = path.join(this.config.persistencePath, "backups", `${backupId}.json`);
     await fs.mkdir(path.dirname(backupPath), { recursive: true });
     await fs.writeFile(backupPath, JSON.stringify(backup, null, 2));
   }
 
   async loadBackup(backupId: string): Promise<MemoryBackup | null> {
     try {
-      const backupPath = path.join(this.config.persistencePath, 'backups', `${backupId}.json`);
-      const content = await fs.readFile(backupPath, 'utf-8');
+      const backupPath = path.join(this.config.persistencePath, "backups", `${backupId}.json`);
+      const content = await fs.readFile(backupPath, "utf-8");
       return JSON.parse(content);
     } catch (error) {
       return null;

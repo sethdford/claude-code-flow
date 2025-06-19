@@ -2,10 +2,10 @@
  * MCP Performance Monitoring and Optimization
  */
 
-import { EventEmitter } from 'node:events';
-import { performance } from 'node:perf_hooks';
-import { ILogger } from '../core/logger.js';
-import { MCPSession, MCPRequest, MCPResponse, MCPMetrics } from '../utils/types.js';
+import { EventEmitter } from "node:events";
+import { performance } from "node:perf_hooks";
+import { ILogger } from "../core/logger.js";
+import { MCPSession, MCPRequest, MCPResponse, MCPMetrics } from "../utils/types.js";
 
 export interface PerformanceMetrics {
   requestCount: number;
@@ -48,11 +48,11 @@ export interface AlertRule {
   id: string;
   name: string;
   metric: string;
-  operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
+  operator: "gt" | "lt" | "eq" | "gte" | "lte";
   threshold: number;
   duration: number; // milliseconds
   enabled: boolean;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   actions: string[];
 }
 
@@ -60,7 +60,7 @@ export interface Alert {
   id: string;
   ruleId: string;
   ruleName: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   triggeredAt: Date;
   resolvedAt?: Date;
@@ -71,8 +71,8 @@ export interface Alert {
 
 export interface OptimizationSuggestion {
   id: string;
-  type: 'performance' | 'memory' | 'throughput' | 'latency';
-  priority: 'low' | 'medium' | 'high';
+  type: "performance" | "memory" | "throughput" | "latency";
+  priority: "low" | "medium" | "high";
   title: string;
   description: string;
   impact: string;
@@ -128,7 +128,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
 
     this.requestMetrics.set(requestId, metrics);
     
-    this.logger.debug('Request started', {
+    this.logger.debug("Request started", {
       requestId,
       method: request.method,
       sessionId: session.id,
@@ -143,7 +143,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
   recordRequestEnd(requestId: string, response?: MCPResponse, error?: Error): void {
     const metrics = this.requestMetrics.get(requestId);
     if (!metrics) {
-      this.logger.warn('Request metrics not found', { requestId });
+      this.logger.warn("Request metrics not found", { requestId });
       return;
     }
 
@@ -162,14 +162,14 @@ export class MCPPerformanceMonitor extends EventEmitter {
       this.responseTimes.shift();
     }
 
-    this.logger.debug('Request completed', {
+    this.logger.debug("Request completed", {
       requestId,
       duration,
       success: metrics.success,
       error: metrics.error,
     });
 
-    this.emit('requestCompleted', metrics);
+    this.emit("requestCompleted", metrics);
 
     // Remove from active metrics after some time
     setTimeout(() => {
@@ -199,7 +199,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
     // Calculate throughput (requests per second over last minute)
     const oneMinuteAgo = now - 60000;
     const recentRequests = completedRequests.filter(m => 
-      m.endTime && (m.startTime + oneMinuteAgo) > 0
+      m.endTime && (m.startTime + oneMinuteAgo) > 0,
     );
     const throughput = recentRequests.length / 60;
 
@@ -249,7 +249,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
    */
   addAlertRule(rule: AlertRule): void {
     this.alertRules.set(rule.id, rule);
-    this.logger.info('Alert rule added', { 
+    this.logger.info("Alert rule added", { 
       id: rule.id, 
       name: rule.name, 
       metric: rule.metric,
@@ -270,7 +270,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
       }
     }
 
-    this.logger.info('Alert rule removed', { ruleId });
+    this.logger.info("Alert rule removed", { ruleId });
   }
 
   /**
@@ -293,13 +293,13 @@ export class MCPPerformanceMonitor extends EventEmitter {
   getPerformanceSummary(): {
     current: PerformanceMetrics;
     trends: {
-      responseTime: 'improving' | 'degrading' | 'stable';
-      throughput: 'improving' | 'degrading' | 'stable';
-      errorRate: 'improving' | 'degrading' | 'stable';
+      responseTime: "improving" | "degrading" | "stable";
+      throughput: "improving" | "degrading" | "stable";
+      errorRate: "improving" | "degrading" | "stable";
     };
     alerts: number;
     suggestions: number;
-  } {
+    } {
     const current = this.getCurrentMetrics();
     const trends = this.calculateTrends();
 
@@ -320,13 +320,13 @@ export class MCPPerformanceMonitor extends EventEmitter {
       alert.resolvedAt = new Date();
       this.activeAlerts.delete(alertId);
       
-      this.logger.info('Alert resolved', {
+      this.logger.info("Alert resolved", {
         alertId,
         ruleName: alert.ruleName,
         duration: alert.resolvedAt.getTime() - alert.triggeredAt.getTime(),
       });
       
-      this.emit('alertResolved', alert);
+      this.emit("alertResolved", alert);
     }
   }
 
@@ -335,7 +335,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
    */
   clearOptimizationSuggestions(): void {
     this.optimizationSuggestions = [];
-    this.logger.info('Optimization suggestions cleared');
+    this.logger.info("Optimization suggestions cleared");
   }
 
   /**
@@ -357,7 +357,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
       this.cleanupTimer = undefined;
     }
 
-    this.logger.info('Performance monitoring stopped');
+    this.logger.info("Performance monitoring stopped");
   }
 
   private startMonitoring(): void {
@@ -371,7 +371,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
         this.historicalMetrics.shift();
       }
       
-      this.emit('metricsCollected', metrics);
+      this.emit("metricsCollected", metrics);
     }, this.config.metricsInterval);
 
     // Check alerts periodically
@@ -385,54 +385,54 @@ export class MCPPerformanceMonitor extends EventEmitter {
       this.generateOptimizationSuggestions();
     }, this.config.cleanupInterval);
 
-    this.logger.info('Performance monitoring started');
+    this.logger.info("Performance monitoring started");
   }
 
   private setupDefaultAlertRules(): void {
     const defaultRules: AlertRule[] = [
       {
-        id: 'high_response_time',
-        name: 'High Response Time',
-        metric: 'averageResponseTime',
-        operator: 'gt',
+        id: "high_response_time",
+        name: "High Response Time",
+        metric: "averageResponseTime",
+        operator: "gt",
         threshold: 5000, // 5 seconds
         duration: 30000, // 30 seconds
         enabled: true,
-        severity: 'medium',
-        actions: ['log', 'notify'],
+        severity: "medium",
+        actions: ["log", "notify"],
       },
       {
-        id: 'high_error_rate',
-        name: 'High Error Rate',
-        metric: 'errorRate',
-        operator: 'gt',
+        id: "high_error_rate",
+        name: "High Error Rate",
+        metric: "errorRate",
+        operator: "gt",
         threshold: 10, // 10%
         duration: 60000, // 1 minute
         enabled: true,
-        severity: 'high',
-        actions: ['log', 'notify', 'alert'],
+        severity: "high",
+        actions: ["log", "notify", "alert"],
       },
       {
-        id: 'low_throughput',
-        name: 'Low Throughput',
-        metric: 'throughput',
-        operator: 'lt',
+        id: "low_throughput",
+        name: "Low Throughput",
+        metric: "throughput",
+        operator: "lt",
         threshold: 1, // 1 request per second
         duration: 120000, // 2 minutes
         enabled: true,
-        severity: 'medium',
-        actions: ['log', 'notify'],
+        severity: "medium",
+        actions: ["log", "notify"],
       },
       {
-        id: 'high_memory_usage',
-        name: 'High Memory Usage',
-        metric: 'memoryUsage.heapUsed',
-        operator: 'gt',
+        id: "high_memory_usage",
+        name: "High Memory Usage",
+        metric: "memoryUsage.heapUsed",
+        operator: "gt",
         threshold: 1024 * 1024 * 1024, // 1GB
         duration: 300000, // 5 minutes
         enabled: true,
-        severity: 'high',
-        actions: ['log', 'notify', 'alert'],
+        severity: "high",
+        actions: ["log", "notify", "alert"],
       },
     ];
 
@@ -468,7 +468,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
 
         this.activeAlerts.set(alert.id, alert);
         
-        this.logger.warn('Alert triggered', {
+        this.logger.warn("Alert triggered", {
           alertId: alert.id,
           ruleName: rule.name,
           metric: rule.metric,
@@ -476,7 +476,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
           threshold: rule.threshold,
         });
         
-        this.emit('alertTriggered', alert);
+        this.emit("alertTriggered", alert);
       } else if (!triggered && existingAlert) {
         // Resolve existing alert
         this.resolveAlert(existingAlert.id);
@@ -485,7 +485,7 @@ export class MCPPerformanceMonitor extends EventEmitter {
   }
 
   private getMetricValue(metrics: PerformanceMetrics, path: string): number {
-    const parts = path.split('.');
+    const parts = path.split(".");
     let value: any = metrics;
     
     for (const part of parts) {
@@ -493,16 +493,16 @@ export class MCPPerformanceMonitor extends EventEmitter {
       if (value === undefined) break;
     }
     
-    return typeof value === 'number' ? value : 0;
+    return typeof value === "number" ? value : 0;
   }
 
   private evaluateCondition(value: number, operator: string, threshold: number): boolean {
     switch (operator) {
-      case 'gt': return value > threshold;
-      case 'gte': return value >= threshold;
-      case 'lt': return value < threshold;
-      case 'lte': return value <= threshold;
-      case 'eq': return value === threshold;
+      case "gt": return value > threshold;
+      case "gte": return value >= threshold;
+      case "lt": return value < threshold;
+      case "lte": return value <= threshold;
+      case "eq": return value === threshold;
       default: return false;
     }
   }
@@ -515,17 +515,17 @@ export class MCPPerformanceMonitor extends EventEmitter {
   }
 
   private calculateTrends(): {
-    responseTime: 'improving' | 'degrading' | 'stable';
-    throughput: 'improving' | 'degrading' | 'stable';
-    errorRate: 'improving' | 'degrading' | 'stable';
-  } {
+    responseTime: "improving" | "degrading" | "stable";
+    throughput: "improving" | "degrading" | "stable";
+    errorRate: "improving" | "degrading" | "stable";
+    } {
     const recentMetrics = this.historicalMetrics.slice(-10); // Last 10 data points
     
     if (recentMetrics.length < 2) {
       return {
-        responseTime: 'stable',
-        throughput: 'stable',
-        errorRate: 'stable',
+        responseTime: "stable",
+        throughput: "stable",
+        errorRate: "stable",
       };
     }
 
@@ -539,16 +539,16 @@ export class MCPPerformanceMonitor extends EventEmitter {
     };
   }
 
-  private getTrend(oldValue: number, newValue: number, lowerIsBetter: boolean): 'improving' | 'degrading' | 'stable' {
+  private getTrend(oldValue: number, newValue: number, lowerIsBetter: boolean): "improving" | "degrading" | "stable" {
     const change = (newValue - oldValue) / oldValue;
     const threshold = 0.1; // 10% change threshold
 
     if (Math.abs(change) < threshold) {
-      return 'stable';
+      return "stable";
     }
 
     const improving = lowerIsBetter ? change < 0 : change > 0;
-    return improving ? 'improving' : 'degrading';
+    return improving ? "improving" : "degrading";
   }
 
   private generateOptimizationSuggestions(): void {
@@ -559,13 +559,13 @@ export class MCPPerformanceMonitor extends EventEmitter {
     if (metrics.averageResponseTime > 2000) {
       suggestions.push({
         id: `opt_response_time_${Date.now()}`,
-        type: 'performance',
-        priority: 'high',
-        title: 'Optimize Response Time',
-        description: 'Average response time is above 2 seconds',
-        impact: 'Improve user experience and system throughput',
-        implementation: 'Consider implementing caching, optimizing database queries, or adding connection pooling',
-        estimatedImprovement: '30-50% response time reduction',
+        type: "performance",
+        priority: "high",
+        title: "Optimize Response Time",
+        description: "Average response time is above 2 seconds",
+        impact: "Improve user experience and system throughput",
+        implementation: "Consider implementing caching, optimizing database queries, or adding connection pooling",
+        estimatedImprovement: "30-50% response time reduction",
         detectedAt: new Date(),
         metrics: { averageResponseTime: metrics.averageResponseTime },
       });
@@ -575,13 +575,13 @@ export class MCPPerformanceMonitor extends EventEmitter {
     if (metrics.memoryUsage.heapUsed > 512 * 1024 * 1024) { // 512MB
       suggestions.push({
         id: `opt_memory_${Date.now()}`,
-        type: 'memory',
-        priority: 'medium',
-        title: 'Optimize Memory Usage',
-        description: 'Heap memory usage is high',
-        impact: 'Prevent memory leaks and improve stability',
-        implementation: 'Review memory usage patterns, implement object pooling, or add garbage collection tuning',
-        estimatedImprovement: '20-30% memory reduction',
+        type: "memory",
+        priority: "medium",
+        title: "Optimize Memory Usage",
+        description: "Heap memory usage is high",
+        impact: "Prevent memory leaks and improve stability",
+        implementation: "Review memory usage patterns, implement object pooling, or add garbage collection tuning",
+        estimatedImprovement: "20-30% memory reduction",
         detectedAt: new Date(),
         metrics: { heapUsed: metrics.memoryUsage.heapUsed },
       });
@@ -591,13 +591,13 @@ export class MCPPerformanceMonitor extends EventEmitter {
     if (metrics.throughput < 5 && metrics.requestCount > 100) {
       suggestions.push({
         id: `opt_throughput_${Date.now()}`,
-        type: 'throughput',
-        priority: 'medium',
-        title: 'Improve Throughput',
-        description: 'Request throughput is below optimal levels',
-        impact: 'Handle more concurrent requests efficiently',
-        implementation: 'Consider horizontal scaling, load balancing, or request batching',
-        estimatedImprovement: '2-3x throughput increase',
+        type: "throughput",
+        priority: "medium",
+        title: "Improve Throughput",
+        description: "Request throughput is below optimal levels",
+        impact: "Handle more concurrent requests efficiently",
+        implementation: "Consider horizontal scaling, load balancing, or request batching",
+        estimatedImprovement: "2-3x throughput increase",
         detectedAt: new Date(),
         metrics: { throughput: metrics.throughput },
       });
@@ -606,19 +606,19 @@ export class MCPPerformanceMonitor extends EventEmitter {
     // Add only new suggestions
     for (const suggestion of suggestions) {
       const exists = this.optimizationSuggestions.some(s => 
-        s.type === suggestion.type && s.title === suggestion.title
+        s.type === suggestion.type && s.title === suggestion.title,
       );
       
       if (!exists) {
         this.optimizationSuggestions.push(suggestion);
-        this.emit('optimizationSuggestion', suggestion);
+        this.emit("optimizationSuggestion", suggestion);
       }
     }
 
     // Keep only recent suggestions (last 24 hours)
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     this.optimizationSuggestions = this.optimizationSuggestions.filter(s => 
-      s.detectedAt > dayAgo
+      s.detectedAt > dayAgo,
     );
   }
 

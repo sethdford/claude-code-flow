@@ -1,325 +1,168 @@
-# 🌊 Claude-Flow v1.0.72: Advanced AI Agent Orchestration Platform
+# Claude Flow
 
-<div align="center">
+> Advanced AI agent orchestration system for multi-agent coordination
 
-[![🌟 Star on GitHub](https://img.shields.io/github/stars/ruvnet/claude-code-flow?style=for-the-badge&logo=github&color=gold)](https://github.com/ruvnet/claude-code-flow)
-[![📦 NPX Ready](https://img.shields.io/npm/v/claude-flow?style=for-the-badge&logo=npm&color=blue&label=v1.0.72)](https://www.npmjs.com/package/claude-flow)
-[![⚡ Claude Code](https://img.shields.io/badge/Claude%20Code-Ready-green?style=for-the-badge&logo=anthropic)](https://github.com/ruvnet/claude-code-flow)
-[![🦕 Multi-Runtime](https://img.shields.io/badge/Runtime-Node%20%7C%20Deno-blue?style=for-the-badge&logo=javascript)](https://github.com/ruvnet/claude-code-flow)
-[![⚡ TypeScript](https://img.shields.io/badge/TypeScript-Full%20Support-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![🛡️ MIT License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&logo=opensourceinitiative)](https://opensource.org/licenses/MIT)
+[![npm version](https://badge.fury.io/js/claude-flow.svg)](https://badge.fury.io/js/claude-flow)
+[![Build Status](https://github.com/ruvnet/claude-code-flow/workflows/CI/badge.svg)](https://github.com/ruvnet/claude-code-flow/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-</div>
+Claude Flow is a powerful command-line tool and framework for orchestrating AI agents, managing complex workflows, and coordinating multi-agent systems. Built with TypeScript and Node.js, it provides a comprehensive platform for AI-driven automation and coordination.
 
-## 🎯 **Transform Your Development Workflow**
+## ✨ Features
 
-**Claude-Flow** is the ultimate orchestration platform that revolutionizes how you work with Claude Code. Coordinate **multiple AI agents** simultaneously, manage complex workflows, and build sophisticated applications with AI-powered development.
+- **🤖 Multi-Agent Orchestration**: Coordinate multiple AI agents working together
+- **🔄 Workflow Management**: Define and execute complex AI workflows
+- **📡 MCP Integration**: Built-in Model Context Protocol support
+- **🎯 SPARC Framework**: Structured approach to AI-driven development
+- **📊 Real-time Monitoring**: Track agent performance and system metrics
+- **🛠️ Extensible Architecture**: Plugin system for custom functionality
+- **🔐 Security First**: Built-in security measures and access controls
+- **📦 Standalone Binaries**: Self-contained executables for easy deployment
 
-> 🔥 **One command to rule them all**: `npx claude-flow@latest init --sparc` - Deploy a full AI agent coordination system in seconds!
+## 🚀 Quick Start
 
+### Installation
 
-## 🚀 **What's New in v1.0.72**
-
-### 🎯 **Claude Code Settings Optimization**
-- **✅ Auto-Settings Creation**: `init` command now creates `.claude/settings.json` with automation-optimized settings
-- **✅ Extended Timeouts**: 5-minute default, 10-minute max for Bash commands (300s/600s)
-- **✅ Full Tool Permissions**: All tools allowed with wildcards `(*)` for complete automation
-- **✅ Large Output Support**: 500KB character limit for handling extensive outputs
-- **✅ Automation Features**: Parallel execution, batch operations, and auto-save to memory enabled
-
-### 🔧 **Enhanced SPARC Integration**
-- **✅ Better Prompts**: SPARC and swarm prompts now emphasize batch tools and memory usage
-- **✅ Memory First**: All modes now save to memory after each step for better coordination
-- **✅ Agent Clarity**: Swarm prompts specify exact agent counts and immediate execution
-- **✅ Task Tracking**: Added visual progress indicators and task format to all prompts
-- **✅ Action-Oriented**: Changed from planning to immediate execution language
-
-### 🚀 **Developer Experience**
-- **✅ Zero Configuration**: Optimal settings applied automatically on init
-- **✅ Long Operations**: Support for extended running tasks without timeouts
-- **✅ Better Reliability**: Auto-accept for Claude Code warnings in swarm mode
-- **✅ Version Consistency**: All components updated to v1.0.72
-
----
-
-## ⚡ **Quick Start** 
-
-### 🚀 **Instant Setup**
 ```bash
-# Install and initialize with SPARC development environment
-npx claude-flow@latest init --sparc
-
-# Use the local wrapper (created by init)
-./claude-flow start --ui --port 3000
-
-# Run SPARC commands
-./claude-flow sparc "build a REST API"
-```
-
-### 🎛️ **SPARC Development Modes** (17 Specialized Agents)
-```bash
-# List all available SPARC modes
-./claude-flow sparc modes
-
-# Run specific development workflows
-./claude-flow sparc run coder "implement user authentication"
-./claude-flow sparc run architect "design microservice architecture"
-./claude-flow sparc tdd "create test suite for API"
-```
-
-## 🏗️ **Core Features**
-
-### 🤖 **Multi-Agent Orchestration**
-- **Parallel Execution**: Run up to 10 agents concurrently with BatchTool
-- **Smart Coordination**: Intelligent task distribution and load balancing
-- **Memory Sharing**: Persistent knowledge bank across all agents
-- **Real-time Monitoring**: Live dashboard for agent status and progress
-
-### 🧠 **SPARC Development Framework**
-- **17 Specialized Modes**: Architect, Coder, TDD, Security, DevOps, and more
-- **Workflow Orchestration**: Complete development lifecycle automation
-- **Interactive & Non-interactive**: Flexible execution modes
-- **Boomerang Pattern**: Iterative development with continuous refinement
-
-### 📊 **Advanced Monitoring & Analytics**
-- **System Health Dashboard**: Real-time metrics and performance tracking
-- **Task Coordination**: Dependency management and conflict resolution
-- **Terminal Pool Management**: Efficient resource utilization
-- **Coverage Reports**: Comprehensive test and code coverage analysis
-
----
-
-## 🛠️ **Installation & Setup**
-
-### **Method 1: Quick Start with NPX (Recommended)**
-```bash
-# Initialize with full SPARC environment
-npx claude-flow@latest init --sparc
-
-# This creates:
-# ✓ Local ./claude-flow wrapper script
-# ✓ .claude/ directory with configuration
-# ✓ CLAUDE.md (project instructions for Claude Code)
-# ✓ .roomodes (17 pre-configured SPARC modes)
-# ✓ Swarm command documentation
-
-# Start using immediately
-./claude-flow start --ui --port 3000
-```
-
-### **Method 2: Global Installation**
-```bash
-# Install globally
+# Install globally via npm
 npm install -g claude-flow
 
-# Initialize anywhere
-claude-flow init --sparc
-
-# Use directly
-claude-flow start --ui
+# Or run directly with npx
+npx claude-flow --help
 ```
 
-### **Method 3: Local Project Installation**
+### Basic Usage
+
 ```bash
-# Add to project
-npm install claude-flow --save-dev
+# Start interactive mode
+claude-flow
 
-# Initialize
-npx claude-flow init --sparc
+# Show version
+claude-flow --version
 
-# Use with local wrapper
-./claude-flow start --ui
-```
+# Get help
+claude-flow help
 
----
+# Start a new workflow
+claude-flow start --config my-workflow.json
 
-## 🎮 **Usage Examples**
+# Monitor running agents
+claude-flow monitor
 
-### 🚀 **Basic Operations**
-```bash
 # Check system status
-./claude-flow status
-
-# Start orchestration with Web UI
-./claude-flow start --ui --port 3000
-
-# Check MCP server status
-./claude-flow mcp status
-
-# Manage agents
-./claude-flow agent spawn researcher --name "DataBot"
-./claude-flow agent info agent-123
-./claude-flow agent terminate agent-123
+claude-flow status
 ```
 
-### 🔥 **Advanced Workflows**
+## 📖 Documentation
 
-#### **Multi-Agent Development**
+### Core Commands
+
+#### `start` - Start Agent Orchestration
 ```bash
-# Deploy swarm for full-stack development
-./claude-flow swarm "Build e-commerce platform" \
-  --strategy development \
-  --max-agents 5 \
-  --parallel \
-  --monitor
-
-# BatchTool parallel development
-batchtool run --parallel \
-  "./claude-flow sparc run architect 'design user auth'" \
-  "./claude-flow sparc run code 'implement login API'" \
-  "./claude-flow sparc run tdd 'create auth tests'" \
-  "./claude-flow sparc run security-review 'audit auth flow'"
+claude-flow start [options]
+  --config <path>     Configuration file path
+  --agents <number>   Number of agents to spawn
+  --mode <mode>       Execution mode (sequential, parallel, swarm)
+  --output <path>     Output directory
 ```
 
-#### **SPARC Development Modes**
+#### `monitor` - Real-time Monitoring
 ```bash
-# Complete development workflow
-./claude-flow sparc run ask "research best practices for microservices"
-./claude-flow sparc run architect "design scalable architecture"
-./claude-flow sparc run code "implement user service"
-./claude-flow sparc run tdd "create comprehensive test suite"
-./claude-flow sparc run integration "integrate all services"
-./claude-flow sparc run devops "setup CI/CD pipeline"
+claude-flow monitor [options]
+  --refresh <seconds> Refresh interval
+  --format <format>   Output format (table, json, dashboard)
+  --filter <filter>   Filter agents by status
 ```
 
-#### **Memory & Coordination**
+#### `sparc` - SPARC Framework
 ```bash
-# Store and query project knowledge
-./claude-flow memory store requirements "User auth with JWT"
-./claude-flow memory store architecture "Microservice design patterns"
-./claude-flow memory query auth
-
-# Task coordination
-./claude-flow task create research "Market analysis for AI tools"
-./claude-flow task workflow examples/development-pipeline.json
+claude-flow sparc [options]
+  --mode <mode>       SPARC mode (specification, architecture, etc.)
+  --input <path>      Input file or prompt
+  --output <path>     Output directory
 ```
 
----
+### Configuration
 
-## 📋 **Available Commands**
+Claude Flow uses JSON configuration files to define workflows and agent behavior:
 
-### **Core Commands**
-| Command | Description | Example |
-|---------|-------------|---------|
-| `init` | Initialize project with Claude integration | `./claude-flow init --sparc` |
-| `start` | Start orchestration system | `./claude-flow start --ui` |
-| `status` | Show system health and metrics | `./claude-flow status` |
-| `agent` | Manage AI agents and hierarchies | `./claude-flow agent spawn researcher` |
-| `swarm` | Advanced multi-agent coordination | `./claude-flow swarm "Build API" --parallel` |
-
-### **SPARC Development Modes**
-| Mode | Purpose | Example |
-|------|---------|---------|
-| `architect` | System design and architecture | `./claude-flow sparc run architect "design API"` |
-| `code` | Code development and implementation | `./claude-flow sparc run code "user authentication"` |
-| `tdd` | Test-driven development | `./claude-flow sparc run tdd "payment system"` |
-| `security-review` | Security auditing and analysis | `./claude-flow sparc run security-review "auth flow"` |
-| `integration` | System integration and testing | `./claude-flow sparc run integration "microservices"` |
-| `devops` | Deployment and CI/CD | `./claude-flow sparc run devops "k8s deployment"` |
-
-### **Memory & Coordination**
-| Command | Description | Example |
-|---------|-------------|---------|
-| `memory store` | Store information in knowledge bank | `./claude-flow memory store key "value"` |
-| `memory query` | Search stored information | `./claude-flow memory query "authentication"` |
-| `task create` | Create and manage tasks | `./claude-flow task create research "AI trends"` |
-| `monitor` | Real-time system monitoring | `./claude-flow monitor --dashboard` |
-
-### **Enterprise Commands**
-| Command | Description | Example |
-|---------|-------------|---------|
-| `project` | Project lifecycle management | `./claude-flow project create "API Project" --type web-app` |
-| `deploy` | Deployment automation & strategies | `./claude-flow deploy create "v1.2.0" --strategy blue-green` |
-| `cloud` | Multi-cloud infrastructure management | `./claude-flow cloud resources create "web-server" compute` |
-| `security` | Security scanning & compliance | `./claude-flow security scan "Vulnerability Check" ./src` |
-| `analytics` | Performance analytics & insights | `./claude-flow analytics insights --timerange 7d` |
-| `audit` | Enterprise audit logging | `./claude-flow audit report compliance --framework SOC2` |
-
----
-
-## 🏗️ **Architecture Overview**
-
-### **Multi-Layer Agent System**
-```
-┌─────────────────────────────────────────────────────────┐
-│                 BatchTool Orchestrator                  │
-├─────────────────────────────────────────────────────────┤
-│  Agent 1    Agent 2    Agent 3    Agent 4    Agent 5   │
-│ Architect │   Coder   │   TDD    │ Security │  DevOps   │
-├─────────────────────────────────────────────────────────┤
-│              Shared Memory Bank & Coordination          │
-├─────────────────────────────────────────────────────────┤
-│         Terminal Pool & Resource Management             │
-├─────────────────────────────────────────────────────────┤
-│              Claude Code Integration Layer              │
-└─────────────────────────────────────────────────────────┘
+```json
+{
+  "name": "my-workflow",
+  "version": "1.0.0",
+  "agents": [
+    {
+      "id": "agent-1",
+      "type": "claude",
+      "role": "coordinator",
+      "config": {
+        "model": "claude-3-sonnet",
+        "maxTokens": 4000
+      }
+    }
+  ],
+  "workflow": {
+    "type": "sequential",
+    "steps": [
+      {
+        "agent": "agent-1",
+        "task": "analyze-requirements",
+        "input": "requirements.txt"
+      }
+    ]
+  }
+}
 ```
 
-### **Key Components**
-- **🎛️ Orchestrator**: Central coordination and task distribution
-- **🤖 Agent Pool**: Specialized AI agents for different domains
-- **🧠 Memory Bank**: Persistent knowledge sharing across agents
-- **📊 Monitor**: Real-time metrics and health monitoring
-- **🔗 MCP Server**: Model Context Protocol for tool integration
+### Environment Variables
 
----
-
-## 🧪 **Testing & Quality Assurance**
-
-### **Comprehensive Test Coverage**
 ```bash
-# Run full test suite
-npm test
+# API Keys
+ANTHROPIC_API_KEY=your-api-key
+OPENAI_API_KEY=your-api-key
 
-# Run specific test categories
-npm run test:unit        # Unit tests
-npm run test:integration # Integration tests
-npm run test:e2e         # End-to-end tests
-
-# Generate coverage reports
-npm run test:coverage
-
-# Lint and typecheck
-npm run lint
-npm run typecheck
+# Configuration
+CLAUDE_FLOW_CONFIG=./config.json
+CLAUDE_FLOW_LOG_LEVEL=info
+CLAUDE_FLOW_OUTPUT_DIR=./output
 ```
 
-### **Quality Metrics (v1.0.72)**
-- **✅ Project-Focused**: CLAUDE.md explicitly guides building user applications
-- **✅ Clear Instructions**: No confusion about modifying claude-flow itself
-- **✅ Real Examples**: All documentation shows building actual applications
-- **✅ NPM Publishing**: Fully compatible with npx and global installation
-- **✅ Cross-Platform**: Windows, Mac, and Linux support
+## 🏗️ Architecture
 
----
+Claude Flow is built on a modular architecture:
 
-## 📚 **Documentation & Resources**
+```
+┌─────────────────┐
+│   CLI Interface │
+├─────────────────┤
+│ Agent Manager   │
+├─────────────────┤
+│ Workflow Engine │
+├─────────────────┤
+│ MCP Integration │
+├─────────────────┤
+│ Core Services   │
+└─────────────────┘
+```
 
-### **Getting Started**
-- [🚀 Quick Start Guide](./docs/quick-start.md)
-- [⚙️ Configuration Options](./docs/configuration.md)
-- [🤖 Agent Management](./docs/agents.md)
-- [🧠 SPARC Development](./docs/sparc-modes.md)
+### Key Components
 
-### **Advanced Topics**
-- [🔧 BatchTool Integration](./docs/batchtool.md)
-- [📊 Monitoring & Analytics](./docs/monitoring.md)
-- [🔗 MCP Server Setup](./docs/mcp-integration.md)
-- [🔒 Security Best Practices](./docs/security.md)
+- **Agent Manager**: Handles agent lifecycle and coordination
+- **Workflow Engine**: Executes complex multi-step workflows
+- **MCP Integration**: Model Context Protocol support
+- **Communication Layer**: Inter-agent messaging and coordination
+- **Memory System**: Persistent storage and context management
 
-### **API Reference**
-- [📖 Command Reference](./docs/commands.md)
-- [🎛️ Configuration Schema](./docs/config-schema.md)
-- [🔌 Plugin Development](./docs/plugins.md)
-- [🛠️ Troubleshooting](./docs/troubleshooting.md)
+## 🔧 Development
 
----
+### Prerequisites
 
-## 🤝 **Contributing**
+- Node.js 18+ 
+- npm or yarn
+- TypeScript
 
-We welcome contributions! Here's how to get started:
+### Building from Source
 
-### **Development Setup**
 ```bash
 # Clone the repository
 git clone https://github.com/ruvnet/claude-code-flow.git
@@ -328,55 +171,58 @@ cd claude-code-flow
 # Install dependencies
 npm install
 
-# Build the project
-npm run build
+# Build TypeScript
+npm run build:ts
+
+# Build standalone binary
+npm run build:sea
 
 # Run tests
 npm test
-
-# Link for local development
-npm link
 ```
 
-### **Contributing Guidelines**
-- 🐛 **Bug Reports**: Use GitHub issues with detailed reproduction steps
-- 💡 **Feature Requests**: Propose new features with use cases
-- 🔧 **Pull Requests**: Follow our coding standards and include tests
-- 📚 **Documentation**: Help improve docs and examples
+### Project Structure
 
----
-
-## 📄 **License**
-
-MIT License - see [LICENSE](./LICENSE) for details.
-
----
-
-## 🎉 **Acknowledgments**
-
-- **Anthropic**: For the amazing Claude AI that powers this platform
-- **Node.js Team**: For the excellent JavaScript runtime
-- **Open Source Community**: For contributions and feedback
-- **SPARC Methodology**: For the structured development approach
-
----
-
-<div align="center">
-
-### **🚀 Ready to transform your development workflow?**
-
-```bash
-npx claude-flow@latest init --sparc
+```
+src/
+├── cli/           # CLI interface and commands
+├── agents/        # Agent management system
+├── coordination/  # Multi-agent coordination
+├── core/          # Core services and utilities
+├── mcp/           # Model Context Protocol integration
+├── swarm/         # Swarm intelligence features
+└── types/         # TypeScript type definitions
 ```
 
-**Join thousands of developers already using Claude-Flow!**
+## 🤝 Contributing
 
-[![GitHub](https://img.shields.io/badge/GitHub-ruvnet/claude--code--flow-blue?style=for-the-badge&logo=github)](https://github.com/ruvnet/claude-code-flow)
-[![NPM](https://img.shields.io/badge/NPM-claude--flow-red?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/claude-flow)
-[![Discord](https://img.shields.io/badge/Discord-Join%20Community-purple?style=for-the-badge&logo=discord)](https://discord.gg/claude-flow)
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [TypeScript](https://www.typescriptlang.org/)
+- Powered by [Node.js](https://nodejs.org/)
+- Inspired by swarm intelligence and multi-agent systems
+- Thanks to the open-source community
+
+## 📞 Support
+
+- 📖 [Documentation](https://github.com/ruvnet/claude-code-flow/docs)
+- 🐛 [Issue Tracker](https://github.com/ruvnet/claude-code-flow/issues)
+- 💬 [Discussions](https://github.com/ruvnet/claude-code-flow/discussions)
 
 ---
 
-**Built with ❤️ by [rUv](https://github.com/ruvnet) | Powered by Claude AI**
-
-</div>
+**Made with ❤️ by the Claude Flow team** 

@@ -1,7 +1,7 @@
-import { parentPort, workerData } from 'worker_threads';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { createHash } from 'crypto';
+import { parentPort, workerData } from "worker_threads";
+import * as fs from "fs/promises";
+import * as path from "path";
+import { createHash } from "crypto";
 
 interface WorkerData {
   files: Array<{
@@ -20,7 +20,7 @@ interface WorkerResult {
   hash?: string;
 }
 
-async function copyFile(file: WorkerData['files'][0]): Promise<WorkerResult> {
+async function copyFile(file: WorkerData["files"][0]): Promise<WorkerResult> {
   try {
     // Ensure destination directory exists
     const destDir = path.dirname(file.destPath);
@@ -39,19 +39,19 @@ async function copyFile(file: WorkerData['files'][0]): Promise<WorkerResult> {
     // Calculate hash if verification is requested
     if (file.verify) {
       const content = await fs.readFile(file.destPath);
-      hash = createHash('sha256').update(content).digest('hex');
+      hash = createHash("sha256").update(content).digest("hex");
     }
     
     return {
       success: true,
       file: file.sourcePath,
-      hash
+      hash,
     };
   } catch (error) {
     return {
       success: false,
       file: file.sourcePath,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -60,7 +60,7 @@ async function main() {
   const data = workerData as WorkerData;
   
   if (!parentPort) {
-    throw new Error('This script must be run as a worker thread');
+    throw new Error("This script must be run as a worker thread");
   }
   
   for (const file of data.files) {
@@ -74,8 +74,8 @@ main().catch(error => {
   if (parentPort) {
     parentPort.postMessage({
       success: false,
-      file: 'worker',
-      error: error instanceof Error ? error.message : String(error)
+      file: "worker",
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 });

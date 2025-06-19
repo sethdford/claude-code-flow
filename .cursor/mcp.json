@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "vibex-task-manager": {
+      "command": "npx",
+      "args": ["vibex-task-manager-mcp"],
+      "env": {
+        "PROJECT_ROOT": "."
+      }
+    }
+  }
+} 

@@ -3,9 +3,9 @@
  * Provides persistent storage and coordination for agent management
  */
 
-import { DistributedMemorySystem } from '../memory/distributed-memory.js';
-import { AgentState, AgentId, AgentType, AgentStatus } from '../swarm/types.js';
-import { EventEmitter } from 'node:events';
+import { DistributedMemorySystem } from "../memory/distributed-memory.js";
+import { AgentState, AgentId, AgentType, AgentStatus } from "../swarm/types.js";
+import { EventEmitter } from "node:events";
 
 export interface AgentRegistryEntry {
   agent: AgentState;
@@ -46,7 +46,7 @@ export class AgentRegistry extends EventEmitter {
   private cacheExpiry = 60000; // 1 minute
   private lastCacheUpdate = 0;
 
-  constructor(memory: DistributedMemorySystem, namespace: string = 'agents') {
+  constructor(memory: DistributedMemorySystem, namespace: string = "agents") {
     super();
     this.memory = memory;
     this.namespace = namespace;
@@ -54,7 +54,7 @@ export class AgentRegistry extends EventEmitter {
 
   async initialize(): Promise<void> {
     await this.loadFromMemory();
-    this.emit('registry:initialized');
+    this.emit("registry:initialized");
   }
 
   /**
@@ -67,23 +67,23 @@ export class AgentRegistry extends EventEmitter {
       lastUpdated: new Date(),
       tags: [...tags, agent.type, agent.status],
       metadata: {
-        registeredBy: 'agent-manager',
-        version: '1.0.0'
-      }
+        registeredBy: "agent-manager",
+        version: "1.0.0",
+      },
     };
 
     // Store in memory
     const key = this.getAgentKey(agent.id.id);
     await this.memory.store(key, entry, {
-      type: 'agent-registry',
+      type: "agent-registry",
       tags: entry.tags,
-      partition: this.namespace
+      partition: this.namespace,
     });
 
     // Update cache
     this.cache.set(agent.id.id, entry);
 
-    this.emit('agent:registered', { agentId: agent.id.id, agent });
+    this.emit("agent:registered", { agentId: agent.id.id, agent });
   }
 
   /**
@@ -99,21 +99,21 @@ export class AgentRegistry extends EventEmitter {
     entry.agent = { ...entry.agent, ...updates };
     entry.lastUpdated = new Date();
     entry.tags = [entry.agent.type, entry.agent.status, ...entry.tags.filter(t => 
-      t !== entry.agent.type && t !== entry.agent.status
+      t !== entry.agent.type && t !== entry.agent.status,
     )];
 
     // Store updated entry
     const key = this.getAgentKey(agentId);
     await this.memory.store(key, entry, {
-      type: 'agent-registry',
+      type: "agent-registry",
       tags: entry.tags,
-      partition: this.namespace
+      partition: this.namespace,
     });
 
     // Update cache
     this.cache.set(agentId, entry);
 
-    this.emit('agent:updated', { agentId, agent: entry.agent });
+    this.emit("agent:updated", { agentId, agent: entry.agent });
   }
 
   /**
@@ -131,11 +131,11 @@ export class AgentRegistry extends EventEmitter {
       await this.memory.store(archiveKey, {
         ...entry,
         archivedAt: new Date(),
-        reason: 'agent_removed'
+        reason: "agent_removed",
       }, {
-        type: 'agent-archive',
-        tags: [...entry.tags, 'archived'],
-        partition: 'archived'
+        type: "agent-archive",
+        tags: [...entry.tags, "archived"],
+        partition: "archived",
       });
     }
 
@@ -146,7 +146,7 @@ export class AgentRegistry extends EventEmitter {
     // Remove from cache
     this.cache.delete(agentId);
 
-    this.emit('agent:unregistered', { agentId, preserved: preserveHistory });
+    this.emit("agent:unregistered", { agentId, preserved: preserveHistory });
   }
 
   /**
@@ -168,9 +168,10 @@ export class AgentRegistry extends EventEmitter {
 
     // Load from memory
     const key = this.getAgentKey(agentId);
-    const entry = await this.memory.retrieve(key);
+    const memoryEntry = await this.memory.retrieve(key);
     
-    if (entry) {
+    if (memoryEntry && this.isValidAgentRegistryEntry(memoryEntry.value)) {
+      const entry = memoryEntry.value;
       this.cache.set(agentId, entry);
       return entry;
     }
@@ -196,18 +197,18 @@ export class AgentRegistry extends EventEmitter {
     }
 
     if (query.healthThreshold !== undefined) {
-      agents = agents.filter(agent => agent.health >= query.healthThreshold);
+      agents = agents.filter(agent => agent.health >= query.healthThreshold!);
     }
 
     if (query.namePattern) {
-      const pattern = new RegExp(query.namePattern, 'i');
+      const pattern = new RegExp(query.namePattern, "i");
       agents = agents.filter(agent => pattern.test(agent.name));
     }
 
     if (query.tags && query.tags.length > 0) {
       const entries = Array.from(this.cache.values());
       const matchingEntries = entries.filter(entry => 
-        query.tags!.some(tag => entry.tags.includes(tag))
+        query.tags!.some(tag => entry.tags.includes(tag)),
       );
       agents = matchingEntries.map(entry => entry.agent);
     }
@@ -215,14 +216,14 @@ export class AgentRegistry extends EventEmitter {
     if (query.createdAfter) {
       const entries = Array.from(this.cache.values());
       const matchingEntries = entries.filter(entry => 
-        entry.createdAt >= query.createdAfter!
+        entry.createdAt >= query.createdAfter!,
       );
       agents = matchingEntries.map(entry => entry.agent);
     }
 
     if (query.lastActiveAfter) {
       agents = agents.filter(agent => 
-        agent.metrics.lastActivity >= query.lastActiveAfter!
+        agent.metrics.lastActivity >= query.lastActiveAfter!,
       );
     }
 
@@ -271,7 +272,7 @@ export class AgentRegistry extends EventEmitter {
       activeAgents: 0,
       totalUptime: 0,
       tasksCompleted: 0,
-      successRate: 0
+      successRate: 0,
     };
 
     if (agents.length === 0) {
@@ -283,7 +284,7 @@ export class AgentRegistry extends EventEmitter {
       stats.byType[agent.type] = (stats.byType[agent.type] || 0) + 1;
       stats.byStatus[agent.status] = (stats.byStatus[agent.status] || 0) + 1;
       
-      if (agent.status === 'idle' || agent.status === 'busy') {
+      if (agent.status === "idle" || agent.status === "busy") {
         stats.activeAgents++;
       }
 
@@ -295,7 +296,7 @@ export class AgentRegistry extends EventEmitter {
     stats.averageHealth = agents.reduce((sum, agent) => sum + agent.health, 0) / agents.length;
     
     const totalTasks = agents.reduce((sum, agent) => 
-      sum + agent.metrics.tasksCompleted + agent.metrics.tasksFailed, 0
+      sum + agent.metrics.tasksCompleted + agent.metrics.tasksFailed, 0,
     );
     
     if (totalTasks > 0) {
@@ -316,11 +317,11 @@ export class AgentRegistry extends EventEmitter {
         ...agent.capabilities.languages,
         ...agent.capabilities.frameworks,
         ...agent.capabilities.domains,
-        ...agent.capabilities.tools
+        ...agent.capabilities.tools,
       ];
 
       return requiredCapabilities.every(required => 
-        capabilities.some(cap => cap.toLowerCase().includes(required.toLowerCase()))
+        capabilities.some(cap => cap.toLowerCase().includes(required.toLowerCase())),
       );
     });
   }
@@ -331,7 +332,7 @@ export class AgentRegistry extends EventEmitter {
   async findBestAgent(
     taskType: string,
     requiredCapabilities: string[] = [],
-    preferredAgent?: string
+    preferredAgent?: string,
   ): Promise<AgentState | null> {
     let candidates = await this.getHealthyAgents(0.5);
 
@@ -343,16 +344,16 @@ export class AgentRegistry extends EventEmitter {
     // Prefer specific agent if available and healthy
     if (preferredAgent) {
       const preferred = candidates.find(agent => 
-        agent.id.id === preferredAgent || agent.name === preferredAgent
+        agent.id.id === preferredAgent || agent.name === preferredAgent,
       );
       if (preferred) return preferred;
     }
 
     // Filter by availability
     candidates = candidates.filter(agent => 
-      agent.status === 'idle' && 
+      agent.status === "idle" && 
       agent.workload < 0.8 &&
-      agent.capabilities.maxConcurrentTasks > 0
+      agent.capabilities.maxConcurrentTasks > 0,
     );
 
     if (candidates.length === 0) return null;
@@ -360,7 +361,7 @@ export class AgentRegistry extends EventEmitter {
     // Score candidates
     const scored = candidates.map(agent => ({
       agent,
-      score: this.calculateAgentScore(agent, taskType, requiredCapabilities)
+      score: this.calculateAgentScore(agent, taskType, requiredCapabilities),
     }));
 
     // Sort by score (highest first)
@@ -377,11 +378,11 @@ export class AgentRegistry extends EventEmitter {
     await this.memory.store(key, {
       agentId,
       data,
-      timestamp: new Date()
+      timestamp: new Date(),
     }, {
-      type: 'agent-coordination',
-      tags: ['coordination', agentId],
-      partition: this.namespace
+      type: "agent-coordination",
+      tags: ["coordination", agentId],
+      partition: this.namespace,
     });
   }
 
@@ -391,27 +392,41 @@ export class AgentRegistry extends EventEmitter {
   async getCoordinationData(agentId: string): Promise<any> {
     const key = `coordination:${agentId}`;
     const result = await this.memory.retrieve(key);
-    return result?.data || null;
+    return result?.value || null;
   }
 
   // === PRIVATE METHODS ===
 
+  private isValidAgentRegistryEntry(value: any): value is AgentRegistryEntry {
+    return (
+      value &&
+      typeof value === "object" &&
+      "agent" in value &&
+      "createdAt" in value &&
+      "lastUpdated" in value &&
+      "tags" in value &&
+      "metadata" in value
+    );
+  }
+
   private async loadFromMemory(): Promise<void> {
     try {
-      const entries = await this.memory.queryByType('agent-registry', {
-        partition: this.namespace
+      const entries = await this.memory.query({
+        type: "state",
+        partition: this.namespace,
       });
 
       this.cache.clear();
       for (const entry of entries) {
-        if (entry.value && entry.value.agent) {
-          this.cache.set(entry.value.agent.id.id, entry.value);
+        if (entry.value && this.isValidAgentRegistryEntry(entry.value)) {
+          const registryEntry = entry.value;
+          this.cache.set(registryEntry.agent.id.id, registryEntry);
         }
       }
 
       this.lastCacheUpdate = Date.now();
     } catch (error) {
-      console.warn('Failed to load agent registry from memory:', error);
+      console.warn("Failed to load agent registry from memory:", error);
     }
   }
 
@@ -436,7 +451,7 @@ export class AgentRegistry extends EventEmitter {
   private calculateAgentScore(
     agent: AgentState, 
     taskType: string, 
-    requiredCapabilities: string[]
+    requiredCapabilities: string[],
   ): number {
     let score = 0;
 
@@ -456,11 +471,11 @@ export class AgentRegistry extends EventEmitter {
         ...agent.capabilities.languages,
         ...agent.capabilities.frameworks,
         ...agent.capabilities.domains,
-        ...agent.capabilities.tools
+        ...agent.capabilities.tools,
       ];
 
       const matches = requiredCapabilities.filter(required =>
-        agentCaps.some(cap => cap.toLowerCase().includes(required.toLowerCase()))
+        agentCaps.some(cap => cap.toLowerCase().includes(required.toLowerCase())),
       );
 
       score += (matches.length / requiredCapabilities.length) * 10;

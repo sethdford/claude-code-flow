@@ -3,6 +3,15 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "node",
+    "baseUrl": "./src",
+    "paths": {
+      "@cliffy/command": ["./cli/cliffy-compat"],
+      "@cliffy/ansi/colors": ["./cli/cliffy-compat"],
+      "@cliffy/table": ["./cli/cliffy-compat"],
+      "@cliffy/prompt": ["./cli/cliffy-compat"]
+    },
+    "allowImportingTsExtensions": false,
+    "emitDeclarationOnly": false,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowJs": true,
@@ -34,11 +43,12 @@
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": [
-    "src/**/*"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
+    "src/terminal/vscode-bridge.ts",
     "**/*.test.ts",
     "**/*.spec.ts",
     "tests/**/*",

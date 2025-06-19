@@ -2,18 +2,18 @@
  * Task scheduler implementation
  */
 
-import { Task, TaskStatus, CoordinationConfig, SystemEvents } from '../utils/types.js';
-import { IEventBus } from '../core/event-bus.js';
-import { ILogger } from '../core/logger.js';
-import { TaskError, TaskTimeoutError, TaskDependencyError } from '../utils/errors.js';
-import { delay } from '../utils/helpers.js';
+import { Task, TaskStatus, CoordinationConfig, SystemEvents } from "../utils/types.js";
+import { IEventBus } from "../core/event-bus.js";
+import { ILogger } from "../core/logger.js";
+import { TaskError, TaskTimeoutError, TaskDependencyError } from "../utils/errors.js";
+import { delay } from "../utils/helpers.js";
 
-interface ScheduledTask {
+export interface ScheduledTask {
   task: Task;
   agentId: string;
   attempts: number;
   lastAttempt?: Date;
-  timeout?: number;
+  timeout?: NodeJS.Timeout;
 }
 
 /**
@@ -32,18 +32,18 @@ export class TaskScheduler {
   ) {}
 
   async initialize(): Promise<void> {
-    this.logger.info('Initializing task scheduler');
+    this.logger.info("Initializing task scheduler");
     
     // Set up periodic cleanup
     setInterval(() => this.cleanup(), 60000); // Every minute
   }
 
   async shutdown(): Promise<void> {
-    this.logger.info('Shutting down task scheduler');
+    this.logger.info("Shutting down task scheduler");
     
     // Cancel all active tasks
     const taskIds = Array.from(this.tasks.keys());
-    await Promise.all(taskIds.map(id => this.cancelTask(id, 'Scheduler shutdown')));
+    await Promise.all(taskIds.map(id => this.cancelTask(id, "Scheduler shutdown")));
     
     this.tasks.clear();
     this.agentTasks.clear();
@@ -52,7 +52,7 @@ export class TaskScheduler {
   }
 
   async assignTask(task: Task, agentId: string): Promise<void> {
-    this.logger.info('Assigning task', { taskId: task.id, agentId });
+    this.logger.info("Assigning task", { taskId: task.id, agentId });
 
     // Check dependencies
     if (task.dependencies.length > 0) {
@@ -67,7 +67,7 @@ export class TaskScheduler {
 
     // Create scheduled task
     const scheduledTask: ScheduledTask = {
-      task: { ...task, status: 'assigned', assignedAgent: agentId },
+      task: { ...task, status: "assigned", assignedAgent: agentId },
       agentId,
       attempts: 0,
     };
@@ -93,17 +93,17 @@ export class TaskScheduler {
     this.startTask(task.id);
   }
 
-  async completeTask(taskId: string, result: unknown): Promise<void> {
+  async completeTask(taskId: string, result: Record<string, unknown>): Promise<void> {
     const scheduled = this.tasks.get(taskId);
     if (!scheduled) {
       throw new TaskError(`Task not found: ${taskId}`);
     }
 
-    this.logger.info('Task completed', { taskId, agentId: scheduled.agentId });
+    this.logger.info("Task completed", { taskId, agentId: scheduled.agentId });
 
     // Update task status
-    scheduled.task.status = 'completed';
-    scheduled.task.output = result as Record<string, unknown>;
+    scheduled.task.status = "completed";
+    scheduled.task.output = result;
     scheduled.task.completedAt = new Date();
 
     // Clear timeout
@@ -136,7 +136,7 @@ export class TaskScheduler {
       throw new TaskError(`Task not found: ${taskId}`);
     }
 
-    this.logger.error('Task failed', { 
+    this.logger.error("Task failed", { 
       taskId, 
       agentId: scheduled.agentId,
       attempt: scheduled.attempts,
@@ -153,7 +153,7 @@ export class TaskScheduler {
 
     // Check if we should retry
     if (scheduled.attempts < this.config.maxRetries) {
-      this.logger.info('Retrying task', { 
+      this.logger.info("Retrying task", { 
         taskId,
         attempt: scheduled.attempts,
         maxRetries: this.config.maxRetries,
@@ -167,7 +167,7 @@ export class TaskScheduler {
       }, retryDelay);
     } else {
       // Max retries exceeded, mark as failed
-      scheduled.task.status = 'failed';
+      scheduled.task.status = "failed";
       scheduled.task.error = error;
       scheduled.task.completedAt = new Date();
 
@@ -176,7 +176,7 @@ export class TaskScheduler {
       this.agentTasks.get(scheduled.agentId)?.delete(taskId);
 
       // Cancel dependent tasks
-      await this.cancelDependentTasks(taskId, 'Parent task failed');
+      await this.cancelDependentTasks(taskId, "Parent task failed");
     }
   }
 
@@ -186,7 +186,7 @@ export class TaskScheduler {
       return; // Already cancelled or completed
     }
 
-    this.logger.info('Cancelling task', { taskId, reason });
+    this.logger.info("Cancelling task", { taskId, reason });
 
     // Clear timeout
     if (scheduled.timeout) {
@@ -194,7 +194,7 @@ export class TaskScheduler {
     }
 
     // Update task status
-    scheduled.task.status = 'cancelled';
+    scheduled.task.status = "cancelled";
     scheduled.task.completedAt = new Date();
 
     // Emit cancellation event
@@ -205,7 +205,7 @@ export class TaskScheduler {
     this.agentTasks.get(scheduled.agentId)?.delete(taskId);
 
     // Cancel dependent tasks
-    await this.cancelDependentTasks(taskId, 'Parent task cancelled');
+    await this.cancelDependentTasks(taskId, "Parent task cancelled");
   }
 
   async cancelAgentTasks(agentId: string): Promise<void> {
@@ -214,13 +214,13 @@ export class TaskScheduler {
       return;
     }
 
-    this.logger.info('Cancelling all tasks for agent', { 
+    this.logger.info("Cancelling all tasks for agent", { 
       agentId,
       taskCount: taskIds.size,
     });
 
     const promises = Array.from(taskIds).map(
-      taskId => this.cancelTask(taskId, 'Agent terminated'),
+      taskId => this.cancelTask(taskId, "Agent terminated"),
     );
 
     await Promise.all(promises);
@@ -233,16 +233,16 @@ export class TaskScheduler {
       return;
     }
 
-    this.logger.info('Rescheduling tasks for agent', { 
+    this.logger.info("Rescheduling tasks for agent", { 
       agentId,
       taskCount: taskIds.size,
     });
 
     for (const taskId of taskIds) {
       const scheduled = this.tasks.get(taskId);
-      if (scheduled && scheduled.task.status === 'running') {
+      if (scheduled && scheduled.task.status === "running") {
         // Reset task status
-        scheduled.task.status = 'queued';
+        scheduled.task.status = "queued";
         scheduled.attempts = 0;
         
         // Re-emit task created event for reassignment
@@ -309,7 +309,7 @@ export class TaskScheduler {
   }
 
   async performMaintenance(): Promise<void> {
-    this.logger.debug('Performing task scheduler maintenance');
+    this.logger.debug("Performing task scheduler maintenance");
     
     // Cleanup old completed tasks
     this.cleanup();
@@ -317,10 +317,10 @@ export class TaskScheduler {
     // Check for stuck tasks
     const now = new Date();
     for (const [taskId, scheduled] of this.tasks) {
-      if (scheduled.task.status === 'running' && scheduled.task.startedAt) {
+      if (scheduled.task.status === "running" && scheduled.task.startedAt) {
         const runtime = now.getTime() - scheduled.task.startedAt.getTime();
         if (runtime > this.config.resourceTimeout * 2) {
-          this.logger.warn('Found stuck task', { 
+          this.logger.warn("Found stuck task", { 
             taskId,
             runtime,
             agentId: scheduled.agentId,
@@ -333,14 +333,14 @@ export class TaskScheduler {
     }
   }
 
-  private startTask(taskId: string): void {
+  protected startTask(taskId: string): void {
     const scheduled = this.tasks.get(taskId);
     if (!scheduled) {
       return;
     }
 
     // Update status
-    scheduled.task.status = 'running';
+    scheduled.task.status = "running";
     scheduled.task.startedAt = new Date();
 
     // Emit task started event
@@ -352,16 +352,18 @@ export class TaskScheduler {
     // Set timeout for task execution
     const timeoutMs = this.config.resourceTimeout;
     scheduled.timeout = setTimeout(() => {
-      this.failTask(taskId, new TaskTimeoutError(taskId, timeoutMs));
+      this.failTask(taskId, new TaskTimeoutError(taskId, timeoutMs)).catch(error => {
+        this.logger.error("Failed to handle task timeout", { taskId, error });
+      });
     }, timeoutMs);
   }
 
-  private canStartTask(task: Task): boolean {
+  protected canStartTask(task: Task): boolean {
     // Check if all dependencies are completed
     return task.dependencies.every(depId => this.completedTasks.has(depId));
   }
 
-  private async cancelDependentTasks(taskId: string, reason: string): Promise<void> {
+  protected async cancelDependentTasks(taskId: string, reason: string): Promise<void> {
     const dependents = this.taskDependencies.get(taskId);
     if (!dependents) {
       return;
@@ -372,7 +374,7 @@ export class TaskScheduler {
     }
   }
 
-  private cleanup(): void {
+  protected cleanup(): void {
     // Clean up old completed tasks (keep last 1000)
     if (this.completedTasks.size > 1000) {
       const toRemove = this.completedTasks.size - 1000;

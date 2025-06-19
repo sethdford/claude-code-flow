@@ -1,9 +1,9 @@
 // init/claude-config.ts - Claude configuration creation
-import type { InitOptions } from './index.js';
+import type { InitOptions } from "./index.js";
 
 export async function createClaudeConfig(options: InitOptions): Promise<void> {
-  const fs = await import('fs/promises');
-  const path = await import('path');
+  const fs = await import("fs/promises");
+  const path = await import("path");
   
   // Create base configuration
   const claudeConfig = {
@@ -11,7 +11,7 @@ export async function createClaudeConfig(options: InitOptions): Promise<void> {
     project: {
       name: path.basename(process.cwd()),
       type: "claude-flow",
-      created: new Date().toISOString()
+      created: new Date().toISOString(),
     },
     features: {
       swarm: true,
@@ -20,14 +20,14 @@ export async function createClaudeConfig(options: InitOptions): Promise<void> {
       terminal: true,
       mcp: true,
       batchTools: true,
-      orchestration: true
+      orchestration: true,
     },
     batchTools: {
       enabled: true,
       maxConcurrentTasks: 10,
       memoryCoordination: true,
       taskOrchestration: true,
-      parallelExecution: true
+      parallelExecution: true,
     },
     swarmConfig: {
       defaultStrategy: "auto",
@@ -37,19 +37,19 @@ export async function createClaudeConfig(options: InitOptions): Promise<void> {
       enableMonitoring: true,
       enableParallel: true,
       outputFormats: ["json", "sqlite", "csv", "html"],
-      defaultOutputDir: "./reports"
+      defaultOutputDir: "./reports",
     },
     coordination: {
       todoIntegration: true,
       memorySharing: true,
       crossAgentCommunication: true,
       taskDependencyTracking: true,
-      progressMonitoring: true
-    }
+      progressMonitoring: true,
+    },
   };
   
-  await fs.writeFile('.claude/config.json', JSON.stringify(claudeConfig, null, 2));
-  console.log('  ✅ Created .claude/config.json with batch tools configuration');
+  await fs.writeFile(".claude/config.json", JSON.stringify(claudeConfig, null, 2));
+  console.log("  ✅ Created .claude/config.json with batch tools configuration");
   
   // Create additional configuration files
   await createBatchToolsConfig();
@@ -58,7 +58,7 @@ export async function createClaudeConfig(options: InitOptions): Promise<void> {
 }
 
 async function createBatchToolsConfig(): Promise<void> {
-  const fs = await import('fs/promises');
+  const fs = await import("fs/promises");
   
   const batchConfig = {
     version: "1.0.71",
@@ -68,78 +68,78 @@ async function createBatchToolsConfig(): Promise<void> {
         enabled: true,
         features: ["task_breakdown", "dependency_tracking", "priority_management", "progress_monitoring"],
         maxTasks: 50,
-        defaultPriority: "medium"
+        defaultPriority: "medium",
       },
       todoRead: {
         enabled: true,
         features: ["progress_tracking", "status_monitoring", "task_filtering"],
         autoRefresh: true,
-        refreshInterval: 30
+        refreshInterval: 30,
       },
       task: {
         enabled: true,
         features: ["parallel_execution", "agent_coordination", "load_balancing"],
         maxConcurrentTasks: 10,
         timeoutDefault: 300,
-        retryAttempts: 3
+        retryAttempts: 3,
       },
       memory: {
         enabled: true,
         features: ["cross_agent_sharing", "persistent_storage", "knowledge_coordination"],
         maxEntries: 1000,
         compressionEnabled: true,
-        encryptionEnabled: false
+        encryptionEnabled: false,
       },
       fileOperations: {
         batchRead: {
           enabled: true,
           maxConcurrentReads: 10,
-          timeoutPerFile: 30
+          timeoutPerFile: 30,
         },
         batchWrite: {
           enabled: true,
           maxConcurrentWrites: 5,
-          backupEnabled: true
+          backupEnabled: true,
         },
         batchEdit: {
           enabled: true,
           maxConcurrentEdits: 5,
-          validationEnabled: true
-        }
+          validationEnabled: true,
+        },
       },
       search: {
         batchGlob: {
           enabled: true,
           maxConcurrentSearches: 5,
-          cacheResults: true
+          cacheResults: true,
         },
         batchGrep: {
           enabled: true,
           maxConcurrentSearches: 5,
-          regexOptimization: true
-        }
-      }
+          regexOptimization: true,
+        },
+      },
     },
     performance: {
       monitoring: {
         enabled: true,
         metricsCollection: true,
-        performanceAlerts: true
+        performanceAlerts: true,
       },
       optimization: {
         resourcePooling: true,
         intelligentBatching: true,
-        loadBalancing: true
-      }
-    }
+        loadBalancing: true,
+      },
+    },
   };
   
-  await fs.writeFile('.claude/configs/batch-tools.json', JSON.stringify(batchConfig, null, 2));
-  console.log('  ✅ Created batch tools configuration');
+  await fs.writeFile(".claude/configs/batch-tools.json", JSON.stringify(batchConfig, null, 2));
+  console.log("  ✅ Created batch tools configuration");
 }
 
 async function createSwarmConfig(): Promise<void> {
-  const fs = await import('fs/promises');
+  const fs = await import("fs/promises");
   
   const swarmConfig = {
     version: "1.0.71",
@@ -151,7 +151,7 @@ async function createSwarmConfig(): Promise<void> {
         defaultAgents: 6,
         phases: ["planning", "execution", "synthesis", "reporting"],
         tools: ["WebSearch", "WebFetch", "Memory", "TodoWrite", "Task"],
-        coordination: "memory_based"
+        coordination: "memory_based",
       },
       development: {
         description: "Coordinated software development",
@@ -159,7 +159,7 @@ async function createSwarmConfig(): Promise<void> {
         defaultAgents: 8,
         phases: ["architecture", "implementation", "testing", "integration"],
         tools: ["Read", "Write", "Edit", "Bash", "Memory", "TodoWrite", "Task"],
-        coordination: "hierarchical_teams"
+        coordination: "hierarchical_teams",
       },
       analysis: {
         description: "Data analysis and insights generation",
@@ -167,7 +167,7 @@ async function createSwarmConfig(): Promise<void> {
         defaultAgents: 10,
         phases: ["collection", "processing", "analysis", "visualization"],
         tools: ["Read", "Bash", "Memory", "TodoWrite", "Task"],
-        coordination: "peer_to_peer"
+        coordination: "peer_to_peer",
       },
       testing: {
         description: "Comprehensive testing coordination",
@@ -175,7 +175,7 @@ async function createSwarmConfig(): Promise<void> {
         defaultAgents: 12,
         phases: ["planning", "execution", "validation", "reporting"],
         tools: ["Read", "Write", "Bash", "TodoWrite", "Task"],
-        coordination: "distributed_validation"
+        coordination: "distributed_validation",
       },
       optimization: {
         description: "Performance optimization coordination",
@@ -183,7 +183,7 @@ async function createSwarmConfig(): Promise<void> {
         defaultAgents: 6,
         phases: ["profiling", "analysis", "optimization", "validation"],
         tools: ["Read", "Edit", "Bash", "Memory", "TodoWrite"],
-        coordination: "adaptive_hybrid"
+        coordination: "adaptive_hybrid",
       },
       maintenance: {
         description: "System maintenance coordination",
@@ -191,49 +191,49 @@ async function createSwarmConfig(): Promise<void> {
         defaultAgents: 4,
         phases: ["assessment", "planning", "execution", "verification"],
         tools: ["Read", "Write", "Bash", "TodoWrite", "Memory"],
-        coordination: "centralized_safety"
-      }
+        coordination: "centralized_safety",
+      },
     },
     coordinationModes: {
       centralized: {
         description: "Single coordinator manages all agents",
         useCases: ["maintenance", "safety_critical", "simple_tasks"],
         coordination: "master_slave",
-        communication: "hub_spoke"
+        communication: "hub_spoke",
       },
       distributed: {
         description: "Multiple coordinators manage agent groups", 
         useCases: ["research", "testing", "large_scale"],
         coordination: "multi_master",
-        communication: "federated"
+        communication: "federated",
       },
       hierarchical: {
         description: "Tree-like organization with team leads",
         useCases: ["development", "structured_workflows", "large_teams"],
         coordination: "tree_structure",
-        communication: "hierarchical_reporting"
+        communication: "hierarchical_reporting",
       },
       mesh: {
         description: "Peer-to-peer agent communication",
         useCases: ["analysis", "dynamic_tasks", "adaptive_workflows"],
         coordination: "peer_to_peer",
-        communication: "mesh_network"
+        communication: "mesh_network",
       },
       hybrid: {
         description: "Adaptive coordination based on task phase",
         useCases: ["optimization", "complex_workflows", "multi_phase"],
         coordination: "adaptive_mixed",
-        communication: "dynamic_topology"
-      }
-    }
+        communication: "dynamic_topology",
+      },
+    },
   };
   
-  await fs.writeFile('.claude/configs/swarm.json', JSON.stringify(swarmConfig, null, 2));
-  console.log('  ✅ Created swarm orchestration configuration');
+  await fs.writeFile(".claude/configs/swarm.json", JSON.stringify(swarmConfig, null, 2));
+  console.log("  ✅ Created swarm orchestration configuration");
 }
 
 async function createCoordinationConfig(): Promise<void> {
-  const fs = await import('fs/promises');
+  const fs = await import("fs/promises");
   
   const coordinationConfig = {
     version: "1.0.71",
@@ -245,59 +245,59 @@ async function createCoordinationConfig(): Promise<void> {
           autoBreakdown: true,
           dependencyTracking: true,
           progressMonitoring: true,
-          priorityManagement: true
+          priorityManagement: true,
         },
         taskDistribution: {
           algorithm: "intelligent_balancing",
           loadBalancing: true,
           skillMatching: true,
-          resourceOptimization: true
-        }
+          resourceOptimization: true,
+        },
       },
       communication: {
         memorySharing: {
           enabled: true,
           crossAgentAccess: true,
           knowledgeSync: true,
-          conflictResolution: "timestamp_priority"
+          conflictResolution: "timestamp_priority",
         },
         coordination: {
           realTimeUpdates: true,
           statusBroadcasting: true,
-          emergencySignaling: true
-        }
+          emergencySignaling: true,
+        },
       },
       monitoring: {
         progressTracking: {
           enabled: true,
           realTimeUpdates: true,
           milestoneTracking: true,
-          performanceMetrics: true
+          performanceMetrics: true,
         },
         healthMonitoring: {
           agentHealth: true,
           taskHealth: true,
           systemHealth: true,
-          alerting: true
-        }
-      }
+          alerting: true,
+        },
+      },
     },
     optimization: {
       resourceManagement: {
         pooling: true,
         allocation: "dynamic",
         recycling: true,
-        monitoring: true
+        monitoring: true,
       },
       performance: {
         batchOptimization: true,
         parallelExecution: true,
         caching: true,
-        compression: true
-      }
-    }
+        compression: true,
+      },
+    },
   };
   
-  await fs.writeFile('.claude/configs/coordination.json', JSON.stringify(coordinationConfig, null, 2));
-  console.log('  ✅ Created coordination configuration');
+  await fs.writeFile(".claude/configs/coordination.json", JSON.stringify(coordinationConfig, null, 2));
+  console.log("  ✅ Created coordination configuration");
 }

@@ -14,21 +14,21 @@ export interface ProcessInfo {
 }
 
 export enum ProcessType {
-  ORCHESTRATOR = 'orchestrator',
-  MCP_SERVER = 'mcp-server',
-  MEMORY_MANAGER = 'memory-manager',
-  TERMINAL_POOL = 'terminal-pool',
-  COORDINATOR = 'coordinator',
-  EVENT_BUS = 'event-bus'
+  ORCHESTRATOR = "orchestrator",
+  MCP_SERVER = "mcp-server",
+  MEMORY_MANAGER = "memory-manager",
+  TERMINAL_POOL = "terminal-pool",
+  COORDINATOR = "coordinator",
+  EVENT_BUS = "event-bus"
 }
 
 export enum ProcessStatus {
-  STOPPED = 'stopped',
-  STARTING = 'starting',
-  RUNNING = 'running',
-  STOPPING = 'stopping',
-  ERROR = 'error',
-  CRASHED = 'crashed'
+  STOPPED = "stopped",
+  STARTING = "starting",
+  RUNNING = "running",
+  STOPPING = "stopping",
+  ERROR = "error",
+  CRASHED = "crashed"
 }
 
 export interface ProcessMetrics {
@@ -57,10 +57,13 @@ export interface StartOptions {
   verbose?: boolean;
   ui?: boolean;
   autoStart?: boolean;
+  force?: boolean;
+  healthCheck?: boolean;
+  timeout?: number;
 }
 
 export interface UIAction {
-  type: 'start' | 'stop' | 'restart' | 'logs' | 'status' | 'exit';
+  type: "start" | "stop" | "restart" | "logs" | "status" | "exit";
   processId?: string;
   options?: Record<string, any>;
 }

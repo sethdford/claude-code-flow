@@ -1,8 +1,10 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { Worker } from 'worker_threads';
-import { PromptCopier, CopyOptions, CopyResult, FileInfo } from './prompt-copier';
-import { logger } from '../logger';
+import * as fs from "fs/promises";
+import * as path from "path";
+import { Worker } from "worker_threads";
+import { PromptCopier, CopyOptions, CopyResult, FileInfo } from "./prompt-copier";
+import { Logger } from "../core/logger.js";
+
+const logger = Logger.getInstance();
 
 interface WorkerPool {
   workers: Worker[];
@@ -18,7 +20,7 @@ export class EnhancedPromptCopier extends PromptCopier {
     super(options);
   }
 
-  protected async copyFilesParallel(): Promise<void> {
+  protected override async copyFilesParallel(): Promise<void> {
     const workerCount = Math.min(this.options.maxWorkers, this.fileQueue.length);
     
     // Initialize worker pool
@@ -38,29 +40,29 @@ export class EnhancedPromptCopier extends PromptCopier {
     const pool: WorkerPool = {
       workers,
       busy: new Set(),
-      queue: []
+      queue: [],
     };
     
     // Create workers
     for (let i = 0; i < workerCount; i++) {
       const worker = new Worker(
-        path.join(__dirname, 'workers', 'copy-worker.js'),
+        path.join(__dirname, "workers", "copy-worker.js"),
         {
-          workerData: { workerId: i }
-        }
+          workerData: { workerId: i },
+        },
       );
       
       // Setup worker message handler
-      worker.on('message', (result) => {
+      worker.on("message", (result) => {
         this.handleWorkerResult(result, i, pool);
       });
       
-      worker.on('error', (error) => {
+      worker.on("error", (error) => {
         logger.error(`Worker ${i} error:`, error);
         this.errors.push({
-          file: 'worker',
+          file: "worker",
           error: error.message,
-          phase: 'write'
+          phase: "write",
         });
       });
       
@@ -112,9 +114,9 @@ export class EnhancedPromptCopier extends PromptCopier {
             sourcePath: file.path,
             destPath: path.join(this.options.destination, file.relativePath),
             permissions: this.options.preservePermissions ? file.permissions : undefined,
-            verify: this.options.verify
+            verify: this.options.verify,
           })),
-          workerId: availableWorkerIndex
+          workerId: availableWorkerIndex,
         };
         
         let remainingFiles = chunk.length;
@@ -127,7 +129,7 @@ export class EnhancedPromptCopier extends PromptCopier {
           
           if (remainingFiles === 0) {
             // Chunk complete
-            pool.workers[availableWorkerIndex].off('message', messageHandler);
+            pool.workers[availableWorkerIndex].off("message", messageHandler);
             pool.busy.delete(availableWorkerIndex);
             
             // Process next queued work
@@ -142,7 +144,7 @@ export class EnhancedPromptCopier extends PromptCopier {
           }
         };
         
-        pool.workers[availableWorkerIndex].on('message', messageHandler);
+        pool.workers[availableWorkerIndex].on("message", messageHandler);
         pool.workers[availableWorkerIndex].postMessage(workerData);
       };
       
@@ -161,7 +163,7 @@ export class EnhancedPromptCopier extends PromptCopier {
         this.errors.push({
           file: result.file,
           error: result.error,
-          phase: 'write'
+          phase: "write",
         });
       }
     }
@@ -178,7 +180,7 @@ export class EnhancedPromptCopier extends PromptCopier {
     if (!this.workerPool) return;
     
     const terminationPromises = this.workerPool.workers.map(worker => 
-      worker.terminate()
+      worker.terminate(),
     );
     
     await Promise.all(terminationPromises);
@@ -186,8 +188,8 @@ export class EnhancedPromptCopier extends PromptCopier {
   }
 
   // Override verification to use worker results
-  protected async verifyFiles(): Promise<void> {
-    logger.info('Verifying copied files...');
+  protected override async verifyFiles(): Promise<void> {
+    logger.info("Verifying copied files...");
     
     for (const file of this.fileQueue) {
       if (!this.copiedFiles.has(file.path)) continue;
@@ -197,7 +199,7 @@ export class EnhancedPromptCopier extends PromptCopier {
         
         // Verify file exists
         if (!await this.fileExists(destPath)) {
-          throw new Error('Destination file not found');
+          throw new Error("Destination file not found");
         }
         
         // Verify size
@@ -220,8 +222,8 @@ export class EnhancedPromptCopier extends PromptCopier {
       } catch (error) {
         this.errors.push({
           file: file.path,
-          error: error.message,
-          phase: 'verify'
+          error: error instanceof Error ? error.message : String(error),
+          phase: "verify",
         });
       }
     }

@@ -2,8 +2,8 @@
  * Event bus implementation for Claude-Flow
  */
 
-import { SystemEvents, EventMap } from '../utils/types.js';
-import { TypedEventEmitter } from '../utils/helpers.js';
+import { SystemEvents, EventMap } from "../utils/types.js";
+import { TypedEventEmitter } from "../utils/helpers.js";
 
 export interface IEventBus {
   emit(event: string, data?: unknown): void;
@@ -133,7 +133,7 @@ export class EventBus implements IEventBus {
         resolve(data);
       };
 
-      let timer: number | undefined;
+      let timer: NodeJS.Timeout | undefined;
       if (timeoutMs) {
         timer = setTimeout(() => {
           this.off(event, handler);

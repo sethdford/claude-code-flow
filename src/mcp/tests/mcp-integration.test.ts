@@ -2,24 +2,24 @@
  * Comprehensive MCP Integration Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, Mock } from 'vitest';
-import { MCPServer } from '../server.js';
-import { MCPLifecycleManager, LifecycleState } from '../lifecycle-manager.js';
-import { MCPPerformanceMonitor } from '../performance-monitor.js';
-import { MCPProtocolManager } from '../protocol-manager.js';
-import { MCPOrchestrationIntegration } from '../orchestration-integration.js';
-import { ToolRegistry } from '../tools.js';
-import { AuthManager } from '../auth.js';
-import { ILogger } from '../../core/logger.js';
-import { MCPConfig, MCPInitializeParams, MCPRequest, MCPSession } from '../../utils/types.js';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { MCPServer } from '../server';
+import { MCPLifecycleManager, LifecycleState } from '../lifecycle-manager';
+import { MCPPerformanceMonitor } from '../performance-monitor';
+import { MCPProtocolManager } from '../protocol-manager';
+import { MCPOrchestrationIntegration } from '../orchestration-integration';
+import { ToolRegistry } from '../tools';
+import { AuthManager } from '../auth';
+import { ILogger } from '../../core/logger';
+import { MCPConfig, MCPInitializeParams, MCPRequest, MCPSession } from '../../utils/types';
 import { EventEmitter } from 'node:events';
 
 // Mock logger
 const mockLogger: ILogger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
 };
 
 // Mock event bus
@@ -84,7 +84,7 @@ describe('MCP Server', () => {
 
       // Mock transport handler
       const transport = (server as any).transport;
-      transport.onRequest = vi.fn();
+      transport.onRequest = jest.fn();
       
       const response = await (server as any).handleRequest(request);
       
@@ -110,7 +110,7 @@ describe('MCP Server', () => {
             input: { type: 'string' },
           },
         },
-        handler: vi.fn().mockResolvedValue('test result'),
+        handler: jest.fn().mockResolvedValue('test result'),
       };
 
       server.registerTool(tool);
@@ -122,14 +122,14 @@ describe('MCP Server', () => {
         name: 'test/tool1',
         description: 'Test tool 1',
         inputSchema: { type: 'object', properties: {} },
-        handler: vi.fn(),
+        handler: jest.fn(),
       };
 
       const tool2 = {
         name: 'test/tool2',
         description: 'Test tool 2',
         inputSchema: { type: 'object', properties: {} },
-        handler: vi.fn(),
+        handler: jest.fn(),
       };
 
       server.registerTool(tool1);
@@ -172,7 +172,7 @@ describe('MCP Lifecycle Manager', () => {
   let mockServerFactory: Mock;
 
   beforeEach(() => {
-    mockServerFactory = vi.fn(() => new MCPServer(
+    mockServerFactory = jest.fn(() => new MCPServer(
       mockMCPConfig,
       mockEventBus,
       mockLogger,
@@ -378,7 +378,7 @@ describe('Tool Registry', () => {
             input: { type: 'string' },
           },
         },
-        handler: vi.fn().mockResolvedValue('test result'),
+        handler: jest.fn().mockResolvedValue('test result'),
       };
 
       const capability = {
@@ -401,14 +401,14 @@ describe('Tool Registry', () => {
         name: 'file/read',
         description: 'Read files',
         inputSchema: { type: 'object', properties: {} },
-        handler: vi.fn(),
+        handler: jest.fn(),
       };
 
       const tool2 = {
         name: 'memory/query',
         description: 'Query memory',
         inputSchema: { type: 'object', properties: {} },
-        handler: vi.fn(),
+        handler: jest.fn(),
       };
 
       toolRegistry.register(tool1);
@@ -428,7 +428,7 @@ describe('Tool Registry', () => {
         name: 'test/metric-tool',
         description: 'Tool for metrics testing',
         inputSchema: { type: 'object', properties: {} },
-        handler: vi.fn().mockResolvedValue('success'),
+        handler: jest.fn().mockResolvedValue('success'),
       };
 
       toolRegistry.register(tool);
@@ -451,8 +451,8 @@ describe('MCP Orchestration Integration', () => {
   beforeEach(() => {
     mockComponents = {
       orchestrator: {
-        getStatus: vi.fn().mockResolvedValue({ status: 'running' }),
-        listTasks: vi.fn().mockResolvedValue([]),
+        getStatus: jest.fn().mockResolvedValue({ status: 'running' }),
+        listTasks: jest.fn().mockResolvedValue([]),
       },
       eventBus: new EventEmitter(),
     };
@@ -512,7 +512,7 @@ describe('MCP Orchestration Integration', () => {
 
     it('should handle component connection failures gracefully', async () => {
       // Mock a failing component
-      mockComponents.orchestrator.getStatus = vi.fn().mockRejectedValue(new Error('Connection failed'));
+      mockComponents.orchestrator.getStatus = jest.fn().mockRejectedValue(new Error('Connection failed'));
       
       await integration.start();
       

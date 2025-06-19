@@ -9,13 +9,13 @@ import {
   MCPCapabilities,
   MCPAuthConfig,
   MCPConfig,
-} from '../utils/types.js';
-import { ILogger } from '../core/logger.js';
-import { MCPError } from '../utils/errors.js';
-import { createHash, timingSafeEqual } from 'node:crypto';
+} from "../utils/types.js";
+import { ILogger } from "../core/logger.js";
+import { MCPError } from "../utils/errors.js";
+import { createHash, timingSafeEqual } from "node:crypto";
 
 export interface ISessionManager {
-  createSession(transport: 'stdio' | 'http' | 'websocket'): MCPSession;
+  createSession(transport: "stdio" | "http" | "websocket"): MCPSession;
   getSession(id: string): MCPSession | undefined;
   initializeSession(sessionId: string, params: MCPInitializeParams): void;
   authenticateSession(sessionId: string, credentials: unknown): boolean;
@@ -39,13 +39,13 @@ export class SessionManager implements ISessionManager {
   private authConfig: MCPAuthConfig;
   private sessionTimeout: number;
   private maxSessions: number;
-  private cleanupInterval?: number;
+  private cleanupInterval?: NodeJS.Timeout;
 
   constructor(
     private config: MCPConfig,
     private logger: ILogger,
   ) {
-    this.authConfig = config.auth || { enabled: false, method: 'token' };
+    this.authConfig = config.auth || { enabled: false, method: "token" };
     this.sessionTimeout = config.sessionTimeout || 3600000; // 1 hour default
     this.maxSessions = config.maxSessions || 100;
 
@@ -55,14 +55,14 @@ export class SessionManager implements ISessionManager {
     }, 60000); // Clean up every minute
   }
 
-  createSession(transport: 'stdio' | 'http' | 'websocket'): MCPSession {
+  createSession(transport: "stdio" | "http" | "websocket"): MCPSession {
     // Check session limit
     if (this.sessions.size >= this.maxSessions) {
       // Try to clean up expired sessions first
       this.cleanupExpiredSessions();
       
       if (this.sessions.size >= this.maxSessions) {
-        throw new MCPError('Maximum number of sessions reached');
+        throw new MCPError("Maximum number of sessions reached");
       }
     }
 
@@ -71,7 +71,7 @@ export class SessionManager implements ISessionManager {
 
     const session: MCPSession = {
       id: sessionId,
-      clientInfo: { name: 'unknown', version: 'unknown' },
+      clientInfo: { name: "unknown", version: "unknown" },
       protocolVersion: { major: 0, minor: 0, patch: 0 },
       capabilities: {},
       isInitialized: false,
@@ -83,7 +83,7 @@ export class SessionManager implements ISessionManager {
 
     this.sessions.set(sessionId, session);
 
-    this.logger.info('Session created', {
+    this.logger.info("Session created", {
       sessionId,
       transport,
       totalSessions: this.sessions.size,
@@ -117,7 +117,7 @@ export class SessionManager implements ISessionManager {
     session.isInitialized = true;
     session.lastActivity = new Date();
 
-    this.logger.info('Session initialized', {
+    this.logger.info("Session initialized", {
       sessionId,
       clientInfo: params.clientInfo,
       protocolVersion: params.protocolVersion,
@@ -138,17 +138,17 @@ export class SessionManager implements ISessionManager {
     let authenticated = false;
 
     switch (this.authConfig.method) {
-      case 'token':
+      case "token":
         authenticated = this.authenticateToken(credentials);
         break;
-      case 'basic':
+      case "basic":
         authenticated = this.authenticateBasic(credentials);
         break;
-      case 'oauth':
+      case "oauth":
         authenticated = this.authenticateOAuth(credentials);
         break;
       default:
-        this.logger.warn('Unknown authentication method', {
+        this.logger.warn("Unknown authentication method", {
           method: this.authConfig.method,
         });
         return false;
@@ -159,12 +159,12 @@ export class SessionManager implements ISessionManager {
       session.authData = this.extractAuthData(credentials);
       session.lastActivity = new Date();
 
-      this.logger.info('Session authenticated', {
+      this.logger.info("Session authenticated", {
         sessionId,
         method: this.authConfig.method,
       });
     } else {
-      this.logger.warn('Session authentication failed', {
+      this.logger.warn("Session authentication failed", {
         sessionId,
         method: this.authConfig.method,
       });
@@ -184,7 +184,7 @@ export class SessionManager implements ISessionManager {
     const session = this.sessions.get(sessionId);
     if (session) {
       this.sessions.delete(sessionId);
-      this.logger.info('Session removed', {
+      this.logger.info("Session removed", {
         sessionId,
         duration: Date.now() - session.createdAt.getTime(),
         transport: session.transport,
@@ -216,7 +216,7 @@ export class SessionManager implements ISessionManager {
     }
 
     if (expiredSessions.length > 0) {
-      this.logger.info('Cleaned up expired sessions', {
+      this.logger.info("Cleaned up expired sessions", {
         count: expiredSessions.length,
         remainingSessions: this.sessions.size,
       });
@@ -228,7 +228,7 @@ export class SessionManager implements ISessionManager {
     active: number;
     authenticated: number;
     expired: number;
-  } {
+    } {
     let active = 0;
     let authenticated = 0;
     let expired = 0;
@@ -287,7 +287,7 @@ export class SessionManager implements ISessionManager {
     if (!isSupported) {
       throw new MCPError(
         `Unsupported protocol version: ${version.major}.${version.minor}.${version.patch}`,
-        { supportedVersions }
+        { supportedVersions },
       );
     }
   }
@@ -349,21 +349,21 @@ export class SessionManager implements ISessionManager {
   private authenticateOAuth(credentials: unknown): boolean {
     // TODO: Implement OAuth authentication
     // This would typically involve validating JWT tokens
-    this.logger.warn('OAuth authentication not yet implemented');
+    this.logger.warn("OAuth authentication not yet implemented");
     return false;
   }
 
   private extractToken(credentials: unknown): string | null {
-    if (typeof credentials === 'string') {
+    if (typeof credentials === "string") {
       return credentials;
     }
 
-    if (typeof credentials === 'object' && credentials !== null) {
+    if (typeof credentials === "object" && credentials !== null) {
       const creds = credentials as Record<string, unknown>;
-      if (typeof creds.token === 'string') {
+      if (typeof creds.token === "string") {
         return creds.token;
       }
-      if (typeof creds.authorization === 'string') {
+      if (typeof creds.authorization === "string") {
         const match = creds.authorization.match(/^Bearer\s+(.+)$/);
         return match ? match[1] : null;
       }
@@ -373,22 +373,22 @@ export class SessionManager implements ISessionManager {
   }
 
   private extractBasicAuth(credentials: unknown): { username?: string; password?: string } {
-    if (typeof credentials === 'object' && credentials !== null) {
+    if (typeof credentials === "object" && credentials !== null) {
       const creds = credentials as Record<string, unknown>;
       
-      if (typeof creds.username === 'string' && typeof creds.password === 'string') {
+      if (typeof creds.username === "string" && typeof creds.password === "string") {
         return {
           username: creds.username,
           password: creds.password,
         };
       }
 
-      if (typeof creds.authorization === 'string') {
+      if (typeof creds.authorization === "string") {
         const match = creds.authorization.match(/^Basic\s+(.+)$/);
         if (match) {
           try {
             const decoded = atob(match[1]);
-            const [username, password] = decoded.split(':', 2);
+            const [username, password] = decoded.split(":", 2);
             return { username, password };
           } catch {
             return {};
@@ -401,7 +401,7 @@ export class SessionManager implements ISessionManager {
   }
 
   private extractAuthData(credentials: unknown): any {
-    if (typeof credentials === 'object' && credentials !== null) {
+    if (typeof credentials === "object" && credentials !== null) {
       const creds = credentials as Record<string, unknown>;
       return {
         token: this.extractToken(credentials),
@@ -413,6 +413,6 @@ export class SessionManager implements ISessionManager {
   }
 
   private hashPassword(password: string): string {
-    return createHash('sha256').update(password).digest('hex');
+    return createHash("sha256").update(password).digest("hex");
   }
 }

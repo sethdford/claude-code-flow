@@ -1,0 +1,9 @@
+{
+  "main": "dist/bundled-main.cjs",
+  "output": "dist/sea-prep.blob",
+  "disableExperimentalSEAWarning": true,
+  "useCodeCache": true,
+  "assets": {
+    "package.json": "package.json"
+  }
+}

@@ -2,17 +2,17 @@
  * Advanced load balancing and work stealing implementation
  */
 
-import { EventEmitter } from 'node:events';
-import { ILogger } from '../core/logger.js';
-import { IEventBus } from '../core/event-bus.js';
+import { EventEmitter } from "node:events";
+import { ILogger } from "../core/logger.js";
+import { IEventBus } from "../core/event-bus.js";
 import { 
   AgentId, 
   AgentState, 
   TaskDefinition, 
   TaskId,
-  LoadBalancingStrategy 
-} from '../swarm/types.js';
-import { WorkStealingCoordinator } from './work-stealing.js';
+  LoadBalancingStrategy, 
+} from "../swarm/types.js";
+import { WorkStealingCoordinator } from "./work-stealing.js";
 
 export interface LoadBalancerConfig {
   strategy: LoadBalancingStrategy;
@@ -66,7 +66,7 @@ export interface WorkStealingOperation {
   targetAgent: AgentId;
   tasks: TaskId[];
   reason: string;
-  status: 'planned' | 'executing' | 'completed' | 'failed';
+  status: "planned" | "executing" | "completed" | "failed";
   startTime: Date;
   endTime?: Date;
   metrics: {
@@ -112,14 +112,14 @@ export class LoadBalancer extends EventEmitter {
   constructor(
     config: Partial<LoadBalancerConfig>,
     logger: ILogger,
-    eventBus: IEventBus
+    eventBus: IEventBus,
   ) {
     super();
     this.logger = logger;
     this.eventBus = eventBus;
 
     this.config = {
-      strategy: 'hybrid',
+      strategy: "predictive",
       enableWorkStealing: true,
       stealThreshold: 3,
       maxStealBatch: 5,
@@ -133,7 +133,7 @@ export class LoadBalancer extends EventEmitter {
       adaptiveThresholds: true,
       predictiveEnabled: true,
       debugMode: false,
-      ...config
+      ...config,
     };
 
     this.workStealer = new WorkStealingCoordinator(
@@ -141,42 +141,47 @@ export class LoadBalancer extends EventEmitter {
         enabled: this.config.enableWorkStealing,
         stealThreshold: this.config.stealThreshold,
         maxStealBatch: this.config.maxStealBatch,
-        stealInterval: this.config.rebalanceInterval
+        stealInterval: this.config.rebalanceInterval,
       },
       this.eventBus,
-      this.logger
+      this.logger,
     );
 
     this.setupEventHandlers();
   }
 
   private setupEventHandlers(): void {
-    this.eventBus.on('agent:load-update', (data) => {
-      this.updateAgentLoad(data.agentId, data.load);
+    this.eventBus.on("agent:load-update", (data) => {
+      const payload = data as { agentId: string; load: number };
+      this.updateAgentLoad(payload.agentId, { cpuUsage: payload.load });
     });
 
-    this.eventBus.on('task:queued', (data) => {
-      this.updateTaskQueue(data.agentId, data.task, 'add');
+    this.eventBus.on("task:queued", (data) => {
+      const payload = data as { agentId: string; task: any };
+      this.updateTaskQueue(payload.agentId, payload.task, "add");
     });
 
-    this.eventBus.on('task:started', (data) => {
-      this.updateTaskQueue(data.agentId, data.task, 'remove');
+    this.eventBus.on("task:started", (data) => {
+      const payload = data as { agentId: string; task: any };
+      this.updateTaskQueue(payload.agentId, payload.task, "remove");
     });
 
-    this.eventBus.on('workstealing:request', (data) => {
-      this.executeWorkStealing(data.sourceAgent, data.targetAgent, data.taskCount);
+    this.eventBus.on("workstealing:request", (data) => {
+      const payload = data as { sourceAgent: string; targetAgent: string; taskCount: number };
+      this.executeWorkStealing(payload.sourceAgent, payload.targetAgent, payload.taskCount);
     });
 
-    this.eventBus.on('agent:performance-update', (data) => {
-      this.updatePerformanceBaseline(data.agentId, data.metrics);
+    this.eventBus.on("agent:performance-update", (data) => {
+      const payload = data as { agentId: string; metrics: any };
+      this.updatePerformanceBaseline(payload.agentId, payload.metrics);
     });
   }
 
   async initialize(): Promise<void> {
-    this.logger.info('Initializing load balancer', {
+    this.logger.info("Initializing load balancer", {
       strategy: this.config.strategy,
       workStealing: this.config.enableWorkStealing,
-      predictive: this.config.predictiveEnabled
+      predictive: this.config.predictiveEnabled,
     });
 
     // Initialize work stealer
@@ -186,11 +191,11 @@ export class LoadBalancer extends EventEmitter {
     this.startLoadSampling();
     this.startRebalancing();
 
-    this.emit('loadbalancer:initialized');
+    this.emit("loadbalancer:initialized");
   }
 
   async shutdown(): Promise<void> {
-    this.logger.info('Shutting down load balancer');
+    this.logger.info("Shutting down load balancer");
 
     // Stop monitoring
     if (this.loadSamplingInterval) clearInterval(this.loadSamplingInterval);
@@ -199,7 +204,7 @@ export class LoadBalancer extends EventEmitter {
     // Shutdown work stealer
     await this.workStealer.shutdown();
 
-    this.emit('loadbalancer:shutdown');
+    this.emit("loadbalancer:shutdown");
   }
 
   // === AGENT SELECTION ===
@@ -212,16 +217,16 @@ export class LoadBalancer extends EventEmitter {
       preferredAgents?: AgentId[];
       maxLoad?: number;
       requireCapabilities?: string[];
-    }
+    },
   ): Promise<LoadBalancingDecision> {
     const startTime = Date.now();
 
     try {
       // Filter agents based on constraints
-      let candidates = this.filterAgentsByConstraints(availableAgents, task, constraints);
+      const candidates = this.filterAgentsByConstraints(availableAgents, task, constraints);
       
       if (candidates.length === 0) {
-        throw new Error('No suitable agents available for task');
+        throw new Error("No suitable agents available for task");
       }
 
       // Apply selection strategy
@@ -236,20 +241,20 @@ export class LoadBalancer extends EventEmitter {
       }
 
       const selectionTime = Date.now() - startTime;
-      this.logger.debug('Agent selected', {
+      this.logger.debug("Agent selected", {
         taskId: task.id.id,
         selectedAgent: decision.selectedAgent.id,
         reason: decision.reason,
         confidence: decision.confidence,
-        selectionTime
+        selectionTime,
       });
 
-      this.emit('agent:selected', { task, decision, selectionTime });
+      this.emit("agent:selected", { task, decision, selectionTime });
 
       return decision;
 
     } catch (error) {
-      this.logger.error('Agent selection failed', { taskId: task.id.id, error });
+      this.logger.error("Agent selection failed", { taskId: task.id.id, error });
       throw error;
     }
   }
@@ -262,7 +267,7 @@ export class LoadBalancer extends EventEmitter {
       preferredAgents?: AgentId[];
       maxLoad?: number;
       requireCapabilities?: string[];
-    }
+    },
   ): AgentState[] {
     return agents.filter(agent => {
       // Exclude specific agents
@@ -281,7 +286,7 @@ export class LoadBalancer extends EventEmitter {
         const hasAllCapabilities = constraints.requireCapabilities.every(cap =>
           agent.capabilities.domains.includes(cap) ||
           agent.capabilities.tools.includes(cap) ||
-          agent.capabilities.languages.includes(cap)
+          agent.capabilities.languages.includes(cap),
         );
         if (!hasAllCapabilities) {
           return false;
@@ -299,7 +304,7 @@ export class LoadBalancer extends EventEmitter {
 
   private async applySelectionStrategy(
     task: TaskDefinition,
-    candidates: AgentState[]
+    candidates: AgentState[],
   ): Promise<LoadBalancingDecision> {
     const scores = new Map<string, number>();
     const reasons = new Map<string, string>();
@@ -317,32 +322,32 @@ export class LoadBalancer extends EventEmitter {
       const scoreComponents: string[] = [];
 
       switch (this.config.strategy) {
-        case 'load-based':
+        case "work-stealing":
           score = this.calculateLoadScore(agent, load);
           scoreComponents.push(`load:${score.toFixed(2)}`);
           break;
 
-        case 'performance-based':
+        case "work-sharing":
           score = this.calculatePerformanceScore(agent, load);
           scoreComponents.push(`perf:${score.toFixed(2)}`);
           break;
 
-        case 'capability-based':
+        case "centralized":
           score = this.calculateCapabilityScore(agent, task);
           scoreComponents.push(`cap:${score.toFixed(2)}`);
           break;
 
-        case 'affinity-based':
+        case "distributed":
           score = this.calculateAffinityScore(agent, task);
           scoreComponents.push(`affinity:${score.toFixed(2)}`);
           break;
 
-        case 'cost-based':
+        case "predictive":
           score = this.calculateCostScore(agent, task);
           scoreComponents.push(`cost:${score.toFixed(2)}`);
           break;
 
-        case 'hybrid':
+        case "reactive":
           score = this.calculateHybridScore(agent, task, load);
           scoreComponents.push(`hybrid:${score.toFixed(2)}`);
           break;
@@ -364,7 +369,7 @@ export class LoadBalancer extends EventEmitter {
       }
 
       scores.set(agentId, score);
-      reasons.set(agentId, scoreComponents.join(','));
+      reasons.set(agentId, scoreComponents.join(","));
     }
 
     // Select agent with highest score
@@ -376,13 +381,13 @@ export class LoadBalancer extends EventEmitter {
 
     const selectedAgent = sortedCandidates[0];
     const selectedScore = scores.get(selectedAgent.id.id) || 0;
-    const selectedReason = reasons.get(selectedAgent.id.id) || 'unknown';
+    const selectedReason = reasons.get(selectedAgent.id.id) || "unknown";
 
     // Build alternatives list
     const alternatives = sortedCandidates.slice(1, 4).map(agent => ({
       agent: agent.id,
       score: scores.get(agent.id.id) || 0,
-      reason: reasons.get(agent.id.id) || 'unknown'
+      reason: reasons.get(agent.id.id) || "unknown",
     }));
 
     // Calculate confidence based on score gap
@@ -396,7 +401,7 @@ export class LoadBalancer extends EventEmitter {
       alternatives,
       loadBefore,
       predictedLoadAfter,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -424,9 +429,9 @@ export class LoadBalancer extends EventEmitter {
     let totalChecks = 0;
 
     // Check language compatibility
-    if (task.requirements.capabilities.includes('coding')) {
+    if (task.requirements.capabilities.includes("coding")) {
       const hasLanguage = agent.capabilities.languages.some(lang =>
-        task.context.language === lang
+        task.context.language === lang,
       );
       score += hasLanguage ? 1 : 0;
       totalChecks++;
@@ -441,14 +446,14 @@ export class LoadBalancer extends EventEmitter {
 
     // Check domain expertise
     const domainMatch = agent.capabilities.domains.some(domain =>
-      task.type.includes(domain) || task.requirements.capabilities.includes(domain)
+      task.type.includes(domain) || task.requirements.capabilities.includes(domain),
     );
     score += domainMatch ? 1 : 0;
     totalChecks++;
 
     // Check required tools
     const hasTools = task.requirements.tools.every(tool =>
-      agent.capabilities.tools.includes(tool)
+      agent.capabilities.tools.includes(tool),
     );
     score += hasTools ? 1 : 0;
     totalChecks++;
@@ -499,75 +504,75 @@ export class LoadBalancer extends EventEmitter {
   private async executeWorkStealing(
     sourceAgentId: string,
     targetAgentId: string,
-    taskCount: number
+    taskCount: number,
   ): Promise<void> {
     const operationId = `steal-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     
     const operation: WorkStealingOperation = {
       id: operationId,
-      sourceAgent: { id: sourceAgentId, swarmId: 'default', type: 'coordinator', instance: 1 },
-      targetAgent: { id: targetAgentId, swarmId: 'default', type: 'coordinator', instance: 1 },
+      sourceAgent: { id: sourceAgentId, swarmId: "default", type: "coordinator", instance: 1 },
+      targetAgent: { id: targetAgentId, swarmId: "default", type: "coordinator", instance: 1 },
       tasks: [],
-      reason: 'load_imbalance',
-      status: 'planned',
+      reason: "load_imbalance",
+      status: "planned",
       startTime: new Date(),
       metrics: {
         tasksStolen: 0,
         loadReduction: 0,
-        latencyImprovement: 0
-      }
+        latencyImprovement: 0,
+      },
     };
 
     this.stealOperations.set(operationId, operation);
 
     try {
-      operation.status = 'executing';
+      operation.status = "executing";
 
       // Get source queue
       const sourceQueue = this.taskQueues.get(sourceAgentId) || [];
       if (sourceQueue.length === 0) {
-        throw new Error('Source agent has no tasks to steal');
+        throw new Error("Source agent has no tasks to steal");
       }
 
       // Select tasks to steal (lowest priority first)
       const tasksToSteal = sourceQueue
-        .sort((a, b) => a.priority === b.priority ? 0 : (a.priority === 'low' ? -1 : 1))
+        .sort((a, b) => a.priority === b.priority ? 0 : (a.priority === "low" ? -1 : 1))
         .slice(0, Math.min(taskCount, this.config.maxStealBatch));
 
       // Remove tasks from source
       for (const task of tasksToSteal) {
-        this.updateTaskQueue(sourceAgentId, task, 'remove');
-        this.updateTaskQueue(targetAgentId, task, 'add');
+        this.updateTaskQueue(sourceAgentId, task, "remove");
+        this.updateTaskQueue(targetAgentId, task, "add");
         operation.tasks.push(task.id);
       }
 
       // Update metrics
       operation.metrics.tasksStolen = tasksToSteal.length;
       operation.metrics.loadReduction = this.calculateLoadReduction(sourceAgentId, tasksToSteal.length);
-      operation.status = 'completed';
+      operation.status = "completed";
       operation.endTime = new Date();
 
-      this.logger.info('Work stealing completed', {
+      this.logger.info("Work stealing completed", {
         operationId,
         sourceAgent: sourceAgentId,
         targetAgent: targetAgentId,
-        tasksStolen: operation.metrics.tasksStolen
+        tasksStolen: operation.metrics.tasksStolen,
       });
 
-      this.emit('workstealing:completed', { operation });
+      this.emit("workstealing:completed", { operation });
 
     } catch (error) {
-      operation.status = 'failed';
+      operation.status = "failed";
       operation.endTime = new Date();
       
-      this.logger.error('Work stealing failed', {
+      this.logger.error("Work stealing failed", {
         operationId,
         sourceAgent: sourceAgentId,
         targetAgent: targetAgentId,
-        error
+        error,
       });
 
-      this.emit('workstealing:failed', { operation, error });
+      this.emit("workstealing:failed", { operation, error });
     }
   }
 
@@ -578,8 +583,8 @@ export class LoadBalancer extends EventEmitter {
       this.sampleAgentLoads();
     }, this.config.loadSamplingInterval);
 
-    this.logger.info('Started load sampling', { 
-      interval: this.config.loadSamplingInterval 
+    this.logger.info("Started load sampling", { 
+      interval: this.config.loadSamplingInterval, 
     });
   }
 
@@ -588,8 +593,8 @@ export class LoadBalancer extends EventEmitter {
       this.performRebalancing();
     }, this.config.rebalanceInterval);
 
-    this.logger.info('Started rebalancing', { 
-      interval: this.config.rebalanceInterval 
+    this.logger.info("Started rebalancing", { 
+      interval: this.config.rebalanceInterval, 
     });
   }
 
@@ -621,10 +626,10 @@ export class LoadBalancer extends EventEmitter {
       // Find overloaded and underloaded agents
       const loads = Array.from(this.agentLoads.entries());
       const overloaded = loads.filter(([_, load]) => 
-        load.utilization > 0.8 && load.queueDepth > this.config.queueDepthThreshold
+        load.utilization > 0.8 && load.queueDepth > this.config.queueDepthThreshold,
       );
       const underloaded = loads.filter(([_, load]) => 
-        load.utilization < 0.3 && load.queueDepth < 2
+        load.utilization < 0.3 && load.queueDepth < 2,
       );
 
       if (overloaded.length === 0 || underloaded.length === 0) {
@@ -641,7 +646,7 @@ export class LoadBalancer extends EventEmitter {
           const [targetId] = target;
           const tasksToSteal = Math.min(
             Math.floor((overloadedLoad.queueDepth - targetId.length) / 2),
-            this.config.maxStealBatch
+            this.config.maxStealBatch,
           );
 
           if (tasksToSteal > 0) {
@@ -651,7 +656,7 @@ export class LoadBalancer extends EventEmitter {
       }
 
     } catch (error) {
-      this.logger.error('Rebalancing failed', error);
+      this.logger.error("Rebalancing failed", error);
     }
   }
 
@@ -669,7 +674,7 @@ export class LoadBalancer extends EventEmitter {
         predictedLoad: Math.min(1, currentLoad + 0.1),
         confidence: 0.5,
         timeHorizon: 60000, // 1 minute
-        factors: { task_complexity: 0.1 }
+        factors: { task_complexity: 0.1 },
       };
     }
 
@@ -705,13 +710,13 @@ export class LoadBalancer extends EventEmitter {
 
   private checkTypeCompatibility(agentType: string, taskType: string): boolean {
     const compatibilityMap: Record<string, string[]> = {
-      'researcher': ['research', 'analysis', 'documentation'],
-      'developer': ['coding', 'testing', 'integration', 'deployment'],
-      'analyzer': ['analysis', 'validation', 'review'],
-      'reviewer': ['review', 'validation', 'documentation'],
-      'coordinator': ['coordination', 'monitoring', 'management'],
-      'tester': ['testing', 'validation', 'integration'],
-      'specialist': ['custom', 'optimization', 'maintenance']
+      "researcher": ["research", "analysis", "documentation"],
+      "developer": ["coding", "testing", "integration", "deployment"],
+      "analyzer": ["analysis", "validation", "review"],
+      "reviewer": ["review", "validation", "documentation"],
+      "coordinator": ["coordination", "monitoring", "management"],
+      "tester": ["testing", "validation", "integration"],
+      "specialist": ["custom", "optimization", "maintenance"],
     };
 
     const compatibleTypes = compatibilityMap[agentType] || [];
@@ -728,10 +733,10 @@ export class LoadBalancer extends EventEmitter {
     this.agentLoads.set(agentId, updated);
   }
 
-  private updateTaskQueue(agentId: string, task: TaskDefinition, operation: 'add' | 'remove'): void {
+  private updateTaskQueue(agentId: string, task: TaskDefinition, operation: "add" | "remove"): void {
     const queue = this.taskQueues.get(agentId) || [];
     
-    if (operation === 'add') {
+    if (operation === "add") {
       queue.push(task);
     } else {
       const index = queue.findIndex(t => t.id.id === task.id.id);
@@ -745,7 +750,7 @@ export class LoadBalancer extends EventEmitter {
     // Update agent load
     this.updateAgentLoad(agentId, {
       queueDepth: queue.length,
-      taskCount: queue.length
+      taskCount: queue.length,
     });
   }
 
@@ -753,7 +758,7 @@ export class LoadBalancer extends EventEmitter {
     const baseline = this.performanceBaselines.get(agentId) || {
       expectedThroughput: 10,
       expectedResponseTime: 5000,
-      expectedQuality: 0.8
+      expectedQuality: 0.8,
     };
 
     // Update baseline with exponential moving average
@@ -782,7 +787,7 @@ export class LoadBalancer extends EventEmitter {
     const newUtilization = this.calculateUtilization({
       ...load,
       queueDepth: load.queueDepth - tasksRemoved,
-      taskCount: load.taskCount - tasksRemoved
+      taskCount: load.taskCount - tasksRemoved,
     });
 
     return oldUtilization - newUtilization;
@@ -801,7 +806,7 @@ export class LoadBalancer extends EventEmitter {
       capacity: 10,
       utilization: 0,
       efficiency: 1.0,
-      affinityScore: 0.5
+      affinityScore: 0.5,
     };
   }
 
@@ -830,13 +835,13 @@ export class LoadBalancer extends EventEmitter {
     underloadedAgents: number;
     totalStealOperations: number;
     successfulSteals: number;
-  } {
+    } {
     const loads = Array.from(this.agentLoads.values());
     const avgUtilization = loads.reduce((sum, load) => sum + load.utilization, 0) / loads.length || 0;
     const overloaded = loads.filter(load => load.utilization > 0.8).length;
     const underloaded = loads.filter(load => load.utilization < 0.3).length;
     const successfulSteals = Array.from(this.stealOperations.values())
-      .filter(op => op.status === 'completed').length;
+      .filter(op => op.status === "completed").length;
 
     return {
       totalAgents: loads.length,
@@ -844,7 +849,7 @@ export class LoadBalancer extends EventEmitter {
       overloadedAgents: overloaded,
       underloadedAgents: underloaded,
       totalStealOperations: this.stealOperations.size,
-      successfulSteals
+      successfulSteals,
     };
   }
 
@@ -905,8 +910,8 @@ class LoadPredictor {
       timeHorizon: 60000,
       factors: {
         task_complexity: taskComplexity,
-        historical_trend: predictedLoad - currentLoad
-      }
+        historical_trend: predictedLoad - currentLoad,
+      },
     };
   }
 
@@ -942,7 +947,7 @@ class SimpleLinearModel {
     const startTime = data[0].timestamp.getTime();
     const points = data.map((point, index) => ({
       x: index, // Use index as x for simplicity
-      y: point.load
+      y: point.load,
     }));
 
     // Calculate linear regression
@@ -973,7 +978,7 @@ class SimpleLinearModel {
 
     return {
       value: Math.max(0, Math.min(1, nextValue)),
-      confidence
+      confidence,
     };
   }
 }

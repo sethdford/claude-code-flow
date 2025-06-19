@@ -2,7 +2,7 @@
  * Migration type definitions
  */
 
-export type MigrationStrategy = 'full' | 'selective' | 'merge';
+export type MigrationStrategy = "full" | "selective" | "merge";
 
 export interface MigrationOptions {
   projectPath: string;
@@ -27,7 +27,7 @@ export interface MigrationAnalysis {
 }
 
 export interface MigrationRisk {
-  level: 'low' | 'medium' | 'high';
+  level: "low" | "medium" | "high";
   description: string;
   file?: string;
   mitigation?: string;
@@ -90,7 +90,7 @@ export interface MigrationManifest {
 export interface CommandMigration {
   source: string;
   target: string;
-  transform?: 'copy' | 'merge' | 'replace';
+  transform?: "copy" | "merge" | "replace";
   priority?: number;
 }
 
@@ -111,7 +111,7 @@ export interface MigrationProgress {
   total: number;
   completed: number;
   current: string;
-  phase: 'analyzing' | 'backing-up' | 'migrating' | 'validating' | 'complete';
+  phase: "analyzing" | "backing-up" | "migrating" | "validating" | "complete";
   errors: number;
   warnings: number;
 }

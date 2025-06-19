@@ -1,0 +1,62 @@
+{
+  "project": "claude-code-flow-build-fix",
+  "version": "1.0.0",
+  "description": "Tasks for fixing the `claude-code-flow` build.",
+  "tags": {
+    "master": {
+      "name": "master",
+      "description": "Default task list",
+      "tasks": [
+        {
+          "id": "1",
+          "title": "Phase 1: Resolve Architectural Violations",
+          "description": "Address critical architectural issues preventing a clean build, including forbidden dependencies like 'vscode' and 'Deno'.",
+          "status": "pending",
+          "dependencies": [],
+          "priority": "high",
+          "details": "Remove vscode and Deno imports. The file `src/terminal/vscode-bridge.ts` is a primary target.",
+          "testStrategy": "Run `npm run build` and confirm no errors related to `vscode` or `Deno` are present."
+        },
+        {
+          "id": "2",
+          "title": "Phase 2: Fix Configuration Errors",
+          "description": "Correct configuration issues in `tsconfig.json` and `package.json`.",
+          "status": "pending",
+          "dependencies": [
+            "1"
+          ],
+          "priority": "high",
+          "details": "Audit `tsconfig.json` compiler options, module resolution, and path aliases. Resolve conflicts between linter and TSC regarding module extensions. Audit `package.json` for dependency issues.",
+          "testStrategy": "The build should proceed past the configuration stage without errors."
+        },
+        {
+          "id": "3",
+          "title": "Phase 3: Resolve Import/Module Resolution Errors",
+          "description": "Fix all 'Cannot find module' (e.g., TS2307) errors.",
+          "status": "pending",
+          "dependencies": [
+            "2"
+          ],
+          "priority": "medium",
+          "details": "Systematically fix all broken import paths and ensure all required type definitions are installed.",
+          "testStrategy": "Run `npm run build` and confirm all module resolution errors are gone."
+        },
+        {
+          "id": "4",
+          "title": "Phase 4: Fix Type-Checking Errors",
+          "description": "Fix all remaining TypeScript type-checking errors.",
+          "status": "pending",
+          "dependencies": [
+            "3"
+          ],
+          "priority": "medium",
+          "details": "Address all remaining `TS2339`, `TS2345`, and similar type errors until the build is clean.",
+          "testStrategy": "Run `npm run build` to completion with zero errors."
+        }
+      ]
+    }
+  },
+  "state": {
+    "currentTag": "master"
+  }
+} 

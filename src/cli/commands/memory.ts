@@ -2,9 +2,10 @@
  * Memory management commands
  */
 
-import { Command } from '@cliffy/command';
-import { colors } from '@cliffy/ansi/colors';
-import { Table } from '@cliffy/table';
+import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import colors from "chalk";
+import { Deno } from "../../utils/deno-compat.js";
 
 interface MemoryEntry {
   key: string;
@@ -19,7 +20,7 @@ export class SimpleMemoryManager {
 
   async load() {
     try {
-      const content = await Deno.readTextFile(this.filePath);
+      const content = await readFile(this.filePath, "utf-8");
       this.data = JSON.parse(content);
     } catch {
       // File doesn't exist yet
@@ -28,8 +29,8 @@ export class SimpleMemoryManager {
   }
 
   async save() {
-    await Deno.mkdir("./memory", { recursive: true });
-    await Deno.writeTextFile(this.filePath, JSON.stringify(this.data, null, 2));
+    await mkdir("./memory", { recursive: true });
+    await writeFile(this.filePath, JSON.stringify(this.data, null, 2), "utf-8");
   }
 
   async store(key: string, value: string, namespace: string = "default") {
@@ -47,7 +48,7 @@ export class SimpleMemoryManager {
       key,
       value,
       namespace,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     await this.save();
@@ -87,7 +88,7 @@ export class SimpleMemoryManager {
       totalEntries,
       namespaces: Object.keys(this.data).length,
       namespaceStats,
-      sizeBytes: new TextEncoder().encode(JSON.stringify(this.data)).length
+      sizeBytes: new TextEncoder().encode(JSON.stringify(this.data)).length,
     };
   }
 
@@ -119,6 +120,15 @@ export class SimpleMemoryManager {
   }
 }
 
+// Cliffy commands are not supported in Node.js build
+// Export a placeholder command for Node.js compatibility
+export const memoryCommand = {
+  description: "Memory management commands (use simple-cli for Node.js)",
+  showHelp: () => console.log("Use claude-flow simple memory commands instead"),
+};
+
+// Export only the SimpleMemoryManager class
+/*
 export const memoryCommand = new Command()
   .description('Manage memory bank')
   .action(() => {
@@ -128,7 +138,7 @@ export const memoryCommand = new Command()
   .command('store', new Command()
     .description('Store information in memory')
     .arguments('<key:string> <value:string>')
-    .option('-n, --namespace <namespace:string>', 'Target namespace', { default: 'default' })
+    .option('-n, --namespace <namespace>', 'Target namespace', 'default')
     .action(async (options: any, key: string, value: string) => {
       try {
         const memory = new SimpleMemoryManager();
@@ -145,9 +155,9 @@ export const memoryCommand = new Command()
   // Query command
   .command('query', new Command()
     .description('Search memory entries')
-    .arguments('<search:string>')
-    .option('-n, --namespace <namespace:string>', 'Filter by namespace')
-    .option('-l, --limit <limit:number>', 'Limit results', { default: 10 })
+    .arguments('<search>')
+    .option('-n, --namespace <namespace>', 'Filter by namespace')
+    .option('-l, --limit <limit>', 'Limit results', '10')
     .action(async (options: any, search: string) => {
       try {
         const memory = new SimpleMemoryManager();
@@ -179,7 +189,7 @@ export const memoryCommand = new Command()
   // Export command
   .command('export', new Command()
     .description('Export memory to file')
-    .arguments('<file:string>')
+    .arguments('<file>')
     .action(async (options: any, file: string) => {
       try {
         const memory = new SimpleMemoryManager();
@@ -197,7 +207,7 @@ export const memoryCommand = new Command()
   // Import command
   .command('import', new Command()
     .description('Import memory from file')
-    .arguments('<file:string>')
+    .arguments('<file>')
     .action(async (options: any, file: string) => {
       try {
         const memory = new SimpleMemoryManager();
@@ -239,7 +249,7 @@ export const memoryCommand = new Command()
   // Cleanup command
   .command('cleanup', new Command()
     .description('Clean up old entries')
-    .option('-d, --days <days:number>', 'Entries older than n days', { default: 30 })
+    .option('-d, --days <days>', 'Entries older than n days', '30')
     .action(async (options: any) => {
       try {
         const memory = new SimpleMemoryManager();
@@ -251,3 +261,4 @@ export const memoryCommand = new Command()
       }
     })
   );
+*/

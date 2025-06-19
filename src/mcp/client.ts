@@ -2,9 +2,9 @@
  * MCP Client for Model Context Protocol
  */
 
-import { ITransport } from './transports/base.js';
-import { logger } from '../core/logger.js';
-import { MCPRequest, MCPResponse, MCPNotification } from '../utils/types.js';
+import { ITransport } from "./transports/base.js";
+import { logger } from "../core/logger.js";
+import { MCPRequest, MCPResponse, MCPNotification } from "../utils/types.js";
 
 export interface MCPClientConfig {
   transport: ITransport;
@@ -24,24 +24,24 @@ export class MCPClient {
   async connect(): Promise<void> {
     await this.transport.connect();
     this.connected = true;
-    logger.info('MCP Client connected');
+    logger.info("MCP Client connected");
   }
 
   async disconnect(): Promise<void> {
     if (this.connected) {
       await this.transport.disconnect();
       this.connected = false;
-      logger.info('MCP Client disconnected');
+      logger.info("MCP Client disconnected");
     }
   }
 
   async request(method: string, params?: unknown): Promise<unknown> {
     if (!this.connected) {
-      throw new Error('Client not connected');
+      throw new Error("Client not connected");
     }
 
     const request: MCPRequest = {
-      jsonrpc: '2.0' as const,
+      jsonrpc: "2.0" as const,
       method,
       params,
       id: Math.random().toString(36).slice(2),
@@ -49,7 +49,7 @@ export class MCPClient {
 
     const response = await this.transport.sendRequest(request);
     
-    if ('error' in response) {
+    if ("error" in response && response.error) {
       throw new Error(response.error.message);
     }
 
@@ -58,11 +58,11 @@ export class MCPClient {
 
   async notify(method: string, params?: unknown): Promise<void> {
     if (!this.connected) {
-      throw new Error('Client not connected');
+      throw new Error("Client not connected");
     }
 
     const notification: MCPNotification = {
-      jsonrpc: '2.0' as const,
+      jsonrpc: "2.0" as const,
       method,
       params,
     };
@@ -70,7 +70,7 @@ export class MCPClient {
     if (this.transport.sendNotification) {
       await this.transport.sendNotification(notification);
     } else {
-      throw new Error('Transport does not support notifications');
+      throw new Error("Transport does not support notifications");
     }
   }
 

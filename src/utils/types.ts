@@ -30,7 +30,7 @@ export interface OrchestratorMetrics {
 export interface AgentProfile {
   id: string;
   name: string;
-  type: 'coordinator' | 'researcher' | 'implementer' | 'analyst' | 'custom';
+  type: "coordinator" | "researcher" | "implementer" | "analyst" | "custom";
   capabilities: string[];
   systemPrompt: string;
   maxConcurrentTasks: number;
@@ -47,7 +47,7 @@ export interface AgentSession {
   terminalId: string;
   startTime: Date;
   endTime?: Date;
-  status: 'active' | 'idle' | 'terminated' | 'error';
+  status: "active" | "idle" | "terminated" | "error";
   lastActivity: Date;
   memoryBankId: string;
 }
@@ -71,20 +71,20 @@ export interface Task {
 }
 
 export type TaskStatus = 
-  | 'pending'
-  | 'queued'
-  | 'assigned'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+  | "pending"
+  | "queued"
+  | "assigned"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
 // Memory-related types
 export interface MemoryEntry {
   id: string;
   agentId: string;
   sessionId: string;
-  type: 'observation' | 'insight' | 'decision' | 'artifact' | 'error';
+  type: "observation" | "insight" | "decision" | "artifact" | "error";
   content: string;
   context: Record<string, unknown>;
   timestamp: Date;
@@ -97,7 +97,7 @@ export interface MemoryEntry {
 export interface MemoryQuery {
   agentId?: string;
   sessionId?: string;
-  type?: MemoryEntry['type'];
+  type?: MemoryEntry["type"];
   tags?: string[];
   startTime?: Date;
   endTime?: Date;
@@ -110,38 +110,38 @@ export interface MemoryQuery {
 // Event-related types
 export enum SystemEvents {
   // Agent events
-  AGENT_SPAWNED = 'agent:spawned',
-  AGENT_TERMINATED = 'agent:terminated',
-  AGENT_ERROR = 'agent:error',
-  AGENT_IDLE = 'agent:idle',
-  AGENT_ACTIVE = 'agent:active',
+  AGENT_SPAWNED = "agent:spawned",
+  AGENT_TERMINATED = "agent:terminated",
+  AGENT_ERROR = "agent:error",
+  AGENT_IDLE = "agent:idle",
+  AGENT_ACTIVE = "agent:active",
 
   // Task events
-  TASK_CREATED = 'task:created',
-  TASK_ASSIGNED = 'task:assigned',
-  TASK_STARTED = 'task:started',
-  TASK_COMPLETED = 'task:completed',
-  TASK_FAILED = 'task:failed',
-  TASK_CANCELLED = 'task:cancelled',
+  TASK_CREATED = "task:created",
+  TASK_ASSIGNED = "task:assigned",
+  TASK_STARTED = "task:started",
+  TASK_COMPLETED = "task:completed",
+  TASK_FAILED = "task:failed",
+  TASK_CANCELLED = "task:cancelled",
 
   // Memory events
-  MEMORY_CREATED = 'memory:created',
-  MEMORY_UPDATED = 'memory:updated',
-  MEMORY_DELETED = 'memory:deleted',
-  MEMORY_SYNCED = 'memory:synced',
+  MEMORY_CREATED = "memory:created",
+  MEMORY_UPDATED = "memory:updated",
+  MEMORY_DELETED = "memory:deleted",
+  MEMORY_SYNCED = "memory:synced",
 
   // System events
-  SYSTEM_READY = 'system:ready',
-  SYSTEM_SHUTDOWN = 'system:shutdown',
-  SYSTEM_ERROR = 'system:error',
-  SYSTEM_HEALTHCHECK = 'system:healthcheck',
+  SYSTEM_READY = "system:ready",
+  SYSTEM_SHUTDOWN = "system:shutdown",
+  SYSTEM_ERROR = "system:error",
+  SYSTEM_HEALTHCHECK = "system:healthcheck",
 
   // Coordination events
-  RESOURCE_ACQUIRED = 'resource:acquired',
-  RESOURCE_RELEASED = 'resource:released',
-  DEADLOCK_DETECTED = 'deadlock:detected',
-  MESSAGE_SENT = 'message:sent',
-  MESSAGE_RECEIVED = 'message:received',
+  RESOURCE_ACQUIRED = "resource:acquired",
+  RESOURCE_RELEASED = "resource:released",
+  DEADLOCK_DETECTED = "deadlock:detected",
+  MESSAGE_SENT = "message:sent",
+  MESSAGE_RECEIVED = "message:received",
 }
 
 export interface EventMap extends Record<string, unknown> {
@@ -175,7 +175,7 @@ export interface EventMap extends Record<string, unknown> {
   [SystemEvents.MESSAGE_RECEIVED]: { from: string; to: string; message: Message };
   
   // Additional events
-  'metrics:collected': OrchestratorMetrics;
+  "metrics:collected": OrchestratorMetrics;
 }
 
 // Configuration types
@@ -205,7 +205,7 @@ export interface OrchestratorConfig {
 }
 
 export interface TerminalConfig {
-  type: 'vscode' | 'native' | 'auto';
+  type: "vscode" | "native" | "auto";
   poolSize: number;
   recycleAfter: number;
   healthCheckInterval: number;
@@ -213,10 +213,10 @@ export interface TerminalConfig {
 }
 
 export interface MemoryConfig {
-  backend: 'sqlite' | 'markdown' | 'hybrid';
+  backend: "sqlite" | "markdown" | "hybrid";
   cacheSizeMB: number;
   syncInterval: number;
-  conflictResolution: 'last-write' | 'crdt' | 'manual';
+  conflictResolution: "last-write" | "crdt" | "manual";
   retentionDays: number;
   sqlitePath?: string;
   markdownDir?: string;
@@ -231,7 +231,7 @@ export interface CoordinationConfig {
 }
 
 export interface MCPConfig {
-  transport: 'stdio' | 'http' | 'websocket';
+  transport: "stdio" | "http" | "websocket";
   host?: string;
   port?: number;
   tlsEnabled?: boolean;
@@ -246,9 +246,9 @@ export interface MCPConfig {
 }
 
 export interface LoggingConfig {
-  level: 'debug' | 'info' | 'warn' | 'error';
-  format: 'json' | 'text';
-  destination: 'console' | 'file' | 'both';
+  level: "debug" | "info" | "warn" | "error";
+  format: "json" | "text";
+  destination: "console" | "file" | "both";
   filePath?: string;
   maxFileSize?: number;
   maxFiles?: number;
@@ -256,14 +256,14 @@ export interface LoggingConfig {
 
 // Health and monitoring types
 export interface HealthStatus {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   components: Record<string, ComponentHealth>;
   timestamp: Date;
 }
 
 export interface ComponentHealth {
   name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   lastCheck: Date;
   error?: string;
   metrics?: Record<string, number>;
@@ -299,7 +299,7 @@ export interface MCPProtocolVersion {
 
 export interface MCPCapabilities {
   logging?: {
-    level?: 'debug' | 'info' | 'warn' | 'error';
+    level?: "debug" | "info" | "warn" | "error";
   };
   prompts?: {
     listChanged?: boolean;
@@ -358,21 +358,21 @@ export interface MCPResource {
 }
 
 export interface MCPRequest {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: string | number;
   method: string;
   params?: unknown;
 }
 
 export interface MCPResponse {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: string | number;
   result?: unknown;
   error?: MCPError;
 }
 
 export interface MCPNotification {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   method: string;
   params?: unknown;
 }
@@ -390,7 +390,7 @@ export interface MCPToolCall {
 
 export interface MCPToolResult {
   content: Array<{
-    type: 'text' | 'image' | 'resource';
+    type: "text" | "image" | "resource";
     text?: string;
     data?: string;
     mimeType?: string;
@@ -399,7 +399,7 @@ export interface MCPToolResult {
 }
 
 export interface MCPLogEntry {
-  level: 'debug' | 'info' | 'warn' | 'error';
+  level: "debug" | "info" | "warn" | "error";
   data?: unknown;
   logger?: string;
 }
@@ -415,7 +415,7 @@ export interface MCPSession {
   isInitialized: boolean;
   createdAt: Date;
   lastActivity: Date;
-  transport: 'stdio' | 'http' | 'websocket';
+  transport: "stdio" | "http" | "websocket";
   authenticated: boolean;
   authData?: {
     token?: string;
@@ -426,7 +426,7 @@ export interface MCPSession {
 
 export interface MCPAuthConfig {
   enabled: boolean;
-  method: 'token' | 'basic' | 'oauth';
+  method: "token" | "basic" | "oauth";
   tokens?: string[];
   users?: Array<{
     username: string;
@@ -440,7 +440,7 @@ export interface MCPAuthConfig {
 
 export interface MCPLoadBalancerConfig {
   enabled: boolean;
-  strategy: 'round-robin' | 'least-connections' | 'weighted';
+  strategy: "round-robin" | "least-connections" | "weighted";
   maxRequestsPerSecond: number;
   healthCheckInterval: number;
   circuitBreakerThreshold: number;
@@ -477,8 +477,8 @@ export interface IEventBus {
 export interface Terminal {
   id: string;
   pid?: number;
-  type: 'vscode' | 'native';
-  status: 'active' | 'idle' | 'dead';
+  type: "vscode" | "native";
+  status: "active" | "idle" | "dead";
 }
 
 export interface TerminalCommand {

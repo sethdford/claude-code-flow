@@ -2,10 +2,10 @@
  * Fixed orchestrator implementation for Claude-Flow
  */
 
-import { EventBus } from './event-bus.js';
-import { Logger } from './logger.js';
-import { ConfigManager } from './config.js';
-import { JsonPersistenceManager } from './json-persistence.js';
+import { EventBus } from "./event-bus.js";
+import { Logger } from "./logger.js";
+import { ConfigManager } from "./config.js";
+import { JsonPersistenceManager } from "./json-persistence.js";
 
 export interface AgentInfo {
   id: string;
@@ -56,17 +56,17 @@ export class Orchestrator {
   constructor(
     private config: ConfigManager,
     private eventBus: EventBus,
-    private logger: Logger
+    private logger: Logger,
   ) {
     this.persistence = new JsonPersistenceManager();
   }
 
   async start(): Promise<void> {
     if (this.started) {
-      throw new Error('Orchestrator already started');
+      throw new Error("Orchestrator already started");
     }
 
-    this.logger.info('Starting orchestrator...');
+    this.logger.info("Starting orchestrator...");
     
     // Initialize persistence
     await this.persistence.initialize();
@@ -75,10 +75,10 @@ export class Orchestrator {
     await this.loadFromPersistence();
     
     // Initialize components
-    this.eventBus.emit('system:ready', { timestamp: new Date() });
+    this.eventBus.emit("system:ready", { timestamp: new Date() });
     
     this.started = true;
-    this.logger.info('Orchestrator started successfully');
+    this.logger.info("Orchestrator started successfully");
   }
 
   private async loadFromPersistence(): Promise<void> {
@@ -117,7 +117,7 @@ export class Orchestrator {
       return;
     }
 
-    this.logger.info('Stopping orchestrator...');
+    this.logger.info("Stopping orchestrator...");
     
     // Clean up resources
     this.agents.clear();
@@ -129,7 +129,7 @@ export class Orchestrator {
     this.persistence.close();
     
     this.started = false;
-    this.logger.info('Orchestrator stopped');
+    this.logger.info("Orchestrator stopped");
   }
 
   async spawnAgent(profile: {
@@ -146,7 +146,7 @@ export class Orchestrator {
       id: agentId,
       type: profile.type,
       name: profile.name,
-      status: 'active',
+      status: "active",
       assignedTasks: [],
       createdAt: Date.now(),
     };
@@ -156,7 +156,7 @@ export class Orchestrator {
       id: agentId,
       type: profile.type,
       name: profile.name,
-      status: 'active',
+      status: "active",
       capabilities: profile.capabilities,
       systemPrompt: profile.systemPrompt,
       maxConcurrentTasks: profile.maxConcurrentTasks,
@@ -165,7 +165,7 @@ export class Orchestrator {
     });
     
     this.agents.set(agentId, agent);
-    this.eventBus.emit('agent:spawned', { agentId, profile });
+    this.eventBus.emit("agent:spawned", { agentId, profile });
     
     return agentId;
   }
@@ -177,10 +177,10 @@ export class Orchestrator {
     }
     
     // Update persistence
-    await this.persistence.updateAgentStatus(agentId, 'terminated');
+    await this.persistence.updateAgentStatus(agentId, "terminated");
     
     this.agents.delete(agentId);
-    this.eventBus.emit('agent:terminated', { agentId, reason: 'User requested' });
+    this.eventBus.emit("agent:terminated", { agentId, reason: "User requested" });
   }
 
   getActiveAgents(): AgentInfo[] {
@@ -204,7 +204,7 @@ export class Orchestrator {
       id: taskId,
       type: task.type,
       description: task.description,
-      status: 'pending',
+      status: "pending",
       progress: 0,
     };
     
@@ -213,7 +213,7 @@ export class Orchestrator {
       id: taskId,
       type: task.type,
       description: task.description,
-      status: 'pending',
+      status: "pending",
       priority: task.priority,
       dependencies: task.dependencies,
       metadata: task.metadata,
@@ -222,19 +222,19 @@ export class Orchestrator {
     });
     
     this.tasks.set(taskId, taskInfo);
-    this.eventBus.emit('task:created', { taskId, task });
+    this.eventBus.emit("task:created", { taskId, task });
     
     // Simulate task assignment
-    const availableAgents = Array.from(this.agents.values()).filter(a => a.status === 'active');
+    const availableAgents = Array.from(this.agents.values()).filter(a => a.status === "active");
     if (availableAgents.length > 0) {
       const agent = availableAgents[0];
       taskInfo.assignedAgent = agent.id;
-      taskInfo.status = 'assigned';
+      taskInfo.status = "assigned";
       agent.assignedTasks.push(taskId);
-      this.eventBus.emit('task:assigned', { taskId, agentId: agent.id });
+      this.eventBus.emit("task:assigned", { taskId, agentId: agent.id });
       
       // Update persistence with assignment
-      await this.persistence.updateTaskStatus(taskId, 'assigned', agent.id);
+      await this.persistence.updateTaskStatus(taskId, "assigned", agent.id);
     }
     
     return taskId;
@@ -254,8 +254,8 @@ export class Orchestrator {
       throw new Error(`Task ${taskId} not found`);
     }
     
-    task.status = 'cancelled';
-    this.eventBus.emit('task:cancelled', { taskId });
+    task.status = "cancelled";
+    this.eventBus.emit("task:cancelled", { taskId });
   }
 
   getActiveSessions(): SessionInfo[] {
@@ -269,25 +269,25 @@ export class Orchestrator {
     }
     
     this.sessions.delete(sessionId);
-    this.eventBus.emit('session:terminated', { sessionId });
+    this.eventBus.emit("session:terminated", { sessionId });
   }
 
   async executeWorkflow(workflow: any): Promise<string> {
     const workflowId = `workflow-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     const status: WorkflowStatus = {
-      status: 'running',
+      status: "running",
       progress: 0,
     };
     
     this.workflows.set(workflowId, status);
-    this.eventBus.emit('workflow:started', { workflowId, workflow });
+    this.eventBus.emit("workflow:started", { workflowId, workflow });
     
     // Simulate workflow execution
     setTimeout(() => {
-      status.status = 'completed';
+      status.status = "completed";
       status.progress = 100;
-      this.eventBus.emit('workflow:completed', { workflowId });
+      this.eventBus.emit("workflow:completed", { workflowId });
     }, 5000);
     
     return workflowId;

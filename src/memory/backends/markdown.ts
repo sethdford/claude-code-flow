@@ -2,12 +2,12 @@
  * Markdown backend implementation for human-readable memory storage
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
-import { IMemoryBackend } from './base.js';
-import { MemoryEntry, MemoryQuery } from '../../utils/types.js';
-import { ILogger } from '../../core/logger.js';
-import { MemoryBackendError } from '../../utils/errors.js';
+import { promises as fs } from "fs";
+import path from "path";
+import { IMemoryBackend } from "./base.js";
+import { MemoryEntry, MemoryQuery } from "../../utils/types.js";
+import { ILogger } from "../../core/logger.js";
+import { MemoryBackendError } from "../../utils/errors.js";
 
 /**
  * Markdown-based memory backend
@@ -20,29 +20,29 @@ export class MarkdownBackend implements IMemoryBackend {
     private baseDir: string,
     private logger: ILogger,
   ) {
-    this.indexPath = path.join(this.baseDir, 'index.json');
+    this.indexPath = path.join(this.baseDir, "index.json");
   }
 
   async initialize(): Promise<void> {
-    this.logger.info('Initializing Markdown backend', { baseDir: this.baseDir });
+    this.logger.info("Initializing Markdown backend", { baseDir: this.baseDir });
 
     try {
       // Ensure directories exist
       await fs.mkdir(this.baseDir, { recursive: true });
-      await fs.mkdir(path.join(this.baseDir, 'agents'), { recursive: true });
-      await fs.mkdir(path.join(this.baseDir, 'sessions'), { recursive: true });
+      await fs.mkdir(path.join(this.baseDir, "agents"), { recursive: true });
+      await fs.mkdir(path.join(this.baseDir, "sessions"), { recursive: true });
 
       // Load index
       await this.loadIndex();
 
-      this.logger.info('Markdown backend initialized');
+      this.logger.info("Markdown backend initialized");
     } catch (error) {
-      throw new MemoryBackendError('Failed to initialize Markdown backend', { error });
+      throw new MemoryBackendError("Failed to initialize Markdown backend", { error });
     }
   }
 
   async shutdown(): Promise<void> {
-    this.logger.info('Shutting down Markdown backend');
+    this.logger.info("Shutting down Markdown backend");
 
     // Save index before shutdown
     await this.saveIndex();
@@ -60,7 +60,7 @@ export class MarkdownBackend implements IMemoryBackend {
       // Update index
       await this.saveIndex();
     } catch (error) {
-      throw new MemoryBackendError('Failed to store entry', { error });
+      throw new MemoryBackendError("Failed to store entry", { error });
     }
   }
 
@@ -93,7 +93,7 @@ export class MarkdownBackend implements IMemoryBackend {
       // Update index
       await this.saveIndex();
     } catch (error) {
-      throw new MemoryBackendError('Failed to delete entry', { error });
+      throw new MemoryBackendError("Failed to delete entry", { error });
     }
   }
 
@@ -187,14 +187,14 @@ export class MarkdownBackend implements IMemoryBackend {
     } catch (error) {
       return {
         healthy: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   private async loadIndex(): Promise<void> {
     try {
-      const content = await fs.readFile(this.indexPath, 'utf-8');
+      const content = await fs.readFile(this.indexPath, "utf-8");
       const index = JSON.parse(content) as Record<string, MemoryEntry>;
 
       // Convert and validate entries
@@ -204,10 +204,10 @@ export class MarkdownBackend implements IMemoryBackend {
         this.entries.set(id, entry);
       }
 
-      this.logger.info('Loaded memory index', { entries: this.entries.size });
+      this.logger.info("Loaded memory index", { entries: this.entries.size });
     } catch (error: any) {
-      if (error.code !== 'ENOENT') {
-        this.logger.warn('Failed to load index', { error });
+      if (error.code !== "ENOENT") {
+        this.logger.warn("Failed to load index", { error });
       }
       // Start with empty index if file doesn't exist
     }
@@ -221,7 +221,7 @@ export class MarkdownBackend implements IMemoryBackend {
     }
 
     const content = JSON.stringify(index, null, 2);
-    await fs.writeFile(this.indexPath, content, 'utf-8');
+    await fs.writeFile(this.indexPath, content, "utf-8");
   }
 
   private async writeEntryToFile(entry: MemoryEntry): Promise<void> {
@@ -235,50 +235,50 @@ export class MarkdownBackend implements IMemoryBackend {
     const content = this.entryToMarkdown(entry);
 
     // Write file
-    await fs.writeFile(filePath, content, 'utf-8');
+    await fs.writeFile(filePath, content, "utf-8");
   }
 
   private getEntryFilePath(entry: MemoryEntry): string {
-    const date = entry.timestamp.toISOString().split('T')[0];
-    const time = entry.timestamp.toISOString().split('T')[1].replace(/:/g, '-').split('.')[0];
+    const date = entry.timestamp.toISOString().split("T")[0];
+    const time = entry.timestamp.toISOString().split("T")[1].replace(/:/g, "-").split(".")[0];
     
-    return path.join(this.baseDir, 'agents', entry.agentId, date, `${time}_${entry.id}.md`);
+    return path.join(this.baseDir, "agents", entry.agentId, date, `${time}_${entry.id}.md`);
   }
 
   private entryToMarkdown(entry: MemoryEntry): string {
     const lines: string[] = [
       `# Memory Entry: ${entry.id}`,
-      '',
+      "",
       `**Agent**: ${entry.agentId}`,
       `**Session**: ${entry.sessionId}`,
       `**Type**: ${entry.type}`,
       `**Timestamp**: ${entry.timestamp.toISOString()}`,
       `**Version**: ${entry.version}`,
-      '',
+      "",
     ];
 
     if (entry.parentId) {
-      lines.push(`**Parent**: ${entry.parentId}`, '');
+      lines.push(`**Parent**: ${entry.parentId}`, "");
     }
 
     if (entry.tags.length > 0) {
-      lines.push(`**Tags**: ${entry.tags.join(', ')}`, '');
+      lines.push(`**Tags**: ${entry.tags.join(", ")}`, "");
     }
 
-    lines.push('## Content', '', entry.content, '');
+    lines.push("## Content", "", entry.content, "");
 
     if (Object.keys(entry.context).length > 0) {
-      lines.push('## Context', '', '```json');
+      lines.push("## Context", "", "```json");
       lines.push(JSON.stringify(entry.context, null, 2));
-      lines.push('```', '');
+      lines.push("```", "");
     }
 
     if (entry.metadata && Object.keys(entry.metadata).length > 0) {
-      lines.push('## Metadata', '', '```json');
+      lines.push("## Metadata", "", "```json");
       lines.push(JSON.stringify(entry.metadata, null, 2));
-      lines.push('```', '');
+      lines.push("```", "");
     }
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 }

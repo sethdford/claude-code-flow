@@ -118,7 +118,7 @@ export function setupCommands(cli: CLI): void {
           "coordination",
           "coordination/memory_bank",
           "coordination/subtasks", 
-          "coordination/orchestration"
+          "coordination/orchestration",
         ];
         
         // Ensure memory directory exists for SQLite database
@@ -132,7 +132,7 @@ export function setupCommands(cli: CLI): void {
             await mkdir(dir, { recursive: true });
             console.log(`  ✓ Created ${dir}/ directory`);
           } catch (err) {
-            if ((err as any).code !== 'EEXIST') {
+            if ((err as any).code !== "EEXIST") {
               throw err;
             }
           }
@@ -151,7 +151,7 @@ export function setupCommands(cli: CLI): void {
         const initialData = {
           agents: [],
           tasks: [],
-          lastUpdated: Date.now()
+          lastUpdated: Date.now(),
         };
         await writeFile("memory/claude-flow-data.json", JSON.stringify(initialData, null, 2));
         console.log("  ✓ Created memory/claude-flow-data.json (persistence database)");
@@ -219,7 +219,7 @@ export function setupCommands(cli: CLI): void {
           
           try {
             await new Promise<void>((resolve) => {
-              controller.signal.addEventListener('abort', () => resolve());
+              controller.signal.addEventListener("abort", () => resolve());
             });
           } finally {
             process.off("SIGINT", shutdown);
@@ -255,7 +255,7 @@ export function setupCommands(cli: CLI): void {
               id: taskId,
               type,
               description,
-              status: 'pending',
+              status: "pending",
               priority: ctx.flags.priority as number || 1,
               dependencies: ctx.flags.deps ? (ctx.flags.deps as string).split(",") : [],
               metadata: {},
@@ -263,7 +263,7 @@ export function setupCommands(cli: CLI): void {
               createdAt: Date.now(),
             });
             
-            success(`Task created successfully!`);
+            success("Task created successfully!");
             console.log(`📝 Task ID: ${taskId}`);
             console.log(`🎯 Type: ${type}`);
             console.log(`📄 Description: ${description}`);
@@ -349,8 +349,8 @@ export function setupCommands(cli: CLI): void {
             const workflow = JSON.parse(content);
             
             success("Workflow loaded:");
-            console.log(`📋 Name: ${workflow.name || 'Unnamed'}`);
-            console.log(`📝 Description: ${workflow.description || 'No description'}`);
+            console.log(`📋 Name: ${workflow.name || "Unnamed"}`);
+            console.log(`📝 Description: ${workflow.description || "No description"}`);
             console.log(`🤖 Agents: ${workflow.agents?.length || 0}`);
             console.log(`📌 Tasks: ${workflow.tasks?.length || 0}`);
             
@@ -389,7 +389,7 @@ export function setupCommands(cli: CLI): void {
       const enhancedCtx = {
         args: ctx.args.slice(1), // Remove 'agent' from args
         flags: ctx.flags,
-        command: subcommand
+        command: subcommand,
       };
       
       try {
@@ -404,7 +404,7 @@ export function setupCommands(cli: CLI): void {
           case "pool":
           case "health":
             // Use the enhanced agent command system
-            console.log(colors.cyan('🚀 Using enhanced agent management system...'));
+            console.log(colors.cyan("🚀 Using enhanced agent management system..."));
             
             // Create a simplified wrapper around the enhanced command
             const agentManager = await import("../../agents/agent-manager.js");
@@ -415,7 +415,7 @@ export function setupCommands(cli: CLI): void {
             
             warning("Enhanced agent management is available!");
             console.log("For full functionality, use the comprehensive agent commands:");
-            console.log(`  - claude-flow agent ${subcommand} ${ctx.args.slice(1).join(' ')}`);
+            console.log(`  - claude-flow agent ${subcommand} ${ctx.args.slice(1).join(" ")}`);
             console.log("  - Enhanced features: pools, health monitoring, resource management");
             console.log("  - Interactive configuration and detailed metrics");
             break;
@@ -460,7 +460,7 @@ export function setupCommands(cli: CLI): void {
                 id: agentId,
                 type,
                 name,
-                status: 'active',
+                status: "active",
                 capabilities: getCapabilitiesForType(type),
                 systemPrompt: ctx.flags.prompt as string || getDefaultPromptForType(type),
                 maxConcurrentTasks: ctx.flags.maxTasks as number || 5,
@@ -468,11 +468,11 @@ export function setupCommands(cli: CLI): void {
                 createdAt: Date.now(),
               });
               
-              success(`Agent spawned successfully!`);
+              success("Agent spawned successfully!");
               console.log(`📝 Agent ID: ${agentId}`);
               console.log(`🤖 Type: ${type}`);
               console.log(`📛 Name: ${name}`);
-              console.log(`⚡ Status: Active`);
+              console.log("⚡ Status: Active");
             } catch (err) {
               error(`Failed to spawn agent: ${(err as Error).message}`);
             }
@@ -520,13 +520,13 @@ export function setupCommands(cli: CLI): void {
         json: ctx.flags.json,
         detailed: ctx.flags.detailed,
         healthCheck: ctx.flags.healthCheck || ctx.flags["health-check"],
-        history: ctx.flags.history
+        history: ctx.flags.history,
       };
       
       // Mock the enhanced status command action
-      console.log(colors.cyan('🔍 Enhanced Status Command'));
-      console.log('For full enhanced functionality, use: claude-flow status [options]');
-      console.log('Available options: --watch, --interval, --component, --json, --detailed, --health-check, --history');
+      console.log(colors.cyan("🔍 Enhanced Status Command"));
+      console.log("For full enhanced functionality, use: claude-flow status [options]");
+      console.log("Available options: --watch, --interval, --component, --json, --detailed, --health-check, --history");
       
       // Fallback to basic status
       try {
@@ -538,12 +538,12 @@ export function setupCommands(cli: CLI): void {
         const isRunning = await access("orchestrator.log").then(() => true).catch(() => false);
         
         success("Claude-Flow System Status:");
-        console.log(`🟢 Status: ${isRunning ? 'Running' : 'Stopped'}`);
+        console.log(`🟢 Status: ${isRunning ? "Running" : "Stopped"}`);
         console.log(`🤖 Agents: ${stats.activeAgents} active (${stats.totalAgents} total)`);
         console.log(`📋 Tasks: ${stats.pendingTasks} in queue (${stats.totalTasks} total)`);
-        console.log(`💾 Memory: Ready`);
-        console.log(`🖥️  Terminal Pool: Ready`);
-        console.log(`🌐 MCP Server: ${isRunning ? 'Running' : 'Stopped'}`);
+        console.log("💾 Memory: Ready");
+        console.log("🖥️  Terminal Pool: Ready");
+        console.log(`🌐 MCP Server: ${isRunning ? "Running" : "Stopped"}`);
         
         if (ctx.flags.verbose || options.detailed) {
           console.log("\nDetailed Statistics:");
@@ -555,8 +555,8 @@ export function setupCommands(cli: CLI): void {
         }
         
         if (options.watch) {
-          warning('Watch mode available in enhanced status command');
-          console.log('Use: claude-flow status --watch');
+          warning("Watch mode available in enhanced status command");
+          console.log("Use: claude-flow status --watch");
         }
         
       } catch (err) {
@@ -575,12 +575,12 @@ export function setupCommands(cli: CLI): void {
         { name: "detailed", description: "Show detailed component information", type: "boolean" },
         { name: "health-check", description: "Perform comprehensive health checks", type: "boolean" },
         { name: "history", description: "Show status history from logs", type: "boolean" },
-        { name: "verbose", short: "v", description: "Enable verbose output", type: "boolean" }
+        { name: "verbose", short: "v", description: "Enable verbose output", type: "boolean" },
       ],
-      action: enhancedStatusAction
+      action: enhancedStatusAction,
     });
   } catch (err) {
-    warning('Enhanced status command not available, using basic version');
+    warning("Enhanced status command not available, using basic version");
     
     // Fallback basic status command
     cli.command({
@@ -595,12 +595,12 @@ export function setupCommands(cli: CLI): void {
           const isRunning = await access("orchestrator.log").then(() => true).catch(() => false);
           
           success("Claude-Flow System Status:");
-          console.log(`🟢 Status: ${isRunning ? 'Running' : 'Stopped'}`);
+          console.log(`🟢 Status: ${isRunning ? "Running" : "Stopped"}`);
           console.log(`🤖 Agents: ${stats.activeAgents} active (${stats.totalAgents} total)`);
           console.log(`📋 Tasks: ${stats.pendingTasks} in queue (${stats.totalTasks} total)`);
-          console.log(`💾 Memory: Ready`);
-          console.log(`🖥️  Terminal Pool: Ready`);
-          console.log(`🌐 MCP Server: ${isRunning ? 'Running' : 'Stopped'}`);
+          console.log("💾 Memory: Ready");
+          console.log("🖥️  Terminal Pool: Ready");
+          console.log(`🌐 MCP Server: ${isRunning ? "Running" : "Stopped"}`);
           
           if (ctx.flags.verbose) {
             console.log("\nDetailed Statistics:");
@@ -613,7 +613,7 @@ export function setupCommands(cli: CLI): void {
         } catch (err) {
           error(`Failed to get status: ${(err as Error).message}`);
         }
-      }
+      },
     });
   }
 
@@ -639,10 +639,10 @@ export function setupCommands(cli: CLI): void {
               return;
             }
             
-            success(`MCP server is running as part of the orchestration system`);
+            success("MCP server is running as part of the orchestration system");
             console.log(`📡 Default address: http://${host}:${port}`);
-            console.log(`🔧 Available tools: Research, Code, Terminal, Memory`);
-            console.log(`📚 Use 'claude-flow mcp tools' to see all available tools`);
+            console.log("🔧 Available tools: Research, Code, Terminal, Memory");
+            console.log("📚 Use 'claude-flow mcp tools' to see all available tools");
           } catch (err) {
             error(`Failed to check MCP server: ${(err as Error).message}`);
           }
@@ -678,8 +678,8 @@ export function setupCommands(cli: CLI): void {
               const mcpConfig = config.get().mcp;
               console.log(`📍 Address: ${mcpConfig.host}:${mcpConfig.port}`);
               console.log(`🔐 Authentication: ${mcpConfig.auth ? "Enabled" : "Disabled"}`);
-              console.log(`🔧 Tools: Available`);
-              console.log(`📊 Metrics: Collecting`);
+              console.log("🔧 Tools: Available");
+              console.log("📊 Metrics: Collecting");
             }
           } catch (err) {
             error(`Failed to get MCP status: ${(err as Error).message}`);
@@ -820,7 +820,7 @@ export function setupCommands(cli: CLI): void {
             for (const entry of limited) {
               console.log(blue(`\n📌 ${entry.key}`));
               console.log(`   Namespace: ${entry.namespace}`);
-              console.log(`   Value: ${entry.value.substring(0, 100)}${entry.value.length > 100 ? '...' : ''}`);
+              console.log(`   Value: ${entry.value.substring(0, 100)}${entry.value.length > 100 ? "..." : ""}`);
               console.log(`   Stored: ${new Date(entry.timestamp).toLocaleString()}`);
             }
             
@@ -1068,23 +1068,23 @@ You are running within the Claude-Flow orchestration system, which provides powe
 
 2. **During Execution**:
    - Store findings: \`npx claude-flow memory store findings "your data here"\`
-   - Save checkpoints: \`npx claude-flow memory store progress_${task.replace(/\s+/g, '_')} "current status"\`
-   ${ctx.flags.parallel ? '- Spawn agents: `npx claude-flow agent spawn researcher --name "research-agent"`' : ''}
-   ${ctx.flags.parallel ? '- Create tasks: `npx claude-flow task create implementation "implement feature X"`' : ''}
+   - Save checkpoints: \`npx claude-flow memory store progress_${task.replace(/\s+/g, "_")} "current status"\`
+   ${ctx.flags.parallel ? '- Spawn agents: `npx claude-flow agent spawn researcher --name "research-agent"`' : ""}
+   ${ctx.flags.parallel ? '- Create tasks: `npx claude-flow task create implementation "implement feature X"`' : ""}
 
 3. **Best Practices**:
    - Use the Bash tool to run \`npx claude-flow\` commands
    - Store data as JSON strings for complex structures
    - Query memory before starting to check for existing work
    - Use descriptive keys for memory storage
-   ${ctx.flags.parallel ? '- Coordinate with other agents through shared memory' : ''}
-   ${ctx.flags.research ? '- Store research findings: `npx claude-flow memory store research_findings "data"`' : ''}
+   ${ctx.flags.parallel ? "- Coordinate with other agents through shared memory" : ""}
+   ${ctx.flags.research ? '- Store research findings: `npx claude-flow memory store research_findings "data"`' : ""}
 
 ## Configuration
 - Instance ID: ${instanceId}
-- Mode: ${ctx.flags.mode || 'full'}
+- Mode: ${ctx.flags.mode || "full"}
 - Coverage Target: ${ctx.flags.coverage || 80}%
-- Commit Strategy: ${ctx.flags.commit || 'phase'}
+- Commit Strategy: ${ctx.flags.commit || "phase"}
 
 ## Example Commands
 
@@ -1132,10 +1132,10 @@ Now, please proceed with the task: ${task}`;
               console.log(`Mode: ${ctx.flags.mode || "full"}`);
               console.log(`Coverage: ${ctx.flags.coverage || 80}%`);
               console.log(`Commit: ${ctx.flags.commit || "phase"}`);
-              console.log(`\nEnhanced Features:`);
-              console.log(`  - Memory Bank enabled via: npx claude-flow memory commands`);
-              console.log(`  - Coordination ${ctx.flags.parallel ? 'enabled' : 'disabled'}`);
-              console.log(`  - Access Claude-Flow features through Bash tool`);
+              console.log("\nEnhanced Features:");
+              console.log("  - Memory Bank enabled via: npx claude-flow memory commands");
+              console.log(`  - Coordination ${ctx.flags.parallel ? "enabled" : "disabled"}`);
+              console.log("  - Access Claude-Flow features through Bash tool");
               return;
             }
             
@@ -1145,17 +1145,17 @@ Now, please proceed with the task: ${task}`;
             console.log(`⚙️  Mode: ${ctx.flags.mode || "full"}`);
             console.log(`📊 Coverage: ${ctx.flags.coverage || 80}%`);
             console.log(`💾 Commit: ${ctx.flags.commit || "phase"}`);
-            console.log(`✨ Enhanced with Claude-Flow guidance for memory and coordination`);
-            console.log('');
-            console.log('📋 Task will be enhanced with:');
-            console.log('  - Memory Bank instructions (store/retrieve)');
-            console.log('  - Coordination capabilities (swarm management)');
-            console.log('  - Best practices for multi-agent workflows');
-            console.log('');
+            console.log("✨ Enhanced with Claude-Flow guidance for memory and coordination");
+            console.log("");
+            console.log("📋 Task will be enhanced with:");
+            console.log("  - Memory Bank instructions (store/retrieve)");
+            console.log("  - Coordination capabilities (swarm management)");
+            console.log("  - Best practices for multi-agent workflows");
+            console.log("");
             
             // Execute Claude command
             const { spawn } = await import("child_process");
-            const child = spawn("claude", claudeCmd.slice(1).map(arg => arg.replace(/^"|"$/g, '')), {
+            const child = spawn("claude", claudeCmd.slice(1).map(arg => arg.replace(/^"|"$/g, "")), {
               env: {
                 ...process.env,
                 CLAUDE_INSTANCE_ID: instanceId,
@@ -1163,15 +1163,15 @@ Now, please proceed with the task: ${task}`;
                 CLAUDE_FLOW_COVERAGE: (ctx.flags.coverage || 80).toString(),
                 CLAUDE_FLOW_COMMIT: ctx.flags.commit as string || "phase",
                 // Add Claude-Flow specific features
-                CLAUDE_FLOW_MEMORY_ENABLED: 'true',
-                CLAUDE_FLOW_MEMORY_NAMESPACE: 'default',
-                CLAUDE_FLOW_COORDINATION_ENABLED: ctx.flags.parallel ? 'true' : 'false',
-                CLAUDE_FLOW_FEATURES: 'memory,coordination,swarm',
+                CLAUDE_FLOW_MEMORY_ENABLED: "true",
+                CLAUDE_FLOW_MEMORY_NAMESPACE: "default",
+                CLAUDE_FLOW_COORDINATION_ENABLED: ctx.flags.parallel ? "true" : "false",
+                CLAUDE_FLOW_FEATURES: "memory,coordination,swarm",
               },
               stdio: "inherit",
             });
             
-            const status = await new Promise((resolve) => {
+            const status = await new Promise<{ success: boolean; code: number | null }>((resolve) => {
               child.on("close", (code) => {
                 resolve({ success: code === 0, code });
               });
@@ -1240,7 +1240,7 @@ Now, please proceed with the task: ${task}`;
               console.log(`\n🚀 Spawning Claude for task: ${task.name || taskId}`);
               
               const { spawn } = await import("child_process");
-              const child = spawn("claude", claudeCmd.slice(1).map(arg => arg.replace(/^"|"$/g, '')), {
+              const child = spawn("claude", claudeCmd.slice(1).map(arg => arg.replace(/^"|"$/g, "")), {
                 env: {
                   ...process.env,
                   CLAUDE_TASK_ID: taskId,
@@ -1257,7 +1257,7 @@ Now, please proceed with the task: ${task}`;
                 }));
               } else {
                 // Wait for completion if sequential
-                const status = await new Promise((resolve) => {
+                const status = await new Promise<{ success: boolean; code: number | null }>((resolve) => {
                   child.on("close", (code) => {
                     resolve({ success: code === 0, code });
                   });
@@ -1271,7 +1271,7 @@ Now, please proceed with the task: ${task}`;
             if (workflow.parallel && promises.length > 0) {
               success("All Claude instances spawned in parallel mode");
               const results = await Promise.all(promises);
-              const failed = results.filter(s => !s.success).length;
+              const failed = results.filter((s: any) => !s.success).length;
               if (failed > 0) {
                 warning(`${failed} tasks failed`);
               } else {
@@ -1302,19 +1302,19 @@ Now, please proceed with the task: ${task}`;
     const enhancedMonitorAction = async (ctx: CommandContext) => {
       // Convert CLI context to match enhanced command expectations
       const options = {
-        interval: ctx.flags.interval || ctx.flags.i || 2,
+        interval: Number(ctx.flags.interval || ctx.flags.i || 2),
         compact: ctx.flags.compact || ctx.flags.c,
         focus: ctx.flags.focus || ctx.flags.f,
         alerts: ctx.flags.alerts,
         export: ctx.flags.export,
-        threshold: ctx.flags.threshold || 80,
-        logLevel: ctx.flags.logLevel || ctx.flags['log-level'] || 'info',
-        noGraphs: ctx.flags.noGraphs || ctx.flags['no-graphs']
+        threshold: Number(ctx.flags.threshold || 80),
+        logLevel: ctx.flags.logLevel || ctx.flags["log-level"] || "info",
+        noGraphs: ctx.flags.noGraphs || ctx.flags["no-graphs"],
       };
       
-      console.log(colors.cyan('📊 Enhanced Monitor Command'));
-      console.log('For full enhanced functionality, use: claude-flow monitor [options]');
-      console.log('Available options: --interval, --compact, --focus, --alerts, --export, --threshold, --log-level, --no-graphs');
+      console.log(colors.cyan("📊 Enhanced Monitor Command"));
+      console.log("For full enhanced functionality, use: claude-flow monitor [options]");
+      console.log("Available options: --interval, --compact, --focus, --alerts, --export, --threshold, --log-level, --no-graphs");
       
       // Fallback to basic monitoring
       try {
@@ -1344,7 +1344,7 @@ Now, please proceed with the task: ${task}`;
         process.on("SIGINT", cleanup);
         process.on("SIGTERM", cleanup);
         
-        process.stdout.write('\x1b[?25l');
+        process.stdout.write("\x1b[?25l");
         
         let cycles = 0;
         while (running) {
@@ -1372,8 +1372,8 @@ Now, please proceed with the task: ${task}`;
             console.log("\n📊 System Overview:");
             const cpuUsage = Math.random() * 100;
             const memoryUsage = Math.random() * 1000;
-            const cpuColor = cpuUsage > options.threshold ? '🔴' : cpuUsage > options.threshold * 0.8 ? '🟡' : '🟢';
-            const memoryColor = memoryUsage > 800 ? '🔴' : memoryUsage > 600 ? '🟡' : '🟢';
+            const cpuColor = cpuUsage > options.threshold ? "🔴" : cpuUsage > (options.threshold * 0.8) ? "🟡" : "🟢";
+            const memoryColor = memoryUsage > 800 ? "🔴" : memoryUsage > 600 ? "🟡" : "🟢";
             
             console.log(`   ${cpuColor} CPU: ${cpuUsage.toFixed(1)}%`);
             console.log(`   ${memoryColor} Memory: ${memoryUsage.toFixed(0)}MB`);
@@ -1391,16 +1391,16 @@ Now, please proceed with the task: ${task}`;
               // Simple ASCII graph simulation
               if (!options.noGraphs) {
                 console.log("\n📊 CPU Trend (last 10 updates):");
-                const trend = Array.from({length: 10}, () => Math.floor(Math.random() * 8));
-                const chars = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
-                console.log(`   ${trend.map(i => chars[i]).join('')}`);
+                const trend = Array.from({ length: 10 }, () => Math.floor(Math.random() * 8));
+                const chars = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+                console.log(`   ${trend.map(i => chars[i]).join("")}`);
               }
             }
             
             // Active components (if focused)
             if (options.focus && !options.compact) {
               console.log(`\n🎯 ${options.focus} Component Details:`);
-              console.log(`   Status: Healthy`);
+              console.log("   Status: Healthy");
               console.log(`   Load: ${(Math.random() * 100).toFixed(1)}%`);
               console.log(`   Uptime: ${Math.floor(Math.random() * 3600)}s`);
               console.log(`   Connections: ${Math.floor(Math.random() * 10) + 1}`);
@@ -1409,8 +1409,8 @@ Now, please proceed with the task: ${task}`;
             // Alerts simulation
             if (options.alerts && Math.random() > 0.8) {
               console.log("\n🚨 Active Alerts:");
-              console.log(`   ⚠️  High CPU usage detected`);
-              console.log(`   📊 Memory usage approaching threshold`);
+              console.log("   ⚠️  High CPU usage detected");
+              console.log("   📊 Memory usage approaching threshold");
             }
             
             // Export status
@@ -1421,7 +1421,7 @@ Now, please proceed with the task: ${task}`;
             }
             
             // Footer
-            console.log("\n" + "─".repeat(60));
+            console.log(`\n${  "─".repeat(60)}`);
             console.log(`Log Level: ${options.logLevel} • Threshold: ${options.threshold}% • Press Ctrl+C to exit`);
             
             await new Promise(resolve => setTimeout(resolve, interval));
@@ -1431,7 +1431,7 @@ Now, please proceed with the task: ${task}`;
           }
         }
         
-        process.stdout.write('\x1b[?25h');
+        process.stdout.write("\x1b[?25h");
         
       } catch (err) {
         error(`Failed to start enhanced monitor: ${(err as Error).message}`);
@@ -1449,12 +1449,12 @@ Now, please proceed with the task: ${task}`;
         { name: "export", description: "Export monitoring data to file", type: "string" },
         { name: "threshold", description: "Alert threshold percentage", type: "number", default: 80 },
         { name: "log-level", description: "Log level filter (error, warn, info, debug)", type: "string", default: "info" },
-        { name: "no-graphs", description: "Disable ASCII graphs", type: "boolean" }
+        { name: "no-graphs", description: "Disable ASCII graphs", type: "boolean" },
       ],
-      action: enhancedMonitorAction
+      action: enhancedMonitorAction,
     });
   } catch (err) {
-    warning('Enhanced monitor command not available, using basic version');
+    warning("Enhanced monitor command not available, using basic version");
     
     // Fallback basic monitor command (original implementation)
     cli.command({
@@ -1463,7 +1463,7 @@ Now, please proceed with the task: ${task}`;
       options: [
         { name: "interval", short: "i", description: "Update interval in seconds", type: "number", default: 2 },
         { name: "compact", short: "c", description: "Compact view mode", type: "boolean" },
-        { name: "focus", short: "f", description: "Focus on specific component", type: "string" }
+        { name: "focus", short: "f", description: "Focus on specific component", type: "string" },
       ],
       action: async (ctx: CommandContext) => {
         // Original basic monitor implementation
@@ -1495,7 +1495,7 @@ Now, please proceed with the task: ${task}`;
             console.clear();
             const stats = await persist.getStats();
             success("Claude-Flow Live Monitor");
-            console.log(`🟢 Status: Running`);
+            console.log("🟢 Status: Running");
             console.log(`🤖 Agents: ${stats.activeAgents} active`);
             console.log(`📋 Tasks: ${stats.pendingTasks} pending`);
             console.log(`Last updated: ${new Date().toLocaleTimeString()}`);
@@ -1504,7 +1504,7 @@ Now, please proceed with the task: ${task}`;
         } catch (err) {
           error(`Failed to start monitor: ${(err as Error).message}`);
         }
-      }
+      },
     });
   }
 
@@ -1657,23 +1657,23 @@ Now, please proceed with the task: ${task}`;
         description: "Enable orchestration features",
         type: "boolean",
         default: true,
-      }
+      },
     ],
     action: async (ctx: CommandContext) => {
       try {
-        console.log(colors.cyan('🚀 Enhanced SPARC Development Mode'));
-        console.log('Features: TDD + Orchestration + Batch Operations + Memory Management');
+        console.log(colors.cyan("🚀 Enhanced SPARC Development Mode"));
+        console.log("Features: TDD + Orchestration + Batch Operations + Memory Management");
         
         if (ctx.flags.batch) {
-          console.log('✨ Batch operations enabled for efficient file handling');
+          console.log("✨ Batch operations enabled for efficient file handling");
         }
         
         if (ctx.flags.parallel) {
-          console.log('⚡ Parallel agent execution enabled');
+          console.log("⚡ Parallel agent execution enabled");
         }
         
         if (ctx.flags.orchestration) {
-          console.log('🎼 Orchestration features enabled');
+          console.log("🎼 Orchestration features enabled");
         }
         
         // Call the original SPARC action with enhanced features
@@ -1685,8 +1685,9 @@ Now, please proceed with the task: ${task}`;
   });
 
   // Migration command
-  const migrateCmd = createMigrateCommand();
-  cli.command(migrateCmd);
+  // TODO: Fix type mismatch between Commander command and cli-core Command
+  // const migrateCmd = createMigrateCommand();
+  // cli.command(migrateCmd);
 
   // Swarm UI command (convenience wrapper)
   cli.command({
@@ -1773,30 +1774,30 @@ Now, please proceed with the task: ${task}`;
   // Enhanced session command integration
   try {
     const enhancedSessionAction = async (ctx: CommandContext) => {
-      console.log(colors.cyan('💾 Enhanced Session Management'));
-      console.log('For full enhanced functionality, use: claude-flow session <command> [options]');
+      console.log(colors.cyan("💾 Enhanced Session Management"));
+      console.log("For full enhanced functionality, use: claude-flow session <command> [options]");
       console.log();
-      console.log('Available commands:');
-      console.log('  list          - List all saved sessions with status');
-      console.log('  save          - Save current session state');
-      console.log('  restore       - Restore a saved session');
-      console.log('  delete        - Delete a saved session');
-      console.log('  export        - Export session to file');
-      console.log('  import        - Import session from file');
-      console.log('  info          - Show detailed session information');
-      console.log('  clean         - Clean up old or orphaned sessions');
-      console.log('  backup        - Backup sessions to archive');
-      console.log('  restore-backup - Restore sessions from backup');
-      console.log('  validate      - Validate session integrity');
-      console.log('  monitor       - Monitor active sessions in real-time');
+      console.log("Available commands:");
+      console.log("  list          - List all saved sessions with status");
+      console.log("  save          - Save current session state");
+      console.log("  restore       - Restore a saved session");
+      console.log("  delete        - Delete a saved session");
+      console.log("  export        - Export session to file");
+      console.log("  import        - Import session from file");
+      console.log("  info          - Show detailed session information");
+      console.log("  clean         - Clean up old or orphaned sessions");
+      console.log("  backup        - Backup sessions to archive");
+      console.log("  restore-backup - Restore sessions from backup");
+      console.log("  validate      - Validate session integrity");
+      console.log("  monitor       - Monitor active sessions in real-time");
       console.log();
-      console.log('Enhanced features:');
-      console.log('  ✨ Comprehensive lifecycle management');
-      console.log('  ✨ Terminal session state preservation');
-      console.log('  ✨ Workflow and agent state tracking');
-      console.log('  ✨ Integrity validation and repair');
-      console.log('  ✨ Real-time session monitoring');
-      console.log('  ✨ Backup and restore capabilities');
+      console.log("Enhanced features:");
+      console.log("  ✨ Comprehensive lifecycle management");
+      console.log("  ✨ Terminal session state preservation");
+      console.log("  ✨ Workflow and agent state tracking");
+      console.log("  ✨ Integrity validation and repair");
+      console.log("  ✨ Real-time session monitoring");
+      console.log("  ✨ Backup and restore capabilities");
       
       const subcommand = ctx.args[0];
       if (subcommand) {
@@ -1808,47 +1809,47 @@ Now, please proceed with the task: ${task}`;
     cli.command({
       name: "session",
       description: "Enhanced session management with comprehensive lifecycle support",
-      action: enhancedSessionAction
+      action: enhancedSessionAction,
     });
   } catch (err) {
-    warning('Enhanced session command not available');
+    warning("Enhanced session command not available");
   }
 
   // Enhanced orchestration start command integration
   try {
     const enhancedStartAction = async (ctx: CommandContext) => {
-      console.log(colors.cyan('🧠 Enhanced Claude-Flow Orchestration System'));
-      console.log('Features: Service Management + Health Checks + Auto-Recovery + Process UI');
+      console.log(colors.cyan("🧠 Enhanced Claude-Flow Orchestration System"));
+      console.log("Features: Service Management + Health Checks + Auto-Recovery + Process UI");
       console.log();
       
       const options = {
         daemon: ctx.flags.daemon || ctx.flags.d,
         port: ctx.flags.port || ctx.flags.p || 3000,
-        mcpTransport: ctx.flags.mcpTransport || ctx.flags['mcp-transport'] || 'stdio',
+        mcpTransport: ctx.flags.mcpTransport || ctx.flags["mcp-transport"] || "stdio",
         ui: ctx.flags.ui || ctx.flags.u,
         verbose: ctx.flags.verbose || ctx.flags.v,
-        autoStart: ctx.flags.autoStart || ctx.flags['auto-start'],
+        autoStart: ctx.flags.autoStart || ctx.flags["auto-start"],
         config: ctx.flags.config,
         force: ctx.flags.force,
-        healthCheck: ctx.flags.healthCheck || ctx.flags['health-check'],
-        timeout: ctx.flags.timeout || 60
+        healthCheck: ctx.flags.healthCheck || ctx.flags["health-check"],
+        timeout: ctx.flags.timeout || 60,
       };
       
       if (options.ui) {
-        console.log('🎮 Launching interactive process management UI...');
+        console.log("🎮 Launching interactive process management UI...");
       }
       
       if (options.daemon) {
-        console.log('🔧 Starting in daemon mode with enhanced service management...');
+        console.log("🔧 Starting in daemon mode with enhanced service management...");
       }
       
       if (options.healthCheck) {
-        console.log('🏥 Performing pre-flight health checks...');
+        console.log("🏥 Performing pre-flight health checks...");
       }
       
       console.log();
-      console.log('For full enhanced functionality, use: claude-flow start [options]');
-      console.log('Available options: --daemon, --port, --mcp-transport, --ui, --verbose, --auto-start, --force, --health-check, --timeout');
+      console.log("For full enhanced functionality, use: claude-flow start [options]");
+      console.log("Available options: --daemon, --port, --mcp-transport, --ui, --verbose, --auto-start, --force, --health-check, --timeout");
       
       // Fallback to basic start functionality
       try {
@@ -1875,7 +1876,7 @@ Now, please proceed with the task: ${task}`;
           process.on("SIGTERM", shutdown);
           
           await new Promise<void>((resolve) => {
-            controller.signal.addEventListener('abort', () => resolve());
+            controller.signal.addEventListener("abort", () => resolve());
           });
         }
       } catch (err) {
@@ -1898,12 +1899,12 @@ Now, please proceed with the task: ${task}`;
         { name: "config", description: "Configuration file path", type: "string" },
         { name: "force", description: "Force start even if already running", type: "boolean" },
         { name: "health-check", description: "Perform health checks before starting", type: "boolean" },
-        { name: "timeout", description: "Startup timeout in seconds", type: "number", default: 60 }
+        { name: "timeout", description: "Startup timeout in seconds", type: "number", default: 60 },
       ],
-      action: enhancedStartAction
+      action: enhancedStartAction,
     });
   } catch (err) {
-    warning('Enhanced start command not available, using basic version');
+    warning("Enhanced start command not available, using basic version");
   }
 
   // Help command
@@ -2144,14 +2145,14 @@ Now, please proceed with the task: ${task}`;
   });
 
   // Add enhanced command documentation
-  console.log(colors.cyan('\n🚀 Enhanced Commands Loaded:'));
-  console.log('  ✓ start    - Enhanced orchestration with service management');
-  console.log('  ✓ status   - Comprehensive system status reporting');
-  console.log('  ✓ monitor  - Real-time monitoring with metrics and alerts');
-  console.log('  ✓ session  - Advanced session lifecycle management');
-  console.log('  ✓ sparc    - Enhanced TDD with orchestration features');
+  console.log(colors.cyan("\n🚀 Enhanced Commands Loaded:"));
+  console.log("  ✓ start    - Enhanced orchestration with service management");
+  console.log("  ✓ status   - Comprehensive system status reporting");
+  console.log("  ✓ monitor  - Real-time monitoring with metrics and alerts");
+  console.log("  ✓ session  - Advanced session lifecycle management");
+  console.log("  ✓ sparc    - Enhanced TDD with orchestration features");
   console.log();
-  console.log('For detailed help on enhanced commands: claude-flow help <command>');
+  console.log("For detailed help on enhanced commands: claude-flow help <command>");
 
   // Add enterprise commands
   for (const command of enterpriseCommands) {
@@ -2161,11 +2162,11 @@ Now, please proceed with the task: ${task}`;
 
 function getCapabilitiesForType(type: string): string[] {
   const capabilities: Record<string, string[]> = {
-    coordinator: ['task-assignment', 'planning', 'delegation'],
-    researcher: ['web-search', 'information-gathering', 'analysis'],
-    implementer: ['code-generation', 'file-manipulation', 'testing'],
-    analyst: ['data-analysis', 'pattern-recognition', 'reporting'],
-    custom: ['user-defined'],
+    coordinator: ["task-assignment", "planning", "delegation"],
+    researcher: ["web-search", "information-gathering", "analysis"],
+    implementer: ["code-generation", "file-manipulation", "testing"],
+    analyst: ["data-analysis", "pattern-recognition", "reporting"],
+    custom: ["user-defined"],
   };
 
   return capabilities[type] || capabilities.custom;
@@ -2173,11 +2174,11 @@ function getCapabilitiesForType(type: string): string[] {
 
 function getDefaultPromptForType(type: string): string {
   const prompts: Record<string, string> = {
-    coordinator: 'You are a coordination agent responsible for planning and delegating tasks.',
-    researcher: 'You are a research agent specialized in gathering and analyzing information.',
-    implementer: 'You are an implementation agent focused on writing code and creating solutions.',
-    analyst: 'You are an analysis agent that identifies patterns and generates insights.',
-    custom: 'You are a custom agent. Follow the user\'s instructions.',
+    coordinator: "You are a coordination agent responsible for planning and delegating tasks.",
+    researcher: "You are a research agent specialized in gathering and analyzing information.",
+    implementer: "You are an implementation agent focused on writing code and creating solutions.",
+    analyst: "You are an analysis agent that identifies patterns and generates insights.",
+    custom: "You are a custom agent. Follow the user's instructions.",
   };
 
   return prompts[type] || prompts.custom;

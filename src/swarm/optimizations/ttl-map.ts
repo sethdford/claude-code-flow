@@ -29,7 +29,7 @@ export class TTLMap<K, V> {
     hits: 0,
     misses: 0,
     evictions: 0,
-    expirations: 0
+    expirations: 0,
   };
   
   constructor(options: TTLMapOptions = {}) {
@@ -55,7 +55,7 @@ export class TTLMap<K, V> {
       expiry,
       createdAt: now,
       accessCount: 0,
-      lastAccessedAt: now
+      lastAccessedAt: now,
     });
   }
   
@@ -267,7 +267,7 @@ export class TTLMap<K, V> {
     return {
       ...this.stats,
       size: this.items.size,
-      hitRate: this.stats.hits / (this.stats.hits + this.stats.misses) || 0
+      hitRate: this.stats.hits / (this.stats.hits + this.stats.misses) || 0,
     };
   }
   
@@ -291,7 +291,7 @@ export class TTLMap<K, V> {
           ttl: item.expiry - now,
           age: now - item.createdAt,
           accessCount: item.accessCount,
-          lastAccessed: now - item.lastAccessedAt
+          lastAccessed: now - item.lastAccessedAt,
         });
       }
     }

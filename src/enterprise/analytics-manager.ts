@@ -1,15 +1,15 @@
-import { EventEmitter } from 'events';
-import { writeFile, readFile, mkdir, readdir } from 'fs/promises';
-import { join } from 'path';
-import { Logger } from '../core/logger.js';
-import { ConfigManager } from '../core/config.js';
+import { EventEmitter } from "events";
+import { writeFile, readFile, mkdir, readdir } from "fs/promises";
+import { join } from "path";
+import { Logger } from "../core/logger.js";
+import { ConfigManager } from "../core/config.js";
 
 export interface AnalyticsMetric {
   id: string;
   name: string;
   description: string;
-  type: 'counter' | 'gauge' | 'histogram' | 'summary';
-  category: 'performance' | 'usage' | 'business' | 'technical' | 'security' | 'cost';
+  type: "counter" | "gauge" | "histogram" | "summary";
+  category: "performance" | "usage" | "business" | "technical" | "security" | "cost";
   unit: string;
   value: number;
   tags: Record<string, string>;
@@ -22,7 +22,7 @@ export interface AnalyticsDashboard {
   id: string;
   name: string;
   description: string;
-  type: 'operational' | 'executive' | 'technical' | 'business' | 'security' | 'custom';
+  type: "operational" | "executive" | "technical" | "business" | "security" | "custom";
   widgets: DashboardWidget[];
   layout: DashboardLayout;
   permissions: {
@@ -34,8 +34,8 @@ export interface AnalyticsDashboard {
     autoRefresh: boolean;
     refreshInterval: number; // seconds
     exportSchedule?: {
-      frequency: 'daily' | 'weekly' | 'monthly';
-      format: 'pdf' | 'png' | 'csv' | 'json';
+      frequency: "daily" | "weekly" | "monthly";
+      format: "pdf" | "png" | "csv" | "json";
       recipients: string[];
     };
   };
@@ -48,18 +48,18 @@ export interface AnalyticsDashboard {
 export interface DashboardWidget {
   id: string;
   title: string;
-  type: 'chart' | 'table' | 'metric' | 'gauge' | 'map' | 'text' | 'alert';
-  size: 'small' | 'medium' | 'large' | 'full-width';
+  type: "chart" | "table" | "metric" | "gauge" | "map" | "text" | "alert";
+  size: "small" | "medium" | "large" | "full-width";
   position: { x: number; y: number; width: number; height: number };
   dataSource: {
     query: string;
     metrics: string[];
-    aggregation: 'sum' | 'avg' | 'min' | 'max' | 'count' | 'p95' | 'p99';
+    aggregation: "sum" | "avg" | "min" | "max" | "count" | "p95" | "p99";
     timeRange: string;
     groupBy: string[];
   };
   visualization: {
-    chartType?: 'line' | 'bar' | 'pie' | 'scatter' | 'heatmap' | 'area';
+    chartType?: "line" | "bar" | "pie" | "scatter" | "heatmap" | "area";
     options: Record<string, any>;
     thresholds?: {
       warning: number;
@@ -82,7 +82,7 @@ export interface DashboardLayout {
 export interface DashboardFilter {
   id: string;
   name: string;
-  type: 'dropdown' | 'multiselect' | 'daterange' | 'text' | 'number';
+  type: "dropdown" | "multiselect" | "daterange" | "text" | "number";
   field: string;
   values?: string[];
   defaultValue?: any;
@@ -91,21 +91,21 @@ export interface DashboardFilter {
 
 export interface AlertCondition {
   metric: string;
-  operator: '>' | '<' | '>=' | '<=' | '==' | '!=';
+  operator: ">" | "<" | ">=" | "<=" | "==" | "!=";
   threshold: number;
   duration: number; // seconds
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
 }
 
 export interface AnalyticsInsight {
   id: string;
   title: string;
   description: string;
-  type: 'anomaly' | 'trend' | 'correlation' | 'prediction' | 'recommendation';
-  category: 'performance' | 'usage' | 'cost' | 'security' | 'quality';
+  type: "anomaly" | "trend" | "correlation" | "prediction" | "recommendation";
+  category: "performance" | "usage" | "cost" | "security" | "quality";
   confidence: number; // 0-100
-  impact: 'low' | 'medium' | 'high';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  impact: "low" | "medium" | "high";
+  priority: "low" | "medium" | "high" | "critical";
   data: {
     metrics: string[];
     timeRange: { start: Date; end: Date };
@@ -115,11 +115,11 @@ export interface AnalyticsInsight {
   };
   recommendations: {
     action: string;
-    effort: 'low' | 'medium' | 'high';
+    effort: "low" | "medium" | "high";
     impact: string;
     implementation: string[];
   }[];
-  status: 'new' | 'acknowledged' | 'investigating' | 'resolved' | 'dismissed';
+  status: "new" | "acknowledged" | "investigating" | "resolved" | "dismissed";
   assignedTo?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -285,7 +285,7 @@ export interface PredictiveModel {
   id: string;
   name: string;
   description: string;
-  type: 'regression' | 'classification' | 'time-series' | 'anomaly-detection';
+  type: "regression" | "classification" | "time-series" | "anomaly-detection";
   algorithm: string;
   features: string[];
   target: string;
@@ -306,7 +306,7 @@ export interface PredictiveModel {
     mae?: number;
   };
   predictions: PredictionResult[];
-  status: 'training' | 'ready' | 'needs-retraining' | 'error';
+  status: "training" | "ready" | "needs-retraining" | "error";
 }
 
 export interface PredictionResult {
@@ -324,10 +324,10 @@ export interface AnalyticsReport {
   id: string;
   name: string;
   description: string;
-  type: 'performance' | 'usage' | 'business' | 'security' | 'compliance' | 'custom';
-  format: 'pdf' | 'html' | 'csv' | 'json' | 'xlsx';
+  type: "performance" | "usage" | "business" | "security" | "compliance" | "custom";
+  format: "pdf" | "html" | "csv" | "json" | "xlsx";
   schedule: {
-    frequency: 'manual' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'quarterly';
+    frequency: "manual" | "hourly" | "daily" | "weekly" | "monthly" | "quarterly";
     time?: string;
     timezone?: string;
     recipients: string[];
@@ -344,7 +344,7 @@ export interface AnalyticsReport {
 export interface ReportSection {
   id: string;
   title: string;
-  type: 'summary' | 'chart' | 'table' | 'text' | 'metrics';
+  type: "summary" | "chart" | "table" | "text" | "metrics";
   content: {
     query?: string;
     visualization?: any;
@@ -408,13 +408,13 @@ export class AnalyticsManager extends EventEmitter {
   private configuration: AnalyticsConfiguration;
 
   constructor(
-    analyticsPath: string = './analytics',
+    analyticsPath: string = "./analytics",
     logger?: Logger,
-    config?: ConfigManager
+    config?: ConfigManager,
   ) {
     super();
     this.analyticsPath = analyticsPath;
-    this.logger = logger || new Logger({ level: 'info', format: 'text', destination: 'console' });
+    this.logger = logger || new Logger({ level: "info", format: "text", destination: "console" });
     this.config = config || ConfigManager.getInstance();
     this.configuration = this.getDefaultConfiguration();
   }
@@ -422,28 +422,28 @@ export class AnalyticsManager extends EventEmitter {
   async initialize(): Promise<void> {
     try {
       await mkdir(this.analyticsPath, { recursive: true });
-      await mkdir(join(this.analyticsPath, 'metrics'), { recursive: true });
-      await mkdir(join(this.analyticsPath, 'dashboards'), { recursive: true });
-      await mkdir(join(this.analyticsPath, 'insights'), { recursive: true });
-      await mkdir(join(this.analyticsPath, 'models'), { recursive: true });
-      await mkdir(join(this.analyticsPath, 'reports'), { recursive: true });
+      await mkdir(join(this.analyticsPath, "metrics"), { recursive: true });
+      await mkdir(join(this.analyticsPath, "dashboards"), { recursive: true });
+      await mkdir(join(this.analyticsPath, "insights"), { recursive: true });
+      await mkdir(join(this.analyticsPath, "models"), { recursive: true });
+      await mkdir(join(this.analyticsPath, "reports"), { recursive: true });
       
       await this.loadConfigurations();
       await this.initializeDefaultDashboards();
       await this.startMetricsCollection();
       
-      this.logger.info('Analytics Manager initialized successfully');
+      this.logger.info("Analytics Manager initialized successfully");
     } catch (error) {
-      this.logger.error('Failed to initialize Analytics Manager', { error });
+      this.logger.error("Failed to initialize Analytics Manager", { error });
       throw error;
     }
   }
 
-  async recordMetric(metric: Omit<AnalyticsMetric, 'id' | 'timestamp'>): Promise<void> {
+  async recordMetric(metric: Omit<AnalyticsMetric, "id" | "timestamp">): Promise<void> {
     const fullMetric: AnalyticsMetric = {
       id: `metric-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
-      ...metric
+      ...metric,
     };
 
     const key = `${metric.category}-${metric.name}`;
@@ -463,7 +463,7 @@ export class AnalyticsManager extends EventEmitter {
     // Persist to disk for longer-term storage
     await this.persistMetric(fullMetric);
 
-    this.emit('metric:recorded', fullMetric);
+    this.emit("metric:recorded", fullMetric);
 
     // Check for anomalies and generate insights
     await this.checkForAnomalies(key, fullMetric);
@@ -472,16 +472,16 @@ export class AnalyticsManager extends EventEmitter {
   async queryMetrics(query: {
     metrics: string[];
     timeRange: { start: Date; end: Date };
-    aggregation?: 'sum' | 'avg' | 'min' | 'max' | 'count' | 'p95' | 'p99';
+    aggregation?: "sum" | "avg" | "min" | "max" | "count" | "p95" | "p99";
     groupBy?: string[];
     filters?: Record<string, any>;
   }): Promise<Record<string, any[]>> {
     const results: Record<string, any[]> = {};
 
     for (const metricName of query.metrics) {
-      const key = metricName.includes('-') ? metricName : `*-${metricName}`;
+      const key = metricName.includes("-") ? metricName : `*-${metricName}`;
       const matchingKeys = Array.from(this.metrics.keys()).filter(k => 
-        key === '*' || k.includes(key.replace('*-', '')) || k === key
+        key === "*" || k.includes(key.replace("*-", "")) || k === key,
       );
 
       let allMetrics: AnalyticsMetric[] = [];
@@ -493,16 +493,16 @@ export class AnalyticsManager extends EventEmitter {
       // Filter by time range
       allMetrics = allMetrics.filter(m => 
         m.timestamp >= query.timeRange.start && 
-        m.timestamp <= query.timeRange.end
+        m.timestamp <= query.timeRange.end,
       );
 
       // Apply filters
       if (query.filters) {
         for (const [field, value] of Object.entries(query.filters)) {
           allMetrics = allMetrics.filter(m => {
-            if (field === 'tags') {
+            if (field === "tags") {
               return Object.entries(value as Record<string, string>).every(([k, v]) => 
-                m.tags[k] === v
+                m.tags[k] === v,
               );
             }
             return (m as any)[field] === value;
@@ -514,11 +514,11 @@ export class AnalyticsManager extends EventEmitter {
       if (query.groupBy && query.groupBy.length > 0) {
         const grouped = this.groupMetrics(allMetrics, query.groupBy);
         for (const [group, metrics] of Object.entries(grouped)) {
-          const aggregated = this.aggregateMetrics(metrics, query.aggregation || 'avg');
+          const aggregated = this.aggregateMetrics(metrics, query.aggregation || "avg");
           results[`${metricName}-${group}`] = aggregated;
         }
       } else {
-        const aggregated = this.aggregateMetrics(allMetrics, query.aggregation || 'avg');
+        const aggregated = this.aggregateMetrics(allMetrics, query.aggregation || "avg");
         results[metricName] = aggregated;
       }
     }
@@ -529,9 +529,9 @@ export class AnalyticsManager extends EventEmitter {
   async createDashboard(dashboardData: {
     name: string;
     description: string;
-    type: AnalyticsDashboard['type'];
-    widgets: Omit<DashboardWidget, 'id'>[];
-    permissions?: Partial<AnalyticsDashboard['permissions']>;
+    type: AnalyticsDashboard["type"];
+    widgets: Omit<DashboardWidget, "id">[];
+    permissions?: Partial<AnalyticsDashboard["permissions"]>;
   }): Promise<AnalyticsDashboard> {
     const dashboard: AnalyticsDashboard = {
       id: `dashboard-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -540,34 +540,34 @@ export class AnalyticsManager extends EventEmitter {
       type: dashboardData.type,
       widgets: dashboardData.widgets.map((widget, index) => ({
         id: `widget-${Date.now()}-${index}`,
-        ...widget
+        ...widget,
       })),
       layout: {
         columns: 12,
         rows: 8,
         grid: true,
-        responsive: true
+        responsive: true,
       },
       permissions: {
         viewers: [],
         editors: [],
         public: false,
-        ...dashboardData.permissions
+        ...dashboardData.permissions,
       },
       schedule: {
         autoRefresh: true,
-        refreshInterval: 30
+        refreshInterval: 30,
       },
       filters: [],
       createdAt: new Date(),
       updatedAt: new Date(),
-      createdBy: 'system'
+      createdBy: "system",
     };
 
     this.dashboards.set(dashboard.id, dashboard);
     await this.saveDashboard(dashboard);
 
-    this.emit('dashboard:created', dashboard);
+    this.emit("dashboard:created", dashboard);
     this.logger.info(`Dashboard created: ${dashboard.name} (${dashboard.id})`);
 
     return dashboard;
@@ -578,14 +578,14 @@ export class AnalyticsManager extends EventEmitter {
       metrics?: string[];
       timeRange?: { start: Date; end: Date };
       categories?: string[];
-    } = {}
+    } = {},
   ): Promise<AnalyticsInsight[]> {
     const insights: AnalyticsInsight[] = [];
 
     // Default time range: last 24 hours
     const timeRange = scope.timeRange || {
       start: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      end: new Date()
+      end: new Date(),
     };
 
     // Anomaly detection
@@ -614,7 +614,7 @@ export class AnalyticsManager extends EventEmitter {
       await this.saveInsight(insight);
     }
 
-    this.emit('insights:generated', { insights, scope });
+    this.emit("insights:generated", { insights, scope });
     this.logger.info(`Generated ${insights.length} insights`);
 
     return insights;
@@ -623,7 +623,7 @@ export class AnalyticsManager extends EventEmitter {
   async trainPredictiveModel(modelConfig: {
     name: string;
     description: string;
-    type: PredictiveModel['type'];
+    type: PredictiveModel["type"];
     algorithm: string;
     features: string[];
     target: string;
@@ -643,15 +643,15 @@ export class AnalyticsManager extends EventEmitter {
       trainingData: {
         samples: 0,
         features: modelConfig.features.length,
-        timeRange: modelConfig.trainingPeriod
+        timeRange: modelConfig.trainingPeriod,
       },
       performance: {
         precision: 0,
         recall: 0,
-        f1Score: 0
+        f1Score: 0,
       },
       predictions: [],
-      status: 'training'
+      status: "training",
     };
 
     try {
@@ -662,16 +662,16 @@ export class AnalyticsManager extends EventEmitter {
       const trained = await this.executeModelTraining(model, trainingData);
       
       Object.assign(model, trained);
-      model.status = 'ready';
+      model.status = "ready";
 
       this.models.set(model.id, model);
       await this.saveModel(model);
 
-      this.emit('model:trained', model);
+      this.emit("model:trained", model);
       this.logger.info(`Predictive model trained: ${model.name} (${model.id}) - Accuracy: ${model.accuracy}%`);
 
     } catch (error) {
-      model.status = 'error';
+      model.status = "error";
       this.logger.error(`Model training failed: ${model.name}`, { error });
       throw error;
     }
@@ -681,14 +681,14 @@ export class AnalyticsManager extends EventEmitter {
 
   async makePrediction(
     modelId: string,
-    input: Record<string, any>
+    input: Record<string, any>,
   ): Promise<PredictionResult> {
     const model = this.models.get(modelId);
     if (!model) {
       throw new Error(`Model not found: ${modelId}`);
     }
 
-    if (model.status !== 'ready') {
+    if (model.status !== "ready") {
       throw new Error(`Model is not ready for predictions: ${model.status}`);
     }
 
@@ -701,7 +701,7 @@ export class AnalyticsManager extends EventEmitter {
       input,
       prediction: prediction.value,
       confidence: prediction.confidence,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     model.predictions.push(result);
@@ -709,182 +709,182 @@ export class AnalyticsManager extends EventEmitter {
 
     await this.saveModel(model);
 
-    this.emit('prediction:made', { model, result });
+    this.emit("prediction:made", { model, result });
     this.logger.debug(`Prediction made: ${modelId} - ${JSON.stringify(result.prediction)}`);
 
     return result;
   }
 
   async getPerformanceMetrics(
-    timeRange?: { start: Date; end: Date }
+    timeRange?: { start: Date; end: Date },
   ): Promise<PerformanceMetrics> {
     const range = timeRange || {
       start: new Date(Date.now() - 60 * 60 * 1000), // Last hour
-      end: new Date()
+      end: new Date(),
     };
 
     const systemMetrics = await this.queryMetrics({
-      metrics: ['cpu-usage', 'memory-usage', 'disk-usage', 'network-io'],
+      metrics: ["cpu-usage", "memory-usage", "disk-usage", "network-io"],
       timeRange: range,
-      aggregation: 'avg'
+      aggregation: "avg",
     });
 
     const appMetrics = await this.queryMetrics({
-      metrics: ['response-time', 'request-rate', 'error-rate', 'uptime'],
+      metrics: ["response-time", "request-rate", "error-rate", "uptime"],
       timeRange: range,
-      aggregation: 'avg'
+      aggregation: "avg",
     });
 
     const dbMetrics = await this.queryMetrics({
-      metrics: ['db-connections', 'query-time', 'db-size'],
+      metrics: ["db-connections", "query-time", "db-size"],
       timeRange: range,
-      aggregation: 'avg'
+      aggregation: "avg",
     });
 
     // Construct performance metrics (simplified)
     return {
       system: {
         cpu: {
-          usage: this.getLatestValue(systemMetrics['cpu-usage']) || 0,
+          usage: this.getLatestValue(systemMetrics["cpu-usage"]) || 0,
           cores: 8, // Would be detected from system
-          loadAverage: [1.2, 1.5, 1.8] // Would be collected from system
+          loadAverage: [1.2, 1.5, 1.8], // Would be collected from system
         },
         memory: {
-          used: this.getLatestValue(systemMetrics['memory-usage']) || 0,
+          used: this.getLatestValue(systemMetrics["memory-usage"]) || 0,
           free: 4000000000, // Would be calculated
           total: 8000000000,
-          usage: 50
+          usage: 50,
         },
         disk: {
-          used: this.getLatestValue(systemMetrics['disk-usage']) || 0,
+          used: this.getLatestValue(systemMetrics["disk-usage"]) || 0,
           free: 100000000000,
           total: 500000000000,
           usage: 20,
-          iops: 1000
+          iops: 1000,
         },
         network: {
           bytesIn: 1000000,
           bytesOut: 2000000,
           packetsIn: 5000,
           packetsOut: 6000,
-          errors: 5
-        }
+          errors: 5,
+        },
       },
       application: {
         responseTime: {
-          avg: this.getLatestValue(appMetrics['response-time']) || 0,
+          avg: this.getLatestValue(appMetrics["response-time"]) || 0,
           p50: 150,
           p95: 500,
-          p99: 1000
+          p99: 1000,
         },
         throughput: {
-          requestsPerSecond: this.getLatestValue(appMetrics['request-rate']) || 0,
-          transactionsPerSecond: 50
+          requestsPerSecond: this.getLatestValue(appMetrics["request-rate"]) || 0,
+          transactionsPerSecond: 50,
         },
         errors: {
-          rate: this.getLatestValue(appMetrics['error-rate']) || 0,
+          rate: this.getLatestValue(appMetrics["error-rate"]) || 0,
           count: 10,
-          types: { '500': 5, '404': 3, '400': 2 }
+          types: { "500": 5, "404": 3, "400": 2 },
         },
         availability: {
-          uptime: this.getLatestValue(appMetrics['uptime']) || 0,
+          uptime: this.getLatestValue(appMetrics["uptime"]) || 0,
           sla: 99.9,
-          incidents: 2
-        }
+          incidents: 2,
+        },
       },
       database: {
         connections: {
           active: 25,
           idle: 75,
-          max: 100
+          max: 100,
         },
         queries: {
-          avgExecutionTime: this.getLatestValue(dbMetrics['query-time']) || 0,
+          avgExecutionTime: this.getLatestValue(dbMetrics["query-time"]) || 0,
           slowQueries: 5,
-          deadlocks: 0
+          deadlocks: 0,
         },
         storage: {
-          size: this.getLatestValue(dbMetrics['db-size']) || 0,
+          size: this.getLatestValue(dbMetrics["db-size"]) || 0,
           growth: 1000000, // bytes per day
-          fragmentation: 5
-        }
+          fragmentation: 5,
+        },
       },
       infrastructure: {
         containers: {
           running: 12,
           stopped: 2,
-          restarts: 3
+          restarts: 3,
         },
         services: {
           healthy: 15,
           unhealthy: 1,
-          degraded: 0
-        }
-      }
+          degraded: 0,
+        },
+      },
     };
   }
 
   async getUsageMetrics(
-    timeRange?: { start: Date; end: Date }
+    timeRange?: { start: Date; end: Date },
   ): Promise<UsageMetrics> {
     const range = timeRange || {
       start: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-      end: new Date()
+      end: new Date(),
     };
 
     const usageData = await this.queryMetrics({
-      metrics: ['active-users', 'sessions', 'api-calls', 'feature-usage'],
+      metrics: ["active-users", "sessions", "api-calls", "feature-usage"],
       timeRange: range,
-      aggregation: 'sum'
+      aggregation: "sum",
     });
 
     return {
       users: {
         total: 10000,
-        active: this.getLatestValue(usageData['active-users']) || 0,
+        active: this.getLatestValue(usageData["active-users"]) || 0,
         new: 50,
         returning: 1500,
-        churn: 25
+        churn: 25,
       },
       sessions: {
-        total: this.getLatestValue(usageData['sessions']) || 0,
+        total: this.getLatestValue(usageData["sessions"]) || 0,
         duration: {
           avg: 15 * 60, // 15 minutes
-          median: 12 * 60
+          median: 12 * 60,
         },
         bounceRate: 25,
-        pagesPerSession: 4.5
+        pagesPerSession: 4.5,
       },
       features: {
         adoption: {
-          'dashboard': { users: 800, usage: 5000, retention: 85 },
-          'reports': { users: 600, usage: 2000, retention: 70 },
-          'analytics': { users: 400, usage: 1500, retention: 60 }
+          "dashboard": { users: 800, usage: 5000, retention: 85 },
+          "reports": { users: 600, usage: 2000, retention: 70 },
+          "analytics": { users: 400, usage: 1500, retention: 60 },
         },
-        mostUsed: ['dashboard', 'reports', 'search'],
-        leastUsed: ['advanced-filters', 'export', 'integrations']
+        mostUsed: ["dashboard", "reports", "search"],
+        leastUsed: ["advanced-filters", "export", "integrations"],
       },
       api: {
-        calls: this.getLatestValue(usageData['api-calls']) || 0,
+        calls: this.getLatestValue(usageData["api-calls"]) || 0,
         uniqueConsumers: 150,
         avgResponseTime: 250,
         errorRate: 2.5,
         rateLimits: {
           hit: 5,
-          consumed: 75
-        }
+          consumed: 75,
+        },
       },
       content: {
         created: 100,
         modified: 250,
         deleted: 25,
-        views: 5000
-      }
+        views: 5000,
+      },
     };
   }
 
   async getBusinessMetrics(
-    timeRange?: { start: Date; end: Date }
+    timeRange?: { start: Date; end: Date },
   ): Promise<BusinessMetrics> {
     // This would integrate with business systems (CRM, billing, etc.)
     return {
@@ -893,28 +893,28 @@ export class AnalyticsManager extends EventEmitter {
         recurring: 800000,
         growth: 15,
         arpu: 100,
-        ltv: 2400
+        ltv: 2400,
       },
       customers: {
         total: 500,
         new: 25,
         retained: 450,
         churned: 10,
-        satisfaction: 4.2
+        satisfaction: 4.2,
       },
       conversion: {
         leads: 1000,
         qualified: 400,
         opportunities: 200,
         closed: 50,
-        rate: 5
+        rate: 5,
       },
       support: {
         tickets: 150,
         resolved: 140,
         avgResolutionTime: 4 * 60 * 60, // 4 hours
-        satisfaction: 4.5
-      }
+        satisfaction: 4.5,
+      },
     };
   }
 
@@ -925,160 +925,160 @@ export class AnalyticsManager extends EventEmitter {
         enabled: true,
         samplingRate: 1.0,
         batchSize: 1000,
-        flushInterval: 60000
+        flushInterval: 60000,
       },
       storage: {
         retention: {
-          raw: '7d',
-          aggregated: '90d',
-          summary: '1y'
+          raw: "7d",
+          aggregated: "90d",
+          summary: "1y",
         },
         compression: true,
-        encryption: false
+        encryption: false,
       },
       processing: {
         realTime: true,
         batchProcessing: true,
-        aggregationIntervals: ['1m', '5m', '1h', '1d']
+        aggregationIntervals: ["1m", "5m", "1h", "1d"],
       },
       alerts: {
         enabled: true,
-        channels: ['email', 'slack'],
+        channels: ["email", "slack"],
         escalation: {
           levels: 3,
-          intervals: [5, 15, 30] // minutes
-        }
+          intervals: [5, 15, 30], // minutes
+        },
       },
       privacy: {
         anonymization: true,
         gdprCompliant: true,
-        dataMinimization: true
+        dataMinimization: true,
       },
-      integrations: {}
+      integrations: {},
     };
   }
 
   private async loadConfigurations(): Promise<void> {
     try {
       // Load dashboards
-      const dashboardFiles = await readdir(join(this.analyticsPath, 'dashboards'));
-      for (const file of dashboardFiles.filter(f => f.endsWith('.json'))) {
-        const content = await readFile(join(this.analyticsPath, 'dashboards', file), 'utf-8');
+      const dashboardFiles = await readdir(join(this.analyticsPath, "dashboards"));
+      for (const file of dashboardFiles.filter(f => f.endsWith(".json"))) {
+        const content = await readFile(join(this.analyticsPath, "dashboards", file), "utf-8");
         const dashboard: AnalyticsDashboard = JSON.parse(content);
         this.dashboards.set(dashboard.id, dashboard);
       }
 
       // Load insights
-      const insightFiles = await readdir(join(this.analyticsPath, 'insights'));
-      for (const file of insightFiles.filter(f => f.endsWith('.json'))) {
-        const content = await readFile(join(this.analyticsPath, 'insights', file), 'utf-8');
+      const insightFiles = await readdir(join(this.analyticsPath, "insights"));
+      for (const file of insightFiles.filter(f => f.endsWith(".json"))) {
+        const content = await readFile(join(this.analyticsPath, "insights", file), "utf-8");
         const insight: AnalyticsInsight = JSON.parse(content);
         this.insights.set(insight.id, insight);
       }
 
       // Load models
-      const modelFiles = await readdir(join(this.analyticsPath, 'models'));
-      for (const file of modelFiles.filter(f => f.endsWith('.json'))) {
-        const content = await readFile(join(this.analyticsPath, 'models', file), 'utf-8');
+      const modelFiles = await readdir(join(this.analyticsPath, "models"));
+      for (const file of modelFiles.filter(f => f.endsWith(".json"))) {
+        const content = await readFile(join(this.analyticsPath, "models", file), "utf-8");
         const model: PredictiveModel = JSON.parse(content);
         this.models.set(model.id, model);
       }
 
       this.logger.info(`Loaded ${this.dashboards.size} dashboards, ${this.insights.size} insights, ${this.models.size} models`);
     } catch (error) {
-      this.logger.warn('Failed to load some analytics configurations', { error });
+      this.logger.warn("Failed to load some analytics configurations", { error });
     }
   }
 
   private async initializeDefaultDashboards(): Promise<void> {
     const defaultDashboards = [
       {
-        name: 'System Performance',
-        description: 'Real-time system performance metrics',
-        type: 'operational' as const,
+        name: "System Performance",
+        description: "Real-time system performance metrics",
+        type: "operational" as const,
         widgets: [
           {
-            title: 'CPU Usage',
-            type: 'gauge' as const,
-            size: 'medium' as const,
+            title: "CPU Usage",
+            type: "gauge" as const,
+            size: "medium" as const,
             position: { x: 0, y: 0, width: 6, height: 3 },
             dataSource: {
-              query: 'cpu-usage',
-              metrics: ['cpu-usage'],
-              aggregation: 'avg' as const,
-              timeRange: '1h',
-              groupBy: []
+              query: "cpu-usage",
+              metrics: ["cpu-usage"],
+              aggregation: "avg" as const,
+              timeRange: "1h",
+              groupBy: [],
             },
             visualization: {
-              chartType: 'gauge' as const,
-              options: { max: 100, unit: '%' },
-              thresholds: { warning: 70, critical: 90 }
+              chartType: "pie" as const,
+              options: { max: 100, unit: "%" },
+              thresholds: { warning: 70, critical: 90 },
             },
-            alerts: { enabled: true, conditions: [] }
+            alerts: { enabled: true, conditions: [] },
           },
           {
-            title: 'Memory Usage',
-            type: 'gauge' as const,
-            size: 'medium' as const,
+            title: "Memory Usage",
+            type: "gauge" as const,
+            size: "medium" as const,
             position: { x: 6, y: 0, width: 6, height: 3 },
             dataSource: {
-              query: 'memory-usage',
-              metrics: ['memory-usage'],
-              aggregation: 'avg' as const,
-              timeRange: '1h',
-              groupBy: []
+              query: "memory-usage",
+              metrics: ["memory-usage"],
+              aggregation: "avg" as const,
+              timeRange: "1h",
+              groupBy: [],
             },
             visualization: {
-              chartType: 'gauge' as const,
-              options: { max: 100, unit: '%' },
-              thresholds: { warning: 80, critical: 95 }
+              chartType: "pie" as const,
+              options: { max: 100, unit: "%" },
+              thresholds: { warning: 80, critical: 95 },
             },
-            alerts: { enabled: true, conditions: [] }
+            alerts: { enabled: true, conditions: [] },
           },
           {
-            title: 'Response Time',
-            type: 'chart' as const,
-            size: 'large' as const,
+            title: "Response Time",
+            type: "chart" as const,
+            size: "large" as const,
             position: { x: 0, y: 3, width: 12, height: 4 },
             dataSource: {
-              query: 'response-time',
-              metrics: ['response-time'],
-              aggregation: 'avg' as const,
-              timeRange: '24h',
-              groupBy: ['service']
+              query: "response-time",
+              metrics: ["response-time"],
+              aggregation: "avg" as const,
+              timeRange: "24h",
+              groupBy: ["service"],
             },
             visualization: {
-              chartType: 'line' as const,
-              options: { unit: 'ms' }
+              chartType: "line" as const,
+              options: { unit: "ms" },
             },
-            alerts: { enabled: false, conditions: [] }
-          }
-        ]
+            alerts: { enabled: false, conditions: [] },
+          },
+        ],
       },
       {
-        name: 'Business KPIs',
-        description: 'Key business performance indicators',
-        type: 'executive' as const,
+        name: "Business KPIs",
+        description: "Key business performance indicators",
+        type: "executive" as const,
         widgets: [
           {
-            title: 'Active Users',
-            type: 'metric' as const,
-            size: 'small' as const,
+            title: "Active Users",
+            type: "metric" as const,
+            size: "small" as const,
             position: { x: 0, y: 0, width: 3, height: 2 },
             dataSource: {
-              query: 'active-users',
-              metrics: ['active-users'],
-              aggregation: 'count' as const,
-              timeRange: '24h',
-              groupBy: []
+              query: "active-users",
+              metrics: ["active-users"],
+              aggregation: "count" as const,
+              timeRange: "24h",
+              groupBy: [],
             },
             visualization: {
-              options: { unit: 'users' }
+              options: { unit: "users" },
             },
-            alerts: { enabled: false, conditions: [] }
-          }
-        ]
-      }
+            alerts: { enabled: false, conditions: [] },
+          },
+        ],
+      },
     ];
 
     for (const dashboardData of defaultDashboards) {
@@ -1099,49 +1099,49 @@ export class AnalyticsManager extends EventEmitter {
       await this.collectApplicationMetrics();
     }, 30000); // Every 30 seconds
 
-    this.logger.info('Started automatic metrics collection');
+    this.logger.info("Started automatic metrics collection");
   }
 
   private async collectSystemMetrics(): Promise<void> {
     try {
       // Mock system metrics collection
       await this.recordMetric({
-        name: 'cpu-usage',
-        description: 'CPU usage percentage',
-        type: 'gauge',
-        category: 'performance',
-        unit: 'percent',
+        name: "cpu-usage",
+        description: "CPU usage percentage",
+        type: "gauge",
+        category: "performance",
+        unit: "percent",
         value: Math.random() * 100,
-        tags: { host: 'localhost', service: 'system' },
-        source: 'system-monitor',
-        metadata: {}
+        tags: { host: "localhost", service: "system" },
+        source: "system-monitor",
+        metadata: {},
       });
 
       await this.recordMetric({
-        name: 'memory-usage',
-        description: 'Memory usage percentage',
-        type: 'gauge',
-        category: 'performance',
-        unit: 'percent',
+        name: "memory-usage",
+        description: "Memory usage percentage",
+        type: "gauge",
+        category: "performance",
+        unit: "percent",
         value: Math.random() * 100,
-        tags: { host: 'localhost', service: 'system' },
-        source: 'system-monitor',
-        metadata: {}
+        tags: { host: "localhost", service: "system" },
+        source: "system-monitor",
+        metadata: {},
       });
 
       await this.recordMetric({
-        name: 'disk-usage',
-        description: 'Disk usage percentage',
-        type: 'gauge',
-        category: 'performance',
-        unit: 'percent',
+        name: "disk-usage",
+        description: "Disk usage percentage",
+        type: "gauge",
+        category: "performance",
+        unit: "percent",
         value: Math.random() * 100,
-        tags: { host: 'localhost', service: 'system' },
-        source: 'system-monitor',
-        metadata: {}
+        tags: { host: "localhost", service: "system" },
+        source: "system-monitor",
+        metadata: {},
       });
     } catch (error) {
-      this.logger.error('Failed to collect system metrics', { error });
+      this.logger.error("Failed to collect system metrics", { error });
     }
   }
 
@@ -1149,53 +1149,53 @@ export class AnalyticsManager extends EventEmitter {
     try {
       // Mock application metrics collection
       await this.recordMetric({
-        name: 'response-time',
-        description: 'Average response time',
-        type: 'gauge',
-        category: 'performance',
-        unit: 'milliseconds',
+        name: "response-time",
+        description: "Average response time",
+        type: "gauge",
+        category: "performance",
+        unit: "milliseconds",
         value: Math.random() * 1000 + 100,
-        tags: { service: 'api', endpoint: '/users' },
-        source: 'application',
-        metadata: {}
+        tags: { service: "api", endpoint: "/users" },
+        source: "application",
+        metadata: {},
       });
 
       await this.recordMetric({
-        name: 'request-rate',
-        description: 'Requests per second',
-        type: 'counter',
-        category: 'usage',
-        unit: 'requests/sec',
+        name: "request-rate",
+        description: "Requests per second",
+        type: "counter",
+        category: "usage",
+        unit: "requests/sec",
         value: Math.random() * 100 + 10,
-        tags: { service: 'api' },
-        source: 'application',
-        metadata: {}
+        tags: { service: "api" },
+        source: "application",
+        metadata: {},
       });
 
       await this.recordMetric({
-        name: 'error-rate',
-        description: 'Error rate percentage',
-        type: 'gauge',
-        category: 'performance',
-        unit: 'percent',
+        name: "error-rate",
+        description: "Error rate percentage",
+        type: "gauge",
+        category: "performance",
+        unit: "percent",
         value: Math.random() * 5,
-        tags: { service: 'api' },
-        source: 'application',
-        metadata: {}
+        tags: { service: "api" },
+        source: "application",
+        metadata: {},
       });
     } catch (error) {
-      this.logger.error('Failed to collect application metrics', { error });
+      this.logger.error("Failed to collect application metrics", { error });
     }
   }
 
   private async persistMetric(metric: AnalyticsMetric): Promise<void> {
-    const date = metric.timestamp.toISOString().split('T')[0];
-    const filePath = join(this.analyticsPath, 'metrics', `${date}.json`);
+    const date = metric.timestamp.toISOString().split("T")[0];
+    const filePath = join(this.analyticsPath, "metrics", `${date}.json`);
     
     try {
       let existingData: AnalyticsMetric[] = [];
       try {
-        const content = await readFile(filePath, 'utf-8');
+        const content = await readFile(filePath, "utf-8");
         existingData = JSON.parse(content);
       } catch {
         // File doesn't exist yet
@@ -1204,7 +1204,7 @@ export class AnalyticsManager extends EventEmitter {
       existingData.push(metric);
       await writeFile(filePath, JSON.stringify(existingData, null, 2));
     } catch (error) {
-      this.logger.error('Failed to persist metric', { error, metric: metric.id });
+      this.logger.error("Failed to persist metric", { error, metric: metric.id });
     }
   }
 
@@ -1215,7 +1215,7 @@ export class AnalyticsManager extends EventEmitter {
     const recent = historical.slice(-10);
     const average = recent.reduce((sum, m) => sum + m.value, 0) / recent.length;
     const stdDev = Math.sqrt(
-      recent.reduce((sum, m) => sum + Math.pow(m.value - average, 2), 0) / recent.length
+      recent.reduce((sum, m) => sum + Math.pow(m.value - average, 2), 0) / recent.length,
     );
 
     const threshold = 2; // 2 standard deviations
@@ -1226,50 +1226,50 @@ export class AnalyticsManager extends EventEmitter {
         id: `insight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         title: `Anomaly detected in ${metric.name}`,
         description: `The metric ${metric.name} has deviated significantly from its normal pattern`,
-        type: 'anomaly',
-        category: metric.category,
+        type: "anomaly",
+        category: metric.category === "business" || metric.category === "technical" ? "performance" : metric.category,
         confidence: Math.min(95, deviation * 20),
-        impact: deviation > 3 ? 'high' : 'medium',
-        priority: deviation > 3 ? 'high' : 'medium',
+        impact: deviation > 3 ? "high" : "medium",
+        priority: deviation > 3 ? "high" : "medium",
         data: {
           metrics: [metric.name],
           timeRange: { start: recent[0].timestamp, end: metric.timestamp },
           values: { current: metric.value, average, stdDev },
           baseline: { average, stdDev },
-          deviation
+          deviation,
         },
         recommendations: [
           {
-            action: 'Investigate the cause of the anomaly',
-            effort: 'medium',
-            impact: 'Identify potential issues before they become critical',
+            action: "Investigate the cause of the anomaly",
+            effort: "medium",
+            impact: "Identify potential issues before they become critical",
             implementation: [
-              'Check recent deployments or configuration changes',
-              'Review system logs for errors or warnings',
-              'Monitor related metrics for correlation'
-            ]
-          }
+              "Check recent deployments or configuration changes",
+              "Review system logs for errors or warnings",
+              "Monitor related metrics for correlation",
+            ],
+          },
         ],
-        status: 'new',
+        status: "new",
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       this.insights.set(insight.id, insight);
       await this.saveInsight(insight);
 
-      this.emit('anomaly:detected', { metric, insight, deviation });
+      this.emit("anomaly:detected", { metric, insight, deviation });
       this.logger.warn(`Anomaly detected in ${metric.name}`, { 
         current: metric.value, 
         average, 
-        deviation 
+        deviation, 
       });
     }
   }
 
   private async detectAnomalies(
     timeRange: { start: Date; end: Date },
-    metrics?: string[]
+    metrics?: string[],
   ): Promise<AnalyticsInsight[]> {
     // Simplified anomaly detection
     return [];
@@ -1277,26 +1277,26 @@ export class AnalyticsManager extends EventEmitter {
 
   private async analyzeTrends(
     timeRange: { start: Date; end: Date },
-    metrics?: string[]
+    metrics?: string[],
   ): Promise<AnalyticsInsight[]> {
     // Simplified trend analysis
     return [];
   }
 
   private async analyzePerformance(
-    timeRange: { start: Date; end: Date }
+    timeRange: { start: Date; end: Date },
   ): Promise<AnalyticsInsight[]> {
     const insights: AnalyticsInsight[] = [];
 
     // Check response time trends
     const responseTimeData = await this.queryMetrics({
-      metrics: ['response-time'],
+      metrics: ["response-time"],
       timeRange,
-      aggregation: 'avg'
+      aggregation: "avg",
     });
 
-    if (responseTimeData['response-time']?.length > 0) {
-      const values = responseTimeData['response-time'].map((d: any) => d.value);
+    if (responseTimeData["response-time"]?.length > 0) {
+      const values = responseTimeData["response-time"].map((d: any) => d.value);
       const recent = values.slice(-5);
       const earlier = values.slice(0, -5);
 
@@ -1308,45 +1308,45 @@ export class AnalyticsManager extends EventEmitter {
         if (Math.abs(change) > 20) {
           insights.push({
             id: `perf-insight-${Date.now()}`,
-            title: `Response time ${change > 0 ? 'increased' : 'decreased'} by ${Math.abs(change).toFixed(1)}%`,
-            description: `Response time has changed significantly in the recent period`,
-            type: 'trend',
-            category: 'performance',
+            title: `Response time ${change > 0 ? "increased" : "decreased"} by ${Math.abs(change).toFixed(1)}%`,
+            description: "Response time has changed significantly in the recent period",
+            type: "trend",
+            category: "performance",
             confidence: 80,
-            impact: Math.abs(change) > 50 ? 'high' : 'medium',
-            priority: Math.abs(change) > 50 ? 'high' : 'medium',
+            impact: Math.abs(change) > 50 ? "high" : "medium",
+            priority: Math.abs(change) > 50 ? "high" : "medium",
             data: {
-              metrics: ['response-time'],
+              metrics: ["response-time"],
               timeRange,
               values: { recent: recentAvg, earlier: earlierAvg, change },
             },
             recommendations: change > 0 ? [
               {
-                action: 'Investigate performance degradation',
-                effort: 'medium',
-                impact: 'Restore optimal response times',
+                action: "Investigate performance degradation",
+                effort: "medium",
+                impact: "Restore optimal response times",
                 implementation: [
-                  'Check for increased load or traffic',
-                  'Review recent code deployments',
-                  'Analyze database query performance',
-                  'Monitor resource utilization'
-                ]
-              }
+                  "Check for increased load or traffic",
+                  "Review recent code deployments",
+                  "Analyze database query performance",
+                  "Monitor resource utilization",
+                ],
+              },
             ] : [
               {
-                action: 'Document performance improvement',
-                effort: 'low',
-                impact: 'Understand what caused the improvement',
+                action: "Document performance improvement",
+                effort: "low",
+                impact: "Understand what caused the improvement",
                 implementation: [
-                  'Identify recent optimizations',
-                  'Document best practices',
-                  'Monitor sustainability'
-                ]
-              }
+                  "Identify recent optimizations",
+                  "Document best practices",
+                  "Monitor sustainability",
+                ],
+              },
             ],
-            status: 'new',
+            status: "new",
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           });
         }
       }
@@ -1356,14 +1356,14 @@ export class AnalyticsManager extends EventEmitter {
   }
 
   private async analyzeUsage(
-    timeRange: { start: Date; end: Date }
+    timeRange: { start: Date; end: Date },
   ): Promise<AnalyticsInsight[]> {
     // Simplified usage analysis
     return [];
   }
 
   private async analyzeCostOptimization(
-    timeRange: { start: Date; end: Date }
+    timeRange: { start: Date; end: Date },
   ): Promise<AnalyticsInsight[]> {
     // Simplified cost optimization analysis
     return [];
@@ -1374,7 +1374,7 @@ export class AnalyticsManager extends EventEmitter {
     const data = await this.queryMetrics({
       metrics: model.features,
       timeRange: model.trainingData.timeRange,
-      aggregation: 'avg'
+      aggregation: "avg",
     });
 
     // Transform data for ML training (simplified)
@@ -1389,12 +1389,12 @@ export class AnalyticsManager extends EventEmitter {
       performance: {
         precision: 0.85,
         recall: 0.82,
-        f1Score: 0.83
+        f1Score: 0.83,
       },
       trainingData: {
         ...model.trainingData,
-        samples: data.length
-      }
+        samples: data.length,
+      },
     };
   }
 
@@ -1411,11 +1411,11 @@ export class AnalyticsManager extends EventEmitter {
     
     for (const metric of metrics) {
       const key = groupBy.map(field => {
-        if (field === 'tags') {
-          return Object.entries(metric.tags).map(([k, v]) => `${k}:${v}`).join(',');
+        if (field === "tags") {
+          return Object.entries(metric.tags).map(([k, v]) => `${k}:${v}`).join(",");
         }
-        return (metric as any)[field] || 'unknown';
-      }).join('-');
+        return (metric as any)[field] || "unknown";
+      }).join("-");
       
       if (!groups[key]) {
         groups[key] = [];
@@ -1445,27 +1445,27 @@ export class AnalyticsManager extends EventEmitter {
       let aggregatedValue: number;
 
       switch (aggregation) {
-        case 'sum':
+        case "sum":
           aggregatedValue = values.reduce((sum, v) => sum + v, 0);
           break;
-        case 'min':
+        case "min":
           aggregatedValue = Math.min(...values);
           break;
-        case 'max':
+        case "max":
           aggregatedValue = Math.max(...values);
           break;
-        case 'count':
+        case "count":
           aggregatedValue = values.length;
           break;
-        case 'p95':
+        case "p95":
           values.sort((a, b) => a - b);
           aggregatedValue = values[Math.floor(values.length * 0.95)];
           break;
-        case 'p99':
+        case "p99":
           values.sort((a, b) => a - b);
           aggregatedValue = values[Math.floor(values.length * 0.99)];
           break;
-        case 'avg':
+        case "avg":
         default:
           aggregatedValue = values.reduce((sum, v) => sum + v, 0) / values.length;
       }
@@ -1473,7 +1473,7 @@ export class AnalyticsManager extends EventEmitter {
       return {
         timestamp: new Date(timestamp),
         value: aggregatedValue,
-        count: values.length
+        count: values.length,
       };
     }).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
@@ -1484,17 +1484,17 @@ export class AnalyticsManager extends EventEmitter {
   }
 
   private async saveDashboard(dashboard: AnalyticsDashboard): Promise<void> {
-    const filePath = join(this.analyticsPath, 'dashboards', `${dashboard.id}.json`);
+    const filePath = join(this.analyticsPath, "dashboards", `${dashboard.id}.json`);
     await writeFile(filePath, JSON.stringify(dashboard, null, 2));
   }
 
   private async saveInsight(insight: AnalyticsInsight): Promise<void> {
-    const filePath = join(this.analyticsPath, 'insights', `${insight.id}.json`);
+    const filePath = join(this.analyticsPath, "insights", `${insight.id}.json`);
     await writeFile(filePath, JSON.stringify(insight, null, 2));
   }
 
   private async saveModel(model: PredictiveModel): Promise<void> {
-    const filePath = join(this.analyticsPath, 'models', `${model.id}.json`);
+    const filePath = join(this.analyticsPath, "models", `${model.id}.json`);
     await writeFile(filePath, JSON.stringify(model, null, 2));
   }
 }

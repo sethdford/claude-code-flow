@@ -2,87 +2,112 @@
  * Session management commands for Claude-Flow
  */
 
-import { Command } from '@cliffy/command';
-import { colors } from '@cliffy/ansi/colors';
-import { Table } from '@cliffy/table';
-import { Confirm, Input } from '@cliffy/prompt';
-import { formatDuration, formatStatusIndicator } from '../formatter.js';
-import { generateId } from '../../utils/helpers.js';
+import { Command } from "../cliffy-compat.js";
+import chalk from "chalk";
+import { Table } from "../cliffy-compat.js";
+import { formatDuration, formatStatusIndicator } from "../formatter.js";
+import { generateId } from "../../utils/helpers.js";
+import { Deno } from "../../utils/deno-compat.js";
+import inquirer from "inquirer";
+
+// Simple prompt wrappers
+const Confirm = async (message: string): Promise<boolean> => {
+  const answer = await inquirer.prompt([{
+    type: "confirm",
+    name: "result",
+    message,
+  }]);
+  return answer.result;
+};
+
+const Input = async (message: string, defaultValue?: string): Promise<string> => {
+  const answer = await inquirer.prompt([{
+    type: "input",
+    name: "result",
+    message,
+    default: defaultValue,
+  }]);
+  return answer.result;
+};
+
+// Color compatibility
+const colors = {
+  gray: chalk.gray,
+  yellow: chalk.yellow,
+  red: chalk.red,
+  green: chalk.green,
+  cyan: chalk.cyan,
+  blue: chalk.blue,
+  bold: chalk.bold,
+  white: chalk.white,
+};
 
 export const sessionCommand = new Command()
-  .description('Manage Claude-Flow sessions')
+  .description("Manage Claude-Flow sessions")
   .action(() => {
-    sessionCommand.showHelp();
+    sessionCommand.outputHelp();
   })
-  .command('list', new Command()
-    .description('List all saved sessions')
-    .option('-a, --active', 'Show only active sessions')
-    .option('--format <format:string>', 'Output format (table, json)', { default: 'table' })
-    .action(async (options: any) => {
-      await listSessions(options);
-    }),
-  )
-  .command('save', new Command()
-    .description('Save current session state')
-    .arguments('[name:string]')
-    .option('-d, --description <desc:string>', 'Session description')
-    .option('-t, --tags <tags:string>', 'Comma-separated tags')
-    .option('--auto', 'Auto-generate session name')
-    .action(async (options: any, name: string | undefined) => {
-      await saveSession(name, options);
-    }),
-  )
-  .command('restore', new Command()
-    .description('Restore a saved session')
-    .arguments('<session-id:string>')
-    .option('-f, --force', 'Force restore without confirmation')
-    .option('--merge', 'Merge with current session instead of replacing')
-    .action(async (options: any, sessionId: string) => {
-      await restoreSession(sessionId, options);
-    }),
-  )
-  .command('delete', new Command()
-    .description('Delete a saved session')
-    .arguments('<session-id:string>')
-    .option('-f, --force', 'Skip confirmation prompt')
-    .action(async (options: any, sessionId: string) => {
-      await deleteSession(sessionId, options);
-    }),
-  )
-  .command('export', new Command()
-    .description('Export session to file')
-    .arguments('<session-id:string> <output-file:string>')
-    .option('--format <format:string>', 'Export format (json, yaml)', { default: 'json' })
-    .option('--include-memory', 'Include agent memory in export')
-    .action(async (options: any, sessionId: string, outputFile: string) => {
-      await exportSession(sessionId, outputFile, options);
-    }),
-  )
-  .command('import', new Command()
-    .description('Import session from file')
-    .arguments('<input-file:string>')
-    .option('-n, --name <name:string>', 'Custom session name')
-    .option('--overwrite', 'Overwrite existing session with same ID')
-    .action(async (options: any, inputFile: string) => {
-      await importSession(inputFile, options);
-    }),
-  )
-  .command('info', new Command()
-    .description('Show detailed session information')
-    .arguments('<session-id:string>')
-    .action(async (options: any, sessionId: string) => {
-      await showSessionInfo(sessionId);
-    }),
-  )
-  .command('clean', new Command()
-    .description('Clean up old or orphaned sessions')
-    .option('--older-than <days:number>', 'Delete sessions older than N days', { default: 30 })
-    .option('--dry-run', 'Show what would be deleted without deleting')
-    .option('--orphaned', 'Only clean orphaned sessions')
-    .action(async (options: any) => {
-      await cleanSessions(options);
-    }),
-  );
+  .command("list")
+  .description("List all saved sessions")
+  .option("-a, --active", "Show only active sessions")
+  .option("--format <format>", "Output format (table, json)", "table")
+  .action(async (options: any) => {
+    await listSessions(options);
+  })
+  .command("save")
+  .description("Save current session state")
+  .arguments("[name:string]")
+  .option("-d, --description <desc>", "Session description")
+  .option("-t, --tags <tags>", "Comma-separated tags")
+  .option("--auto", "Auto-generate session name")
+  .action(async (options: any, name: string | undefined) => {
+    await saveSession(name, options);
+  })
+  .command("restore")
+  .description("Restore a saved session")
+  .arguments("<session-id>")
+  .option("-f, --force", "Force restore without confirmation")
+  .option("--merge", "Merge with current session instead of replacing")
+  .action(async (options: any, sessionId: string) => {
+    await restoreSession(sessionId, options);
+  })
+  .command("delete")
+  .description("Delete a saved session")
+  .arguments("<session-id>")
+  .option("-f, --force", "Skip confirmation prompt")
+  .action(async (options: any, sessionId: string) => {
+    await deleteSession(sessionId, options);
+  })
+  .command("export")
+  .description("Export session to file")
+  .arguments("<session-id> <output-file>")
+  .option("--format <format>", "Export format (json, yaml)", "json")
+  .option("--include-memory", "Include agent memory in export")
+  .action(async (options: any, sessionId: string, outputFile: string) => {
+    await exportSession(sessionId, outputFile, options);
+  })
+  .command("import")
+  .description("Import session from file")
+  .arguments("<input-file>")
+  .option("-n, --name <name>", "Custom session name")
+  .option("--overwrite", "Overwrite existing session with same ID")
+  .action(async (options: any, inputFile: string) => {
+    await importSession(inputFile, options);
+  })
+  .command("info")
+  .description("Show detailed session information")
+  .arguments("<session-id>")
+  .action(async (options: any, sessionId: string) => {
+    await showSessionInfo(sessionId);
+  })
+  .command("clean")
+  .description("Clean up old or orphaned sessions")
+  .option("--older-than <days>", "Delete sessions older than N days", "30")
+  .option("--dry-run", "Show what would be deleted without deleting")
+  .option("--orphaned", "Only clean orphaned sessions")
+  .action(async (options: any) => {
+    await cleanSessions(options);
+  });
 
 interface SessionData {
   id: string;
@@ -104,13 +129,13 @@ interface SessionData {
   };
 }
 
-const SESSION_DIR = '.claude-flow/sessions';
+const SESSION_DIR = ".claude-flow/sessions";
 
 async function ensureSessionDir(): Promise<void> {
   try {
     await Deno.mkdir(SESSION_DIR, { recursive: true });
-  } catch (error) {
-    if (!(error instanceof Deno.errors.AlreadyExists)) {
+  } catch (error: any) {
+    if (error?.code !== "EEXIST") {
       throw error;
     }
   }
@@ -127,37 +152,38 @@ async function listSessions(options: any): Promise<void> {
       filteredSessions = sessions.filter(s => (s.metadata as any).active);
     }
 
-    if (options.format === 'json') {
+    if (options.format === "json") {
       console.log(JSON.stringify(filteredSessions, null, 2));
       return;
     }
 
     if (filteredSessions.length === 0) {
-      console.log(colors.gray('No sessions found'));
+      console.log(colors.gray("No sessions found"));
       return;
     }
 
     console.log(colors.cyan.bold(`Sessions (${filteredSessions.length})`));
-    console.log('─'.repeat(60));
+    console.log("─".repeat(60));
 
-    const table = new Table()
-      .header(['ID', 'Name', 'Description', 'Agents', 'Tasks', 'Created'])
-      .border(true);
+    const table = new Table({
+      head: ["ID", "Name", "Description", "Agents", "Tasks", "Created"],
+      style: { head: ["cyan"] },
+    });
 
     for (const session of filteredSessions) {
       table.push([
-        colors.gray(session.id.substring(0, 8) + '...'),
+        colors.gray(`${session.id.substring(0, 8)  }...`),
         colors.white(session.name),
-        session.description ? session.description.substring(0, 30) + (session.description.length > 30 ? '...' : '') : '-',
+        session.description ? session.description.substring(0, 30) + (session.description.length > 30 ? "..." : "") : "-",
         session.state.agents.length.toString(),
         session.state.tasks.length.toString(),
-        session.createdAt.toLocaleDateString()
+        session.createdAt.toLocaleDateString(),
       ]);
     }
 
-    table.render();
+    console.log(table.toString());
   } catch (error) {
-    console.error(colors.red('Failed to list sessions:'), (error as Error).message);
+    console.error(colors.red("Failed to list sessions:"), (error as Error).message);
   }
 }
 
@@ -168,47 +194,47 @@ async function saveSession(name: string | undefined, options: any): Promise<void
     
     if (!name) {
       if (options.auto) {
-        name = `session-${new Date().toISOString().split('T')[0]}-${Date.now().toString().slice(-4)}`;
+        name = `session-${new Date().toISOString().split("T")[0]}-${Date.now().toString().slice(-4)}`;
       } else {
-        name = await Input.prompt({
-          message: 'Enter session name:',
-          default: `session-${new Date().toISOString().split('T')[0]}`,
-        });
+        name = await Input(
+          "Enter session name:",
+          `session-${new Date().toISOString().split("T")[0]}`,
+        );
       }
     }
 
     const session: SessionData = {
-      id: generateId('session'),
+      id: generateId("session"),
       name,
       description: options.description,
-      tags: options.tags ? options.tags.split(',').map((t: string) => t.trim()) : [],
+      tags: options.tags ? options.tags.split(",").map((t: string) => t.trim()) : [],
       createdAt: new Date(),
       updatedAt: new Date(),
       state: currentState,
       metadata: {
-        version: '1.0.0',
+        version: "1.0.0",
         platform: Deno.build.os,
-        checksum: await calculateChecksum(currentState)
-      }
+        checksum: await calculateChecksum(currentState),
+      },
     };
 
     await ensureSessionDir();
     const filePath = `${SESSION_DIR}/${session.id}.json`;
     await Deno.writeTextFile(filePath, JSON.stringify(session, null, 2));
 
-    console.log(colors.green('✓ Session saved successfully'));
-    console.log(`${colors.white('ID:')} ${session.id}`);
-    console.log(`${colors.white('Name:')} ${session.name}`);
-    console.log(`${colors.white('File:')} ${filePath}`);
+    console.log(colors.green("✓ Session saved successfully"));
+    console.log(`${colors.white("ID:")} ${session.id}`);
+    console.log(`${colors.white("Name:")} ${session.name}`);
+    console.log(`${colors.white("File:")} ${filePath}`);
     
     if (session.description) {
-      console.log(`${colors.white('Description:')} ${session.description}`);
+      console.log(`${colors.white("Description:")} ${session.description}`);
     }
     
-    console.log(`${colors.white('Agents:')} ${session.state.agents.length}`);
-    console.log(`${colors.white('Tasks:')} ${session.state.tasks.length}`);
+    console.log(`${colors.white("Agents:")} ${session.state.agents.length}`);
+    console.log(`${colors.white("Tasks:")} ${session.state.tasks.length}`);
   } catch (error) {
-    console.error(colors.red('Failed to save session:'), (error as Error).message);
+    console.error(colors.red("Failed to save session:"), (error as Error).message);
   }
 }
 
@@ -222,23 +248,20 @@ async function restoreSession(sessionId: string, options: any): Promise<void> {
     }
 
     // Show session info
-    console.log(colors.cyan.bold('Session to restore:'));
-    console.log(`${colors.white('Name:')} ${session.name}`);
-    console.log(`${colors.white('Description:')} ${session.description || 'None'}`);
-    console.log(`${colors.white('Agents:')} ${session.state.agents.length}`);
-    console.log(`${colors.white('Tasks:')} ${session.state.tasks.length}`);
-    console.log(`${colors.white('Created:')} ${session.createdAt.toLocaleString()}`);
+    console.log(colors.cyan.bold("Session to restore:"));
+    console.log(`${colors.white("Name:")} ${session.name}`);
+    console.log(`${colors.white("Description:")} ${session.description || "None"}`);
+    console.log(`${colors.white("Agents:")} ${session.state.agents.length}`);
+    console.log(`${colors.white("Tasks:")} ${session.state.tasks.length}`);
+    console.log(`${colors.white("Created:")} ${session.createdAt.toLocaleString()}`);
 
     // Confirmation
     if (!options.force) {
-      const action = options.merge ? 'merge with current session' : 'replace current session';
-      const confirmed = await Confirm.prompt({
-        message: `Are you sure you want to ${action}?`,
-        default: false,
-      });
+      const action = options.merge ? "merge with current session" : "replace current session";
+      const confirmed = await Confirm(`Are you sure you want to ${action}?`);
 
       if (!confirmed) {
-        console.log(colors.gray('Restore cancelled'));
+        console.log(colors.gray("Restore cancelled"));
         return;
       }
     }
@@ -246,34 +269,31 @@ async function restoreSession(sessionId: string, options: any): Promise<void> {
     // Validate session integrity
     const expectedChecksum = await calculateChecksum(session.state);
     if (session.metadata.checksum !== expectedChecksum) {
-      console.log(colors.yellow('⚠ Warning: Session checksum mismatch. Data may be corrupted.'));
+      console.log(colors.yellow("⚠ Warning: Session checksum mismatch. Data may be corrupted."));
       
       if (!options.force) {
-        const proceed = await Confirm.prompt({
-          message: 'Continue anyway?',
-          default: false,
-        });
+        const proceed = await Confirm("Continue anyway?");
         
         if (!proceed) {
-          console.log(colors.gray('Restore cancelled'));
+          console.log(colors.gray("Restore cancelled"));
           return;
         }
       }
     }
 
     // Restore session (mock for now)
-    console.log(colors.yellow('Restoring session...'));
+    console.log(colors.yellow("Restoring session..."));
     
     if (options.merge) {
-      console.log(colors.blue('• Merging agents...'));
-      console.log(colors.blue('• Merging tasks...'));
-      console.log(colors.blue('• Merging memory...'));
+      console.log(colors.blue("• Merging agents..."));
+      console.log(colors.blue("• Merging tasks..."));
+      console.log(colors.blue("• Merging memory..."));
     } else {
-      console.log(colors.blue('• Stopping current agents...'));
-      console.log(colors.blue('• Clearing current tasks...'));
-      console.log(colors.blue('• Restoring agents...'));
-      console.log(colors.blue('• Restoring tasks...'));
-      console.log(colors.blue('• Restoring memory...'));
+      console.log(colors.blue("• Stopping current agents..."));
+      console.log(colors.blue("• Clearing current tasks..."));
+      console.log(colors.blue("• Restoring agents..."));
+      console.log(colors.blue("• Restoring tasks..."));
+      console.log(colors.blue("• Restoring memory..."));
     }
 
     // Update session metadata
@@ -281,10 +301,10 @@ async function restoreSession(sessionId: string, options: any): Promise<void> {
     const filePath = `${SESSION_DIR}/${session.id}.json`;
     await Deno.writeTextFile(filePath, JSON.stringify(session, null, 2));
 
-    console.log(colors.green('✓ Session restored successfully'));
-    console.log(colors.yellow('Note: This is a mock implementation. In production, this would connect to the orchestrator.'));
+    console.log(colors.green("✓ Session restored successfully"));
+    console.log(colors.yellow("Note: This is a mock implementation. In production, this would connect to the orchestrator."));
   } catch (error) {
-    console.error(colors.red('Failed to restore session:'), (error as Error).message);
+    console.error(colors.red("Failed to restore session:"), (error as Error).message);
   }
 }
 
@@ -299,16 +319,13 @@ async function deleteSession(sessionId: string, options: any): Promise<void> {
 
     // Confirmation
     if (!options.force) {
-      console.log(`${colors.white('Session:')} ${session.name}`);
-      console.log(`${colors.white('Created:')} ${session.createdAt.toLocaleString()}`);
+      console.log(`${colors.white("Session:")} ${session.name}`);
+      console.log(`${colors.white("Created:")} ${session.createdAt.toLocaleString()}`);
       
-      const confirmed = await Confirm.prompt({
-        message: 'Are you sure you want to delete this session?',
-        default: false,
-      });
+      const confirmed = await Confirm("Are you sure you want to delete this session?");
 
       if (!confirmed) {
-        console.log(colors.gray('Delete cancelled'));
+        console.log(colors.gray("Delete cancelled"));
         return;
       }
     }
@@ -316,9 +333,9 @@ async function deleteSession(sessionId: string, options: any): Promise<void> {
     const filePath = `${SESSION_DIR}/${session.id}.json`;
     await Deno.remove(filePath);
 
-    console.log(colors.green('✓ Session deleted successfully'));
+    console.log(colors.green("✓ Session deleted successfully"));
   } catch (error) {
-    console.error(colors.red('Failed to delete session:'), (error as Error).message);
+    console.error(colors.red("Failed to delete session:"), (error as Error).message);
   }
 }
 
@@ -338,15 +355,15 @@ async function exportSession(sessionId: string, outputFile: string, options: any
         ...session,
         state: {
           ...session.state,
-          memory: [] // Exclude memory data
-        }
+          memory: [], // Exclude memory data
+        },
       };
     }
 
     let content: string;
-    if (options.format === 'yaml') {
+    if (options.format === "yaml") {
       // In production, you'd use a YAML library
-      console.log(colors.yellow('YAML export not implemented yet, using JSON'));
+      console.log(colors.yellow("YAML export not implemented yet, using JSON"));
       content = JSON.stringify(exportData, null, 2);
     } else {
       content = JSON.stringify(exportData, null, 2);
@@ -354,12 +371,12 @@ async function exportSession(sessionId: string, outputFile: string, options: any
 
     await Deno.writeTextFile(outputFile, content);
 
-    console.log(colors.green('✓ Session exported successfully'));
-    console.log(`${colors.white('File:')} ${outputFile}`);
-    console.log(`${colors.white('Format:')} ${options.format}`);
-    console.log(`${colors.white('Size:')} ${new Blob([content]).size} bytes`);
+    console.log(colors.green("✓ Session exported successfully"));
+    console.log(`${colors.white("File:")} ${outputFile}`);
+    console.log(`${colors.white("Format:")} ${options.format}`);
+    console.log(`${colors.white("Size:")} ${new Blob([content]).size} bytes`);
   } catch (error) {
-    console.error(colors.red('Failed to export session:'), (error as Error).message);
+    console.error(colors.red("Failed to export session:"), (error as Error).message);
   }
 }
 
@@ -370,12 +387,12 @@ async function importSession(inputFile: string, options: any): Promise<void> {
 
     // Validate session data structure
     if (!sessionData.id || !sessionData.name || !sessionData.state) {
-      throw new Error('Invalid session file format');
+      throw new Error("Invalid session file format");
     }
 
     // Generate new ID if not overwriting
     if (!options.overwrite) {
-      sessionData.id = generateId('session');
+      sessionData.id = generateId("session");
     }
 
     // Update name if specified
@@ -386,8 +403,8 @@ async function importSession(inputFile: string, options: any): Promise<void> {
     // Check if session already exists
     const existingSession = await loadSession(sessionData.id);
     if (existingSession && !options.overwrite) {
-      console.error(colors.red('Session with this ID already exists'));
-      console.log(colors.gray('Use --overwrite to replace it'));
+      console.error(colors.red("Session with this ID already exists"));
+      console.log(colors.gray("Use --overwrite to replace it"));
       return;
     }
 
@@ -403,12 +420,12 @@ async function importSession(inputFile: string, options: any): Promise<void> {
     const filePath = `${SESSION_DIR}/${sessionData.id}.json`;
     await Deno.writeTextFile(filePath, JSON.stringify(sessionData, null, 2));
 
-    console.log(colors.green('✓ Session imported successfully'));
-    console.log(`${colors.white('ID:')} ${sessionData.id}`);
-    console.log(`${colors.white('Name:')} ${sessionData.name}`);
-    console.log(`${colors.white('Action:')} ${options.overwrite ? 'Overwritten' : 'Created'}`);
+    console.log(colors.green("✓ Session imported successfully"));
+    console.log(`${colors.white("ID:")} ${sessionData.id}`);
+    console.log(`${colors.white("Name:")} ${sessionData.name}`);
+    console.log(`${colors.white("Action:")} ${options.overwrite ? "Overwritten" : "Created"}`);
   } catch (error) {
-    console.error(colors.red('Failed to import session:'), (error as Error).message);
+    console.error(colors.red("Failed to import session:"), (error as Error).message);
   }
 }
 
@@ -421,50 +438,50 @@ async function showSessionInfo(sessionId: string): Promise<void> {
       return;
     }
 
-    console.log(colors.cyan.bold('Session Information'));
-    console.log('─'.repeat(40));
-    console.log(`${colors.white('ID:')} ${session.id}`);
-    console.log(`${colors.white('Name:')} ${session.name}`);
-    console.log(`${colors.white('Description:')} ${session.description || 'None'}`);
-    console.log(`${colors.white('Tags:')} ${session.tags.join(', ') || 'None'}`);
-    console.log(`${colors.white('Created:')} ${session.createdAt.toLocaleString()}`);
-    console.log(`${colors.white('Updated:')} ${session.updatedAt.toLocaleString()}`);
+    console.log(colors.cyan.bold("Session Information"));
+    console.log("─".repeat(40));
+    console.log(`${colors.white("ID:")} ${session.id}`);
+    console.log(`${colors.white("Name:")} ${session.name}`);
+    console.log(`${colors.white("Description:")} ${session.description || "None"}`);
+    console.log(`${colors.white("Tags:")} ${session.tags.join(", ") || "None"}`);
+    console.log(`${colors.white("Created:")} ${session.createdAt.toLocaleString()}`);
+    console.log(`${colors.white("Updated:")} ${session.updatedAt.toLocaleString()}`);
     console.log();
 
-    console.log(colors.cyan.bold('State Summary'));
-    console.log('─'.repeat(40));
-    console.log(`${colors.white('Agents:')} ${session.state.agents.length}`);
-    console.log(`${colors.white('Tasks:')} ${session.state.tasks.length}`);
-    console.log(`${colors.white('Memory Entries:')} ${session.state.memory.length}`);
+    console.log(colors.cyan.bold("State Summary"));
+    console.log("─".repeat(40));
+    console.log(`${colors.white("Agents:")} ${session.state.agents.length}`);
+    console.log(`${colors.white("Tasks:")} ${session.state.tasks.length}`);
+    console.log(`${colors.white("Memory Entries:")} ${session.state.memory.length}`);
     console.log();
 
-    console.log(colors.cyan.bold('Metadata'));
-    console.log('─'.repeat(40));
-    console.log(`${colors.white('Version:')} ${session.metadata.version}`);
-    console.log(`${colors.white('Platform:')} ${session.metadata.platform}`);
-    console.log(`${colors.white('Checksum:')} ${session.metadata.checksum}`);
+    console.log(colors.cyan.bold("Metadata"));
+    console.log("─".repeat(40));
+    console.log(`${colors.white("Version:")} ${session.metadata.version}`);
+    console.log(`${colors.white("Platform:")} ${session.metadata.platform}`);
+    console.log(`${colors.white("Checksum:")} ${session.metadata.checksum}`);
     
     // Verify integrity
     const currentChecksum = await calculateChecksum(session.state);
     const integrity = currentChecksum === session.metadata.checksum;
-    const integrityIcon = formatStatusIndicator(integrity ? 'success' : 'error');
-    console.log(`${colors.white('Integrity:')} ${integrityIcon} ${integrity ? 'Valid' : 'Corrupted'}`);
+    const integrityIcon = formatStatusIndicator(integrity ? "success" : "error");
+    console.log(`${colors.white("Integrity:")} ${integrityIcon} ${integrity ? "Valid" : "Corrupted"}`);
 
     // File info
     const filePath = `${SESSION_DIR}/${session.id}.json`;
     try {
       const fileInfo = await Deno.stat(filePath);
       console.log();
-      console.log(colors.cyan.bold('File Information'));
-      console.log('─'.repeat(40));
-      console.log(`${colors.white('Path:')} ${filePath}`);
-      console.log(`${colors.white('Size:')} ${fileInfo.size} bytes`);
-      console.log(`${colors.white('Modified:')} ${fileInfo.mtime?.toLocaleString() || 'Unknown'}`);
+      console.log(colors.cyan.bold("File Information"));
+      console.log("─".repeat(40));
+      console.log(`${colors.white("Path:")} ${filePath}`);
+      console.log(`${colors.white("Size:")} ${fileInfo.size} bytes`);
+      console.log(`${colors.white("Modified:")} ${fileInfo.mtime?.toLocaleString() || "Unknown"}`);
     } catch {
-      console.log(colors.red('Warning: Session file not found'));
+      console.log(colors.red("Warning: Session file not found"));
     }
   } catch (error) {
-    console.error(colors.red('Failed to show session info:'), (error as Error).message);
+    console.error(colors.red("Failed to show session info:"), (error as Error).message);
   }
 }
 
@@ -484,31 +501,28 @@ async function cleanSessions(options: any): Promise<void> {
     }
 
     if (toDelete.length === 0) {
-      console.log(colors.gray('No sessions to clean'));
+      console.log(colors.gray("No sessions to clean"));
       return;
     }
 
     console.log(colors.cyan.bold(`Sessions to clean (${toDelete.length})`));
-    console.log('─'.repeat(50));
+    console.log("─".repeat(50));
     
     for (const session of toDelete) {
       const age = Math.floor((Date.now() - session.createdAt.getTime()) / (1000 * 60 * 60 * 24));
-      console.log(`• ${session.name} (${colors.gray(session.id.substring(0, 8) + '...')}) - ${age} days old`);
+      console.log(`• ${session.name} (${colors.gray(`${session.id.substring(0, 8)  }...`)}) - ${age} days old`);
     }
 
     if (options.dryRun) {
-      console.log('\n' + colors.yellow('Dry run mode - no files were deleted'));
+      console.log(`\n${  colors.yellow("Dry run mode - no files were deleted")}`);
       return;
     }
 
     console.log();
-    const confirmed = await Confirm.prompt({
-      message: `Delete ${toDelete.length} sessions?`,
-      default: false,
-    });
+    const confirmed = await Confirm(`Delete ${toDelete.length} sessions?`);
 
     if (!confirmed) {
-      console.log(colors.gray('Clean cancelled'));
+      console.log(colors.gray("Clean cancelled"));
       return;
     }
 
@@ -525,7 +539,7 @@ async function cleanSessions(options: any): Promise<void> {
 
     console.log(colors.green(`✓ Cleaned ${deleted} sessions`));
   } catch (error) {
-    console.error(colors.red('Failed to clean sessions:'), (error as Error).message);
+    console.error(colors.red("Failed to clean sessions:"), (error as Error).message);
   }
 }
 
@@ -533,8 +547,9 @@ async function loadAllSessions(): Promise<SessionData[]> {
   const sessions: SessionData[] = [];
   
   try {
-    for await (const entry of Deno.readDir(SESSION_DIR)) {
-      if (entry.isFile && entry.name.endsWith('.json')) {
+    const entries = await Deno.readDir(SESSION_DIR);
+    for (const entry of entries) {
+      if (entry.isFile && entry.name.endsWith(".json")) {
         try {
           const content = await Deno.readTextFile(`${SESSION_DIR}/${entry.name}`);
           const session = JSON.parse(content) as SessionData;
@@ -544,13 +559,13 @@ async function loadAllSessions(): Promise<SessionData[]> {
           session.updatedAt = new Date(session.updatedAt);
           
           sessions.push(session);
-        } catch (error) {
-          console.warn(colors.yellow(`Warning: Failed to load session file ${entry.name}:`), (error as Error).message);
+        } catch (error: any) {
+          console.warn(colors.yellow(`Warning: Failed to load session file ${entry.name}:`), error?.message || String(error));
         }
       }
     }
-  } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) {
+  } catch (error: any) {
+    if (error?.code !== "ENOENT") {
       throw error;
     }
   }
@@ -567,21 +582,21 @@ async function getCurrentSessionState(): Promise<any> {
   // Mock current session state - in production, this would connect to the orchestrator
   return {
     agents: [
-      { id: 'agent-001', type: 'coordinator', status: 'active' },
-      { id: 'agent-002', type: 'researcher', status: 'active' }
+      { id: "agent-001", type: "coordinator", status: "active" },
+      { id: "agent-002", type: "researcher", status: "active" },
     ],
     tasks: [
-      { id: 'task-001', type: 'research', status: 'running' },
-      { id: 'task-002', type: 'analysis', status: 'pending' }
+      { id: "task-001", type: "research", status: "running" },
+      { id: "task-002", type: "analysis", status: "pending" },
     ],
     memory: [
-      { id: 'memory-001', type: 'conversation', agentId: 'agent-001' },
-      { id: 'memory-002', type: 'result', agentId: 'agent-002' }
+      { id: "memory-001", type: "conversation", agentId: "agent-001" },
+      { id: "memory-002", type: "result", agentId: "agent-002" },
     ],
     configuration: {
       orchestrator: { maxAgents: 10 },
-      memory: { backend: 'hybrid' }
-    }
+      memory: { backend: "hybrid" },
+    },
   };
 }
 
@@ -589,7 +604,7 @@ async function calculateChecksum(data: any): Promise<string> {
   const content = JSON.stringify(data, null, 0);
   const encoder = new TextEncoder();
   const dataBuffer = encoder.encode(content);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16);
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("").substring(0, 16);
 }

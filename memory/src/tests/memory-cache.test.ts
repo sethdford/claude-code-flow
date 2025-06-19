@@ -2,7 +2,7 @@
  * SPARC Memory Bank - Cache Tests
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { MemoryCache } from '../cache/memory-cache';
 import { MemoryItem } from '../types';
 
@@ -94,7 +94,7 @@ describe('MemoryCache', () => {
       cache.set('item1', createTestItem('item1', 30));
       
       // Wait a bit
-      vi.advanceTimersByTime(10);
+      jest.advanceTimersByTime(10);
       
       cache.set('item2', createTestItem('item2', 30));
       cache.set('item3', createTestItem('item3', 30));
@@ -141,7 +141,7 @@ describe('MemoryCache', () => {
 
   describe('TTL Expiration', () => {
     beforeEach(() => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
       cache = new MemoryCache({
         maxSize: 1000,
         ttl: 1000, // 1 second
@@ -155,7 +155,7 @@ describe('MemoryCache', () => {
       expect(cache.get('item1')).toBeDefined();
 
       // Advance time past TTL
-      vi.advanceTimersByTime(1500);
+      jest.advanceTimersByTime(1500);
 
       expect(cache.get('item1')).toBeNull();
     });
@@ -167,7 +167,7 @@ describe('MemoryCache', () => {
       expect(cache.size()).toBe(2);
 
       // Advance time to trigger cleanup
-      vi.advanceTimersByTime(2000);
+      jest.advanceTimersByTime(2000);
 
       // Trigger cleanup by accessing cache
       cache.get('item1');
@@ -218,7 +218,7 @@ describe('MemoryCache', () => {
 
   describe('Eviction Callback', () => {
     it('should call onEvict callback', () => {
-      const onEvict = vi.fn();
+      const onEvict = jest.fn();
       
       cache = new MemoryCache({
         maxSize: 50,

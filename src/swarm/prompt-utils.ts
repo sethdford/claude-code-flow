@@ -1,6 +1,8 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { logger } from '../logger';
+import * as fs from "fs/promises";
+import * as path from "path";
+import { Logger } from "../core/logger.js";
+
+const logger = Logger.getInstance();
 
 export interface PromptConfig {
   sourceDirectories: string[];
@@ -10,53 +12,53 @@ export interface PromptConfig {
     verify: boolean;
     parallel: boolean;
     maxWorkers: number;
-    conflictResolution: 'skip' | 'overwrite' | 'backup' | 'merge';
+    conflictResolution: "skip" | "overwrite" | "backup" | "merge";
     includePatterns: string[];
     excludePatterns: string[];
   };
-  profiles: Record<string, Partial<PromptConfig['defaultOptions']>>;
+  profiles: Record<string, Partial<PromptConfig["defaultOptions"]>>;
 }
 
 export const DEFAULT_CONFIG: PromptConfig = {
   sourceDirectories: [
-    '.roo',
-    '.claude/commands',
-    'src/templates',
-    'templates'
+    ".roo",
+    ".claude/commands",
+    "src/templates",
+    "templates",
   ],
-  destinationDirectory: './project-prompts',
+  destinationDirectory: "./project-prompts",
   defaultOptions: {
     backup: true,
     verify: true,
     parallel: true,
     maxWorkers: 4,
-    conflictResolution: 'backup',
-    includePatterns: ['*.md', '*.txt', '*.prompt', '*.prompts', '*.json'],
-    excludePatterns: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/build/**']
+    conflictResolution: "backup",
+    includePatterns: ["*.md", "*.txt", "*.prompt", "*.prompts", "*.json"],
+    excludePatterns: ["**/node_modules/**", "**/.git/**", "**/dist/**", "**/build/**"],
   },
   profiles: {
-    'sparc': {
-      includePatterns: ['*.md', 'rules.md', 'sparc-*.md'],
-      excludePatterns: ['**/README.md', '**/CHANGELOG.md']
+    "sparc": {
+      includePatterns: ["*.md", "rules.md", "sparc-*.md"],
+      excludePatterns: ["**/README.md", "**/CHANGELOG.md"],
     },
-    'templates': {
-      includePatterns: ['*.template', '*.tmpl', '*.hbs', '*.mustache'],
-      conflictResolution: 'merge'
+    "templates": {
+      includePatterns: ["*.template", "*.tmpl", "*.hbs", "*.mustache"],
+      conflictResolution: "merge",
     },
-    'safe': {
+    "safe": {
       backup: true,
       verify: true,
-      conflictResolution: 'skip',
-      parallel: false
+      conflictResolution: "skip",
+      parallel: false,
     },
-    'fast': {
+    "fast": {
       backup: false,
       verify: false,
       parallel: true,
       maxWorkers: 8,
-      conflictResolution: 'overwrite'
-    }
-  }
+      conflictResolution: "overwrite",
+    },
+  },
 };
 
 export class PromptConfigManager {
@@ -64,20 +66,20 @@ export class PromptConfigManager {
   private config: PromptConfig;
 
   constructor(configPath?: string) {
-    this.configPath = configPath || path.join(process.cwd(), '.prompt-config.json');
+    this.configPath = configPath || path.join(process.cwd(), ".prompt-config.json");
     this.config = { ...DEFAULT_CONFIG };
   }
 
   async loadConfig(): Promise<PromptConfig> {
     try {
-      const configData = await fs.readFile(this.configPath, 'utf-8');
+      const configData = await fs.readFile(this.configPath, "utf-8");
       const userConfig = JSON.parse(configData) as Partial<PromptConfig>;
       
       // Merge with defaults
       this.config = this.mergeConfig(DEFAULT_CONFIG, userConfig);
       logger.info(`Loaded config from ${this.configPath}`);
     } catch (error) {
-      logger.info('Using default configuration');
+      logger.info("Using default configuration");
     }
     
     return this.config;
@@ -96,7 +98,7 @@ export class PromptConfigManager {
     return this.config;
   }
 
-  getProfile(profileName: string): PromptConfig['defaultOptions'] {
+  getProfile(profileName: string): PromptConfig["defaultOptions"] {
     const profile = this.config.profiles[profileName];
     if (!profile) {
       throw new Error(`Profile '${profileName}' not found`);
@@ -115,12 +117,12 @@ export class PromptConfigManager {
       ...override,
       defaultOptions: {
         ...base.defaultOptions,
-        ...override.defaultOptions
+        ...override.defaultOptions,
       },
       profiles: {
         ...base.profiles,
-        ...override.profiles
-      }
+        ...override.profiles,
+      },
     };
   }
 }
@@ -147,7 +149,7 @@ export class PromptPathResolver {
 
   private directoryExists(dirPath: string): boolean {
     try {
-      const stats = require('fs').statSync(dirPath);
+      const stats = require("fs").statSync(dirPath);
       return stats.isDirectory();
     } catch {
       return false;
@@ -157,14 +159,14 @@ export class PromptPathResolver {
   // Discover prompt directories automatically
   async discoverPromptDirectories(): Promise<string[]> {
     const candidates = [
-      '.roo',
-      '.claude',
-      'prompts',
-      'templates',
-      'src/prompts',
-      'src/templates',
-      'docs/prompts',
-      'scripts/prompts'
+      ".roo",
+      ".claude",
+      "prompts",
+      "templates",
+      "src/prompts",
+      "src/templates",
+      "docs/prompts",
+      "scripts/prompts",
     ];
     
     const discovered: string[] = [];
@@ -186,11 +188,11 @@ export class PromptPathResolver {
       for (const entry of entries) {
         if (entry.isFile()) {
           const fileName = entry.name.toLowerCase();
-          if (fileName.endsWith('.md') || 
-              fileName.endsWith('.txt') || 
-              fileName.endsWith('.prompt') ||
-              fileName.includes('prompt') ||
-              fileName.includes('template')) {
+          if (fileName.endsWith(".md") || 
+              fileName.endsWith(".txt") || 
+              fileName.endsWith(".prompt") ||
+              fileName.includes("prompt") ||
+              fileName.includes("template")) {
             return true;
           }
         } else if (entry.isDirectory()) {
@@ -218,23 +220,23 @@ export class PromptValidator {
     let metadata: any = {};
     
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(filePath, "utf-8");
       
       // Check for empty files
       if (content.trim().length === 0) {
-        issues.push('File is empty');
+        issues.push("File is empty");
       }
       
       // Check for common prompt markers
       const hasPromptMarkers = [
-        '# ', '## ', '### ',  // Markdown headers
-        'You are', 'Your task', 'Please',  // Common prompt starters
-        '```', '`',  // Code blocks
-        '{{', '}}',  // Template variables
+        "# ", "## ", "### ",  // Markdown headers
+        "You are", "Your task", "Please",  // Common prompt starters
+        "```", "`",  // Code blocks
+        "{{", "}}",  // Template variables
       ].some(marker => content.includes(marker));
       
       if (!hasPromptMarkers) {
-        issues.push('File may not contain valid prompt content');
+        issues.push("File may not contain valid prompt content");
       }
       
       // Extract metadata from front matter
@@ -243,26 +245,26 @@ export class PromptValidator {
         try {
           metadata = this.parseFrontMatter(frontMatterMatch[1]);
         } catch (error) {
-          issues.push('Invalid front matter format');
+          issues.push("Invalid front matter format");
         }
       }
       
       // Check file size (warn if too large)
       const stats = await fs.stat(filePath);
       if (stats.size > 100 * 1024) { // 100KB
-        issues.push('File is unusually large for a prompt');
+        issues.push("File is unusually large for a prompt");
       }
       
       return {
         valid: issues.length === 0,
         issues,
-        metadata
+        metadata,
       };
       
     } catch (error) {
       return {
         valid: false,
-        issues: [`Failed to read file: ${error.message}`]
+        issues: [`Failed to read file: ${error instanceof Error ? error.message : String(error)}`],
       };
     }
   }
@@ -270,7 +272,7 @@ export class PromptValidator {
   private static parseFrontMatter(frontMatter: string): any {
     // Simple YAML-like parser for basic key-value pairs
     const metadata: any = {};
-    const lines = frontMatter.split('\n');
+    const lines = frontMatter.split("\n");
     
     for (const line of lines) {
       const match = line.match(/^(\w+):\s*(.+)$/);
@@ -294,20 +296,20 @@ export function createProgressBar(total: number): {
     update: (current: number) => {
       const percentage = Math.round((current / total) * 100);
       const filledLength = Math.round((current / total) * barLength);
-      const bar = '█'.repeat(filledLength) + '░'.repeat(barLength - filledLength);
+      const bar = "█".repeat(filledLength) + "░".repeat(barLength - filledLength);
       
       process.stdout.write(`\r[${bar}] ${percentage}% (${current}/${total})`);
     },
     
     complete: () => {
-      process.stdout.write('\n');
-    }
+      process.stdout.write("\n");
+    },
   };
 }
 
 // Utility function to format file sizes
 export function formatFileSize(bytes: number): string {
-  const units = ['B', 'KB', 'MB', 'GB'];
+  const units = ["B", "KB", "MB", "GB"];
   let size = bytes;
   let unitIndex = 0;
   

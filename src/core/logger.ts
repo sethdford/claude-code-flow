@@ -2,12 +2,12 @@
  * Logging infrastructure for Claude-Flow
  */
 
-import { promises as fs } from 'node:fs';
-import * as path from 'node:path';
-import { Buffer } from 'node:buffer';
-import process from 'node:process';
-import { LoggingConfig } from '../utils/types.js';
-import { formatBytes } from '../utils/helpers.js';
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import { Buffer } from "node:buffer";
+import process from "node:process";
+import { LoggingConfig } from "../utils/types.js";
+import { formatBytes } from "../utils/helpers.js";
 
 export interface ILogger {
   debug(message: string, meta?: unknown): void;
@@ -47,15 +47,15 @@ export class Logger implements ILogger {
 
   constructor(
     config: LoggingConfig = {
-      level: 'info',
-      format: 'json',
-      destination: 'console',
+      level: "info",
+      format: "json",
+      destination: "console",
     },
     context: Record<string, unknown> = {},
   ) {
     // Validate file path if file destination
-    if ((config.destination === 'file' || config.destination === 'both') && !config.filePath) {
-      throw new Error('File path required for file logging');
+    if ((config.destination === "file" || config.destination === "both") && !config.filePath) {
+      throw new Error("File path required for file logging");
     }
     
     this.config = config;
@@ -69,14 +69,14 @@ export class Logger implements ILogger {
     if (!Logger.instance) {
       if (!config) {
         // Use default config if none provided and not in test environment
-        const isTestEnv = process.env.CLAUDE_FLOW_ENV === 'test';
+        const isTestEnv = process.env.CLAUDE_FLOW_ENV === "test";
         if (isTestEnv) {
-          throw new Error('Logger configuration required for initialization');
+          throw new Error("Logger configuration required for initialization");
         }
         config = {
-          level: 'info',
-          format: 'json',
-          destination: 'console',
+          level: "info",
+          format: "json",
+          destination: "console",
         };
       }
       Logger.instance = new Logger(config);
@@ -91,7 +91,7 @@ export class Logger implements ILogger {
     this.config = config;
     
     // Reset file handle if destination changed
-    if (this.fileHandle && config.destination !== 'file' && config.destination !== 'both') {
+    if (this.fileHandle && config.destination !== "file" && config.destination !== "both") {
       await this.fileHandle.close();
       delete this.fileHandle;
     }
@@ -129,7 +129,7 @@ export class Logger implements ILogger {
       try {
         await this.fileHandle.close();
       } catch (error) {
-        console.error('Error closing log file handle:', error);
+        console.error("Error closing log file handle:", error);
       } finally {
         delete this.fileHandle;
       }
@@ -152,11 +152,11 @@ export class Logger implements ILogger {
 
     const formatted = this.format(entry);
 
-    if (this.config.destination === 'console' || this.config.destination === 'both') {
+    if (this.config.destination === "console" || this.config.destination === "both") {
       this.writeToConsole(level, formatted);
     }
 
-    if (this.config.destination === 'file' || this.config.destination === 'both') {
+    if (this.config.destination === "file" || this.config.destination === "both") {
       this.writeToFile(formatted);
     }
   }
@@ -167,7 +167,7 @@ export class Logger implements ILogger {
   }
 
   private format(entry: LogEntry): string {
-    if (this.config.format === 'json') {
+    if (this.config.format === "json") {
       // Handle error serialization for JSON format
       const jsonEntry = { ...entry };
       if (jsonEntry.error instanceof Error) {
@@ -183,15 +183,15 @@ export class Logger implements ILogger {
     // Text format
     const contextStr = Object.keys(entry.context).length > 0
       ? ` ${JSON.stringify(entry.context)}`
-      : '';
+      : "";
     const dataStr = entry.data !== undefined
       ? ` ${JSON.stringify(entry.data)}`
-      : '';
+      : "";
     const errorStr = entry.error !== undefined
       ? entry.error instanceof Error
         ? `\n  Error: ${entry.error.message}\n  Stack: ${entry.error.stack}`
         : ` Error: ${JSON.stringify(entry.error)}`
-      : '';
+      : "";
 
     return `[${entry.timestamp}] ${entry.level} ${entry.message}${contextStr}${dataStr}${errorStr}`;
   }
@@ -226,15 +226,15 @@ export class Logger implements ILogger {
 
       // Open file handle if not already open
       if (!this.fileHandle) {
-        this.fileHandle = await fs.open(this.config.filePath, 'a');
+        this.fileHandle = await fs.open(this.config.filePath, "a");
       }
 
       // Write the message
-      const data = Buffer.from(message + '\n', 'utf8');
+      const data = Buffer.from(`${message  }\n`, "utf8");
       await this.fileHandle.write(data);
       this.currentFileSize += data.length;
     } catch (error) {
-      console.error('Failed to write to log file:', error);
+      console.error("Failed to write to log file:", error);
     }
   }
 
@@ -263,7 +263,7 @@ export class Logger implements ILogger {
     }
 
     // Rename current file
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const rotatedPath = `${this.config.filePath}.${timestamp}`;
     await fs.rename(this.config.filePath, rotatedPath);
 
@@ -287,7 +287,7 @@ export class Logger implements ILogger {
       const files: string[] = [];
       
       for (const entry of entries) {
-        if (entry.isFile() && entry.name.startsWith(baseFileName + '.')) {
+        if (entry.isFile() && entry.name.startsWith(`${baseFileName  }.`)) {
           files.push(entry.name);
         }
       }
@@ -301,7 +301,7 @@ export class Logger implements ILogger {
         await fs.unlink(path.join(dir, file));
       }
     } catch (error) {
-      console.error('Failed to cleanup old log files:', error);
+      console.error("Failed to cleanup old log files:", error);
     }
   }
 }

@@ -3,8 +3,9 @@
  * Comprehensive task management with orchestration features
  * Integrates with TodoWrite/TodoRead for coordination and Memory for persistence
  */
-
-export {
+import type { IMemoryManager } from "../memory/manager";
+import type { ILogger } from "../core/logger";
+import {
   TaskEngine,
   WorkflowTask,
   TaskDependency,
@@ -16,24 +17,49 @@ export {
   Workflow,
   TaskFilter,
   TaskSort,
-  TaskCheckpoint
-} from './engine.js';
+  TaskCheckpoint,
+} from "./engine";
+import {
+  createTaskCreateCommand,
+  createTaskListCommand,
+  createTaskStatusCommand,
+  createTaskCancelCommand,
+  createTaskWorkflowCommand,
+  TaskCommandContext,
+} from "./commands";
+import {
+  TaskCoordinator,
+  TodoItem,
+  MemoryEntry,
+  CoordinationContext,
+} from "./coordination";
 
+export type {
+  WorkflowTask,
+  TaskDependency,
+  ResourceRequirement,
+  TaskSchedule,
+  TaskExecution,
+  TaskMetrics,
+  TaskLog,
+  Workflow,
+  TaskFilter,
+  TaskSort,
+  TaskCheckpoint,
+} from "./engine";
+export { TaskEngine } from "./engine";
+
+export type { TaskCommandContext } from "./commands";
 export {
   createTaskCreateCommand,
   createTaskListCommand,
   createTaskStatusCommand,
   createTaskCancelCommand,
   createTaskWorkflowCommand,
-  TaskCommandContext
-} from './commands.js';
+} from "./commands";
 
-export {
-  TaskCoordinator,
-  TodoItem,
-  MemoryEntry,
-  CoordinationContext
-} from './coordination.js';
+export type { TodoItem, MemoryEntry, CoordinationContext } from "./coordination";
+export { TaskCoordinator } from "./coordination";
 
 /**
  * Initialize the complete task management system
@@ -41,34 +67,34 @@ export {
 export async function initializeTaskManagement(
   config: {
     maxConcurrentTasks?: number;
-    memoryManager?: any;
-    logger?: any;
-  } = {}
+    memoryManager?: IMemoryManager;
+    logger?: ILogger;
+  } = {},
 ): Promise<{
   taskEngine: TaskEngine;
   taskCoordinator: TaskCoordinator;
   commands: {
-    create: any;
-    list: any;
-    status: any;
-    cancel: any;
-    workflow: any;
+    create: ReturnType<typeof createTaskCreateCommand>;
+    list: ReturnType<typeof createTaskListCommand>;
+    status: ReturnType<typeof createTaskStatusCommand>;
+    cancel: ReturnType<typeof createTaskCancelCommand>;
+    workflow: ReturnType<typeof createTaskWorkflowCommand>;
   };
 }> {
   const taskEngine = new TaskEngine(
     config.maxConcurrentTasks || 10,
-    config.memoryManager
+    config.memoryManager,
   );
 
   const taskCoordinator = new TaskCoordinator(
     taskEngine,
-    config.memoryManager
+    config.memoryManager,
   );
 
   const commandContext: TaskCommandContext = {
     taskEngine,
     memoryManager: config.memoryManager,
-    logger: config.logger
+    logger: config.logger,
   };
 
   const commands = {
@@ -76,13 +102,13 @@ export async function initializeTaskManagement(
     list: createTaskListCommand(commandContext),
     status: createTaskStatusCommand(commandContext),
     cancel: createTaskCancelCommand(commandContext),
-    workflow: createTaskWorkflowCommand(commandContext)
+    workflow: createTaskWorkflowCommand(commandContext),
   };
 
   return {
     taskEngine,
     taskCoordinator,
-    commands
+    commands,
   };
 }
 
@@ -92,21 +118,21 @@ export async function initializeTaskManagement(
 export async function createTaskTodos(
   objective: string,
   options: {
-    strategy?: 'research' | 'development' | 'analysis' | 'testing' | 'optimization' | 'maintenance';
+    strategy?: "research" | "development" | "analysis" | "testing" | "optimization" | "maintenance";
     maxTasks?: number;
     batchOptimized?: boolean;
     parallelExecution?: boolean;
     memoryCoordination?: boolean;
   } = {},
-  coordinator?: TaskCoordinator
+  coordinator?: TaskCoordinator,
 ): Promise<TodoItem[]> {
   if (!coordinator) {
-    throw new Error('TaskCoordinator instance required for todo creation');
+    throw new Error("TaskCoordinator instance required for todo creation");
   }
 
   const context: CoordinationContext = {
     sessionId: `session-${Date.now()}`,
-    coordinationMode: options.batchOptimized ? 'distributed' : 'centralized'
+    coordinationMode: options.batchOptimized ? "distributed" : "centralized",
   };
 
   return await coordinator.createTaskTodos(objective, context, options);
@@ -124,15 +150,15 @@ export async function launchParallelAgents(
     memoryKey?: string;
     batchOptimized?: boolean;
   }>,
-  coordinator?: TaskCoordinator
+  coordinator?: TaskCoordinator,
 ): Promise<string[]> {
   if (!coordinator) {
-    throw new Error('TaskCoordinator instance required for agent launching');
+    throw new Error("TaskCoordinator instance required for agent launching");
   }
 
   const context: CoordinationContext = {
     sessionId: `session-${Date.now()}`,
-    coordinationMode: 'distributed'
+    coordinationMode: "distributed",
   };
 
   return await coordinator.launchParallelAgents(tasks, context);
@@ -143,16 +169,16 @@ export async function launchParallelAgents(
  */
 export async function storeCoordinationData(
   key: string,
-  value: any,
+  value: unknown,
   options: {
     namespace?: string;
     tags?: string[];
     expiresAt?: Date;
   } = {},
-  coordinator?: TaskCoordinator
+  coordinator?: TaskCoordinator,
 ): Promise<void> {
   if (!coordinator) {
-    throw new Error('TaskCoordinator instance required for memory storage');
+    throw new Error("TaskCoordinator instance required for memory storage");
   }
 
   await coordinator.storeInMemory(key, value, options);
@@ -164,10 +190,10 @@ export async function storeCoordinationData(
 export async function retrieveCoordinationData(
   key: string,
   namespace?: string,
-  coordinator?: TaskCoordinator
-): Promise<any | null> {
+  coordinator?: TaskCoordinator,
+): Promise<unknown | null> {
   if (!coordinator) {
-    throw new Error('TaskCoordinator instance required for memory retrieval');
+    throw new Error("TaskCoordinator instance required for memory retrieval");
   }
 
   return await coordinator.retrieveFromMemory(key, namespace);
@@ -297,7 +323,7 @@ await coordinator.coordinateSwarm(
     { type: 'devops-engineer', role: 'specialist', capabilities: ['deployment', 'monitoring'] }
   ]
 );
-`
+`,
 };
 
 /**
@@ -367,7 +393,7 @@ claude-flow task workflow execute workflow-123 \\
 claude-flow task workflow visualize workflow-123 \\
   --format dot \\
   --output workflow-graph.dot
-`
+`,
 };
 
 export default {
@@ -379,5 +405,5 @@ export default {
   storeCoordinationData,
   retrieveCoordinationData,
   USAGE_EXAMPLES,
-  CLI_EXAMPLES
+  CLI_EXAMPLES,
 };

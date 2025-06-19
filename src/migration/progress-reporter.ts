@@ -2,13 +2,13 @@
  * Progress Reporter - Provides visual feedback during migration
  */
 
-import * as chalk from 'chalk';
-import { MigrationProgress } from './types';
+import chalk from "chalk";
+import { MigrationProgress } from "./types";
 
 export class ProgressReporter {
   private progress: MigrationProgress;
   private startTime: Date;
-  private spinner: string[] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  private spinner: string[] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
   private spinnerIndex: number = 0;
   private intervalId: NodeJS.Timeout | null = null;
 
@@ -16,15 +16,15 @@ export class ProgressReporter {
     this.progress = {
       total: 0,
       completed: 0,
-      current: '',
-      phase: 'analyzing',
+      current: "",
+      phase: "analyzing",
       errors: 0,
-      warnings: 0
+      warnings: 0,
     };
     this.startTime = new Date();
   }
 
-  start(phase: MigrationProgress['phase'], message: string): void {
+  start(phase: MigrationProgress["phase"], message: string): void {
     this.progress.phase = phase;
     this.progress.current = message;
     this.startTime = new Date();
@@ -33,7 +33,7 @@ export class ProgressReporter {
     this.startSpinner();
   }
 
-  update(phase: MigrationProgress['phase'], message: string, completed?: number, total?: number): void {
+  update(phase: MigrationProgress["phase"], message: string, completed?: number, total?: number): void {
     this.progress.phase = phase;
     this.progress.current = message;
     
@@ -94,7 +94,7 @@ export class ProgressReporter {
       this.intervalId = null;
     }
     // Clear the spinner line
-    process.stdout.write('\r\x1b[K');
+    process.stdout.write("\r\x1b[K");
   }
 
   private updateDisplay(): void {
@@ -105,19 +105,19 @@ export class ProgressReporter {
     const message = `${spinner} ${phase} ${progress} ${this.progress.current}`;
     
     // Clear line and write new message
-    process.stdout.write('\r\x1b[K' + message);
+    process.stdout.write(`\r\x1b[K${  message}`);
   }
 
   private getPhaseDisplay(): string {
     const phases = {
-      'analyzing': chalk.blue('📊 Analyzing'),
-      'backing-up': chalk.yellow('💾 Backing up'),
-      'migrating': chalk.green('🔄 Migrating'),
-      'validating': chalk.cyan('✅ Validating'),
-      'complete': chalk.green('✅ Complete')
+      "analyzing": chalk.blue("📊 Analyzing"),
+      "backing-up": chalk.yellow("💾 Backing up"),
+      "migrating": chalk.green("🔄 Migrating"),
+      "validating": chalk.cyan("✅ Validating"),
+      "complete": chalk.green("✅ Complete"),
     };
     
-    return phases[this.progress.phase] || chalk.gray('⏳ Processing');
+    return phases[this.progress.phase] || chalk.gray("⏳ Processing");
   }
 
   private getProgressDisplay(): string {
@@ -126,15 +126,15 @@ export class ProgressReporter {
       const progressBar = this.createProgressBar(percentage);
       return `${progressBar} ${this.progress.completed}/${this.progress.total} (${percentage}%)`;
     }
-    return '';
+    return "";
   }
 
   private createProgressBar(percentage: number, width: number = 20): string {
     const filled = Math.round((percentage / 100) * width);
     const empty = width - filled;
     
-    const filledBar = '█'.repeat(filled);
-    const emptyBar = '░'.repeat(empty);
+    const filledBar = "█".repeat(filled);
+    const emptyBar = "░".repeat(empty);
     
     return chalk.green(filledBar) + chalk.gray(emptyBar);
   }

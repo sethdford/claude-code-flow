@@ -2,13 +2,13 @@
  * Standard I/O transport for MCP
  */
 
-import { createReadStream, createWriteStream } from 'node:fs';
-import { stdin, stdout } from 'node:process';
-import { createInterface, Interface } from 'node:readline';
-import { ITransport, RequestHandler, NotificationHandler } from './base.js';
-import { MCPRequest, MCPResponse, MCPNotification } from '../../utils/types.js';
-import { ILogger } from '../../core/logger.js';
-import { MCPTransportError } from '../../utils/errors.js';
+import { createReadStream, createWriteStream } from "node:fs";
+import { stdin, stdout } from "node:process";
+import { createInterface, Interface } from "node:readline";
+import { ITransport, RequestHandler, NotificationHandler } from "./base.js";
+import { MCPRequest, MCPResponse, MCPNotification } from "../../utils/types.js";
+import { ILogger } from "../../core/logger.js";
+import { MCPTransportError } from "../../utils/errors.js";
 
 /**
  * Stdio transport implementation
@@ -25,10 +25,10 @@ export class StdioTransport implements ITransport {
 
   async start(): Promise<void> {
     if (this.running) {
-      throw new MCPTransportError('Transport already running');
+      throw new MCPTransportError("Transport already running");
     }
 
-    this.logger.info('Starting stdio transport');
+    this.logger.info("Starting stdio transport");
 
     try {
       // Create readline interface for stdin
@@ -39,21 +39,21 @@ export class StdioTransport implements ITransport {
       });
 
       // Set up line handler
-      this.readline.on('line', (line: string) => {
+      this.readline.on("line", (line: string) => {
         this.processMessage(line.trim()).catch((error) => {
-          this.logger.error('Error processing message', { line, error });
+          this.logger.error("Error processing message", { line, error });
         });
       });
 
-      this.readline.on('close', () => {
-        this.logger.info('Stdin closed');
+      this.readline.on("close", () => {
+        this.logger.info("Stdin closed");
         this.running = false;
       });
 
       this.running = true;
-      this.logger.info('Stdio transport started');
+      this.logger.info("Stdio transport started");
     } catch (error) {
-      throw new MCPTransportError('Failed to start stdio transport', { error });
+      throw new MCPTransportError("Failed to start stdio transport", { error });
     }
   }
 
@@ -62,7 +62,7 @@ export class StdioTransport implements ITransport {
       return;
     }
 
-    this.logger.info('Stopping stdio transport');
+    this.logger.info("Stopping stdio transport");
 
     this.running = false;
     
@@ -71,7 +71,7 @@ export class StdioTransport implements ITransport {
       this.readline = undefined;
     }
 
-    this.logger.info('Stdio transport stopped');
+    this.logger.info("Stdio transport stopped");
   }
 
   onRequest(handler: RequestHandler): void {
@@ -105,18 +105,18 @@ export class StdioTransport implements ITransport {
     try {
       message = JSON.parse(line);
       
-      if (!message.jsonrpc || message.jsonrpc !== '2.0') {
-        throw new Error('Invalid JSON-RPC version');
+      if (!message.jsonrpc || message.jsonrpc !== "2.0") {
+        throw new Error("Invalid JSON-RPC version");
       }
 
       if (!message.method) {
-        throw new Error('Missing method');
+        throw new Error("Missing method");
       }
     } catch (error) {
-      this.logger.error('Failed to parse message', { line, error });
+      this.logger.error("Failed to parse message", { line, error });
       
       // Send error response if we can extract an ID
-      let id = 'unknown';
+      let id = "unknown";
       try {
         const parsed = JSON.parse(line);
         if (parsed.id !== undefined) {
@@ -127,11 +127,11 @@ export class StdioTransport implements ITransport {
       }
 
       await this.sendResponse({
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id,
         error: {
           code: -32700,
-          message: 'Parse error',
+          message: "Parse error",
         },
       });
       return;
@@ -152,11 +152,11 @@ export class StdioTransport implements ITransport {
   private async handleRequest(request: MCPRequest): Promise<void> {
     if (!this.requestHandler) {
       await this.sendResponse({
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: request.id,
         error: {
           code: -32603,
-          message: 'No request handler registered',
+          message: "No request handler registered",
         },
       });
       return;
@@ -166,14 +166,14 @@ export class StdioTransport implements ITransport {
       const response = await this.requestHandler(request);
       await this.sendResponse(response);
     } catch (error) {
-      this.logger.error('Request handler error', { request, error });
+      this.logger.error("Request handler error", { request, error });
       
       await this.sendResponse({
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: request.id,
         error: {
           code: -32603,
-          message: 'Internal error',
+          message: "Internal error",
           data: error instanceof Error ? error.message : String(error),
         },
       });
@@ -182,7 +182,7 @@ export class StdioTransport implements ITransport {
 
   private async handleNotification(notification: MCPNotification): Promise<void> {
     if (!this.notificationHandler) {
-      this.logger.warn('Received notification but no handler registered', {
+      this.logger.warn("Received notification but no handler registered", {
         method: notification.method,
       });
       return;
@@ -191,7 +191,7 @@ export class StdioTransport implements ITransport {
     try {
       await this.notificationHandler(notification);
     } catch (error) {
-      this.logger.error('Notification handler error', { notification, error });
+      this.logger.error("Notification handler error", { notification, error });
       // Notifications don't send error responses
     }
   }
@@ -199,9 +199,9 @@ export class StdioTransport implements ITransport {
   private async sendResponse(response: MCPResponse): Promise<void> {
     try {
       const json = JSON.stringify(response);
-      stdout.write(json + '\n');
+      stdout.write(`${json  }\n`);
     } catch (error) {
-      this.logger.error('Failed to send response', { response, error });
+      this.logger.error("Failed to send response", { response, error });
     }
   }
 
@@ -220,20 +220,20 @@ export class StdioTransport implements ITransport {
   async sendRequest(request: MCPRequest): Promise<MCPResponse> {
     // Send request to stdout
     const json = JSON.stringify(request);
-    stdout.write(json + '\n');
+    stdout.write(`${json  }\n`);
     
     // In STDIO transport, responses are handled asynchronously
     // This would need a proper request/response correlation mechanism
-    throw new Error('STDIO transport sendRequest requires request/response correlation');
+    throw new Error("STDIO transport sendRequest requires request/response correlation");
   }
 
   async sendNotification(notification: MCPNotification): Promise<void> {
     try {
       const json = JSON.stringify(notification);
-      stdout.write(json + '\n');
+      stdout.write(`${json  }\n`);
       this.notificationCount++;
     } catch (error) {
-      this.logger.error('Failed to send notification', { notification, error });
+      this.logger.error("Failed to send notification", { notification, error });
       throw error;
     }
   }

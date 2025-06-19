@@ -84,7 +84,7 @@ export class JsonPersistenceManager {
   }
 
   async getActiveAgents(): Promise<PersistedAgent[]> {
-    return this.data.agents.filter(a => a.status === 'active' || a.status === 'idle');
+    return this.data.agents.filter(a => a.status === "active" || a.status === "idle");
   }
 
   async getAllAgents(): Promise<PersistedAgent[]> {
@@ -113,9 +113,9 @@ export class JsonPersistenceManager {
 
   async getActiveTasks(): Promise<PersistedTask[]> {
     return this.data.tasks.filter(t => 
-      t.status === 'pending' || 
-      t.status === 'in_progress' || 
-      t.status === 'assigned'
+      t.status === "pending" || 
+      t.status === "in_progress" || 
+      t.status === "assigned",
     );
   }
 
@@ -130,7 +130,7 @@ export class JsonPersistenceManager {
       if (assignedAgent !== undefined) {
         task.assignedAgent = assignedAgent;
       }
-      if (status === 'completed') {
+      if (status === "completed") {
         task.completedAt = Date.now();
       }
       await this.save();
@@ -154,17 +154,17 @@ export class JsonPersistenceManager {
     completedTasks: number;
   }> {
     const activeAgents = this.data.agents.filter(a => 
-      a.status === 'active' || a.status === 'idle'
+      a.status === "active" || a.status === "idle",
     ).length;
     
     const pendingTasks = this.data.tasks.filter(t => 
-      t.status === 'pending' || 
-      t.status === 'in_progress' || 
-      t.status === 'assigned'
+      t.status === "pending" || 
+      t.status === "in_progress" || 
+      t.status === "assigned",
     ).length;
     
     const completedTasks = this.data.tasks.filter(t => 
-      t.status === 'completed'
+      t.status === "completed",
     ).length;
     
     return {

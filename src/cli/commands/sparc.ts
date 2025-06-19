@@ -30,7 +30,7 @@ async function loadSparcConfig(): Promise<SparcConfig> {
     sparcConfig = JSON.parse(content);
     return sparcConfig!;
   } catch (error) {
-    throw new Error(`Failed to load SPARC configuration: ${error.message}`);
+    throw new Error(`Failed to load SPARC configuration: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -81,7 +81,7 @@ async function listSparcModes(ctx: CommandContext): Promise<void> {
       info("Use --verbose for detailed descriptions");
     }
   } catch (err) {
-    error(`Failed to list SPARC modes: ${err.message}`);
+    error(`Failed to list SPARC modes: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -120,7 +120,7 @@ async function showModeInfo(ctx: CommandContext): Promise<void> {
     console.log(mode.source);
 
   } catch (err) {
-    error(`Failed to show mode info: ${err.message}`);
+    error(`Failed to show mode info: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -157,7 +157,7 @@ async function runSparcMode(ctx: CommandContext): Promise<void> {
       console.log(`Task: ${taskDescription}`);
       console.log();
       console.log("Enhanced prompt preview:");
-      console.log(enhancedTask.substring(0, 300) + "...");
+      console.log(`${enhancedTask.substring(0, 300)  }...`);
       return;
     }
 
@@ -172,7 +172,7 @@ async function runSparcMode(ctx: CommandContext): Promise<void> {
     await executeClaudeWithSparc(enhancedTask, tools, instanceId, ctx.flags);
 
   } catch (err) {
-    error(`Failed to run SPARC mode: ${err.message}`);
+    error(`Failed to run SPARC mode: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -193,7 +193,7 @@ async function runTddFlow(ctx: CommandContext): Promise<void> {
       { mode: "tdd", phase: "Red", description: `Write failing tests for: ${taskDescription}` },
       { mode: "code", phase: "Green", description: `Implement minimal code to pass tests for: ${taskDescription}` },
       { mode: "refinement-optimization-mode", phase: "Refactor", description: `Refactor and optimize implementation for: ${taskDescription}` },
-      { mode: "integration", phase: "Integration", description: `Integrate and verify complete solution for: ${taskDescription}` }
+      { mode: "integration", phase: "Integration", description: `Integrate and verify complete solution for: ${taskDescription}` },
     ];
 
     if (ctx.flags.dryRun || ctx.flags["dry-run"]) {
@@ -225,7 +225,7 @@ async function runTddFlow(ctx: CommandContext): Promise<void> {
         ...ctx.flags,
         tddPhase: step.phase,
         workflowStep: i + 1,
-        totalSteps: workflow.length
+        totalSteps: workflow.length,
       });
 
       const tools = buildToolsFromGroups(mode.groups);
@@ -240,7 +240,7 @@ async function runTddFlow(ctx: CommandContext): Promise<void> {
           const readline = await import("readline");
           const rl = readline.createInterface({
             input: process.stdin,
-            output: process.stdout
+            output: process.stdout,
           });
           rl.question("", () => {
             rl.close();
@@ -253,7 +253,7 @@ async function runTddFlow(ctx: CommandContext): Promise<void> {
     success("SPARC TDD Workflow completed!");
 
   } catch (err) {
-    error(`Failed to run TDD flow: ${err.message}`);
+    error(`Failed to run TDD flow: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -308,7 +308,7 @@ async function runSparcWorkflow(ctx: CommandContext): Promise<void> {
         ...ctx.flags,
         workflowStep: i + 1,
         totalSteps: workflow.steps.length,
-        workflowName: workflow.name
+        workflowName: workflow.name,
       });
 
       const tools = buildToolsFromGroups(mode.groups);
@@ -322,7 +322,7 @@ async function runSparcWorkflow(ctx: CommandContext): Promise<void> {
           const readline = require("readline");
           const rl = readline.createInterface({
             input: process.stdin,
-            output: process.stdout
+            output: process.stdout,
           });
           rl.question("", () => {
             rl.close();
@@ -335,7 +335,7 @@ async function runSparcWorkflow(ctx: CommandContext): Promise<void> {
     success("SPARC workflow completed!");
 
   } catch (err) {
-    error(`Failed to run workflow: ${err.message}`);
+    error(`Failed to run workflow: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -367,13 +367,13 @@ ${flags.tddPhase ? `
 **Current TDD Phase**: ${flags.tddPhase}
 - Follow the Red-Green-Refactor cycle
 - Store test results and refactoring notes in memory
-` : ''}
+` : ""}
 
 ${flags.workflowStep ? `
 **Workflow Progress**: Step ${flags.workflowStep} of ${flags.totalSteps}
 - Review previous steps: \`npx claude-flow memory query previous_steps\`
 - Store this step's output: \`npx claude-flow memory store step_${flags.workflowStep}_output "<results>"\`
-` : ''}
+` : ""}
 
 ### Best Practices
 1. **Modular Development**: Keep all files under 500 lines
@@ -390,7 +390,7 @@ npx claude-flow memory store ${memoryNamespace}_progress "Current status and fin
 npx claude-flow memory query ${memoryNamespace}
 
 # Store phase-specific results
-npx claude-flow memory store ${memoryNamespace}_${flags.tddPhase || 'results'} "Phase output and decisions"
+npx claude-flow memory store ${memoryNamespace}_${flags.tddPhase || "results"} "Phase output and decisions"
 \`\`\`
 
 ### Integration with Other SPARC Modes
@@ -409,7 +409,7 @@ function buildToolsFromGroups(groups: string[]): string {
     edit: ["Edit", "Replace", "MultiEdit", "Write"],
     browser: ["WebFetch"],
     mcp: ["mcp_tools"],
-    command: ["Bash", "Terminal"]
+    command: ["Bash", "Terminal"],
   };
 
   const tools = new Set<string>();
@@ -438,7 +438,7 @@ async function executeClaudeWithSparc(
   enhancedTask: string, 
   tools: string, 
   instanceId: string, 
-  flags: any
+  flags: any,
 ): Promise<void> {
   const claudeArgs = [enhancedTask];
   claudeArgs.push("--allowedTools", tools);
@@ -468,7 +468,7 @@ async function executeClaudeWithSparc(
       stdio: "inherit",
     });
 
-    const status = await new Promise((resolve) => {
+    const status = await new Promise<{ success: boolean; code: number | null }>((resolve) => {
       child.on("close", (code) => {
         resolve({ success: code === 0, code });
       });
@@ -480,7 +480,7 @@ async function executeClaudeWithSparc(
       error(`SPARC instance ${instanceId} exited with code ${status.code}`);
     }
   } catch (err) {
-    error(`Failed to execute Claude: ${err.message}`);
+    error(`Failed to execute Claude: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

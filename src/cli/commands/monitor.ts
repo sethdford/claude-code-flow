@@ -2,17 +2,31 @@
  * Monitor command for Claude-Flow - Live dashboard mode
  */
 
-import { Command } from '@cliffy/command';
-import { colors } from '@cliffy/ansi/colors';
-import { Table } from '@cliffy/table';
-import { formatProgressBar, formatDuration, formatStatusIndicator } from '../formatter.js';
+import { Command } from "../cliffy-compat.js";
+import chalk from "chalk";
+import { Table } from "../cliffy-compat.js";
+import { formatProgressBar, formatDuration, formatStatusIndicator } from "../formatter.js";
+import { Deno, existsSync } from "../../utils/deno-compat.js";
+import { promises as fs } from "node:fs";
+
+// Color compatibility
+const colors = {
+  gray: chalk.gray,
+  green: chalk.green,
+  red: chalk.red,
+  yellow: chalk.yellow,
+  cyan: chalk.cyan,
+  blue: chalk.blue,
+  bold: chalk.bold,
+  white: chalk.white,
+};
 
 export const monitorCommand = new Command()
-  .description('Start live monitoring dashboard')
-  .option('-i, --interval <seconds:number>', 'Update interval in seconds', { default: 2 })
-  .option('-c, --compact', 'Compact view mode')
-  .option('--no-graphs', 'Disable ASCII graphs')
-  .option('--focus <component:string>', 'Focus on specific component')
+  .description("Start live monitoring dashboard")
+  .option("-i, --interval <seconds>", "Update interval in seconds", "2")
+  .option("-c, --compact", "Compact view mode")
+  .option("--no-graphs", "Disable ASCII graphs")
+  .option("--focus <component>", "Focus on specific component")
   .action(async (options: any) => {
     await startMonitorDashboard(options);
   });
@@ -31,28 +45,48 @@ interface MonitorData {
   events: any[];
 }
 
+interface ComponentStatus {
+  name: string;
+  status: "healthy" | "warning" | "error" | "unknown";
+  uptime: number;
+  load: number;
+  errorCount: number;
+  lastError?: string;
+}
+
+interface AlertData {
+  id: string;
+  type: "error" | "warning" | "info";
+  message: string;
+  component?: string;
+  timestamp: number;
+  acknowledged: boolean;
+}
+
 class Dashboard {
   private data: MonitorData[] = [];
   private maxDataPoints = 60; // 2 minutes at 2-second intervals
   private running = true;
+  private alerts: any[] = [];
+  private startTime: Date = new Date();
 
   constructor(private options: any) {}
 
   async start(): Promise<void> {
     // Hide cursor and clear screen
-    Deno.stdout.writeSync(new TextEncoder().encode('\x1b[?25l'));
+    process.stdout.write("\x1b[?25l");
     console.clear();
 
     // Setup signal handlers
     const cleanup = () => {
       this.running = false;
-      Deno.stdout.writeSync(new TextEncoder().encode('\x1b[?25h')); // Show cursor
-      console.log('\n' + colors.gray('Monitor stopped'));
-      Deno.exit(0);
+      process.stdout.write("\x1b[?25h"); // Show cursor
+      console.log(`\n${  colors.gray("Monitor stopped")}`);
+      process.exit(0);
     };
 
-    Deno.addSignalListener('SIGINT', cleanup);
-    Deno.addSignalListener('SIGTERM', cleanup);
+    process.on("SIGINT", cleanup);
+    process.on("SIGTERM", cleanup);
 
     // Start monitoring loop
     await this.monitoringLoop();
@@ -90,18 +124,18 @@ class Dashboard {
         cpu: cpuUsage,
         memory: memoryUsage,
         agents: 3 + Math.floor(Math.random() * 3),
-        tasks: 5 + Math.floor(Math.random() * 10)
+        tasks: 5 + Math.floor(Math.random() * 10),
       },
       components: {
-        orchestrator: { status: 'healthy', load: Math.random() * 100 },
-        terminal: { status: 'healthy', load: Math.random() * 100 },
-        memory: { status: 'healthy', load: Math.random() * 100 },
-        coordination: { status: 'healthy', load: Math.random() * 100 },
-        mcp: { status: 'healthy', load: Math.random() * 100 }
+        orchestrator: { status: "healthy", load: Math.random() * 100 },
+        terminal: { status: "healthy", load: Math.random() * 100 },
+        memory: { status: "healthy", load: Math.random() * 100 },
+        coordination: { status: "healthy", load: Math.random() * 100 },
+        mcp: { status: "healthy", load: Math.random() * 100 },
       },
       agents: this.generateMockAgents(),
       tasks: this.generateMockTasks(),
-      events: this.generateMockEvents()
+      events: this.generateMockEvents(),
     };
   }
 
@@ -143,31 +177,32 @@ class Dashboard {
 
   private renderHeader(data: MonitorData): void {
     const time = data.timestamp.toLocaleTimeString();
-    console.log(colors.cyan.bold('Claude-Flow Live Monitor') + colors.gray(` - ${time}`));
-    console.log('═'.repeat(80));
+    console.log(colors.cyan.bold("Claude-Flow Live Monitor") + colors.gray(` - ${time}`));
+    console.log("═".repeat(80));
   }
 
   private renderSystemOverview(data: MonitorData): void {
-    console.log(colors.white.bold('System Overview'));
-    console.log('─'.repeat(40));
+    console.log(colors.white.bold("System Overview"));
+    console.log("─".repeat(40));
     
-    const cpuBar = formatProgressBar(data.system.cpu, 100, 20, 'CPU');
-    const memoryBar = formatProgressBar(data.system.memory, 1024, 20, 'Memory');
+    const cpuBar = formatProgressBar(data.system.cpu, 100, 20, "CPU");
+    const memoryBar = formatProgressBar(data.system.memory, 1024, 20, "Memory");
     
     console.log(`${cpuBar} ${data.system.cpu.toFixed(1)}%`);
     console.log(`${memoryBar} ${data.system.memory.toFixed(0)}MB`);
-    console.log(`${colors.white('Agents:')} ${data.system.agents} active`);
-    console.log(`${colors.white('Tasks:')} ${data.system.tasks} in queue`);
+    console.log(`${colors.white("Agents:")} ${data.system.agents} active`);
+    console.log(`${colors.white("Tasks:")} ${data.system.tasks} in queue`);
     console.log();
   }
 
   private renderComponentsStatus(data: MonitorData): void {
-    console.log(colors.white.bold('Components'));
-    console.log('─'.repeat(40));
+    console.log(colors.white.bold("Components"));
+    console.log("─".repeat(40));
     
-    const table = new Table()
-      .header(['Component', 'Status', 'Load'])
-      .border(false);
+    const table = new Table({
+      head: ["Component", "Status", "Load"],
+      style: { head: ["cyan"], border: [] },
+    });
 
     for (const [name, component] of Object.entries(data.components)) {
       const statusIcon = formatStatusIndicator(component.status);
@@ -176,71 +211,73 @@ class Dashboard {
       table.push([
         colors.cyan(name),
         `${statusIcon} ${component.status}`,
-        `${loadBar} ${component.load.toFixed(0)}%`
+        `${loadBar} ${component.load.toFixed(0)}%`,
       ]);
     }
     
-    table.render();
+    console.log(table.toString());
     console.log();
   }
 
   private renderAgentsAndTasks(data: MonitorData): void {
     // Agents table
-    console.log(colors.white.bold('Active Agents'));
-    console.log('─'.repeat(40));
+    console.log(colors.white.bold("Active Agents"));
+    console.log("─".repeat(40));
     
     if (data.agents.length > 0) {
-      const agentTable = new Table()
-        .header(['ID', 'Type', 'Status', 'Tasks'])
-        .border(false);
+      const agentTable = new Table({
+        head: ["ID", "Type", "Status", "Tasks"],
+        style: { head: ["cyan"], border: [] },
+      });
 
       for (const agent of data.agents.slice(0, 5)) {
         const statusIcon = formatStatusIndicator(agent.status);
         
         agentTable.push([
-          colors.gray(agent.id.substring(0, 8) + '...'),
+          colors.gray(`${agent.id.substring(0, 8)  }...`),
           colors.cyan(agent.type),
           `${statusIcon} ${agent.status}`,
-          agent.activeTasks.toString()
+          agent.activeTasks.toString(),
         ]);
       }
       
-      agentTable.render();
+      console.log(agentTable.toString());
     } else {
-      console.log(colors.gray('No active agents'));
+      console.log(colors.gray("No active agents"));
     }
     console.log();
 
     // Recent tasks
-    console.log(colors.white.bold('Recent Tasks'));
-    console.log('─'.repeat(40));
+    console.log(colors.white.bold("Recent Tasks"));
+    console.log("─".repeat(40));
     
     if (data.tasks.length > 0) {
-      const taskTable = new Table()
-        .header(['ID', 'Type', 'Status', 'Duration'])
-        .border(false);
+      const taskTable = new Table({
+        head: ["ID", "Type", "Status", "Duration"],
+        style: { head: ["cyan"], border: [] },
+      });
 
       for (const task of data.tasks.slice(0, 5)) {
         const statusIcon = formatStatusIndicator(task.status);
         
         taskTable.push([
-          colors.gray(task.id.substring(0, 8) + '...'),
+          colors.gray(`${task.id.substring(0, 8)  }...`),
           colors.white(task.type),
           `${statusIcon} ${task.status}`,
-          task.duration ? formatDuration(task.duration) : '-'
+          task.duration ? formatDuration(task.duration) : "-",
         ]);
       }
       
-      taskTable.render();
+      console.log(taskTable.toString());
     } else {
-      console.log(colors.gray('No recent tasks'));
+      console.log(colors.gray("No recent tasks"));
     }
     console.log();
   }
 
   private renderRecentEvents(data: MonitorData): void {
-    console.log(colors.white.bold('Recent Events'));
-    console.log('─'.repeat(40));
+    console.log(colors.white.bold("Recent Events"));
+    console.log("─".repeat(40));
     
     if (data.events.length > 0) {
       for (const event of data.events.slice(0, 3)) {
@@ -249,25 +286,25 @@ class Dashboard {
         console.log(`${colors.gray(time)} ${icon} ${event.message}`);
       }
     } else {
-      console.log(colors.gray('No recent events'));
+      console.log(colors.gray("No recent events"));
     }
     console.log();
   }
 
   private renderPerformanceGraphs(): void {
-    console.log(colors.white.bold('Performance (Last 60s)'));
-    console.log('─'.repeat(40));
+    console.log(colors.white.bold("Performance (Last 60s)"));
+    console.log("─".repeat(40));
     
     if (this.data.length >= 2) {
       // CPU graph
-      console.log(colors.cyan('CPU Usage:'));
+      console.log(colors.cyan("CPU Usage:"));
       console.log(this.createSparkline(this.data.map(d => d.system.cpu), 30));
       
       // Memory graph
-      console.log(colors.cyan('Memory Usage:'));
+      console.log(colors.cyan("Memory Usage:"));
       console.log(this.createSparkline(this.data.map(d => d.system.memory), 30));
     } else {
-      console.log(colors.gray('Collecting data...'));
+      console.log(colors.gray("Collecting data..."));
     }
     console.log();
   }
@@ -280,7 +317,7 @@ class Dashboard {
     }
 
     console.log(colors.white.bold(`${componentName} Details`));
-    console.log('─'.repeat(40));
+    console.log("─".repeat(40));
     
     const statusIcon = formatStatusIndicator(component.status);
     console.log(`${statusIcon} Status: ${component.status}`);
@@ -291,131 +328,131 @@ class Dashboard {
   }
 
   private renderFooter(): void {
-    console.log('─'.repeat(80));
-    console.log(colors.gray('Press Ctrl+C to exit • Update interval: ') + 
+    console.log("─".repeat(80));
+    console.log(colors.gray("Press Ctrl+C to exit • Update interval: ") + 
                colors.yellow(`${this.options.interval}s`));
   }
 
   private renderError(error: any): void {
     console.clear();
-    console.log(colors.red.bold('Monitor Error'));
-    console.log('─'.repeat(40));
+    console.log(colors.red.bold("Monitor Error"));
+    console.log("─".repeat(40));
     
-    if ((error as Error).message.includes('ECONNREFUSED')) {
-      console.log(colors.red('✗ Cannot connect to Claude-Flow'));
-      console.log(colors.gray('Make sure Claude-Flow is running with: claude-flow start'));
+    if ((error as Error).message.includes("ECONNREFUSED")) {
+      console.log(colors.red("✗ Cannot connect to Claude-Flow"));
+      console.log(colors.gray("Make sure Claude-Flow is running with: claude-flow start"));
     } else {
-      console.log(colors.red('Error:'), (error as Error).message);
+      console.log(colors.red("Error:"), (error as Error).message);
     }
     
-    console.log('\n' + colors.gray('Retrying in ') + colors.yellow(`${this.options.interval}s...`));
+    console.log(`\n${  colors.gray("Retrying in ")  }${colors.yellow(`${this.options.interval}s...`)}`);
   }
 
   private createMiniProgressBar(current: number, max: number, width: number): string {
     const filled = Math.floor((current / max) * width);
     const empty = width - filled;
-    return colors.green('█'.repeat(filled)) + colors.gray('░'.repeat(empty));
+    return colors.green("█".repeat(filled)) + colors.gray("░".repeat(empty));
   }
 
   private createSparkline(data: number[], width: number): string {
-    if (data.length < 2) return colors.gray('▁'.repeat(width));
+    if (data.length < 2) return colors.gray("▁".repeat(width));
     
     const max = Math.max(...data);
     const min = Math.min(...data);
     const range = max - min || 1;
     
-    const chars = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+    const chars = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
     const recent = data.slice(-width);
     
     return recent.map(value => {
       const normalized = (value - min) / range;
       const charIndex = Math.floor(normalized * (chars.length - 1));
       return colors.cyan(chars[charIndex]);
-    }).join('');
+    }).join("");
   }
 
   private getEventIcon(type: string): string {
     const icons = {
-      agent_spawned: colors.green('↗'),
-      agent_terminated: colors.red('↙'),
-      task_completed: colors.green('✓'),
-      task_failed: colors.red('✗'),
-      task_assigned: colors.blue('→'),
-      system_warning: colors.yellow('⚠'),
-      system_error: colors.red('✗'),
+      agent_spawned: colors.green("↗"),
+      agent_terminated: colors.red("↙"),
+      task_completed: colors.green("✓"),
+      task_failed: colors.red("✗"),
+      task_assigned: colors.blue("→"),
+      system_warning: colors.yellow("⚠"),
+      system_error: colors.red("✗"),
     };
-    return icons[type as keyof typeof icons] || colors.blue('•');
+    return icons[type as keyof typeof icons] || colors.blue("•");
   }
 
   private generateMockAgents(): any[] {
     return [
       {
-        id: 'agent-001',
-        type: 'coordinator',
-        status: 'active',
-        activeTasks: Math.floor(Math.random() * 5) + 1
+        id: "agent-001",
+        type: "coordinator",
+        status: "active",
+        activeTasks: Math.floor(Math.random() * 5) + 1,
       },
       {
-        id: 'agent-002',
-        type: 'researcher',
-        status: 'active',
-        activeTasks: Math.floor(Math.random() * 8) + 1
+        id: "agent-002",
+        type: "researcher",
+        status: "active",
+        activeTasks: Math.floor(Math.random() * 8) + 1,
       },
       {
-        id: 'agent-003',
-        type: 'implementer',
-        status: Math.random() > 0.7 ? 'idle' : 'active',
-        activeTasks: Math.floor(Math.random() * 3)
-      }
+        id: "agent-003",
+        type: "implementer",
+        status: Math.random() > 0.7 ? "idle" : "active",
+        activeTasks: Math.floor(Math.random() * 3),
+      },
     ];
   }
 
   private generateMockTasks(): any[] {
-    const types = ['research', 'implementation', 'analysis', 'coordination'];
-    const statuses = ['running', 'pending', 'completed', 'failed'];
+    const types = ["research", "implementation", "analysis", "coordination"];
+    const statuses = ["running", "pending", "completed", "failed"];
     
     return Array.from({ length: 8 }, (_, i) => ({
-      id: `task-${String(i + 1).padStart(3, '0')}`,
+      id: `task-${String(i + 1).padStart(3, "0")}`,
       type: types[Math.floor(Math.random() * types.length)],
       status: statuses[Math.floor(Math.random() * statuses.length)],
-      duration: Math.random() > 0.5 ? Math.floor(Math.random() * 120000) : null
+      duration: Math.random() > 0.5 ? Math.floor(Math.random() * 120000) : null,
     }));
   }
 
   private generateMockEvents(): any[] {
     const events = [
-      { type: 'task_completed', message: 'Research task completed successfully' },
-      { type: 'agent_spawned', message: 'New implementer agent spawned' },
-      { type: 'task_assigned', message: 'Task assigned to coordinator agent' },
-      { type: 'system_warning', message: 'High memory usage detected' }
+      { type: "task_completed", message: "Research task completed successfully" },
+      { type: "agent_spawned", message: "New implementer agent spawned" },
+      { type: "task_assigned", message: "Task assigned to coordinator agent" },
+      { type: "system_warning", message: "High memory usage detected" },
     ];
     
     const eventTypes = [
-      { type: 'task_completed', message: 'Research task completed successfully', level: 'info' as const },
-      { type: 'agent_spawned', message: 'New implementer agent spawned', level: 'info' as const },
-      { type: 'task_assigned', message: 'Task assigned to coordinator agent', level: 'info' as const },
-      { type: 'system_warning', message: 'High memory usage detected', level: 'warn' as const },
-      { type: 'task_failed', message: 'Analysis task failed due to timeout', level: 'error' as const },
-      { type: 'system_info', message: 'System health check completed', level: 'info' as const },
-      { type: 'memory_gc', message: 'Garbage collection triggered', level: 'debug' as const },
-      { type: 'network_event', message: 'MCP connection established', level: 'info' as const }
+      { type: "task_completed", message: "Research task completed successfully", level: "info" as const },
+      { type: "agent_spawned", message: "New implementer agent spawned", level: "info" as const },
+      { type: "task_assigned", message: "Task assigned to coordinator agent", level: "info" as const },
+      { type: "system_warning", message: "High memory usage detected", level: "warn" as const },
+      { type: "task_failed", message: "Analysis task failed due to timeout", level: "error" as const },
+      { type: "system_info", message: "System health check completed", level: "info" as const },
+      { type: "memory_gc", message: "Garbage collection triggered", level: "debug" as const },
+      { type: "network_event", message: "MCP connection established", level: "info" as const },
     ];
     
-    const components = ['orchestrator', 'terminal', 'memory', 'coordination', 'mcp'];
+    const components = ["orchestrator", "terminal", "memory", "coordination", "mcp"];
     
     return Array.from({ length: 6 + Math.floor(Math.random() * 4) }, (_, i) => {
       const event = eventTypes[Math.floor(Math.random() * eventTypes.length)];
       return {
         ...event,
         timestamp: Date.now() - (i * Math.random() * 300000), // Random intervals up to 5 minutes
-        component: Math.random() > 0.3 ? components[Math.floor(Math.random() * components.length)] : undefined
+        component: Math.random() > 0.3 ? components[Math.floor(Math.random() * components.length)] : undefined,
       };
     }).sort((a, b) => b.timestamp - a.timestamp);
   }
   
   private async checkSystemRunning(): Promise<boolean> {
     try {
-      return await existsSync('.claude-flow.pid');
+      return existsSync(".claude-flow.pid");
     } catch {
       return false;
     }
@@ -428,8 +465,8 @@ class Dashboard {
   }
   
   private generateComponentStatus(): Record<string, ComponentStatus> {
-    const components = ['orchestrator', 'terminal', 'memory', 'coordination', 'mcp'];
-    const statuses = ['healthy', 'degraded', 'error'];
+    const components = ["orchestrator", "terminal", "memory", "coordination", "mcp"];
+    const statuses = ["healthy", "warning", "error"] as const;
     
     const result: Record<string, ComponentStatus> = {};
     
@@ -438,11 +475,12 @@ class Dashboard {
       const hasErrors = Math.random() > 0.8;
       
       result[component] = {
+        name: component,
         status,
         load: Math.random() * 100,
         uptime: Math.random() * 3600000, // Up to 1 hour
-        errors: hasErrors ? Math.floor(Math.random() * 5) : 0,
-        lastError: hasErrors ? 'Connection timeout' : undefined
+        errorCount: hasErrors ? Math.floor(Math.random() * 5) : 0,
+        lastError: hasErrors ? "Connection timeout" : undefined,
       };
     }
     
@@ -455,47 +493,47 @@ class Dashboard {
     // Check system thresholds
     if (data.system.cpu > this.options.threshold) {
       newAlerts.push({
-        id: 'cpu-high',
-        type: 'warning',
+        id: "cpu-high",
+        type: "warning",
         message: `CPU usage high: ${data.system.cpu.toFixed(1)}%`,
-        component: 'system',
+        component: "system",
         timestamp: Date.now(),
-        acknowledged: false
+        acknowledged: false,
       });
     }
     
     if (data.system.memory > 800) {
       newAlerts.push({
-        id: 'memory-high',
-        type: 'warning',
+        id: "memory-high",
+        type: "warning",
         message: `Memory usage high: ${data.system.memory.toFixed(0)}MB`,
-        component: 'system',
+        component: "system",
         timestamp: Date.now(),
-        acknowledged: false
+        acknowledged: false,
       });
     }
     
     // Check component status
     for (const [name, component] of Object.entries(data.components)) {
-      if (component.status === 'error') {
+      if (component.status === "error") {
         newAlerts.push({
           id: `component-error-${name}`,
-          type: 'error',
+          type: "error",
           message: `Component ${name} is in error state`,
           component: name,
           timestamp: Date.now(),
-          acknowledged: false
+          acknowledged: false,
         });
       }
       
       if (component.load > this.options.threshold) {
         newAlerts.push({
           id: `component-load-${name}`,
-          type: 'warning',
+          type: "warning",
           message: `Component ${name} load high: ${component.load.toFixed(1)}%`,
           component: name,
           timestamp: Date.now(),
-          acknowledged: false
+          acknowledged: false,
         });
       }
     }
@@ -511,18 +549,18 @@ class Dashboard {
       const exportData = {
         metadata: {
           exportTime: new Date().toISOString(),
-          duration: formatDuration(Date.now() - this.startTime),
-          dataPoints: this.exportData.length,
-          interval: this.options.interval
+          duration: formatDuration(Date.now() - this.startTime.getTime()),
+          dataPoints: this.data.length,
+          interval: this.options.interval,
         },
-        data: this.exportData,
-        alerts: this.alerts
+        data: this.data,
+        alerts: this.alerts,
       };
       
       await Deno.writeTextFile(this.options.export, JSON.stringify(exportData, null, 2));
       console.log(colors.green(`✓ Monitoring data exported to ${this.options.export}`));
     } catch (error) {
-      console.error(colors.red('Failed to export data:'), (error as Error).message);
+      console.error(colors.red("Failed to export data:"), (error as Error).message);
     }
   }
 }
@@ -530,19 +568,19 @@ class Dashboard {
 async function startMonitorDashboard(options: any): Promise<void> {
   // Validate options
   if (options.interval < 1) {
-    console.error(colors.red('Update interval must be at least 1 second'));
+    console.error(colors.red("Update interval must be at least 1 second"));
     return;
   }
   
   if (options.threshold < 1 || options.threshold > 100) {
-    console.error(colors.red('Threshold must be between 1 and 100'));
+    console.error(colors.red("Threshold must be between 1 and 100"));
     return;
   }
   
   if (options.export) {
     // Check if export path is writable
     try {
-      await Deno.writeTextFile(options.export, '');
+      await Deno.writeTextFile(options.export, "");
       await Deno.remove(options.export);
     } catch {
       console.error(colors.red(`Cannot write to export file: ${options.export}`));

@@ -2,24 +2,42 @@
  * Output formatting utilities for CLI
  */
 
-import { colors } from '@cliffy/ansi/colors';
-import { Table } from '@cliffy/table';
+import chalk from "chalk";
+import Table from "cli-table3";
+import { Deno } from "../utils/deno-compat.js";
 // Box is not available in the current cliffy version
-import { AgentProfile, Task, MemoryEntry, HealthStatus } from '../utils/types.js';
+import { AgentProfile, Task, MemoryEntry, HealthStatus } from "../utils/types.js";
+
+// Color compatibility
+const colors = {
+  gray: chalk.gray,
+  yellow: chalk.yellow,
+  red: chalk.red,
+  green: chalk.green,
+  cyan: chalk.cyan,
+  blue: chalk.blue,
+  white: chalk.white,
+  bold: chalk.bold,
+  dim: chalk.dim,
+  underline: chalk.underline,
+  magenta: chalk.magenta,
+};
 
 /**
  * Formats an error for display
  */
 export function formatError(error: unknown): string {
   if (error instanceof Error) {
-    let message = error.message;
+    let { message } = error;
     
-    if ('code' in error) {
-      message = `[${(error as any).code}] ${message}`;
+    const errorWithCode = error as Error & { code?: string };
+    if ("code" in error && errorWithCode.code) {
+      message = `[${errorWithCode.code}] ${message}`;
     }
     
-    if ('details' in error && (error as any).details) {
-      message += '\n' + colors.gray('Details: ' + JSON.stringify((error as any).details, null, 2));
+    const errorWithDetails = error as Error & { details?: unknown };
+    if ("details" in error && errorWithDetails.details) {
+      message += `\n${  colors.gray(`Details: ${  JSON.stringify(errorWithDetails.details, null, 2)}`)}`;
     }
     
     return message;
@@ -38,10 +56,10 @@ export function formatAgent(agent: AgentProfile): string {
     colors.gray(`Type: ${agent.type}`),
     colors.gray(`Priority: ${agent.priority}`),
     colors.gray(`Max Tasks: ${agent.maxConcurrentTasks}`),
-    colors.gray(`Capabilities: ${agent.capabilities.join(', ')}`),
+    colors.gray(`Capabilities: ${agent.capabilities.join(", ")}`),
   ];
   
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -71,14 +89,14 @@ export function formatTask(task: Task): string {
   }
 
   if (task.dependencies.length > 0) {
-    lines.push(colors.gray(`Dependencies: ${task.dependencies.join(', ')}`));
+    lines.push(colors.gray(`Dependencies: ${task.dependencies.join(", ")}`));
   }
 
   if (task.error) {
     lines.push(colors.red(`Error: ${task.error.message}`));
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -95,12 +113,12 @@ export function formatMemoryEntry(entry: MemoryEntry): string {
   ];
 
   if (entry.tags.length > 0) {
-    lines.push(colors.gray(`Tags: ${entry.tags.join(', ')}`));
+    lines.push(colors.gray(`Tags: ${entry.tags.join(", ")}`));
   }
 
-  lines.push('', colors.white('Content:'), entry.content);
+  lines.push("", colors.white("Content:"), entry.content);
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -116,8 +134,8 @@ export function formatHealthStatus(health: HealthStatus): string {
   const lines = [
     statusColor.bold(`System Status: ${health.status.toUpperCase()}`),
     colors.gray(`Checked at: ${health.timestamp.toISOString()}`),
-    '',
-    colors.cyan.bold('Components:'),
+    "",
+    colors.cyan.bold("Components:"),
   ];
 
   for (const [name, component] of Object.entries(health.components)) {
@@ -140,16 +158,17 @@ export function formatHealthStatus(health: HealthStatus): string {
     }
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
  * Creates a table for agent listing
  */
-export function createAgentTable(agents: AgentProfile[]): Table {
-  const table = new Table()
-    .header(['ID', 'Name', 'Type', 'Priority', 'Max Tasks'])
-    .border(true);
+export function createAgentTable(agents: AgentProfile[]) {
+  const table = new Table({
+    head: ["ID", "Name", "Type", "Priority", "Max Tasks"],
+    style: { border: ["gray"] },
+  });
 
   for (const agent of agents) {
     table.push([
@@ -167,10 +186,11 @@ export function createAgentTable(agents: AgentProfile[]): Table {
 /**
  * Creates a table for task listing
  */
-export function createTaskTable(tasks: Task[]): Table {
-  const table = new Table()
-    .header(['ID', 'Type', 'Description', 'Status', 'Agent'])
-    .border(true);
+export function createTaskTable(tasks: Task[]) {
+  const table = new Table({
+    head: ["ID", "Type", "Description", "Status", "Agent"],
+    style: { head: ["cyan"] },
+  });
 
   for (const task of tasks) {
     const statusCell = {
@@ -186,9 +206,9 @@ export function createTaskTable(tasks: Task[]): Table {
     table.push([
       task.id,
       task.type,
-      task.description.substring(0, 40) + (task.description.length > 40 ? '...' : ''),
+      task.description.substring(0, 40) + (task.description.length > 40 ? "..." : ""),
       statusCell,
-      task.assignedAgent || '-',
+      task.assignedAgent || "-",
     ]);
   }
 
@@ -226,10 +246,10 @@ export function formatDuration(ms: number): string {
  */
 export function displayBanner(version: string): void {
   const banner = `
-${colors.cyan.bold('╔══════════════════════════════════════════════════════════════╗')}
-${colors.cyan.bold('║')}             ${colors.white.bold('🧠 Claude-Flow')} ${colors.gray('v' + version)}                        ${colors.cyan.bold('║')}
-${colors.cyan.bold('║')}          ${colors.gray('Advanced AI Agent Orchestration')}               ${colors.cyan.bold('║')}
-${colors.cyan.bold('╚══════════════════════════════════════════════════════════════╝')}
+${colors.cyan.bold("╔══════════════════════════════════════════════════════════════╗")}
+${colors.cyan.bold("║")}             ${colors.white.bold("🧠 Claude-Flow")} ${colors.gray(`v${  version}`)}                        ${colors.cyan.bold("║")}
+${colors.cyan.bold("║")}          ${colors.gray("Advanced AI Agent Orchestration")}               ${colors.cyan.bold("║")}
+${colors.cyan.bold("╚══════════════════════════════════════════════════════════════╝")}
 `;
   console.log(banner);
 }
@@ -239,25 +259,25 @@ ${colors.cyan.bold('╚═══════════════════
  */
 export function displayVersion(version: string, buildDate: string): void {
   const info = [
-    colors.cyan.bold('Claude-Flow Version Information'),
-    '',
-    colors.white('Version:    ') + colors.yellow(version),
-    colors.white('Build Date: ') + colors.yellow(buildDate),
-    colors.white('Runtime:    ') + colors.yellow('Deno ' + Deno.version.deno),
-    colors.white('TypeScript: ') + colors.yellow(Deno.version.typescript),
-    colors.white('V8:         ') + colors.yellow(Deno.version.v8),
-    '',
-    colors.gray('Components:'),
-    colors.white('  • Multi-Agent Orchestration'),
-    colors.white('  • Memory Management'),
-    colors.white('  • Terminal Integration'),
-    colors.white('  • MCP Server'),
-    colors.white('  • Task Coordination'),
-    '',
-    colors.blue('Homepage: ') + colors.underline('https://github.com/anthropics/claude-code-flow'),
+    colors.cyan.bold("Claude-Flow Version Information"),
+    "",
+    colors.white("Version:    ") + colors.yellow(version),
+    colors.white("Build Date: ") + colors.yellow(buildDate),
+    colors.white("Runtime:    ") + colors.yellow(`Node.js ${  process.version}`),
+    colors.white("TypeScript: ") + colors.yellow("5.x"),
+    colors.white("V8:         ") + colors.yellow(process.versions.v8),
+    "",
+    colors.gray("Components:"),
+    colors.white("  • Multi-Agent Orchestration"),
+    colors.white("  • Memory Management"),
+    colors.white("  • Terminal Integration"),
+    colors.white("  • MCP Server"),
+    colors.white("  • Task Coordination"),
+    "",
+    colors.blue("Homepage: ") + colors.underline("https://github.com/anthropics/claude-code-flow"),
   ];
   
-  console.log(info.join('\n'));
+  console.log(info.join("\n"));
 }
 
 /**
@@ -267,14 +287,14 @@ export function formatProgressBar(
   current: number,
   total: number,
   width: number = 40,
-  label?: string
+  label?: string,
 ): string {
   const percentage = Math.min(100, (current / total) * 100);
   const filled = Math.floor((percentage / 100) * width);
   const empty = width - filled;
   
-  const bar = colors.green('█'.repeat(filled)) + colors.gray('░'.repeat(empty));
-  const percent = percentage.toFixed(1).padStart(5) + '%';
+  const bar = colors.green("█".repeat(filled)) + colors.gray("░".repeat(empty));
+  const percent = `${percentage.toFixed(1).padStart(5)  }%`;
   
   let result = `[${bar}] ${percent}`;
   if (label) {
@@ -289,12 +309,12 @@ export function formatProgressBar(
  */
 export function formatStatusIndicator(status: string): string {
   const indicators = {
-    success: colors.green('✓'),
-    error: colors.red('✗'),
-    warning: colors.yellow('⚠'),
-    info: colors.blue('ℹ'),
-    running: colors.cyan('⟳'),
-    pending: colors.gray('○'),
+    success: colors.green("✓"),
+    error: colors.red("✗"),
+    warning: colors.yellow("⚠"),
+    info: colors.blue("ℹ"),
+    running: colors.cyan("⟳"),
+    pending: colors.gray("○"),
   };
   
   return indicators[status as keyof typeof indicators] || status;
@@ -304,7 +324,7 @@ export function formatStatusIndicator(status: string): string {
  * Formats a spinner with message
  */
 export function formatSpinner(message: string, frame: number = 0): string {
-  const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
   const spinner = colors.cyan(frames[frame % frames.length]);
   return `${spinner} ${message}`;
 }

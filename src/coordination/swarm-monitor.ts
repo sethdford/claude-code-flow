@@ -1,14 +1,14 @@
-import { EventEmitter } from 'node:events';
-import * as os from 'node:os';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import { Logger } from '../core/logger.js';
-import { performance } from 'node:perf_hooks';
+import { EventEmitter } from "node:events";
+import * as os from "node:os";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { Logger } from "../core/logger.js";
+import { performance } from "node:perf_hooks";
 
 interface AgentMetrics {
   id: string;
   name: string;
-  status: 'idle' | 'running' | 'completed' | 'failed' | 'stalled';
+  status: "idle" | "running" | "completed" | "failed" | "stalled";
   currentTask?: string;
   startTime?: number;
   endTime?: number;
@@ -43,8 +43,8 @@ interface SystemMetrics {
 interface Alert {
   id: string;
   timestamp: number;
-  level: 'info' | 'warning' | 'error' | 'critical';
-  type: 'agent_failure' | 'high_cpu' | 'high_memory' | 'stalled_agent' | 'low_throughput' | 'error_rate';
+  level: "info" | "warning" | "error" | "critical";
+  type: "agent_failure" | "high_cpu" | "high_memory" | "stalled_agent" | "low_throughput" | "error_rate";
   message: string;
   details?: any;
 }
@@ -77,7 +77,7 @@ export class SwarmMonitor extends EventEmitter {
 
   constructor(config?: Partial<MonitoringConfig>) {
     super();
-    this.logger = new Logger('SwarmMonitor');
+    this.logger = new Logger({ level: "info", format: "json", destination: "console" });
     this.config = {
       updateInterval: 1000, // 1 second
       metricsRetention: 24, // 24 hours
@@ -88,15 +88,15 @@ export class SwarmMonitor extends EventEmitter {
       throughputThreshold: 1, // 1 task per minute minimum
       enableAlerts: true,
       enableHistory: true,
-      historyPath: './monitoring/history',
-      ...config
+      historyPath: "./monitoring/history",
+      ...config,
     };
     this.startTime = Date.now();
     this.lastThroughputCheck = Date.now();
   }
 
   async start(): Promise<void> {
-    this.logger.info('Starting swarm monitoring...');
+    this.logger.info("Starting swarm monitoring...");
 
     // Create history directory if needed
     if (this.config.enableHistory && this.config.historyPath) {
@@ -113,7 +113,7 @@ export class SwarmMonitor extends EventEmitter {
   }
 
   stop(): void {
-    this.logger.info('Stopping swarm monitoring...');
+    this.logger.info("Stopping swarm monitoring...");
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = undefined;
@@ -125,13 +125,13 @@ export class SwarmMonitor extends EventEmitter {
     this.agentMetrics.set(agentId, {
       id: agentId,
       name,
-      status: 'idle',
+      status: "idle",
       taskCount: 0,
       successCount: 0,
       failureCount: 0,
       averageTaskDuration: 0,
       lastActivity: Date.now(),
-      errorRate: 0
+      errorRate: 0,
     });
     this.logger.debug(`Registered agent: ${name} (${agentId})`);
   }
@@ -148,13 +148,13 @@ export class SwarmMonitor extends EventEmitter {
   taskStarted(agentId: string, taskId: string, taskDescription?: string): void {
     const metrics = this.agentMetrics.get(agentId);
     if (metrics) {
-      metrics.status = 'running';
+      metrics.status = "running";
       metrics.currentTask = taskDescription || taskId;
       metrics.startTime = Date.now();
       metrics.lastActivity = Date.now();
       metrics.taskCount++;
       this.taskStartTimes.set(taskId, Date.now());
-      this.emit('task:started', { agentId, taskId, taskDescription });
+      this.emit("task:started", { agentId, taskId, taskDescription });
     }
   }
 
@@ -164,7 +164,7 @@ export class SwarmMonitor extends EventEmitter {
     
     if (metrics && startTime) {
       const duration = Date.now() - startTime;
-      metrics.status = 'completed';
+      metrics.status = "completed";
       metrics.endTime = Date.now();
       metrics.duration = duration;
       metrics.lastActivity = Date.now();
@@ -183,7 +183,7 @@ export class SwarmMonitor extends EventEmitter {
       this.tasksInLastMinute++;
       
       this.taskStartTimes.delete(taskId);
-      this.emit('task:completed', { agentId, taskId, duration, outputSize });
+      this.emit("task:completed", { agentId, taskId, duration, outputSize });
     }
   }
 
@@ -193,7 +193,7 @@ export class SwarmMonitor extends EventEmitter {
     
     if (metrics) {
       const duration = startTime ? Date.now() - startTime : 0;
-      metrics.status = 'failed';
+      metrics.status = "failed";
       metrics.endTime = Date.now();
       metrics.duration = duration;
       metrics.lastActivity = Date.now();
@@ -203,11 +203,11 @@ export class SwarmMonitor extends EventEmitter {
       metrics.errorRate = (metrics.failureCount / metrics.taskCount) * 100;
       
       this.taskStartTimes.delete(taskId);
-      this.emit('task:failed', { agentId, taskId, error, duration });
+      this.emit("task:failed", { agentId, taskId, error, duration });
       
       // Check error rate threshold
       if (metrics.errorRate > this.config.errorRateThreshold) {
-        this.createAlert('error_rate', 'critical', 
+        this.createAlert("error_rate", "critical", 
           `Agent ${metrics.name} has high error rate: ${metrics.errorRate.toFixed(1)}%`);
       }
     }
@@ -237,14 +237,14 @@ export class SwarmMonitor extends EventEmitter {
       
       // Check for stalled agents
       for (const [agentId, metrics] of this.agentMetrics) {
-        if (metrics.status === 'running') {
+        if (metrics.status === "running") {
           activeAgents++;
           
           // Check for stalled agent
           const stallTime = now - metrics.lastActivity;
           if (stallTime > this.config.stallTimeout) {
-            metrics.status = 'stalled';
-            this.createAlert('stalled_agent', 'warning', 
+            metrics.status = "stalled";
+            this.createAlert("stalled_agent", "warning", 
               `Agent ${metrics.name} appears to be stalled (${Math.round(stallTime / 1000)}s inactive)`);
           }
         }
@@ -276,7 +276,7 @@ export class SwarmMonitor extends EventEmitter {
         failedTasks,
         pendingTasks,
         averageTaskDuration: avgDuration,
-        throughput
+        throughput,
       };
       
       this.systemMetrics.push(systemMetrics);
@@ -295,13 +295,13 @@ export class SwarmMonitor extends EventEmitter {
       }
       
       // Emit metrics update
-      this.emit('metrics:updated', {
+      this.emit("metrics:updated", {
         system: systemMetrics,
-        agents: Array.from(this.agentMetrics.values())
+        agents: Array.from(this.agentMetrics.values()),
       });
       
     } catch (error) {
-      this.logger.error('Error collecting metrics:', error);
+      this.logger.error("Error collecting metrics:", error);
     }
   }
 
@@ -332,36 +332,38 @@ export class SwarmMonitor extends EventEmitter {
   private checkThresholds(metrics: SystemMetrics): void {
     // CPU threshold
     if (metrics.cpuUsage > this.config.cpuThreshold) {
-      this.createAlert('high_cpu', 'warning', 
+      this.createAlert("high_cpu", "warning", 
         `High CPU usage detected: ${metrics.cpuUsage}%`);
     }
     
     // Memory threshold
     if (metrics.memoryUsage > this.config.memoryThreshold) {
-      this.createAlert('high_memory', 'warning', 
+      this.createAlert("high_memory", "warning", 
         `High memory usage detected: ${metrics.memoryUsage.toFixed(1)}%`);
     }
     
     // Throughput threshold
     if (metrics.activeAgents > 0 && metrics.throughput < this.config.throughputThreshold) {
-      this.createAlert('low_throughput', 'warning', 
+      this.createAlert("low_throughput", "warning", 
         `Low throughput detected: ${metrics.throughput} tasks/min`);
     }
   }
 
-  private createAlert(type: Alert['type'], level: Alert['level'], message: string, details?: any): void {
+  private createAlert(type: Alert["type"], level: Alert["level"], message: string, details?: any): void {
     const alert: Alert = {
       id: `${type}_${Date.now()}`,
       timestamp: Date.now(),
       level,
       type,
       message,
-      details
+      details,
     };
     
     this.alerts.push(alert);
-    this.emit('alert', alert);
-    this.logger[level](message);
+    this.emit("alert", alert);
+    // Map alert level to logger method
+    const logLevel = level === "critical" ? "error" : level;
+    this.logger[logLevel as keyof Pick<typeof this.logger, "info" | "warn" | "error">](message);
   }
 
   private cleanOldMetrics(): void {
@@ -377,17 +379,17 @@ export class SwarmMonitor extends EventEmitter {
     
     try {
       const date = new Date();
-      const filename = `metrics_${date.toISOString().split('T')[0]}.jsonl`;
+      const filename = `metrics_${date.toISOString().split("T")[0]}.jsonl`;
       const filepath = path.join(this.config.historyPath, filename);
       
-      const line = JSON.stringify({
+      const line = `${JSON.stringify({
         ...metrics,
-        agents: Array.from(this.agentMetrics.values())
-      }) + '\n';
+        agents: Array.from(this.agentMetrics.values()),
+      })  }\n`;
       
       await fs.appendFile(filepath, line);
     } catch (error) {
-      this.logger.error('Error saving history:', error);
+      this.logger.error("Error saving history:", error);
     }
   }
 
@@ -427,7 +429,7 @@ export class SwarmMonitor extends EventEmitter {
     averageDuration: number;
     currentThroughput: number;
     alerts: number;
-  } {
+    } {
     const current = this.getSystemMetrics();
     const uptime = Date.now() - this.startTime;
     const totalAgents = this.agentMetrics.size;
@@ -450,7 +452,7 @@ export class SwarmMonitor extends EventEmitter {
       successRate,
       averageDuration,
       currentThroughput,
-      alerts
+      alerts,
     };
   }
 
@@ -461,7 +463,7 @@ export class SwarmMonitor extends EventEmitter {
       systemMetrics: this.systemMetrics,
       agentMetrics: Array.from(this.agentMetrics.values()),
       alerts: this.alerts,
-      exported: new Date().toISOString()
+      exported: new Date().toISOString(),
     };
     
     await fs.writeFile(filepath, JSON.stringify(data, null, 2));

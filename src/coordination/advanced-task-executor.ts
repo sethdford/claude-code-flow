@@ -2,13 +2,13 @@
  * Advanced task executor with timeout handling, retry logic, and resource management
  */
 
-import { EventEmitter } from 'node:events';
-import { spawn, ChildProcess } from 'node:child_process';
-import { TaskDefinition, TaskResult, TaskStatus, AgentState, TaskError } from '../swarm/types.js';
-import { ILogger } from '../core/logger.js';
-import { IEventBus } from '../core/event-bus.js';
-import { CircuitBreaker, CircuitBreakerManager } from './circuit-breaker.js';
-import { generateId } from '../utils/helpers.js';
+import { EventEmitter } from "node:events";
+import { spawn, ChildProcess } from "node:child_process";
+import { TaskDefinition, TaskResult, TaskStatus, AgentState, TaskError } from "../swarm/types.js";
+import { ILogger } from "../core/logger.js";
+import { IEventBus } from "../core/event-bus.js";
+import { CircuitBreaker, CircuitBreakerManager } from "./circuit-breaker.js";
+import { generateId } from "../utils/helpers.js";
 
 export interface TaskExecutorConfig {
   maxConcurrentTasks: number;
@@ -69,7 +69,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
   constructor(
     config: Partial<TaskExecutorConfig>,
     logger: ILogger,
-    eventBus: IEventBus
+    eventBus: IEventBus,
   ) {
     super();
     this.logger = logger;
@@ -89,7 +89,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
       enableCircuitBreaker: true,
       enableResourceMonitoring: true,
       killTimeout: 5000,
-      ...config
+      ...config,
     };
 
     // Initialize circuit breaker manager
@@ -101,7 +101,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
         halfOpenLimit: 2,
       },
       this.logger,
-      this.eventBus
+      this.eventBus,
     );
 
     this.setupEventHandlers();
@@ -109,32 +109,32 @@ export class AdvancedTaskExecutor extends EventEmitter {
 
   private setupEventHandlers(): void {
     // Handle process events
-    process.on('SIGTERM', () => this.gracefulShutdown());
-    process.on('SIGINT', () => this.gracefulShutdown());
+    process.on("SIGTERM", () => this.gracefulShutdown());
+    process.on("SIGINT", () => this.gracefulShutdown());
 
     // Handle circuit breaker events
-    this.eventBus.on('circuitbreaker:state-change', (event) => {
-      this.logger.info('Circuit breaker state changed', event);
-      this.emit('circuit-breaker-changed', event);
+    this.eventBus.on("circuitbreaker:state-change", (event) => {
+      this.logger.info("Circuit breaker state changed", event);
+      this.emit("circuit-breaker-changed", event);
     });
   }
 
   async initialize(): Promise<void> {
-    this.logger.info('Initializing advanced task executor', {
+    this.logger.info("Initializing advanced task executor", {
       maxConcurrentTasks: this.config.maxConcurrentTasks,
       defaultTimeout: this.config.defaultTimeout,
-      resourceLimits: this.config.resourceLimits
+      resourceLimits: this.config.resourceLimits,
     });
 
     if (this.config.enableResourceMonitoring) {
       this.startResourceMonitoring();
     }
 
-    this.emit('executor-initialized');
+    this.emit("executor-initialized");
   }
 
   async shutdown(): Promise<void> {
-    this.logger.info('Shutting down task executor');
+    this.logger.info("Shutting down task executor");
     this.isShuttingDown = true;
 
     // Stop resource monitoring
@@ -144,12 +144,12 @@ export class AdvancedTaskExecutor extends EventEmitter {
 
     // Cancel all running tasks
     const cancelPromises = Array.from(this.runningTasks.values()).map(ctx =>
-      this.cancelTask(ctx.taskId, 'Shutdown requested')
+      this.cancelTask(ctx.taskId, "Shutdown requested"),
     );
 
     await Promise.all(cancelPromises);
 
-    this.emit('executor-shutdown');
+    this.emit("executor-shutdown");
   }
 
   /**
@@ -162,27 +162,27 @@ export class AdvancedTaskExecutor extends EventEmitter {
       timeout?: number;
       retryAttempts?: number;
       priority?: number;
-    } = {}
+    } = {},
   ): Promise<TaskExecutionResult> {
     const startTime = Date.now();
     let retryCount = 0;
     const maxRetries = options.retryAttempts ?? this.config.retryAttempts;
     const timeout = options.timeout ?? this.config.defaultTimeout;
 
-    this.logger.info('Starting task execution', {
-      taskId: task.id.id,
+    this.logger.info("Starting task execution", {
+      taskId: typeof task.id === "string" ? task.id : task.id.id,
       agentId: agent.id.id,
       type: task.type,
       timeout,
-      maxRetries
+      maxRetries,
     });
 
     // Check if we have capacity
     if (this.runningTasks.size >= this.config.maxConcurrentTasks) {
       this.queuedTasks.push(task);
-      this.logger.info('Task queued due to capacity limits', {
-        taskId: task.id.id,
-        queueSize: this.queuedTasks.length
+      this.logger.info("Task queued due to capacity limits", {
+        taskId: typeof task.id === "string" ? task.id : task.id.id,
+        queueSize: this.queuedTasks.length,
       });
       
       // Wait for capacity
@@ -193,10 +193,10 @@ export class AdvancedTaskExecutor extends EventEmitter {
       try {
         const result = await this.executeSingleAttempt(task, agent, timeout, retryCount);
         
-        this.logger.info('Task completed successfully', {
-          taskId: task.id.id,
+        this.logger.info("Task completed successfully", {
+          taskId: typeof task.id === "string" ? task.id : task.id.id,
           executionTime: Date.now() - startTime,
-          retryCount
+          retryCount,
         });
 
         return {
@@ -204,32 +204,32 @@ export class AdvancedTaskExecutor extends EventEmitter {
           result: result.result,
           executionTime: Date.now() - startTime,
           resourcesUsed: result.resourcesUsed,
-          retryCount
+          retryCount,
         };
 
       } catch (error) {
         retryCount++;
         
-        this.logger.warn('Task attempt failed', {
-          taskId: task.id.id,
+        this.logger.warn("Task attempt failed", {
+          taskId: typeof task.id === "string" ? task.id : task.id.id,
           attempt: retryCount,
           maxRetries,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error),
         });
 
         // Check if we should retry
         if (retryCount > maxRetries) {
           const taskError: TaskError = {
-            type: 'execution_failed',
-            message: error.message,
-            stack: error.stack,
+            type: "execution_failed",
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
             context: {
               retryCount,
               maxRetries,
-              taskType: task.type
+              taskType: task.type,
             },
             recoverable: false,
-            retryable: false
+            retryable: false,
           };
 
           return {
@@ -237,20 +237,20 @@ export class AdvancedTaskExecutor extends EventEmitter {
             error: taskError,
             executionTime: Date.now() - startTime,
             resourcesUsed: this.getDefaultResourceUsage(),
-            retryCount
+            retryCount,
           };
         }
 
         // Calculate backoff delay
         const backoffDelay = Math.min(
           this.config.retryBackoffBase * Math.pow(2, retryCount - 1),
-          this.config.retryBackoffMax
+          this.config.retryBackoffMax,
         );
 
-        this.logger.info('Retrying task after backoff', {
-          taskId: task.id.id,
+        this.logger.info("Retrying task after backoff", {
+          taskId: typeof task.id === "string" ? task.id : task.id.id,
           backoffDelay,
-          attempt: retryCount + 1
+          attempt: retryCount + 1,
         });
 
         await this.delay(backoffDelay);
@@ -258,23 +258,23 @@ export class AdvancedTaskExecutor extends EventEmitter {
     }
 
     // This should never be reached, but TypeScript requires it
-    throw new Error('Unexpected end of retry loop');
+    throw new Error("Unexpected end of retry loop");
   }
 
   private async executeSingleAttempt(
     task: TaskDefinition,
     agent: AgentState,
     timeout: number,
-    retryCount: number
+    retryCount: number,
   ): Promise<{ result: TaskResult; resourcesUsed: ResourceUsage }> {
     const executionContext: ExecutionContext = {
-      taskId: task.id.id,
+      taskId: typeof task.id === "string" ? task.id : task.id.id,
       agentId: agent.id.id,
       startTime: new Date(),
-      resources: this.getDefaultResourceUsage()
+      resources: this.getDefaultResourceUsage(),
     };
 
-    this.runningTasks.set(task.id.id, executionContext);
+    this.runningTasks.set(typeof task.id === "string" ? task.id : task.id.id, executionContext);
 
     try {
       // Set up timeout
@@ -287,7 +287,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
       // Set up circuit breaker if enabled
       if (this.config.enableCircuitBreaker) {
         executionContext.circuitBreaker = this.circuitBreakerManager.getBreaker(
-          `agent-${agent.id.id}`
+          `agent-${agent.id.id}`,
         );
       }
 
@@ -308,7 +308,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
 
     } finally {
       // Cleanup
-      this.runningTasks.delete(task.id.id);
+      this.runningTasks.delete(typeof task.id === "string" ? task.id : task.id.id);
       
       // Process queued tasks
       this.processQueuedTasks();
@@ -318,62 +318,62 @@ export class AdvancedTaskExecutor extends EventEmitter {
   private async performTaskExecution(
     task: TaskDefinition,
     agent: AgentState,
-    context: ExecutionContext
+    context: ExecutionContext,
   ): Promise<{ result: TaskResult; resourcesUsed: ResourceUsage }> {
     const startTime = Date.now();
 
     // Create task execution command
     const command = this.buildExecutionCommand(task, agent);
     
-    this.logger.debug('Executing task command', {
-      taskId: task.id.id,
+    this.logger.debug("Executing task command", {
+      taskId: typeof task.id === "string" ? task.id : task.id.id,
       command: command.cmd,
-      args: command.args
+      args: command.args,
     });
 
     // Spawn process
     const childProcess = spawn(command.cmd, command.args, {
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: ["pipe", "pipe", "pipe"],
       env: {
         ...process.env,
         ...command.env,
-        TASK_ID: task.id.id,
+        TASK_ID: typeof task.id === "string" ? task.id : task.id.id,
         AGENT_ID: agent.id.id,
-        TASK_TYPE: task.type
-      }
+        TASK_TYPE: task.type,
+      },
     });
 
     context.process = childProcess;
 
     // Collect output
-    let stdout = '';
-    let stderr = '';
+    let stdout = "";
+    let stderr = "";
 
-    childProcess.stdout?.on('data', (data) => {
+    childProcess.stdout?.on("data", (data) => {
       stdout += data.toString();
     });
 
-    childProcess.stderr?.on('data', (data) => {
+    childProcess.stderr?.on("data", (data) => {
       stderr += data.toString();
     });
 
     // Send input if provided
     if (task.input && childProcess.stdin) {
       childProcess.stdin.write(JSON.stringify({
-        task: task,
-        agent: agent,
-        input: task.input
+        task,
+        agent,
+        input: task.input,
       }));
       childProcess.stdin.end();
     }
 
     // Wait for process completion
     const exitCode = await new Promise<number>((resolve, reject) => {
-      childProcess.on('exit', (code) => {
+      childProcess.on("exit", (code) => {
         resolve(code ?? 0);
       });
 
-      childProcess.on('error', (error) => {
+      childProcess.on("error", (error) => {
         reject(new Error(`Process error: ${error.message}`));
       });
     });
@@ -394,8 +394,14 @@ export class AdvancedTaskExecutor extends EventEmitter {
           completeness: output.completeness || 1.0,
           accuracy: output.accuracy || 0.9,
           executionTime,
-          resourcesUsed: context.resources,
-          validated: false
+          resourcesUsed: {
+            cpuTime: context.resources.cpu,
+            maxMemory: context.resources.memory,
+            diskIO: context.resources.disk,
+            networkIO: context.resources.network,
+            fileHandles: 0,
+          },
+          validated: false,
         };
       } catch (error) {
         taskResult = {
@@ -406,8 +412,14 @@ export class AdvancedTaskExecutor extends EventEmitter {
           completeness: 1.0,
           accuracy: 0.7,
           executionTime,
-          resourcesUsed: context.resources,
-          validated: false
+          resourcesUsed: {
+            cpuTime: context.resources.cpu,
+            maxMemory: context.resources.memory,
+            diskIO: context.resources.disk,
+            networkIO: context.resources.network,
+            fileHandles: 0,
+          },
+          validated: false,
         };
       }
     } else {
@@ -416,7 +428,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
 
     return {
       result: taskResult,
-      resourcesUsed: context.resources
+      resourcesUsed: context.resources,
     };
   }
 
@@ -428,22 +440,22 @@ export class AdvancedTaskExecutor extends EventEmitter {
     // This would be customized based on task type and agent capabilities
     // For now, return a default Claude execution command
     
-    const cmd = 'deno';
+    const cmd = "deno";
     const args = [
-      'run',
-      '--allow-all',
-      '--no-check',
-      './src/cli/commands/task-executor.ts',
-      '--task-type',
+      "run",
+      "--allow-all",
+      "--no-check",
+      "./src/cli/commands/task-executor.ts",
+      "--task-type",
       task.type,
-      '--agent-type',
-      agent.type
+      "--agent-type",
+      agent.type,
     ];
 
     const env = {
       TASK_TIMEOUT: (task.constraints.timeoutAfter || this.config.defaultTimeout).toString(),
       MEMORY_LIMIT: this.config.resourceLimits.memory.toString(),
-      CPU_LIMIT: this.config.resourceLimits.cpu.toString()
+      CPU_LIMIT: this.config.resourceLimits.cpu.toString(),
     };
 
     return { cmd, args, env };
@@ -455,7 +467,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
       return;
     }
 
-    this.logger.info('Cancelling task', { taskId, reason });
+    this.logger.info("Cancelling task", { taskId, reason });
 
     // Clear timeout
     if (context.timeout) {
@@ -464,12 +476,12 @@ export class AdvancedTaskExecutor extends EventEmitter {
 
     // Kill process if running
     if (context.process && !context.process.killed) {
-      context.process.kill('SIGTERM');
+      context.process.kill("SIGTERM");
 
       // Force kill after timeout
       setTimeout(() => {
         if (context.process && !context.process.killed) {
-          context.process.kill('SIGKILL');
+          context.process.kill("SIGKILL");
         }
       }, this.config.killTimeout);
     }
@@ -477,7 +489,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
     // Remove from running tasks
     this.runningTasks.delete(taskId);
 
-    this.emit('task-cancelled', { taskId, reason });
+    this.emit("task-cancelled", { taskId, reason });
   }
 
   private startResourceMonitoring(): void {
@@ -493,15 +505,15 @@ export class AdvancedTaskExecutor extends EventEmitter {
           const usage = await this.getProcessResourceUsage(context.process.pid!);
           context.resources = {
             ...usage,
-            lastUpdated: new Date()
+            lastUpdated: new Date(),
           };
 
           // Check resource limits
           this.checkResourceLimits(taskId, context);
         } catch (error) {
-          this.logger.warn('Failed to get resource usage', {
+          this.logger.warn("Failed to get resource usage", {
             taskId,
-            error: error.message
+            error: (error as Error).message,
           });
         }
       }
@@ -516,7 +528,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
       cpu: Math.random() * 100,
       disk: Math.random() * this.config.resourceLimits.disk,
       network: Math.random() * 1024 * 1024,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -525,20 +537,20 @@ export class AdvancedTaskExecutor extends EventEmitter {
     const limits = this.config.resourceLimits;
 
     if (memory > limits.memory) {
-      this.logger.warn('Task exceeding memory limit', {
+      this.logger.warn("Task exceeding memory limit", {
         taskId,
         current: memory,
-        limit: limits.memory
+        limit: limits.memory,
       });
       
-      this.cancelTask(taskId, 'Memory limit exceeded');
+      this.cancelTask(taskId, "Memory limit exceeded");
     }
 
     if (cpu > limits.cpu * 100) { // CPU is in percentage
-      this.logger.warn('Task exceeding CPU limit', {
+      this.logger.warn("Task exceeding CPU limit", {
         taskId,
         current: cpu,
-        limit: limits.cpu * 100
+        limit: limits.cpu * 100,
       });
     }
   }
@@ -549,7 +561,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
       cpu: 0,
       disk: 0,
       network: 0,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -573,7 +585,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
     ) {
       const task = this.queuedTasks.shift();
       if (task) {
-        this.emit('task-dequeued', { taskId: task.id.id });
+        this.emit("task-dequeued", { taskId: task.id.id });
       }
     }
   }
@@ -583,7 +595,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
   }
 
   private async gracefulShutdown(): Promise<void> {
-    this.logger.info('Received shutdown signal, initiating graceful shutdown');
+    this.logger.info("Received shutdown signal, initiating graceful shutdown");
     await this.shutdown();
     process.exit(0);
   }
@@ -607,25 +619,25 @@ export class AdvancedTaskExecutor extends EventEmitter {
     queuedTasks: number;
     maxConcurrentTasks: number;
     totalCapacity: number;
-    resourceLimits: typeof this.config.resourceLimits;
+    resourceLimits: any;
     circuitBreakers: Record<string, any>;
-  } {
+    } {
     return {
       runningTasks: this.runningTasks.size,
       queuedTasks: this.queuedTasks.length,
       maxConcurrentTasks: this.config.maxConcurrentTasks,
       totalCapacity: this.config.maxConcurrentTasks,
       resourceLimits: this.config.resourceLimits,
-      circuitBreakers: this.circuitBreakerManager.getAllMetrics()
+      circuitBreakers: this.circuitBreakerManager.getAllMetrics(),
     };
   }
 
   async forceKillTask(taskId: string): Promise<void> {
-    await this.cancelTask(taskId, 'Force killed by user');
+    await this.cancelTask(taskId, "Force killed by user");
   }
 
   updateConfig(newConfig: Partial<TaskExecutorConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    this.logger.info('Task executor configuration updated', { newConfig });
+    this.logger.info("Task executor configuration updated", { newConfig });
   }
 }

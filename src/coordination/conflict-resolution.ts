@@ -2,9 +2,9 @@
  * Conflict resolution mechanisms for multi-agent coordination
  */
 
-import { ILogger } from '../core/logger.js';
-import { IEventBus } from '../core/event-bus.js';
-import { Task, Resource } from '../utils/types.js';
+import { ILogger } from "../core/logger.js";
+import { IEventBus } from "../core/event-bus.js";
+import { Task, Resource } from "../utils/types.js";
 
 export interface ResourceConflict {
   id: string;
@@ -19,14 +19,14 @@ export interface TaskConflict {
   id: string;
   taskId: string;
   agents: string[];
-  type: 'assignment' | 'dependency' | 'output';
+  type: "assignment" | "dependency" | "output";
   timestamp: Date;
   resolved: boolean;
   resolution?: ConflictResolution;
 }
 
 export interface ConflictResolution {
-  type: 'priority' | 'timestamp' | 'vote' | 'manual' | 'retry';
+  type: "priority" | "timestamp" | "vote" | "manual" | "retry";
   winner?: string;
   losers?: string[];
   reason: string;
@@ -42,7 +42,7 @@ export interface ConflictResolutionStrategy {
  * Priority-based resolution strategy
  */
 export class PriorityResolutionStrategy implements ConflictResolutionStrategy {
-  name = 'priority';
+  name = "priority";
 
   async resolve(
     conflict: ResourceConflict | TaskConflict,
@@ -60,7 +60,7 @@ export class PriorityResolutionStrategy implements ConflictResolutionStrategy {
     const losers = priorities.slice(1).map(p => p.agentId);
 
     return {
-      type: 'priority',
+      type: "priority",
       winner,
       losers,
       reason: `Agent ${winner} has highest priority (${priorities[0].priority})`,
@@ -73,7 +73,7 @@ export class PriorityResolutionStrategy implements ConflictResolutionStrategy {
  * First-come-first-served resolution strategy
  */
 export class TimestampResolutionStrategy implements ConflictResolutionStrategy {
-  name = 'timestamp';
+  name = "timestamp";
 
   async resolve(
     conflict: ResourceConflict | TaskConflict,
@@ -91,7 +91,7 @@ export class TimestampResolutionStrategy implements ConflictResolutionStrategy {
     const losers = timestamps.slice(1).map(t => t.agentId);
 
     return {
-      type: 'timestamp',
+      type: "timestamp",
       winner,
       losers,
       reason: `Agent ${winner} made the earliest request`,
@@ -104,7 +104,7 @@ export class TimestampResolutionStrategy implements ConflictResolutionStrategy {
  * Voting-based resolution strategy (for multi-agent consensus)
  */
 export class VotingResolutionStrategy implements ConflictResolutionStrategy {
-  name = 'vote';
+  name = "vote";
 
   async resolve(
     conflict: ResourceConflict | TaskConflict,
@@ -119,7 +119,7 @@ export class VotingResolutionStrategy implements ConflictResolutionStrategy {
 
     // Find winner
     let maxVotes = 0;
-    let winner = '';
+    let winner = "";
     const losers: string[] = [];
 
     for (const [agentId, votes] of voteCounts) {
@@ -135,7 +135,7 @@ export class VotingResolutionStrategy implements ConflictResolutionStrategy {
     }
 
     return {
-      type: 'vote',
+      type: "vote",
       winner,
       losers,
       reason: `Agent ${winner} received the most votes (${maxVotes})`,
@@ -167,7 +167,7 @@ export class ConflictResolver {
    */
   registerStrategy(strategy: ConflictResolutionStrategy): void {
     this.strategies.set(strategy.name, strategy);
-    this.logger.info('Registered conflict resolution strategy', { name: strategy.name });
+    this.logger.info("Registered conflict resolution strategy", { name: strategy.name });
   }
 
   /**
@@ -186,10 +186,10 @@ export class ConflictResolver {
     };
 
     this.conflicts.set(conflict.id, conflict);
-    this.logger.warn('Resource conflict reported', conflict);
+    this.logger.warn("Resource conflict reported", conflict);
 
     // Emit conflict event
-    this.eventBus.emit('conflict:resource', conflict);
+    this.eventBus.emit("conflict:resource", conflict);
 
     return conflict;
   }
@@ -200,7 +200,7 @@ export class ConflictResolver {
   async reportTaskConflict(
     taskId: string,
     agents: string[],
-    type: TaskConflict['type'],
+    type: TaskConflict["type"],
   ): Promise<TaskConflict> {
     const conflict: TaskConflict = {
       id: `conflict-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -212,10 +212,10 @@ export class ConflictResolver {
     };
 
     this.conflicts.set(conflict.id, conflict);
-    this.logger.warn('Task conflict reported', conflict);
+    this.logger.warn("Task conflict reported", conflict);
 
     // Emit conflict event
-    this.eventBus.emit('conflict:task', conflict);
+    this.eventBus.emit("conflict:task", conflict);
 
     return conflict;
   }
@@ -253,12 +253,12 @@ export class ConflictResolver {
     this.resolutionHistory.push(resolution);
 
     // Emit resolution event
-    this.eventBus.emit('conflict:resolved', {
+    this.eventBus.emit("conflict:resolved", {
       conflict,
       resolution,
     });
 
-    this.logger.info('Conflict resolved', {
+    this.logger.info("Conflict resolved", {
       conflictId,
       strategy: strategyName,
       resolution,
@@ -272,7 +272,7 @@ export class ConflictResolver {
    */
   async autoResolve(
     conflictId: string,
-    preferredStrategy: string = 'priority',
+    preferredStrategy: string = "priority",
   ): Promise<ConflictResolution> {
     const conflict = this.conflicts.get(conflictId);
     if (!conflict) {
@@ -280,17 +280,17 @@ export class ConflictResolver {
     }
 
     // Build context based on conflict type
-    let context: any = {};
+    const context: any = {};
 
-    if (preferredStrategy === 'priority') {
+    if (preferredStrategy === "priority") {
       // In a real implementation, fetch agent priorities from configuration
       context.agentPriorities = new Map(
-        conflict.agents.map((id, index) => [id, conflict.agents.length - index])
+        conflict.agents.map((id, index) => [id, conflict.agents.length - index]),
       );
-    } else if (preferredStrategy === 'timestamp') {
+    } else if (preferredStrategy === "timestamp") {
       // In a real implementation, fetch request timestamps
       context.requestTimestamps = new Map(
-        conflict.agents.map((id, index) => [id, new Date(Date.now() - index * 1000)])
+        conflict.agents.map((id, index) => [id, new Date(Date.now() - index * 1000)]),
       );
     }
 
@@ -331,7 +331,7 @@ export class ConflictResolver {
     // Also cleanup old history
     const cutoffTime = now - maxAgeMs;
     this.resolutionHistory = this.resolutionHistory.filter(
-      r => r.timestamp.getTime() > cutoffTime
+      r => r.timestamp.getTime() > cutoffTime,
     );
 
     return removed;
@@ -365,7 +365,7 @@ export class ConflictResolver {
         stats.activeConflicts++;
       }
 
-      if ('resourceId' in conflict) {
+      if ("resourceId" in conflict) {
         stats.conflictsByType.resource++;
       } else {
         stats.conflictsByType.task++;
@@ -397,7 +397,7 @@ export class OptimisticLockManager {
       timestamp: new Date(),
     });
 
-    this.logger.debug('Optimistic lock acquired', {
+    this.logger.debug("Optimistic lock acquired", {
       resourceId,
       agentId,
       version: currentVersion,
@@ -419,7 +419,7 @@ export class OptimisticLockManager {
 
     // Check if versions match
     if (currentVersion !== expectedVersion) {
-      this.logger.warn('Optimistic lock conflict', {
+      this.logger.warn("Optimistic lock conflict", {
         resourceId,
         agentId,
         expectedVersion,
@@ -430,7 +430,7 @@ export class OptimisticLockManager {
 
     // Check if this agent holds the lock
     if (!lock || lock.holder !== agentId) {
-      this.logger.warn('Agent does not hold lock', {
+      this.logger.warn("Agent does not hold lock", {
         resourceId,
         agentId,
       });
@@ -441,7 +441,7 @@ export class OptimisticLockManager {
     this.versions.set(resourceId, currentVersion + 1);
     this.locks.delete(resourceId);
 
-    this.logger.debug('Optimistic update successful', {
+    this.logger.debug("Optimistic update successful", {
       resourceId,
       agentId,
       newVersion: currentVersion + 1,
@@ -458,7 +458,7 @@ export class OptimisticLockManager {
     
     if (lock && lock.holder === agentId) {
       this.locks.delete(resourceId);
-      this.logger.debug('Optimistic lock released', {
+      this.logger.debug("Optimistic lock released", {
         resourceId,
         agentId,
       });
@@ -477,7 +477,7 @@ export class OptimisticLockManager {
         this.locks.delete(resourceId);
         removed++;
         
-        this.logger.warn('Removed stale lock', {
+        this.logger.warn("Removed stale lock", {
           resourceId,
           holder: lock.holder,
           age: now - lock.timestamp.getTime(),

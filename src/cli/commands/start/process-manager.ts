@@ -2,23 +2,35 @@
  * Process Manager - Handles lifecycle of system processes
  */
 
-import { EventEmitter } from './event-emitter.js';
-import { colors } from '@cliffy/ansi/colors';
+import { EventEmitter } from "./event-emitter.js";
+import chalk from "chalk";
 import { 
   ProcessInfo, 
   ProcessType, 
   ProcessStatus, 
   ProcessMetrics,
-  SystemStats 
-} from './types.js';
-import { Orchestrator } from '../../../core/orchestrator.js';
-import { TerminalManager } from '../../../terminal/manager.js';
-import { MemoryManager } from '../../../memory/manager.js';
-import { CoordinationManager } from '../../../coordination/manager.js';
-import { MCPServer } from '../../../mcp/server.js';
-import { eventBus } from '../../../core/event-bus.js';
-import { logger } from '../../../core/logger.js';
-import { configManager } from '../../../core/config.js';
+  SystemStats, 
+} from "./types.js";
+import { Orchestrator } from "../../../core/orchestrator.js";
+import { TerminalManager } from "../../../terminal/manager.js";
+import { MemoryManager } from "../../../memory/manager.js";
+import { CoordinationManager } from "../../../coordination/manager.js";
+import { MCPServer } from "../../../mcp/server.js";
+import { eventBus } from "../../../core/event-bus.js";
+import { logger } from "../../../core/logger.js";
+import { Deno } from "../../../utils/deno-compat.js";
+
+// Color compatibility
+const colors = {
+  gray: chalk.gray,
+  yellow: chalk.yellow,
+  red: chalk.red,
+  green: chalk.green,
+  cyan: chalk.cyan,
+  blue: chalk.blue,
+  bold: chalk.bold,
+};
+import { configManager } from "../../../core/config.js";
 
 export class ProcessManager extends EventEmitter {
   private processes: Map<string, ProcessInfo> = new Map();
@@ -38,41 +50,41 @@ export class ProcessManager extends EventEmitter {
     // Define all manageable processes
     const processDefinitions: ProcessInfo[] = [
       {
-        id: 'event-bus',
-        name: 'Event Bus',
+        id: "event-bus",
+        name: "Event Bus",
         type: ProcessType.EVENT_BUS,
-        status: ProcessStatus.STOPPED
+        status: ProcessStatus.STOPPED,
       },
       {
-        id: 'orchestrator',
-        name: 'Orchestrator Engine',
+        id: "orchestrator",
+        name: "Orchestrator Engine",
         type: ProcessType.ORCHESTRATOR,
-        status: ProcessStatus.STOPPED
+        status: ProcessStatus.STOPPED,
       },
       {
-        id: 'memory-manager',
-        name: 'Memory Manager',
+        id: "memory-manager",
+        name: "Memory Manager",
         type: ProcessType.MEMORY_MANAGER,
-        status: ProcessStatus.STOPPED
+        status: ProcessStatus.STOPPED,
       },
       {
-        id: 'terminal-pool',
-        name: 'Terminal Pool',
+        id: "terminal-pool",
+        name: "Terminal Pool",
         type: ProcessType.TERMINAL_POOL,
-        status: ProcessStatus.STOPPED
+        status: ProcessStatus.STOPPED,
       },
       {
-        id: 'mcp-server',
-        name: 'MCP Server',
+        id: "mcp-server",
+        name: "MCP Server",
         type: ProcessType.MCP_SERVER,
-        status: ProcessStatus.STOPPED
+        status: ProcessStatus.STOPPED,
       },
       {
-        id: 'coordinator',
-        name: 'Coordination Manager',
+        id: "coordinator",
+        name: "Coordination Manager",
         type: ProcessType.COORDINATOR,
-        status: ProcessStatus.STOPPED
-      }
+        status: ProcessStatus.STOPPED,
+      },
     ];
 
     for (const process of processDefinitions) {
@@ -83,9 +95,9 @@ export class ProcessManager extends EventEmitter {
   async initialize(configPath?: string): Promise<void> {
     try {
       this.config = await configManager.load(configPath);
-      this.emit('initialized', { config: this.config });
+      this.emit("initialized", { config: this.config });
     } catch (error) {
-      this.emit('error', { component: 'ProcessManager', error });
+      this.emit("error", { component: "ProcessManager", error });
       throw error;
     }
   }
@@ -106,14 +118,14 @@ export class ProcessManager extends EventEmitter {
       switch (process.type) {
         case ProcessType.EVENT_BUS:
           // Event bus is already initialized globally
-          process.pid = Deno.pid;
+          process.pid = typeof Deno !== "undefined" && "pid" in Deno ? (Deno as any).pid : process.pid;
           break;
 
         case ProcessType.MEMORY_MANAGER:
           this.memoryManager = new MemoryManager(
             this.config.memory,
             eventBus,
-            logger
+            logger,
           );
           await this.memoryManager.initialize();
           break;
@@ -122,7 +134,7 @@ export class ProcessManager extends EventEmitter {
           this.terminalManager = new TerminalManager(
             this.config.terminal,
             eventBus,
-            logger
+            logger,
           );
           await this.terminalManager.initialize();
           break;
@@ -131,7 +143,7 @@ export class ProcessManager extends EventEmitter {
           this.coordinationManager = new CoordinationManager(
             this.config.coordination,
             eventBus,
-            logger
+            logger,
           );
           await this.coordinationManager.initialize();
           break;
@@ -140,7 +152,7 @@ export class ProcessManager extends EventEmitter {
           this.mcpServer = new MCPServer(
             this.config.mcp,
             eventBus,
-            logger
+            logger,
           );
           await this.mcpServer.start();
           break;
@@ -148,7 +160,7 @@ export class ProcessManager extends EventEmitter {
         case ProcessType.ORCHESTRATOR:
           if (!this.terminalManager || !this.memoryManager || 
               !this.coordinationManager || !this.mcpServer) {
-            throw new Error('Required components not initialized');
+            throw new Error("Required components not initialized");
           }
           
           this.orchestrator = new Orchestrator(
@@ -158,7 +170,7 @@ export class ProcessManager extends EventEmitter {
             this.coordinationManager,
             this.mcpServer,
             eventBus,
-            logger
+            logger,
           );
           await this.orchestrator.initialize();
           break;
@@ -166,15 +178,15 @@ export class ProcessManager extends EventEmitter {
 
       process.startTime = Date.now();
       this.updateProcessStatus(processId, ProcessStatus.RUNNING);
-      this.emit('processStarted', { processId, process });
+      this.emit("processStarted", { processId, process });
 
     } catch (error) {
       this.updateProcessStatus(processId, ProcessStatus.ERROR);
       process.metrics = {
         ...process.metrics,
-        lastError: (error as Error).message
+        lastError: (error as Error).message,
       };
-      this.emit('processError', { processId, error });
+      this.emit("processError", { processId, error });
       throw error;
     }
   }
@@ -226,11 +238,11 @@ export class ProcessManager extends EventEmitter {
       }
 
       this.updateProcessStatus(processId, ProcessStatus.STOPPED);
-      this.emit('processStopped', { processId });
+      this.emit("processStopped", { processId });
 
     } catch (error) {
       this.updateProcessStatus(processId, ProcessStatus.ERROR);
-      this.emit('processError', { processId, error });
+      this.emit("processError", { processId, error });
       throw error;
     }
   }
@@ -244,12 +256,12 @@ export class ProcessManager extends EventEmitter {
   async startAll(): Promise<void> {
     // Start in dependency order
     const startOrder = [
-      'event-bus',
-      'memory-manager',
-      'terminal-pool',
-      'coordinator',
-      'mcp-server',
-      'orchestrator'
+      "event-bus",
+      "memory-manager",
+      "terminal-pool",
+      "coordinator",
+      "mcp-server",
+      "orchestrator",
     ];
 
     for (const processId of startOrder) {
@@ -265,12 +277,12 @@ export class ProcessManager extends EventEmitter {
   async stopAll(): Promise<void> {
     // Stop in reverse dependency order
     const stopOrder = [
-      'orchestrator',
-      'mcp-server',
-      'coordinator',
-      'terminal-pool',
-      'memory-manager',
-      'event-bus'
+      "orchestrator",
+      "mcp-server",
+      "coordinator",
+      "terminal-pool",
+      "memory-manager",
+      "event-bus",
     ];
 
     for (const processId of stopOrder) {
@@ -306,7 +318,7 @@ export class ProcessManager extends EventEmitter {
       errorProcesses: errorProcesses.length,
       systemUptime: this.getSystemUptime(),
       totalMemory: this.getTotalMemoryUsage(),
-      totalCpu: this.getTotalCpuUsage()
+      totalCpu: this.getTotalCpuUsage(),
     };
   }
 
@@ -314,13 +326,13 @@ export class ProcessManager extends EventEmitter {
     const process = this.processes.get(processId);
     if (process) {
       process.status = status;
-      this.emit('statusChanged', { processId, status });
+      this.emit("statusChanged", { processId, status });
     }
   }
 
   private getSystemUptime(): number {
-    const orchestrator = this.processes.get('orchestrator');
-    if (orchestrator && orchestrator.startTime) {
+    const orchestrator = this.processes.get("orchestrator");
+    if (orchestrator?.startTime) {
       return Date.now() - orchestrator.startTime;
     }
     return 0;
@@ -340,7 +352,7 @@ export class ProcessManager extends EventEmitter {
     // Placeholder - would integrate with actual logging system
     return [
       `[${new Date().toISOString()}] Process ${processId} started`,
-      `[${new Date().toISOString()}] Process ${processId} is running normally`
+      `[${new Date().toISOString()}] Process ${processId} is running normally`,
     ];
   }
 }

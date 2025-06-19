@@ -2,18 +2,20 @@
  * Migration Analyzer - Analyzes existing projects for migration readiness
  */
 
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import { MigrationAnalysis, MigrationRisk } from './types';
-import { logger } from './logger';
-import * as chalk from 'chalk';
-import { glob } from 'glob';
+import * as path from "node:path";
+import * as fs from "fs-extra";
+import * as crypto from "crypto";
+import { MigrationAnalysis, MigrationRisk } from "./types";
+import { logger } from "./logger";
+import chalk from "chalk";
+import { glob } from "glob";
+import { MigrationValidator } from "./migration-validator";
+import { ProgressReporter } from "./progress-reporter";
 
 export class MigrationAnalyzer {
   private optimizedCommands = [
-    'sparc', 'sparc-architect', 'sparc-code', 'sparc-tdd',
-    'claude-flow-help', 'claude-flow-memory', 'claude-flow-swarm'
+    "sparc", "sparc-architect", "sparc-code", "sparc-tdd",
+    "claude-flow-help", "claude-flow-memory", "claude-flow-swarm",
   ];
 
   async analyze(projectPath: string): Promise<MigrationAnalysis> {
@@ -28,11 +30,11 @@ export class MigrationAnalyzer {
       conflictingFiles: [],
       migrationRisks: [],
       recommendations: [],
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     // Check for .claude folder
-    const claudePath = path.join(projectPath, '.claude');
+    const claudePath = path.join(projectPath, ".claude");
     if (await fs.pathExists(claudePath)) {
       analysis.hasClaudeFolder = true;
       
@@ -57,13 +59,13 @@ export class MigrationAnalyzer {
   }
 
   private async analyzeCommands(claudePath: string, analysis: MigrationAnalysis): Promise<void> {
-    const commandsPath = path.join(claudePath, 'commands');
+    const commandsPath = path.join(claudePath, "commands");
     
     if (await fs.pathExists(commandsPath)) {
-      const files = await glob('**/*.md', { cwd: commandsPath });
+      const files = glob.sync("**/*.md", { cwd: commandsPath });
       
       for (const file of files) {
-        const commandName = path.basename(file, '.md');
+        const commandName = path.basename(file, ".md");
         
         if (!this.optimizedCommands.includes(commandName)) {
           analysis.customCommands.push(commandName);
@@ -75,10 +77,10 @@ export class MigrationAnalyzer {
   private async checkOptimizedPrompts(claudePath: string, analysis: MigrationAnalysis): Promise<void> {
     // Check for key optimized prompt files
     const optimizedFiles = [
-      'BATCHTOOLS_GUIDE.md',
-      'BATCHTOOLS_BEST_PRACTICES.md',
-      'MIGRATION_GUIDE.md',
-      'PERFORMANCE_BENCHMARKS.md'
+      "BATCHTOOLS_GUIDE.md",
+      "BATCHTOOLS_BEST_PRACTICES.md",
+      "MIGRATION_GUIDE.md",
+      "PERFORMANCE_BENCHMARKS.md",
     ];
 
     let hasOptimized = 0;
@@ -93,34 +95,34 @@ export class MigrationAnalyzer {
 
   private async analyzeConfigurations(projectPath: string, analysis: MigrationAnalysis): Promise<void> {
     // Check for CLAUDE.md
-    const claudeMdPath = path.join(projectPath, 'CLAUDE.md');
+    const claudeMdPath = path.join(projectPath, "CLAUDE.md");
     if (await fs.pathExists(claudeMdPath)) {
-      const content = await fs.readFile(claudeMdPath, 'utf-8');
-      analysis.customConfigurations['CLAUDE.md'] = {
+      const content = await fs.readFile(claudeMdPath, "utf-8");
+      analysis.customConfigurations["CLAUDE.md"] = {
         exists: true,
         size: content.length,
-        hasCustomContent: !content.includes('SPARC Development Environment')
+        hasCustomContent: !content.includes("SPARC Development Environment"),
       };
     }
 
     // Check for .roomodes
-    const roomodesPath = path.join(projectPath, '.roomodes');
+    const roomodesPath = path.join(projectPath, ".roomodes");
     if (await fs.pathExists(roomodesPath)) {
       try {
         const roomodes = await fs.readJson(roomodesPath);
-        analysis.customConfigurations['.roomodes'] = {
+        analysis.customConfigurations[".roomodes"] = {
           exists: true,
           modeCount: Object.keys(roomodes).length,
           customModes: Object.keys(roomodes).filter(mode => 
-            !['architect', 'code', 'tdd', 'debug', 'docs-writer'].includes(mode)
-          )
+            !["architect", "code", "tdd", "debug", "docs-writer"].includes(mode),
+          ),
         };
       } catch (error) {
         analysis.migrationRisks.push({
-          level: 'medium',
-          description: 'Invalid .roomodes file',
+          level: "medium",
+          description: "Invalid .roomodes file",
           file: roomodesPath,
-          mitigation: 'File will be backed up and replaced'
+          mitigation: "File will be backed up and replaced",
         });
       }
     }
@@ -129,17 +131,17 @@ export class MigrationAnalyzer {
   private async detectConflicts(projectPath: string, analysis: MigrationAnalysis): Promise<void> {
     // Check for files that might conflict with migration
     const potentialConflicts = [
-      '.claude/commands/sparc.md',
-      '.claude/BATCHTOOLS_GUIDE.md',
-      'memory/memory-store.json',
-      'coordination/config.json'
+      ".claude/commands/sparc.md",
+      ".claude/BATCHTOOLS_GUIDE.md",
+      "memory/memory-store.json",
+      "coordination/config.json",
     ];
 
     for (const file of potentialConflicts) {
       const filePath = path.join(projectPath, file);
       if (await fs.pathExists(filePath)) {
-        const content = await fs.readFile(filePath, 'utf-8');
-        const checksum = crypto.createHash('md5').update(content).digest('hex');
+        const content = await fs.readFile(filePath, "utf-8");
+        const checksum = crypto.createHash("md5").update(content).digest("hex");
         
         // Check if it's a custom version
         if (!this.isStandardFile(file, checksum)) {
@@ -159,36 +161,36 @@ export class MigrationAnalyzer {
     // High risk: Custom commands that might be overwritten
     if (analysis.customCommands.length > 0) {
       analysis.migrationRisks.push({
-        level: 'high',
+        level: "high",
         description: `Found ${analysis.customCommands.length} custom commands that may be affected`,
-        mitigation: 'Use --preserve-custom flag or selective migration'
+        mitigation: "Use --preserve-custom flag or selective migration",
       });
     }
 
     // Medium risk: Existing optimized prompts
     if (analysis.hasOptimizedPrompts) {
       analysis.migrationRisks.push({
-        level: 'medium',
-        description: 'Project already has some optimized prompts',
-        mitigation: 'Consider using merge strategy to preserve customizations'
+        level: "medium",
+        description: "Project already has some optimized prompts",
+        mitigation: "Consider using merge strategy to preserve customizations",
       });
     }
 
     // Low risk: No .claude folder
     if (!analysis.hasClaudeFolder) {
       analysis.migrationRisks.push({
-        level: 'low',
-        description: 'No existing .claude folder found',
-        mitigation: 'Fresh installation will be performed'
+        level: "low",
+        description: "No existing .claude folder found",
+        mitigation: "Fresh installation will be performed",
       });
     }
 
     // High risk: Conflicting files
     if (analysis.conflictingFiles.length > 0) {
       analysis.migrationRisks.push({
-        level: 'high',
+        level: "high",
         description: `${analysis.conflictingFiles.length} files may have custom modifications`,
-        mitigation: 'Files will be backed up before migration'
+        mitigation: "Files will be backed up before migration",
       });
     }
   }
@@ -197,65 +199,65 @@ export class MigrationAnalyzer {
     // Strategy recommendations
     if (analysis.customCommands.length > 0 || analysis.conflictingFiles.length > 0) {
       analysis.recommendations.push(
-        'Use "selective" or "merge" strategy to preserve customizations'
+        'Use "selective" or "merge" strategy to preserve customizations',
       );
     } else if (!analysis.hasClaudeFolder) {
       analysis.recommendations.push(
-        'Use "full" strategy for clean installation'
+        'Use "full" strategy for clean installation',
       );
     }
 
     // Backup recommendations
     if (analysis.hasClaudeFolder) {
       analysis.recommendations.push(
-        'Create a backup before migration (automatic with default settings)'
+        "Create a backup before migration (automatic with default settings)",
       );
     }
 
     // Custom command recommendations
     if (analysis.customCommands.length > 0) {
       analysis.recommendations.push(
-        `Review custom commands: ${analysis.customCommands.join(', ')}`
+        `Review custom commands: ${analysis.customCommands.join(", ")}`,
       );
     }
 
     // Validation recommendations
-    if (analysis.migrationRisks.some(r => r.level === 'high')) {
+    if (analysis.migrationRisks.some(r => r.level === "high")) {
       analysis.recommendations.push(
-        'Run with --dry-run first to preview changes'
+        "Run with --dry-run first to preview changes",
       );
     }
   }
 
   printAnalysis(analysis: MigrationAnalysis, detailed: boolean = false): void {
-    console.log(chalk.bold('\n📊 Migration Analysis Report'));
-    console.log(chalk.gray('─'.repeat(50)));
+    console.log(chalk.bold("\n📊 Migration Analysis Report"));
+    console.log(chalk.gray("─".repeat(50)));
     
-    console.log(`\n${chalk.bold('Project:')} ${analysis.projectPath}`);
-    console.log(`${chalk.bold('Timestamp:')} ${analysis.timestamp.toISOString()}`);
+    console.log(`\n${chalk.bold("Project:")} ${analysis.projectPath}`);
+    console.log(`${chalk.bold("Timestamp:")} ${analysis.timestamp.toISOString()}`);
     
     // Status
-    console.log(chalk.bold('\n📋 Current Status:'));
-    console.log(`  • .claude folder: ${analysis.hasClaudeFolder ? chalk.green('✓') : chalk.red('✗')}`);
-    console.log(`  • Optimized prompts: ${analysis.hasOptimizedPrompts ? chalk.green('✓') : chalk.red('✗')}`);
-    console.log(`  • Custom commands: ${analysis.customCommands.length > 0 ? chalk.yellow(analysis.customCommands.length) : chalk.green('0')}`);
-    console.log(`  • Conflicts: ${analysis.conflictingFiles.length > 0 ? chalk.yellow(analysis.conflictingFiles.length) : chalk.green('0')}`);
+    console.log(chalk.bold("\n📋 Current Status:"));
+    console.log(`  • .claude folder: ${analysis.hasClaudeFolder ? chalk.green("✓") : chalk.red("✗")}`);
+    console.log(`  • Optimized prompts: ${analysis.hasOptimizedPrompts ? chalk.green("✓") : chalk.red("✗")}`);
+    console.log(`  • Custom commands: ${analysis.customCommands.length > 0 ? chalk.yellow(analysis.customCommands.length) : chalk.green("0")}`);
+    console.log(`  • Conflicts: ${analysis.conflictingFiles.length > 0 ? chalk.yellow(analysis.conflictingFiles.length) : chalk.green("0")}`);
     
     // Risks
     if (analysis.migrationRisks.length > 0) {
-      console.log(chalk.bold('\n⚠️  Migration Risks:'));
+      console.log(chalk.bold("\n⚠️  Migration Risks:"));
       analysis.migrationRisks.forEach(risk => {
-        const icon = risk.level === 'high' ? '🔴' : risk.level === 'medium' ? '🟡' : '🟢';
+        const icon = risk.level === "high" ? "🔴" : risk.level === "medium" ? "🟡" : "🟢";
         console.log(`  ${icon} ${chalk.bold(risk.level.toUpperCase())}: ${risk.description}`);
         if (risk.mitigation) {
-          console.log(`     ${chalk.gray('→')} ${chalk.italic(risk.mitigation)}`);
+          console.log(`     ${chalk.gray("→")} ${chalk.italic(risk.mitigation)}`);
         }
       });
     }
     
     // Recommendations
     if (analysis.recommendations.length > 0) {
-      console.log(chalk.bold('\n💡 Recommendations:'));
+      console.log(chalk.bold("\n💡 Recommendations:"));
       analysis.recommendations.forEach(rec => {
         console.log(`  • ${rec}`);
       });
@@ -264,28 +266,28 @@ export class MigrationAnalyzer {
     // Detailed information
     if (detailed) {
       if (analysis.customCommands.length > 0) {
-        console.log(chalk.bold('\n🔧 Custom Commands:'));
+        console.log(chalk.bold("\n🔧 Custom Commands:"));
         analysis.customCommands.forEach(cmd => {
           console.log(`  • ${cmd}`);
         });
       }
       
       if (analysis.conflictingFiles.length > 0) {
-        console.log(chalk.bold('\n📁 Conflicting Files:'));
+        console.log(chalk.bold("\n📁 Conflicting Files:"));
         analysis.conflictingFiles.forEach(file => {
           console.log(`  • ${file}`);
         });
       }
       
       if (Object.keys(analysis.customConfigurations).length > 0) {
-        console.log(chalk.bold('\n⚙️  Configurations:'));
+        console.log(chalk.bold("\n⚙️  Configurations:"));
         Object.entries(analysis.customConfigurations).forEach(([file, config]) => {
           console.log(`  • ${file}: ${JSON.stringify(config, null, 2)}`);
         });
       }
     }
     
-    console.log(chalk.gray('\n' + '─'.repeat(50)));
+    console.log(chalk.gray(`\n${  "─".repeat(50)}`));
   }
 
   async saveAnalysis(analysis: MigrationAnalysis, outputPath: string): Promise<void> {

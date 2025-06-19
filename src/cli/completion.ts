@@ -2,52 +2,65 @@
  * Shell completion generator for Claude-Flow CLI
  */
 
-import { colors } from '@cliffy/ansi/colors';
+import chalk from "chalk";
+import { Deno } from "../utils/deno-compat.js";
+
+// Color compatibility
+const colors = {
+  gray: chalk.gray,
+  yellow: chalk.yellow,
+  red: chalk.red,
+  green: chalk.green,
+  cyan: chalk.cyan,
+  blue: chalk.blue,
+  bold: chalk.bold,
+  white: chalk.white,
+};
 
 export class CompletionGenerator {
   private commands = [
-    'start', 'agent', 'task', 'memory', 'config', 'status', 
-    'monitor', 'session', 'workflow', 'repl', 'version', 'completion'
+    "start", "agent", "task", "memory", "config", "status", 
+    "monitor", "session", "workflow", "repl", "version", "completion",
   ];
 
   private subcommands = {
-    agent: ['spawn', 'list', 'terminate', 'info'],
-    task: ['create', 'list', 'status', 'cancel', 'workflow'],
-    memory: ['query', 'export', 'import', 'stats', 'cleanup'],
-    config: ['show', 'get', 'set', 'init', 'validate'],
-    session: ['list', 'save', 'restore', 'delete', 'export', 'import', 'info', 'clean'],
-    workflow: ['run', 'validate', 'list', 'status', 'stop', 'template'],
+    agent: ["spawn", "list", "terminate", "info"],
+    task: ["create", "list", "status", "cancel", "workflow"],
+    memory: ["query", "export", "import", "stats", "cleanup"],
+    config: ["show", "get", "set", "init", "validate"],
+    session: ["list", "save", "restore", "delete", "export", "import", "info", "clean"],
+    workflow: ["run", "validate", "list", "status", "stop", "template"],
   };
 
   async generate(shell: string, install: boolean = false): Promise<void> {
-    const detectedShell = shell === 'detect' ? await this.detectShell() : shell;
+    const detectedShell = shell === "detect" ? await this.detectShell() : shell;
     
     switch (detectedShell) {
-      case 'bash':
+      case "bash":
         await this.generateBashCompletion(install);
         break;
-      case 'zsh':
+      case "zsh":
         await this.generateZshCompletion(install);
         break;
-      case 'fish':
+      case "fish":
         await this.generateFishCompletion(install);
         break;
       default:
         console.error(colors.red(`Unsupported shell: ${detectedShell}`));
-        console.log(colors.gray('Supported shells: bash, zsh, fish'));
+        console.log(colors.gray("Supported shells: bash, zsh, fish"));
         break;
     }
   }
 
   private async detectShell(): Promise<string> {
-    const shell = Deno.env.get('SHELL') || '';
+    const shell = Deno.env.get("SHELL") || "";
     
-    if (shell.includes('bash')) return 'bash';
-    if (shell.includes('zsh')) return 'zsh';
-    if (shell.includes('fish')) return 'fish';
+    if (shell.includes("bash")) return "bash";
+    if (shell.includes("zsh")) return "zsh";
+    if (shell.includes("fish")) return "fish";
     
-    console.log(colors.yellow('Could not detect shell, defaulting to bash'));
-    return 'bash';
+    console.log(colors.yellow("Could not detect shell, defaulting to bash"));
+    return "bash";
   }
 
   private async generateBashCompletion(install: boolean): Promise<void> {
@@ -99,7 +112,7 @@ _claude_flow_completion() {
                     return
                     ;;
                 *)
-                    COMPREPLY=($(compgen -W "${this.subcommands.agent.join(' ')}" -- "$cur"))
+                    COMPREPLY=($(compgen -W "${this.subcommands.agent.join(" ")}" -- "$cur"))
                     return
                     ;;
             esac
@@ -122,17 +135,17 @@ _claude_flow_completion() {
                     return
                     ;;
                 *)
-                    COMPREPLY=($(compgen -W "${this.subcommands.task.join(' ')}" -- "$cur"))
+                    COMPREPLY=($(compgen -W "${this.subcommands.task.join(" ")}" -- "$cur"))
                     return
                     ;;
             esac
             ;;
         memory)
-            COMPREPLY=($(compgen -W "${this.subcommands.memory.join(' ')}" -- "$cur"))
+            COMPREPLY=($(compgen -W "${this.subcommands.memory.join(" ")}" -- "$cur"))
             return
             ;;
         config)
-            COMPREPLY=($(compgen -W "${this.subcommands.config.join(' ')}" -- "$cur"))
+            COMPREPLY=($(compgen -W "${this.subcommands.config.join(" ")}" -- "$cur"))
             return
             ;;
         session)
@@ -147,7 +160,7 @@ _claude_flow_completion() {
                     return
                     ;;
                 *)
-                    COMPREPLY=($(compgen -W "${this.subcommands.session.join(' ')}" -- "$cur"))
+                    COMPREPLY=($(compgen -W "${this.subcommands.session.join(" ")}" -- "$cur"))
                     return
                     ;;
             esac
@@ -168,7 +181,7 @@ _claude_flow_completion() {
                     return
                     ;;
                 *)
-                    COMPREPLY=($(compgen -W "${this.subcommands.workflow.join(' ')}" -- "$cur"))
+                    COMPREPLY=($(compgen -W "${this.subcommands.workflow.join(" ")}" -- "$cur"))
                     return
                     ;;
             esac
@@ -178,7 +191,7 @@ _claude_flow_completion() {
             return
             ;;
         *)
-            COMPREPLY=($(compgen -W "${this.commands.join(' ')}" -- "$cur"))
+            COMPREPLY=($(compgen -W "${this.commands.join(" ")}" -- "$cur"))
             return
             ;;
     esac
@@ -272,7 +285,7 @@ _claude_flow_agent() {
             _arguments '1: :_claude_flow_agents'
             ;;
         *)
-            _arguments '1: :(${this.subcommands.agent.join(' ')})'
+            _arguments '1: :(${this.subcommands.agent.join(" ")})'
             ;;
     esac
 }
@@ -295,17 +308,17 @@ _claude_flow_task() {
             _arguments '1: :_claude_flow_tasks'
             ;;
         *)
-            _arguments '1: :(${this.subcommands.task.join(' ')})'
+            _arguments '1: :(${this.subcommands.task.join(" ")})'
             ;;
     esac
 }
 
 _claude_flow_memory() {
-    _arguments '1: :(${this.subcommands.memory.join(' ')})'
+    _arguments '1: :(${this.subcommands.memory.join(" ")})'
 }
 
 _claude_flow_config() {
-    _arguments '1: :(${this.subcommands.config.join(' ')})'
+    _arguments '1: :(${this.subcommands.config.join(" ")})'
 }
 
 _claude_flow_session() {
@@ -317,7 +330,7 @@ _claude_flow_session() {
             _arguments '1: :_files -g "*.json *.yaml *.yml"'
             ;;
         *)
-            _arguments '1: :(${this.subcommands.session.join(' ')})'
+            _arguments '1: :(${this.subcommands.session.join(" ")})'
             ;;
     esac
 }
@@ -334,7 +347,7 @@ _claude_flow_workflow() {
             _arguments '1: :_claude_flow_workflows'
             ;;
         *)
-            _arguments '1: :(${this.subcommands.workflow.join(' ')})'
+            _arguments '1: :(${this.subcommands.workflow.join(" ")})'
             ;;
     esac
 }
@@ -471,21 +484,21 @@ complete -f -c claude-flow -n '__fish_claude_flow_using_command completion' -a '
 
   private async installBashCompletion(script: string): Promise<void> {
     const possiblePaths = [
-      '/etc/bash_completion.d/claude-flow',
-      '/usr/local/etc/bash_completion.d/claude-flow',
-      `${Deno.env.get('HOME')}/.local/share/bash-completion/completions/claude-flow`,
-      `${Deno.env.get('HOME')}/.bash_completion.d/claude-flow`
+      "/etc/bash_completion.d/claude-flow",
+      "/usr/local/etc/bash_completion.d/claude-flow",
+      `${Deno.env.get("HOME")}/.local/share/bash-completion/completions/claude-flow`,
+      `${Deno.env.get("HOME")}/.bash_completion.d/claude-flow`,
     ];
 
     for (const path of possiblePaths) {
       try {
-        const dir = path.substring(0, path.lastIndexOf('/'));
+        const dir = path.substring(0, path.lastIndexOf("/"));
         await Deno.mkdir(dir, { recursive: true });
         await Deno.writeTextFile(path, script);
         
-        console.log(colors.green('✓ Bash completion installed'));
-        console.log(`${colors.white('Location:')} ${path}`);
-        console.log(colors.gray('Restart your shell or run: source ~/.bashrc'));
+        console.log(colors.green("✓ Bash completion installed"));
+        console.log(`${colors.white("Location:")} ${path}`);
+        console.log(colors.gray("Restart your shell or run: source ~/.bashrc"));
         return;
       } catch (error) {
         // Try next path
@@ -493,26 +506,26 @@ complete -f -c claude-flow -n '__fish_claude_flow_using_command completion' -a '
       }
     }
 
-    console.error(colors.red('Failed to install bash completion'));
-    console.log(colors.gray('You can manually save the completion script to a bash completion directory'));
+    console.error(colors.red("Failed to install bash completion"));
+    console.log(colors.gray("You can manually save the completion script to a bash completion directory"));
   }
 
   private async installZshCompletion(script: string): Promise<void> {
     const possiblePaths = [
-      `${Deno.env.get('HOME')}/.zsh/completions/_claude-flow`,
-      '/usr/local/share/zsh/site-functions/_claude-flow',
-      '/usr/share/zsh/site-functions/_claude-flow'
+      `${Deno.env.get("HOME")}/.zsh/completions/_claude-flow`,
+      "/usr/local/share/zsh/site-functions/_claude-flow",
+      "/usr/share/zsh/site-functions/_claude-flow",
     ];
 
     for (const path of possiblePaths) {
       try {
-        const dir = path.substring(0, path.lastIndexOf('/'));
+        const dir = path.substring(0, path.lastIndexOf("/"));
         await Deno.mkdir(dir, { recursive: true });
         await Deno.writeTextFile(path, script);
         
-        console.log(colors.green('✓ Zsh completion installed'));
-        console.log(`${colors.white('Location:')} ${path}`);
-        console.log(colors.gray('Restart your shell or run: autoload -U compinit && compinit'));
+        console.log(colors.green("✓ Zsh completion installed"));
+        console.log(`${colors.white("Location:")} ${path}`);
+        console.log(colors.gray("Restart your shell or run: autoload -U compinit && compinit"));
         return;
       } catch (error) {
         // Try next path
@@ -520,26 +533,26 @@ complete -f -c claude-flow -n '__fish_claude_flow_using_command completion' -a '
       }
     }
 
-    console.error(colors.red('Failed to install zsh completion'));
-    console.log(colors.gray('You can manually save the completion script to your zsh completion directory'));
+    console.error(colors.red("Failed to install zsh completion"));
+    console.log(colors.gray("You can manually save the completion script to your zsh completion directory"));
   }
 
   private async installFishCompletion(script: string): Promise<void> {
     const possiblePaths = [
-      `${Deno.env.get('HOME')}/.config/fish/completions/claude-flow.fish`,
-      '/usr/local/share/fish/completions/claude-flow.fish',
-      '/usr/share/fish/completions/claude-flow.fish'
+      `${Deno.env.get("HOME")}/.config/fish/completions/claude-flow.fish`,
+      "/usr/local/share/fish/completions/claude-flow.fish",
+      "/usr/share/fish/completions/claude-flow.fish",
     ];
 
     for (const path of possiblePaths) {
       try {
-        const dir = path.substring(0, path.lastIndexOf('/'));
+        const dir = path.substring(0, path.lastIndexOf("/"));
         await Deno.mkdir(dir, { recursive: true });
         await Deno.writeTextFile(path, script);
         
-        console.log(colors.green('✓ Fish completion installed'));
-        console.log(`${colors.white('Location:')} ${path}`);
-        console.log(colors.gray('Completions will be available in new fish sessions'));
+        console.log(colors.green("✓ Fish completion installed"));
+        console.log(`${colors.white("Location:")} ${path}`);
+        console.log(colors.gray("Completions will be available in new fish sessions"));
         return;
       } catch (error) {
         // Try next path
@@ -547,7 +560,7 @@ complete -f -c claude-flow -n '__fish_claude_flow_using_command completion' -a '
       }
     }
 
-    console.error(colors.red('Failed to install fish completion'));
-    console.log(colors.gray('You can manually save the completion script to your fish completion directory'));
+    console.error(colors.red("Failed to install fish completion"));
+    console.log(colors.gray("You can manually save the completion script to your fish completion directory"));
   }
 }

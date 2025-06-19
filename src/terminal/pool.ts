@@ -2,10 +2,10 @@
  * Terminal pool management
  */
 
-import { Terminal, ITerminalAdapter } from './adapters/base.js';
-import { ILogger } from '../core/logger.js';
-import { TerminalError } from '../utils/errors.js';
-import { delay } from '../utils/helpers.js';
+import { Terminal, ITerminalAdapter } from "./adapters/base.js";
+import { ILogger } from "../core/logger.js";
+import { TerminalError } from "../utils/errors.js";
+import { delay } from "../utils/helpers.js";
 
 interface PooledTerminal {
   terminal: Terminal;
@@ -39,7 +39,7 @@ export class TerminalPool {
   }
 
   private async doInitialize(): Promise<void> {
-    this.logger.info('Initializing terminal pool', { 
+    this.logger.info("Initializing terminal pool", { 
       maxSize: this.maxSize,
       recycleAfter: this.recycleAfter,
     });
@@ -54,13 +54,13 @@ export class TerminalPool {
 
     await Promise.all(promises);
     
-    this.logger.info('Terminal pool initialized', { 
+    this.logger.info("Terminal pool initialized", { 
       created: preCreateCount,
     });
   }
 
   async shutdown(): Promise<void> {
-    this.logger.info('Shutting down terminal pool');
+    this.logger.info("Shutting down terminal pool");
 
     // Destroy all terminals
     const terminals = Array.from(this.terminals.values());
@@ -82,7 +82,7 @@ export class TerminalPool {
         pooled.inUse = true;
         pooled.lastUsed = new Date();
         
-        this.logger.debug('Terminal acquired from pool', { 
+        this.logger.debug("Terminal acquired from pool", { 
           terminalId,
           useCount: pooled.useCount,
         });
@@ -103,7 +103,7 @@ export class TerminalPool {
     }
 
     // Pool is full, wait for a terminal to become available
-    this.logger.info('Terminal pool full, waiting for available terminal');
+    this.logger.info("Terminal pool full, waiting for available terminal");
     
     const startTime = Date.now();
     const timeout = 30000; // 30 seconds
@@ -123,13 +123,13 @@ export class TerminalPool {
       }
     }
 
-    throw new TerminalError('No terminal available in pool (timeout)');
+    throw new TerminalError("No terminal available in pool (timeout)");
   }
 
   async release(terminal: Terminal): Promise<void> {
     const pooled = this.terminals.get(terminal.id);
     if (!pooled) {
-      this.logger.warn('Attempted to release unknown terminal', { 
+      this.logger.warn("Attempted to release unknown terminal", { 
         terminalId: terminal.id,
       });
       return;
@@ -140,7 +140,7 @@ export class TerminalPool {
 
     // Check if terminal should be recycled
     if (pooled.useCount >= this.recycleAfter || !terminal.isAlive()) {
-      this.logger.info('Recycling terminal', { 
+      this.logger.info("Recycling terminal", { 
         terminalId: terminal.id,
         useCount: pooled.useCount,
       });
@@ -157,7 +157,7 @@ export class TerminalPool {
       // Return to available queue
       this.availableQueue.push(terminal.id);
       
-      this.logger.debug('Terminal returned to pool', { 
+      this.logger.debug("Terminal returned to pool", { 
         terminalId: terminal.id,
         useCount: pooled.useCount,
       });
@@ -188,7 +188,7 @@ export class TerminalPool {
   }
 
   async performMaintenance(): Promise<void> {
-    this.logger.debug('Performing terminal pool maintenance');
+    this.logger.debug("Performing terminal pool maintenance");
 
     // Remove dead terminals
     const deadTerminals: string[] = [];
@@ -200,7 +200,7 @@ export class TerminalPool {
 
     // Clean up dead terminals
     for (const id of deadTerminals) {
-      this.logger.warn('Removing dead terminal from pool', { terminalId: id });
+      this.logger.warn("Removing dead terminal from pool", { terminalId: id });
       this.terminals.delete(id);
       const index = this.availableQueue.indexOf(id);
       if (index !== -1) {
@@ -214,7 +214,7 @@ export class TerminalPool {
     
     if (currentSize < minSize) {
       const toCreate = minSize - currentSize;
-      this.logger.info('Replenishing terminal pool', { 
+      this.logger.info("Replenishing terminal pool", { 
         currentSize, 
         minSize, 
         creating: toCreate,
@@ -236,7 +236,7 @@ export class TerminalPool {
       if (!pooled.inUse && pooled.terminal.isAlive()) {
         const idleTime = now - pooled.lastUsed.getTime();
         if (idleTime > staleTimeout) {
-          this.logger.info('Recycling stale terminal', { 
+          this.logger.info("Recycling stale terminal", { 
             terminalId: id, 
             idleTime,
           });
@@ -262,9 +262,9 @@ export class TerminalPool {
       this.terminals.set(terminal.id, pooled);
       this.availableQueue.push(terminal.id);
 
-      this.logger.debug('Created pooled terminal', { terminalId: terminal.id });
+      this.logger.debug("Created pooled terminal", { terminalId: terminal.id });
     } catch (error) {
-      this.logger.error('Failed to create pooled terminal', error);
+      this.logger.error("Failed to create pooled terminal", error);
       throw error;
     }
   }

@@ -2,15 +2,15 @@
  * Dependency graph management for task scheduling
  */
 
-import { Task } from '../utils/types.js';
-import { TaskDependencyError } from '../utils/errors.js';
-import { ILogger } from '../core/logger.js';
+import { Task } from "../utils/types.js";
+import { TaskDependencyError } from "../utils/errors.js";
+import { ILogger } from "../core/logger.js";
 
 export interface DependencyNode {
   taskId: string;
   dependencies: Set<string>;
   dependents: Set<string>;
-  status: 'pending' | 'ready' | 'running' | 'completed' | 'failed';
+  status: "pending" | "ready" | "running" | "completed" | "failed";
 }
 
 export interface DependencyPath {
@@ -33,7 +33,7 @@ export class DependencyGraph {
    */
   addTask(task: Task): void {
     if (this.nodes.has(task.id)) {
-      this.logger.warn('Task already exists in dependency graph', { taskId: task.id });
+      this.logger.warn("Task already exists in dependency graph", { taskId: task.id });
       return;
     }
 
@@ -41,7 +41,7 @@ export class DependencyGraph {
       taskId: task.id,
       dependencies: new Set(task.dependencies),
       dependents: new Set(),
-      status: 'pending',
+      status: "pending",
     };
 
     // Validate dependencies exist
@@ -64,7 +64,7 @@ export class DependencyGraph {
 
     // Check if task is ready
     if (this.isTaskReady(task.id)) {
-      node.status = 'ready';
+      node.status = "ready";
     }
   }
 
@@ -92,7 +92,7 @@ export class DependencyGraph {
         depNode.dependencies.delete(taskId);
         // Check if dependent is now ready
         if (this.isTaskReady(depId)) {
-          depNode.status = 'ready';
+          depNode.status = "ready";
         }
       }
     }
@@ -106,11 +106,11 @@ export class DependencyGraph {
   markCompleted(taskId: string): string[] {
     const node = this.nodes.get(taskId);
     if (!node) {
-      this.logger.warn('Task not found in dependency graph', { taskId });
+      this.logger.warn("Task not found in dependency graph", { taskId });
       return [];
     }
 
-    node.status = 'completed';
+    node.status = "completed";
     this.completedTasks.add(taskId);
     
     // Find newly ready tasks
@@ -118,8 +118,8 @@ export class DependencyGraph {
     
     for (const dependentId of node.dependents) {
       const dependent = this.nodes.get(dependentId);
-      if (dependent && dependent.status === 'pending' && this.isTaskReady(dependentId)) {
-        dependent.status = 'ready';
+      if (dependent && dependent.status === "pending" && this.isTaskReady(dependentId)) {
+        dependent.status = "ready";
         readyTasks.push(dependentId);
       }
     }
@@ -139,7 +139,7 @@ export class DependencyGraph {
       return [];
     }
 
-    node.status = 'failed';
+    node.status = "failed";
     
     // Get all dependent tasks that need to be cancelled
     const toCancelIds = this.getAllDependents(taskId);
@@ -148,7 +148,7 @@ export class DependencyGraph {
     for (const depId of toCancelIds) {
       const depNode = this.nodes.get(depId);
       if (depNode) {
-        depNode.status = 'failed';
+        depNode.status = "failed";
       }
     }
 
@@ -181,9 +181,9 @@ export class DependencyGraph {
     const ready: string[] = [];
     
     for (const [taskId, node] of this.nodes) {
-      if (node.status === 'ready' || (node.status === 'pending' && this.isTaskReady(taskId))) {
+      if (node.status === "ready" || (node.status === "pending" && this.isTaskReady(taskId))) {
         ready.push(taskId);
-        node.status = 'ready';
+        node.status = "ready";
       }
     }
 
@@ -278,7 +278,7 @@ export class DependencyGraph {
     // Check for cycles first
     const cycles = this.detectCycles();
     if (cycles.length > 0) {
-      this.logger.error('Cannot perform topological sort due to cycles', { cycles });
+      this.logger.error("Cannot perform topological sort due to cycles", { cycles });
       return null;
     }
 
@@ -346,7 +346,7 @@ export class DependencyGraph {
     }
 
     return paths.reduce((longest, current) => 
-      current.path.length > longest.path.length ? current : longest
+      current.path.length > longest.path.length ? current : longest,
     );
   }
 
@@ -360,7 +360,7 @@ export class DependencyGraph {
 
     const visited = new Set<string>();
     const queue: Array<{ taskId: string; path: string[] }> = [
-      { taskId: from, path: [from] }
+      { taskId: from, path: [from] },
     ];
 
     while (queue.length > 0) {
@@ -412,16 +412,16 @@ export class DependencyGraph {
       stats.maxDependencies = Math.max(stats.maxDependencies, node.dependencies.size);
       
       switch (node.status) {
-        case 'ready':
+        case "ready":
           stats.readyTasks++;
           break;
-        case 'pending':
+        case "pending":
           stats.pendingTasks++;
           break;
-        case 'running':
+        case "running":
           stats.runningTasks++;
           break;
-        case 'failed':
+        case "failed":
           stats.failedTasks++;
           break;
       }
@@ -436,31 +436,31 @@ export class DependencyGraph {
    * Export graph to DOT format for visualization
    */
   toDot(): string {
-    let dot = 'digraph TaskDependencies {\n';
-    dot += '  rankdir=LR;\n';
-    dot += '  node [shape=box];\n\n';
+    let dot = "digraph TaskDependencies {\n";
+    dot += "  rankdir=LR;\n";
+    dot += "  node [shape=box];\n\n";
 
     // Add nodes with status colors
     for (const [taskId, node] of this.nodes) {
-      let color = 'white';
+      let color = "white";
       switch (node.status) {
-        case 'ready':
-          color = 'lightgreen';
+        case "ready":
+          color = "lightgreen";
           break;
-        case 'running':
-          color = 'yellow';
+        case "running":
+          color = "yellow";
           break;
-        case 'completed':
-          color = 'green';
+        case "completed":
+          color = "green";
           break;
-        case 'failed':
-          color = 'red';
+        case "failed":
+          color = "red";
           break;
       }
       dot += `  "${taskId}" [style=filled, fillcolor=${color}];\n`;
     }
 
-    dot += '\n';
+    dot += "\n";
 
     // Add edges
     for (const [taskId, node] of this.nodes) {
@@ -469,7 +469,7 @@ export class DependencyGraph {
       }
     }
 
-    dot += '}\n';
+    dot += "}\n";
     return dot;
   }
 }

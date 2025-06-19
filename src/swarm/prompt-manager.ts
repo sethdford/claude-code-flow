@@ -1,14 +1,17 @@
-import * as path from 'path';
-import { EventEmitter } from 'events';
-import { copyPrompts, copyPromptsEnhanced, CopyOptions, CopyResult } from './prompt-copier-enhanced';
+import * as path from "path";
+import { EventEmitter } from "events";
+import { copyPromptsEnhanced } from "./prompt-copier-enhanced";
+import { CopyOptions, CopyResult } from "./prompt-copier";
 import { 
   PromptConfigManager, 
   PromptPathResolver, 
   PromptValidator,
   formatDuration,
-  formatFileSize
-} from './prompt-utils';
-import { logger } from '../logger';
+  formatFileSize,
+} from "./prompt-utils";
+import { Logger } from "../core/logger.js";
+
+const logger = Logger.getInstance();
 
 export interface PromptManagerOptions {
   configPath?: string;
@@ -44,20 +47,20 @@ export class PromptManager extends EventEmitter {
     super();
     
     this.options = {
-      configPath: options.configPath || '.prompt-config.json',
+      configPath: options.configPath || ".prompt-config.json",
       basePath: options.basePath || process.cwd(),
       autoDiscovery: options.autoDiscovery ?? true,
-      defaultProfile: options.defaultProfile || 'sparc'
+      defaultProfile: options.defaultProfile || "sparc",
     };
 
     this.configManager = new PromptConfigManager(
-      path.resolve(this.options.basePath, this.options.configPath)
+      path.resolve(this.options.basePath, this.options.configPath),
     );
     this.pathResolver = new PromptPathResolver(this.options.basePath);
   }
 
   async initialize(): Promise<void> {
-    logger.info('Initializing PromptManager...');
+    logger.info("Initializing PromptManager...");
     
     // Load configuration
     await this.configManager.loadConfig();
@@ -72,16 +75,16 @@ export class PromptManager extends EventEmitter {
         const config = this.configManager.getConfig();
         const uniqueDirs = Array.from(new Set([
           ...config.sourceDirectories,
-          ...discovered.map(dir => path.relative(this.options.basePath, dir))
+          ...discovered.map(dir => path.relative(this.options.basePath, dir)),
         ]));
         
         await this.configManager.saveConfig({
-          sourceDirectories: uniqueDirs
+          sourceDirectories: uniqueDirs,
         });
       }
     }
     
-    this.emit('initialized');
+    this.emit("initialized");
   }
 
   async copyPrompts(options: Partial<CopyOptions> = {}): Promise<CopyResult> {
@@ -91,11 +94,11 @@ export class PromptManager extends EventEmitter {
     // Resolve paths
     const resolved = this.pathResolver.resolvePaths(
       config.sourceDirectories,
-      config.destinationDirectory
+      config.destinationDirectory,
     );
 
     if (resolved.sources.length === 0) {
-      throw new Error('No valid source directories found');
+      throw new Error("No valid source directories found");
     }
 
     // Build copy options
@@ -103,27 +106,24 @@ export class PromptManager extends EventEmitter {
       source: resolved.sources[0], // Use first available source
       destination: resolved.destination,
       ...this.configManager.getProfile(profile),
-      ...options
+      ...options,
     };
 
-    logger.info('Starting prompt copy operation', {
+    logger.info("Starting prompt copy operation", {
       source: copyOptions.source,
       destination: copyOptions.destination,
-      profile
+      profile,
     });
 
-    this.emit('copyStart', copyOptions);
+    this.emit("copyStart", copyOptions);
 
     try {
-      const result = await (copyOptions.parallel ? 
-        copyPromptsEnhanced(copyOptions) : 
-        copyPrompts(copyOptions)
-      );
+      const result = await copyPromptsEnhanced(copyOptions);
 
-      this.emit('copyComplete', result);
+      this.emit("copyComplete", result);
       return result;
     } catch (error) {
-      this.emit('copyError', error);
+      this.emit("copyError", error);
       throw error;
     }
   }
@@ -132,7 +132,7 @@ export class PromptManager extends EventEmitter {
     const config = this.configManager.getConfig();
     const resolved = this.pathResolver.resolvePaths(
       config.sourceDirectories,
-      config.destinationDirectory
+      config.destinationDirectory,
     );
 
     const results: CopyResult[] = [];
@@ -143,17 +143,17 @@ export class PromptManager extends EventEmitter {
           source,
           destination: resolved.destination,
           ...this.configManager.getProfile(this.options.defaultProfile),
-          ...options
+          ...options,
         };
 
         logger.info(`Copying from source: ${source}`);
-        const result = await copyPrompts(copyOptions);
+        const result = await copyPromptsEnhanced(copyOptions);
         results.push(result);
         
-        this.emit('sourceComplete', { source, result });
+        this.emit("sourceComplete", { source, result });
       } catch (error) {
         logger.error(`Failed to copy from ${source}:`, error);
-        this.emit('sourceError', { source, error });
+        this.emit("sourceError", { source, error });
         
         // Add error result
         results.push({
@@ -162,8 +162,8 @@ export class PromptManager extends EventEmitter {
           copiedFiles: 0,
           failedFiles: 0,
           skippedFiles: 0,
-          errors: [{ file: source, error: error.message, phase: 'read' }],
-          duration: 0
+          errors: [{ file: source, error: error instanceof Error ? error.message : String(error), phase: "read" }],
+          duration: 0,
         });
       }
     }
@@ -177,13 +177,13 @@ export class PromptManager extends EventEmitter {
     
     const resolved = this.pathResolver.resolvePaths(
       sources,
-      config.destinationDirectory
+      config.destinationDirectory,
     );
 
     let totalFiles = 0;
     let validFiles = 0;
     let invalidFiles = 0;
-    const issues: ValidationReport['issues'] = [];
+    const issues: ValidationReport["issues"] = [];
 
     for (const source of resolved.sources) {
       await this.validateDirectory(source, issues);
@@ -197,15 +197,15 @@ export class PromptManager extends EventEmitter {
       totalFiles,
       validFiles,
       invalidFiles,
-      issues: issues.filter(issue => issue.issues.length > 0) // Only include files with issues
+      issues: issues.filter(issue => issue.issues.length > 0), // Only include files with issues
     };
 
-    this.emit('validationComplete', report);
+    this.emit("validationComplete", report);
     return report;
   }
 
-  private async validateDirectory(dirPath: string, issues: ValidationReport['issues']): Promise<void> {
-    const fs = require('fs').promises;
+  private async validateDirectory(dirPath: string, issues: ValidationReport["issues"]): Promise<void> {
+    const fs = require("fs").promises;
     
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
@@ -219,7 +219,7 @@ export class PromptManager extends EventEmitter {
           issues.push({
             file: fullPath,
             issues: result.issues,
-            metadata: result.metadata
+            metadata: result.metadata,
           });
         } else if (entry.isDirectory()) {
           await this.validateDirectory(fullPath, issues);
@@ -235,7 +235,7 @@ export class PromptManager extends EventEmitter {
     const patterns = config.defaultOptions.includePatterns;
     
     return patterns.some(pattern => {
-      const regex = pattern.replace(/\./g, '\\.').replace(/\*/g, '.*');
+      const regex = pattern.replace(/\./g, "\\.").replace(/\*/g, ".*");
       return new RegExp(regex).test(fileName);
     });
   }
@@ -247,7 +247,7 @@ export class PromptManager extends EventEmitter {
     const config = this.configManager.getConfig();
     const resolved = this.pathResolver.resolvePaths(
       config.sourceDirectories,
-      config.destinationDirectory
+      config.destinationDirectory,
     );
 
     const syncOptions: SyncOptions = {
@@ -255,14 +255,14 @@ export class PromptManager extends EventEmitter {
       deleteOrphaned: false,
       compareHashes: true,
       incrementalOnly: true,
-      ...options
+      ...options,
     };
 
     // Forward sync (source to destination)
     const forwardResult = await this.performIncrementalSync(
       resolved.sources[0],
       resolved.destination,
-      syncOptions
+      syncOptions,
     );
 
     let backwardResult: CopyResult | undefined;
@@ -272,28 +272,28 @@ export class PromptManager extends EventEmitter {
       backwardResult = await this.performIncrementalSync(
         resolved.destination,
         resolved.sources[0],
-        syncOptions
+        syncOptions,
       );
     }
 
     return {
       forward: forwardResult,
-      backward: backwardResult
+      backward: backwardResult,
     };
   }
 
   private async performIncrementalSync(
     source: string,
     destination: string,
-    options: SyncOptions
+    options: SyncOptions,
   ): Promise<CopyResult> {
     // This would implement incremental sync logic
     // For now, we'll use the regular copy with overwrite
-    return copyPrompts({
+    return copyPromptsEnhanced({
       source,
       destination,
-      conflictResolution: 'overwrite',
-      verify: options.compareHashes
+      conflictResolution: "overwrite",
+      verify: options.compareHashes,
     });
   }
 
@@ -315,14 +315,14 @@ export class PromptManager extends EventEmitter {
     const config = this.configManager.getConfig();
     const resolved = this.pathResolver.resolvePaths(
       config.sourceDirectories,
-      config.destinationDirectory
+      config.destinationDirectory,
     );
 
     // Analyze sources
     const sources = await Promise.all(
       resolved.sources.map(async (sourcePath) => {
         try {
-          const fs = require('fs').promises;
+          const fs = require("fs").promises;
           const stats = await fs.stat(sourcePath);
           
           if (!stats.isDirectory()) {
@@ -355,17 +355,17 @@ export class PromptManager extends EventEmitter {
             path: sourcePath,
             exists: true,
             fileCount,
-            totalSize
+            totalSize,
           };
         } catch {
           return { path: sourcePath, exists: false };
         }
-      })
+      }),
     );
 
     return {
       configuration: config,
-      sources
+      sources,
     };
   }
 

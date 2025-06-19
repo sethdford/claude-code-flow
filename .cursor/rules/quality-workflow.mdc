@@ -1,0 +1,22 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Quality Assurance Workflow
+
+This rule defines the mandatory process for ensuring code quality before and after any modification.
+
+## 1. Pre-Authoring Check
+
+Before writing or modifying any code, I (the AI agent) MUST identify the project's linting standards.
+- **Action:** Inspect the `package.json` for the `lint` script and locate the ESLint configuration file (e.g., `.eslintrc.js`, `eslint.config.js`).
+- **Goal:** To understand the specific coding standards (e.g., quote style, import order) so that the code I generate aligns with them from the start.
+
+## 2. Post-Modification Validation
+
+After every `edit_file` operation is successfully applied, I MUST immediately run the build and linter checks to validate the changes. This is non-negotiable.
+- **Step 1: Run Build:** Execute the `npm run build` command. If it fails, I must analyze the error and apply a fix. I will not proceed until the build is successful.
+- **Step 2: Run Linter:** Execute the `npm run lint` command. I will analyze all reported errors and warnings and apply fixes until the linter passes cleanly.
+
+This entire process ensures that the codebase is always in a compilable, consistent, and high-quality state.

@@ -2,11 +2,11 @@
  * Inter-agent messaging system
  */
 
-import { Message, CoordinationConfig, SystemEvents } from '../utils/types.js';
-import { IEventBus } from '../core/event-bus.js';
-import { ILogger } from '../core/logger.js';
-import { CoordinationError } from '../utils/errors.js';
-import { generateId, timeout as timeoutHelper } from '../utils/helpers.js';
+import { Message, CoordinationConfig, SystemEvents } from "../utils/types.js";
+import { IEventBus } from "../core/event-bus.js";
+import { ILogger } from "../core/logger.js";
+import { CoordinationError } from "../utils/errors.js";
+import { generateId, timeout as timeoutHelper } from "../utils/helpers.js";
 
 interface MessageQueue {
   messages: Message[];
@@ -34,18 +34,18 @@ export class MessageRouter {
   ) {}
 
   async initialize(): Promise<void> {
-    this.logger.info('Initializing message router');
+    this.logger.info("Initializing message router");
     
     // Set up periodic cleanup
     setInterval(() => this.cleanup(), 60000); // Every minute
   }
 
   async shutdown(): Promise<void> {
-    this.logger.info('Shutting down message router');
+    this.logger.info("Shutting down message router");
     
     // Reject all pending responses
     for (const [id, pending] of this.pendingResponses) {
-      pending.reject(new Error('Message router shutdown'));
+      pending.reject(new Error("Message router shutdown"));
       clearTimeout(pending.timeout);
     }
     
@@ -55,8 +55,8 @@ export class MessageRouter {
 
   async send(from: string, to: string, payload: unknown): Promise<void> {
     const message: Message = {
-      id: generateId('msg'),
-      type: 'agent-message',
+      id: generateId("msg"),
+      type: "agent-message",
       payload,
       timestamp: new Date(),
       priority: 0,
@@ -72,8 +72,8 @@ export class MessageRouter {
     timeoutMs?: number,
   ): Promise<T> {
     const message: Message = {
-      id: generateId('msg'),
-      type: 'agent-request',
+      id: generateId("msg"),
+      type: "agent-request",
       payload,
       timestamp: new Date(),
       priority: 1,
@@ -102,8 +102,8 @@ export class MessageRouter {
 
   async broadcast(from: string, payload: unknown): Promise<void> {
     const message: Message = {
-      id: generateId('broadcast'),
-      type: 'broadcast',
+      id: generateId("broadcast"),
+      type: "broadcast",
       payload,
       timestamp: new Date(),
       priority: 0,
@@ -119,7 +119,7 @@ export class MessageRouter {
 
   subscribe(agentId: string, handler: (message: Message) => void): void {
     const queue = this.ensureQueue(agentId);
-    queue.handlers.set(generateId('handler'), handler);
+    queue.handlers.set(generateId("handler"), handler);
   }
 
   unsubscribe(agentId: string, handlerId: string): void {
@@ -135,7 +135,7 @@ export class MessageRouter {
   ): Promise<void> {
     const pending = this.pendingResponses.get(originalMessageId);
     if (!pending) {
-      this.logger.warn('No pending response found', { messageId: originalMessageId });
+      this.logger.warn("No pending response found", { messageId: originalMessageId });
       return;
     }
 
@@ -175,7 +175,7 @@ export class MessageRouter {
     to: string,
     message: Message,
   ): Promise<void> {
-    this.logger.debug('Sending message', { 
+    this.logger.debug("Sending message", { 
       from,
       to,
       messageId: message.id,
@@ -217,7 +217,7 @@ export class MessageRouter {
         try {
           handler(message);
         } catch (error) {
-          this.logger.error('Message handler error', { 
+          this.logger.error("Message handler error", { 
             agentId,
             messageId: message.id,
             error,
@@ -228,7 +228,7 @@ export class MessageRouter {
 
     // Emit received event
     this.eventBus.emit(SystemEvents.MESSAGE_RECEIVED, { 
-      from: '', // Would need to track this
+      from: "", // Would need to track this
       to: agentId,
       message,
     });
@@ -245,7 +245,7 @@ export class MessageRouter {
   }
 
   async performMaintenance(): Promise<void> {
-    this.logger.debug('Performing message router maintenance');
+    this.logger.debug("Performing message router maintenance");
     this.cleanup();
   }
 
@@ -261,7 +261,7 @@ export class MessageRouter {
           : this.config.messageTimeout;
 
         if (age > maxAge) {
-          this.logger.warn('Dropping expired message', { 
+          this.logger.warn("Dropping expired message", { 
             agentId,
             messageId: msg.id,
             age,
@@ -283,7 +283,7 @@ export class MessageRouter {
     for (const [id, pending] of this.pendingResponses) {
       // This is handled by the timeout, but double-check
       clearTimeout(pending.timeout);
-      pending.reject(new Error('Response timeout during cleanup'));
+      pending.reject(new Error("Response timeout during cleanup"));
     }
     this.pendingResponses.clear();
   }

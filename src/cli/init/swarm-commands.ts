@@ -1,22 +1,22 @@
 // init/swarm-commands.ts - Swarm command documentation creation
 export async function createSwarmCommands(): Promise<void> {
-  const fs = await import('fs/promises');
-  const path = await import('path');
+  const fs = await import("fs/promises");
+  const path = await import("path");
   
-  const swarmDir = '.claude/commands/swarm';
+  const swarmDir = ".claude/commands/swarm";
   
   // Individual strategy documentation
   const swarmCommands = {
-    'research.md': createResearchCommand(),
-    'development.md': createDevelopmentCommand(),
-    'analysis.md': createAnalysisCommand(),
-    'testing.md': createTestingCommand(),
-    'optimization.md': createOptimizationCommand(),
-    'maintenance.md': createMaintenanceCommand(),
-    'examples.md': createSwarmExamples(),
-    'coordination-modes.md': createCoordinationModes(),
-    'best-practices.md': createBestPractices(),
-    'task-tracking.md': createTaskTracking()
+    "research.md": createResearchCommand(),
+    "development.md": createDevelopmentCommand(),
+    "analysis.md": createAnalysisCommand(),
+    "testing.md": createTestingCommand(),
+    "optimization.md": createOptimizationCommand(),
+    "maintenance.md": createMaintenanceCommand(),
+    "examples.md": createSwarmExamples(),
+    "coordination-modes.md": createCoordinationModes(),
+    "best-practices.md": createBestPractices(),
+    "task-tracking.md": createTaskTracking(),
   };
   
   // Write swarm command documentation

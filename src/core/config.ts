@@ -3,13 +3,13 @@
  * Features: Security masking, change tracking, multi-format support, credential management
  */
 
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { homedir } from 'os';
-import { createHash, randomBytes, createCipher, createDecipher } from 'crypto';
-import { Config } from '../utils/types.js';
-import { deepMerge, safeParseJSON } from '../utils/helpers.js';
-import { ConfigError, ValidationError } from '../utils/errors.js';
+import { promises as fs } from "fs";
+import { join } from "path";
+import { homedir } from "os";
+import { createHash, randomBytes, createCipher, createDecipher } from "crypto";
+import { Config } from "../utils/types.js";
+import { deepMerge, safeParseJSON } from "../utils/helpers.js";
+import { ConfigError, ValidationError } from "../utils/errors.js";
 
 // Format parsers
 interface FormatParser {
@@ -26,12 +26,12 @@ interface ConfigChange {
   newValue: any;
   user?: string;
   reason?: string;
-  source: 'cli' | 'api' | 'file' | 'env';
+  source: "cli" | "api" | "file" | "env";
 }
 
 // Security classification
 interface SecurityClassification {
-  level: 'public' | 'internal' | 'confidential' | 'secret';
+  level: "public" | "internal" | "confidential" | "secret";
   maskPattern?: string;
   encrypted?: boolean;
 }
@@ -52,27 +52,27 @@ interface ValidationRule {
  * Security classifications for configuration paths
  */
 const SECURITY_CLASSIFICATIONS: Record<string, SecurityClassification> = {
-  'credentials': { level: 'secret', encrypted: true },
-  'credentials.apiKey': { level: 'secret', maskPattern: '****...****', encrypted: true },
-  'credentials.token': { level: 'secret', maskPattern: '****...****', encrypted: true },
-  'credentials.password': { level: 'secret', maskPattern: '********', encrypted: true },
-  'mcp.apiKey': { level: 'confidential', maskPattern: '****...****' },
-  'logging.destination': { level: 'internal' },
-  'orchestrator': { level: 'internal' },
-  'terminal': { level: 'public' },
+  "credentials": { level: "secret", encrypted: true },
+  "credentials.apiKey": { level: "secret", maskPattern: "****...****", encrypted: true },
+  "credentials.token": { level: "secret", maskPattern: "****...****", encrypted: true },
+  "credentials.password": { level: "secret", maskPattern: "********", encrypted: true },
+  "mcp.apiKey": { level: "confidential", maskPattern: "****...****" },
+  "logging.destination": { level: "internal" },
+  "orchestrator": { level: "internal" },
+  "terminal": { level: "public" },
 };
 
 /**
  * Sensitive configuration paths that should be masked in output
  */
 const SENSITIVE_PATHS = [
-  'credentials',
-  'apiKey',
-  'token',
-  'password',
-  'secret',
-  'key',
-  'auth',
+  "credentials",
+  "apiKey",
+  "token",
+  "password",
+  "secret",
+  "key",
+  "auth",
 ];
 
 /**
@@ -82,22 +82,22 @@ const FORMAT_PARSERS: Record<string, FormatParser> = {
   json: {
     parse: JSON.parse,
     stringify: (obj) => JSON.stringify(obj, null, 2),
-    extension: '.json'
+    extension: ".json",
   },
   yaml: {
     parse: (content) => {
       // Simple YAML parser for basic key-value pairs
-      const lines = content.split('\n');
+      const lines = content.split("\n");
       const result: any = {};
-      let current = result;
+      const current = result;
       const stack: any[] = [result];
       
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) continue;
+        if (!trimmed || trimmed.startsWith("#")) continue;
         
         const indent = line.length - line.trimStart().length;
-        const colonIndex = trimmed.indexOf(':');
+        const colonIndex = trimmed.indexOf(":");
         
         if (colonIndex === -1) continue;
         
@@ -106,9 +106,9 @@ const FORMAT_PARSERS: Record<string, FormatParser> = {
         
         // Simple value parsing
         let parsedValue: any = value;
-        if (value === 'true') parsedValue = true;
-        else if (value === 'false') parsedValue = false;
-        else if (!isNaN(Number(value)) && value !== '') parsedValue = Number(value);
+        if (value === "true") parsedValue = true;
+        else if (value === "false") parsedValue = false;
+        else if (!isNaN(Number(value)) && value !== "") parsedValue = Number(value);
         else if (value.startsWith('"') && value.endsWith('"')) {
           parsedValue = value.slice(1, -1);
         }
@@ -120,14 +120,14 @@ const FORMAT_PARSERS: Record<string, FormatParser> = {
     },
     stringify: (obj) => {
       const stringify = (obj: any, indent = 0): string => {
-        const spaces = '  '.repeat(indent);
-        let result = '';
+        const spaces = "  ".repeat(indent);
+        let result = "";
         
         for (const [key, value] of Object.entries(obj)) {
-          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          if (typeof value === "object" && value !== null && !Array.isArray(value)) {
             result += `${spaces}${key}:\n${stringify(value, indent + 1)}`;
           } else {
-            const formattedValue = typeof value === 'string' ? `"${value}"` : String(value);
+            const formattedValue = typeof value === "string" ? `"${value}"` : String(value);
             result += `${spaces}${key}: ${formattedValue}\n`;
           }
         }
@@ -137,28 +137,28 @@ const FORMAT_PARSERS: Record<string, FormatParser> = {
       
       return stringify(obj);
     },
-    extension: '.yaml'
+    extension: ".yaml",
   },
   toml: {
     parse: (content) => {
       // Simple TOML parser for basic sections and key-value pairs
-      const lines = content.split('\n');
+      const lines = content.split("\n");
       const result: any = {};
       let currentSection = result;
       
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) continue;
+        if (!trimmed || trimmed.startsWith("#")) continue;
         
         // Section header
-        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
           const sectionName = trimmed.slice(1, -1);
           currentSection = result[sectionName] = {};
           continue;
         }
         
         // Key-value pair
-        const equalsIndex = trimmed.indexOf('=');
+        const equalsIndex = trimmed.indexOf("=");
         if (equalsIndex === -1) continue;
         
         const key = trimmed.substring(0, equalsIndex).trim();
@@ -166,9 +166,9 @@ const FORMAT_PARSERS: Record<string, FormatParser> = {
         
         // Simple value parsing
         let parsedValue: any = value;
-        if (value === 'true') parsedValue = true;
-        else if (value === 'false') parsedValue = false;
-        else if (!isNaN(Number(value)) && value !== '') parsedValue = Number(value);
+        if (value === "true") parsedValue = true;
+        else if (value === "false") parsedValue = false;
+        else if (!isNaN(Number(value)) && value !== "") parsedValue = Number(value);
         else if (value.startsWith('"') && value.endsWith('"')) {
           parsedValue = value.slice(1, -1);
         }
@@ -179,23 +179,23 @@ const FORMAT_PARSERS: Record<string, FormatParser> = {
       return result;
     },
     stringify: (obj) => {
-      let result = '';
+      let result = "";
       
       for (const [section, values] of Object.entries(obj)) {
-        if (typeof values === 'object' && values !== null && !Array.isArray(values)) {
+        if (typeof values === "object" && values !== null && !Array.isArray(values)) {
           result += `[${section}]\n`;
           for (const [key, value] of Object.entries(values)) {
-            const formattedValue = typeof value === 'string' ? `"${value}"` : String(value);
+            const formattedValue = typeof value === "string" ? `"${value}"` : String(value);
             result += `${key} = ${formattedValue}\n`;
           }
-          result += '\n';
+          result += "\n";
         }
       }
       
       return result;
     },
-    extension: '.toml'
-  }
+    extension: ".toml",
+  },
 };
 
 /**
@@ -209,17 +209,17 @@ const DEFAULT_CONFIG: Config = {
     shutdownTimeout: 30000, // 30 seconds
   },
   terminal: {
-    type: 'auto',
+    type: "auto",
     poolSize: 5,
     recycleAfter: 10, // recycle after 10 uses
     healthCheckInterval: 60000, // 1 minute
     commandTimeout: 300000, // 5 minutes
   },
   memory: {
-    backend: 'hybrid',
+    backend: "hybrid",
     cacheSizeMB: 100,
     syncInterval: 5000, // 5 seconds
-    conflictResolution: 'crdt',
+    conflictResolution: "crdt",
     retentionDays: 30,
   },
   coordination: {
@@ -230,14 +230,14 @@ const DEFAULT_CONFIG: Config = {
     messageTimeout: 30000, // 30 seconds
   },
   mcp: {
-    transport: 'stdio',
+    transport: "stdio",
     port: 3000,
     tlsEnabled: false,
   },
   logging: {
-    level: 'info',
-    format: 'json',
-    destination: 'console',
+    level: "info",
+    format: "json",
+    destination: "console",
   },
   credentials: {
     // Encrypted credentials storage
@@ -287,18 +287,18 @@ export class ConfigManager {
    */
   private initializeEncryption(): void {
     try {
-      const keyFile = join(this.userConfigDir, '.encryption-key');
+      const keyFile = join(this.userConfigDir, ".encryption-key");
       // Check if key file exists (simplified for demo)
-      try {
-        await fs.access(keyFile);
+      const { existsSync } = require("node:fs");
+      if (existsSync(keyFile)) {
         // In a real implementation, this would be more secure
         this.encryptionKey = randomBytes(32);
-      } catch {
+      } else {
         this.encryptionKey = randomBytes(32);
         // Store key securely (in production, use proper key management)
       }
     } catch (error) {
-      console.warn('Failed to initialize encryption:', (error as Error).message);
+      console.warn("Failed to initialize encryption:", (error as Error).message);
     }
   }
 
@@ -307,84 +307,84 @@ export class ConfigManager {
    */
   private setupValidationRules(): void {
     // Orchestrator validation rules
-    this.validationRules.set('orchestrator.maxConcurrentAgents', {
-      type: 'number',
+    this.validationRules.set("orchestrator.maxConcurrentAgents", {
+      type: "number",
       required: true,
       min: 1,
       max: 100,
       validator: (value, config) => {
         if (value > config.terminal?.poolSize * 2) {
-          return 'maxConcurrentAgents should not exceed 2x terminal pool size';
+          return "maxConcurrentAgents should not exceed 2x terminal pool size";
         }
         return null;
-      }
+      },
     });
 
-    this.validationRules.set('orchestrator.taskQueueSize', {
-      type: 'number',
+    this.validationRules.set("orchestrator.taskQueueSize", {
+      type: "number",
       required: true,
       min: 1,
       max: 10000,
-      dependencies: ['orchestrator.maxConcurrentAgents'],
+      dependencies: ["orchestrator.maxConcurrentAgents"],
       validator: (value, config) => {
         const maxAgents = config.orchestrator?.maxConcurrentAgents || 1;
         if (value < maxAgents * 10) {
-          return 'taskQueueSize should be at least 10x maxConcurrentAgents';
+          return "taskQueueSize should be at least 10x maxConcurrentAgents";
         }
         return null;
-      }
+      },
     });
 
     // Terminal validation rules
-    this.validationRules.set('terminal.type', {
-      type: 'string',
+    this.validationRules.set("terminal.type", {
+      type: "string",
       required: true,
-      values: ['auto', 'vscode', 'native']
+      values: ["auto", "vscode", "native"],
     });
 
-    this.validationRules.set('terminal.poolSize', {
-      type: 'number',
+    this.validationRules.set("terminal.poolSize", {
+      type: "number",
       required: true,
       min: 1,
-      max: 50
+      max: 50,
     });
 
     // Memory validation rules
-    this.validationRules.set('memory.backend', {
-      type: 'string',
+    this.validationRules.set("memory.backend", {
+      type: "string",
       required: true,
-      values: ['sqlite', 'markdown', 'hybrid']
+      values: ["sqlite", "markdown", "hybrid"],
     });
 
-    this.validationRules.set('memory.cacheSizeMB', {
-      type: 'number',
+    this.validationRules.set("memory.cacheSizeMB", {
+      type: "number",
       required: true,
       min: 1,
       max: 10000,
       validator: (value) => {
         if (value > 1000) {
-          return 'Large cache sizes may impact system performance';
+          return "Large cache sizes may impact system performance";
         }
         return null;
-      }
+      },
     });
 
     // Security validation rules
-    this.validationRules.set('security.encryptionEnabled', {
-      type: 'boolean',
-      required: true
+    this.validationRules.set("security.encryptionEnabled", {
+      type: "boolean",
+      required: true,
     });
 
     // Credentials validation
-    this.validationRules.set('credentials.apiKey', {
-      type: 'string',
+    this.validationRules.set("credentials.apiKey", {
+      type: "string",
       pattern: /^[a-zA-Z0-9_-]+$/,
       validator: (value) => {
         if (value && value.length < 16) {
-          return 'API key should be at least 16 characters long';
+          return "API key should be at least 16 characters long";
         }
         return null;
-      }
+      },
     });
   }
 
@@ -439,11 +439,11 @@ export class ConfigManager {
   /**
    * Updates configuration values with change tracking
    */
-  update(updates: Partial<Config>, options: { user?: string, reason?: string, source?: 'cli' | 'api' | 'file' | 'env' } = {}): Config {
+  update(updates: Partial<Config>, options: { user?: string, reason?: string, source?: "cli" | "api" | "file" | "env" } = {}): Config {
     const oldConfig = deepClone(this.config);
     
     // Track changes before applying
-    this.trackChanges(oldConfig, updates, options);
+    this.trackConfigChanges(oldConfig, updates, options);
     
     // Apply updates
     this.config = deepMergeConfig(this.config, updates);
@@ -467,7 +467,7 @@ export class ConfigManager {
   async save(path?: string, format?: string): Promise<void> {
     const savePath = path || this.configPath;
     if (!savePath) {
-      throw new ConfigError('No configuration file path specified');
+      throw new ConfigError("No configuration file path specified");
     }
 
     const detectedFormat = format || this.detectFormat(savePath);
@@ -481,16 +481,10 @@ export class ConfigManager {
     const configToSave = this.getConfigForSaving();
     const content = parser.stringify(configToSave);
     
-    await fs.writeFile(savePath, content, 'utf8');
+    await fs.writeFile(savePath, content, "utf8");
     
     // Record the save operation
-    this.recordChange({
-      timestamp: new Date().toISOString(),
-      path: 'CONFIG_SAVED',
-      oldValue: null,
-      newValue: savePath,
-      source: 'file'
-    });
+    this.recordChange("CONFIG_SAVED", null, savePath, { source: "file" });
   }
   
   /**
@@ -513,7 +507,7 @@ export class ConfigManager {
    */
   private getUserConfigDir(): string {
     const home = homedir();
-    return join(home, '.claude-flow');
+    return join(home, ".claude-flow");
   }
 
   /**
@@ -523,7 +517,7 @@ export class ConfigManager {
     try {
       await fs.mkdir(this.userConfigDir, { recursive: true });
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
         throw new ConfigError(`Failed to create config directory: ${(error as Error).message}`);
       }
     }
@@ -533,18 +527,18 @@ export class ConfigManager {
    * Loads all profiles from the profiles directory
    */
   async loadProfiles(): Promise<void> {
-    const profilesDir = join(this.userConfigDir, 'profiles');
+    const profilesDir = join(this.userConfigDir, "profiles");
     
     try {
       const entries = await fs.readdir(profilesDir, { withFileTypes: true });
       
       for (const entry of entries) {
-        if (entry.isFile() && entry.name.endsWith('.json')) {
-          const profileName = entry.name.replace('.json', '');
+        if (entry.isFile() && entry.name.endsWith(".json")) {
+          const profileName = entry.name.replace(".json", "");
           const profilePath = join(profilesDir, entry.name);
           
           try {
-            const content = await fs.readFile(profilePath, 'utf8');
+            const content = await fs.readFile(profilePath, "utf8");
             const profileConfig = safeParseJSON<Partial<Config>>(content);
             
             if (profileConfig) {
@@ -582,14 +576,14 @@ export class ConfigManager {
   async saveProfile(profileName: string, config?: Partial<Config>): Promise<void> {
     await this.ensureUserConfigDir();
     
-    const profilesDir = join(this.userConfigDir, 'profiles');
+    const profilesDir = join(this.userConfigDir, "profiles");
     await fs.mkdir(profilesDir, { recursive: true });
     
     const profileConfig = config || this.config;
     const profilePath = join(profilesDir, `${profileName}.json`);
     
     const content = JSON.stringify(profileConfig, null, 2);
-    await fs.writeFile(profilePath, content, 'utf8');
+    await fs.writeFile(profilePath, content, "utf8");
     
     this.profiles.set(profileName, profileConfig);
   }
@@ -598,13 +592,13 @@ export class ConfigManager {
    * Deletes a profile
    */
   async deleteProfile(profileName: string): Promise<void> {
-    const profilePath = join(this.userConfigDir, 'profiles', `${profileName}.json`);
+    const profilePath = join(this.userConfigDir, "profiles", `${profileName}.json`);
     
     try {
       await fs.unlink(profilePath);
       this.profiles.delete(profileName);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         throw new ConfigError(`Profile '${profileName}' not found`);
       }
       throw new ConfigError(`Failed to delete profile: ${(error as Error).message}`);
@@ -637,18 +631,14 @@ export class ConfigManager {
   /**
    * Sets a configuration value by path with change tracking and validation
    */
-  set(path: string, value: any, options: { user?: string, reason?: string, source?: 'cli' | 'api' | 'file' | 'env' } = {}): void {
+  set(path: string, value: any, options: { user?: string, reason?: string, source?: "cli" | "api" | "file" | "env" } = {}): void {
     const oldValue = this.getValue(path);
     
     // Record the change
-    this.recordChange({
-      timestamp: new Date().toISOString(),
-      path,
-      oldValue,
-      newValue: value,
+    this.recordChange(path, oldValue, value, {
       user: options.user,
       reason: options.reason,
-      source: options.source || 'cli'
+      source: options.source || "cli",
     });
     
     // Encrypt sensitive values
@@ -656,7 +646,7 @@ export class ConfigManager {
       value = this.encryptValue(value);
     }
     
-    const keys = path.split('.');
+    const keys = path.split(".");
     let current: any = this.config;
     
     for (let i = 0; i < keys.length - 1; i++) {
@@ -678,11 +668,11 @@ export class ConfigManager {
    * Gets a configuration value by path with decryption for sensitive values
    */
   getValue(path: string, decrypt = true): any {
-    const keys = path.split('.');
+    const keys = path.split(".");
     let current: any = this.config;
     
     for (const key of keys) {
-      if (current && typeof current === 'object' && key in current) {
+      if (current && typeof current === "object" && key in current) {
         current = current[key];
       } else {
         return undefined;
@@ -716,41 +706,41 @@ export class ConfigManager {
   getSchema(): any {
     return {
       orchestrator: {
-        maxConcurrentAgents: { type: 'number', min: 1, max: 100 },
-        taskQueueSize: { type: 'number', min: 1, max: 10000 },
-        healthCheckInterval: { type: 'number', min: 1000, max: 300000 },
-        shutdownTimeout: { type: 'number', min: 1000, max: 300000 },
+        maxConcurrentAgents: { type: "number", min: 1, max: 100 },
+        taskQueueSize: { type: "number", min: 1, max: 10000 },
+        healthCheckInterval: { type: "number", min: 1000, max: 300000 },
+        shutdownTimeout: { type: "number", min: 1000, max: 300000 },
       },
       terminal: {
-        type: { type: 'string', values: ['auto', 'vscode', 'native'] },
-        poolSize: { type: 'number', min: 1, max: 50 },
-        recycleAfter: { type: 'number', min: 1, max: 1000 },
-        healthCheckInterval: { type: 'number', min: 1000, max: 3600000 },
-        commandTimeout: { type: 'number', min: 1000, max: 3600000 },
+        type: { type: "string", values: ["auto", "vscode", "native"] },
+        poolSize: { type: "number", min: 1, max: 50 },
+        recycleAfter: { type: "number", min: 1, max: 1000 },
+        healthCheckInterval: { type: "number", min: 1000, max: 3600000 },
+        commandTimeout: { type: "number", min: 1000, max: 3600000 },
       },
       memory: {
-        backend: { type: 'string', values: ['sqlite', 'markdown', 'hybrid'] },
-        cacheSizeMB: { type: 'number', min: 1, max: 10000 },
-        syncInterval: { type: 'number', min: 1000, max: 300000 },
-        conflictResolution: { type: 'string', values: ['crdt', 'timestamp', 'manual'] },
-        retentionDays: { type: 'number', min: 1, max: 3650 },
+        backend: { type: "string", values: ["sqlite", "markdown", "hybrid"] },
+        cacheSizeMB: { type: "number", min: 1, max: 10000 },
+        syncInterval: { type: "number", min: 1000, max: 300000 },
+        conflictResolution: { type: "string", values: ["crdt", "timestamp", "manual"] },
+        retentionDays: { type: "number", min: 1, max: 3650 },
       },
       coordination: {
-        maxRetries: { type: 'number', min: 0, max: 100 },
-        retryDelay: { type: 'number', min: 100, max: 60000 },
-        deadlockDetection: { type: 'boolean' },
-        resourceTimeout: { type: 'number', min: 1000, max: 3600000 },
-        messageTimeout: { type: 'number', min: 1000, max: 300000 },
+        maxRetries: { type: "number", min: 0, max: 100 },
+        retryDelay: { type: "number", min: 100, max: 60000 },
+        deadlockDetection: { type: "boolean" },
+        resourceTimeout: { type: "number", min: 1000, max: 3600000 },
+        messageTimeout: { type: "number", min: 1000, max: 300000 },
       },
       mcp: {
-        transport: { type: 'string', values: ['stdio', 'http', 'websocket'] },
-        port: { type: 'number', min: 1, max: 65535 },
-        tlsEnabled: { type: 'boolean' },
+        transport: { type: "string", values: ["stdio", "http", "websocket"] },
+        port: { type: "number", min: 1, max: 65535 },
+        tlsEnabled: { type: "boolean" },
       },
       logging: {
-        level: { type: 'string', values: ['debug', 'info', 'warn', 'error'] },
-        format: { type: 'string', values: ['json', 'text'] },
-        destination: { type: 'string', values: ['console', 'file'] },
+        level: { type: "string", values: ["debug", "info", "warn", "error"] },
+        format: { type: "string", values: ["json", "text"] },
+        destination: { type: "string", values: ["console", "file"] },
       },
     };
   }
@@ -759,8 +749,8 @@ export class ConfigManager {
    * Validates a value against schema
    */
   private validateValue(value: any, schema: any, path: string): void {
-    if (schema.type === 'number') {
-      if (typeof value !== 'number' || isNaN(value)) {
+    if (schema.type === "number") {
+      if (typeof value !== "number" || isNaN(value)) {
         throw new ValidationError(`${path}: must be a number`);
       }
       if (schema.min !== undefined && value < schema.min) {
@@ -769,15 +759,15 @@ export class ConfigManager {
       if (schema.max !== undefined && value > schema.max) {
         throw new ValidationError(`${path}: must be at most ${schema.max}`);
       }
-    } else if (schema.type === 'string') {
-      if (typeof value !== 'string') {
+    } else if (schema.type === "string") {
+      if (typeof value !== "string") {
         throw new ValidationError(`${path}: must be a string`);
       }
       if (schema.values && !schema.values.includes(value)) {
-        throw new ValidationError(`${path}: must be one of [${schema.values.join(', ')}]`);
+        throw new ValidationError(`${path}: must be one of [${schema.values.join(", ")}]`);
       }
-    } else if (schema.type === 'boolean') {
-      if (typeof value !== 'boolean') {
+    } else if (schema.type === "boolean") {
+      if (typeof value !== "boolean") {
         throw new ValidationError(`${path}: must be a boolean`);
       }
     }
@@ -790,14 +780,14 @@ export class ConfigManager {
     const defaultConfig = DEFAULT_CONFIG;
     const diff: any = {};
     
-    const findDifferences = (current: any, defaults: any, path: string = '') => {
+    const findDifferences = (current: any, defaults: any, path: string = "") => {
       for (const key in current) {
         const currentValue = current[key];
         const defaultValue = defaults[key];
         const fullPath = path ? `${path}.${key}` : key;
         
-        if (typeof currentValue === 'object' && currentValue !== null && !Array.isArray(currentValue)) {
-          if (typeof defaultValue === 'object' && defaultValue !== null) {
+        if (typeof currentValue === "object" && currentValue !== null && !Array.isArray(currentValue)) {
+          if (typeof defaultValue === "object" && defaultValue !== null) {
             const nestedDiff = {};
             findDifferences(currentValue, defaultValue, fullPath);
             if (Object.keys(nestedDiff).length > 0) {
@@ -807,7 +797,7 @@ export class ConfigManager {
             }
           }
         } else if (currentValue !== defaultValue) {
-          const pathParts = fullPath.split('.');
+          const pathParts = fullPath.split(".");
           let target = diff;
           for (let i = 0; i < pathParts.length - 1; i++) {
             if (!target[pathParts[i]]) {
@@ -829,7 +819,7 @@ export class ConfigManager {
    */
   export(): any {
     return {
-      version: '1.0.0',
+      version: "1.0.0",
       exported: new Date().toISOString(),
       profile: this.currentProfile,
       config: this.config,
@@ -842,7 +832,7 @@ export class ConfigManager {
    */
   import(data: any): void {
     if (!data.config) {
-      throw new ConfigError('Invalid configuration export format');
+      throw new ConfigError("Invalid configuration export format");
     }
     
     this.validateWithDependencies(data.config);
@@ -850,13 +840,7 @@ export class ConfigManager {
     this.currentProfile = data.profile;
     
     // Record the import operation
-    this.recordChange({
-      timestamp: new Date().toISOString(),
-      path: 'CONFIG_IMPORTED',
-      oldValue: null,
-      newValue: data.version || 'unknown',
-      source: 'file'
-    });
+    this.recordChange("CONFIG_IMPORTED", null, data.version || "unknown", { source: "file" });
   }
 
   /**
@@ -864,7 +848,7 @@ export class ConfigManager {
    */
   private async loadFromFile(path: string): Promise<Partial<Config>> {
     try {
-      const content = await fs.readFile(path, 'utf8');
+      const content = await fs.readFile(path, "utf8");
       const format = this.detectFormat(path, content);
       const parser = this.formatParsers[format];
       
@@ -880,7 +864,7 @@ export class ConfigManager {
 
       return config;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         // File doesn't exist, use defaults
         return {};
       }
@@ -892,22 +876,22 @@ export class ConfigManager {
    * Detects configuration file format
    */
   private detectFormat(path: string, content?: string): string {
-    const ext = path.split('.').pop()?.toLowerCase();
+    const ext = path.split(".").pop()?.toLowerCase();
     
-    if (ext === 'yaml' || ext === 'yml') return 'yaml';
-    if (ext === 'toml') return 'toml';
-    if (ext === 'json') return 'json';
+    if (ext === "yaml" || ext === "yml") return "yaml";
+    if (ext === "toml") return "toml";
+    if (ext === "json") return "json";
     
     // Try to detect from content
     if (content) {
       const trimmed = content.trim();
-      if (trimmed.startsWith('{') || trimmed.startsWith('[')) return 'json';
-      if (trimmed.includes('=') && trimmed.includes('[')) return 'toml';
-      if (trimmed.includes(':') && !trimmed.includes('=')) return 'yaml';
+      if (trimmed.startsWith("{") || trimmed.startsWith("[")) return "json";
+      if (trimmed.includes("=") && trimmed.includes("[")) return "toml";
+      if (trimmed.includes(":") && !trimmed.includes("=")) return "yaml";
     }
     
     // Default to JSON
-    return 'json';
+    return "json";
   }
 
   /**
@@ -931,7 +915,7 @@ export class ConfigManager {
 
     // Terminal settings
     const terminalType = process.env.CLAUDE_FLOW_TERMINAL_TYPE;
-    if (terminalType === 'vscode' || terminalType === 'native' || terminalType === 'auto') {
+    if (terminalType === "vscode" || terminalType === "native" || terminalType === "auto") {
       config.terminal = {
         ...DEFAULT_CONFIG.terminal,
         ...config.terminal,
@@ -941,7 +925,7 @@ export class ConfigManager {
 
     // Memory settings
     const memoryBackend = process.env.CLAUDE_FLOW_MEMORY_BACKEND;
-    if (memoryBackend === 'sqlite' || memoryBackend === 'markdown' || memoryBackend === 'hybrid') {
+    if (memoryBackend === "sqlite" || memoryBackend === "markdown" || memoryBackend === "hybrid") {
       config.memory = {
         ...DEFAULT_CONFIG.memory,
         ...config.memory,
@@ -951,7 +935,7 @@ export class ConfigManager {
 
     // MCP settings
     const mcpTransport = process.env.CLAUDE_FLOW_MCP_TRANSPORT;
-    if (mcpTransport === 'stdio' || mcpTransport === 'http' || mcpTransport === 'websocket') {
+    if (mcpTransport === "stdio" || mcpTransport === "http" || mcpTransport === "websocket") {
       config.mcp = {
         ...DEFAULT_CONFIG.mcp,
         ...config.mcp,
@@ -970,7 +954,7 @@ export class ConfigManager {
 
     // Logging settings
     const logLevel = process.env.CLAUDE_FLOW_LOG_LEVEL;
-    if (logLevel === 'debug' || logLevel === 'info' || logLevel === 'warn' || logLevel === 'error') {
+    if (logLevel === "debug" || logLevel === "info" || logLevel === "warn" || logLevel === "error") {
       config.logging = {
         ...DEFAULT_CONFIG.logging,
         ...config.logging,
@@ -1001,25 +985,25 @@ export class ConfigManager {
     
     // Additional cross-field validations
     if (config.orchestrator.maxConcurrentAgents > config.terminal.poolSize * 3) {
-      warnings.push('High agent-to-terminal ratio may cause resource contention');
+      warnings.push("High agent-to-terminal ratio may cause resource contention");
     }
     
-    if (config.memory.cacheSizeMB > 1000 && config.memory.backend === 'sqlite') {
-      warnings.push('Large cache size with SQLite backend may impact performance');
+    if (config.memory.cacheSizeMB > 1000 && config.memory.backend === "sqlite") {
+      warnings.push("Large cache size with SQLite backend may impact performance");
     }
     
-    if (config.mcp.transport === 'http' && !config.mcp.tlsEnabled) {
-      warnings.push('HTTP transport without TLS is not recommended for production');
+    if (config.mcp.transport === "http" && !config.mcp.tlsEnabled) {
+      warnings.push("HTTP transport without TLS is not recommended for production");
     }
     
     // Log warnings
-    if (warnings.length > 0 && config.logging?.level === 'debug') {
-      console.warn('Configuration warnings:', warnings);
+    if (warnings.length > 0 && config.logging?.level === "debug") {
+      console.warn("Configuration warnings:", warnings);
     }
     
     // Throw errors
     if (errors.length > 0) {
-      throw new ValidationError(`Configuration validation failed:\n${errors.join('\n')}`);
+      throw new ValidationError(`Configuration validation failed:\n${errors.join("\n")}`);
     }
   }
   
@@ -1040,20 +1024,20 @@ export class ConfigManager {
     if (value === undefined || value === null) return;
     
     // Type validation
-    if (rule.type === 'number' && (typeof value !== 'number' || isNaN(value))) {
+    if (rule.type === "number" && (typeof value !== "number" || isNaN(value))) {
       throw new ValidationError(`${path} must be a number`);
     }
     
-    if (rule.type === 'string' && typeof value !== 'string') {
+    if (rule.type === "string" && typeof value !== "string") {
       throw new ValidationError(`${path} must be a string`);
     }
     
-    if (rule.type === 'boolean' && typeof value !== 'boolean') {
+    if (rule.type === "boolean" && typeof value !== "boolean") {
       throw new ValidationError(`${path} must be a boolean`);
     }
     
     // Range validation
-    if (typeof value === 'number') {
+    if (typeof value === "number") {
       if (rule.min !== undefined && value < rule.min) {
         throw new ValidationError(`${path} must be at least ${rule.min}`);
       }
@@ -1064,11 +1048,11 @@ export class ConfigManager {
     
     // Values validation
     if (rule.values && !rule.values.includes(value)) {
-      throw new ValidationError(`${path} must be one of: ${rule.values.join(', ')}`);
+      throw new ValidationError(`${path} must be one of: ${rule.values.join(", ")}`);
     }
     
     // Pattern validation
-    if (rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
+    if (rule.pattern && typeof value === "string" && !rule.pattern.test(value)) {
       throw new ValidationError(`${path} does not match required pattern`);
     }
     
@@ -1085,11 +1069,11 @@ export class ConfigManager {
    * Gets a value from a configuration object by path
    */
   private getValueByPath(obj: any, path: string): any {
-    const keys = path.split('.');
+    const keys = path.split(".");
     let current = obj;
     
     for (const key of keys) {
-      if (current && typeof current === 'object' && key in current) {
+      if (current && typeof current === "object" && key in current) {
         current = current[key];
       } else {
         return undefined;
@@ -1104,6 +1088,284 @@ export class ConfigManager {
    */
   private validate(config: Config): void {
     this.validateWithDependencies(config);
+  }
+
+  /**
+   * Gets available configuration templates
+   */
+  getAvailableTemplates(): string[] {
+    return ["minimal", "default", "development", "production"];
+  }
+
+  /**
+   * Creates a configuration from a template
+   */
+  createTemplate(templateName: string): Config {
+    const templates: Record<string, Partial<Config>> = {
+      minimal: {
+        orchestrator: {
+          maxConcurrentAgents: 5,
+          taskQueueSize: 50,
+          healthCheckInterval: 60000,
+          shutdownTimeout: 10000,
+        },
+        terminal: {
+          type: "auto",
+          poolSize: 2,
+          recycleAfter: 5,
+          healthCheckInterval: 120000,
+          commandTimeout: 300000,
+        },
+      },
+      development: {
+        logging: {
+          level: "debug",
+          format: "text",
+          destination: "console",
+        },
+        orchestrator: {
+          maxConcurrentAgents: 20,
+          taskQueueSize: 200,
+          healthCheckInterval: 15000,
+          shutdownTimeout: 5000,
+        },
+      },
+      production: {
+        logging: {
+          level: "warn",
+          format: "json",
+          destination: "file",
+        },
+        memory: {
+          backend: "sqlite",
+          cacheSizeMB: 500,
+          syncInterval: 10000,
+          conflictResolution: "last-write",
+          retentionDays: 90,
+        },
+      },
+    };
+
+    const template = templates[templateName] || {};
+    return deepMerge(DEFAULT_CONFIG as any, template) as Config;
+  }
+
+  /**
+   * Gets format parsers for different config file formats
+   */
+  getFormatParsers(): Record<string, { stringify: (obj: any) => string; parse: (str: string) => any }> {
+    return FORMAT_PARSERS;
+  }
+
+  /**
+   * Validates a configuration file
+   */
+  async validateFile(configPath: string): Promise<{ valid: boolean; errors: string[] }> {
+    const errors: string[] = [];
+    
+    try {
+      const content = await fs.readFile(configPath, "utf8");
+      const config = JSON.parse(content);
+      
+      // Run validation
+      try {
+        this.validate(config);
+      } catch (error) {
+        errors.push((error as Error).message);
+      }
+      
+      // Additional validations
+      if (!config.orchestrator) {
+        errors.push("Missing required section: orchestrator");
+      }
+      if (!config.terminal) {
+        errors.push("Missing required section: terminal");
+      }
+      if (!config.memory) {
+        errors.push("Missing required section: memory");
+      }
+      
+      return {
+        valid: errors.length === 0,
+        errors,
+      };
+    } catch (error) {
+      errors.push(`Failed to read or parse file: ${(error as Error).message}`);
+      return {
+        valid: false,
+        errors,
+      };
+    }
+  }
+
+  /**
+   * Backs up the current configuration
+   */
+  async backup(backupPath?: string): Promise<string> {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const backupFile = backupPath || join(homedir(), ".claude-flow", "backups", `backup-${timestamp}.json`);
+    
+    await fs.mkdir(join(homedir(), ".claude-flow", "backups"), { recursive: true });
+    await fs.writeFile(backupFile, JSON.stringify(this.config, null, 2), "utf8");
+    
+    return backupFile;
+  }
+
+  /**
+   * Restores configuration from a backup
+   */
+  async restore(backupPath: string): Promise<void> {
+    const content = await fs.readFile(backupPath, "utf8");
+    const backupConfig = JSON.parse(content);
+    
+    // Validate the backup configuration
+    this.validate(backupConfig);
+    
+    // Apply the backup
+    this.config = backupConfig;
+    
+    // Save to current config file
+    if (this.configPath) {
+      await this.save();
+    }
+  }
+
+  /**
+   * Gets configuration path history
+   */
+  getPathHistory(): string[] {
+    // In a real implementation, this would track all config paths used
+    return this.configPath ? [this.configPath] : [];
+  }
+
+  /**
+   * Gets configuration change history
+   */
+  getChangeHistory(): Array<{ timestamp: Date; path: string; oldValue: any; newValue: any }> {
+    // Convert string timestamps to Date objects for compatibility
+    return this.changeHistory.map(change => ({
+      timestamp: new Date(change.timestamp),
+      path: change.path,
+      oldValue: change.oldValue,
+      newValue: change.newValue,
+    }));
+  }
+
+  /**
+   * Masks sensitive values in configuration
+   */
+  private maskSensitiveValues(config: any): any {
+    const masked = JSON.parse(JSON.stringify(config));
+    
+    const maskValue = (obj: any, path: string = ""): void => {
+      for (const [key, value] of Object.entries(obj)) {
+        const fullPath = path ? `${path}.${key}` : key;
+        
+        if (SENSITIVE_PATHS.some(sensitive => 
+          fullPath.toLowerCase().includes(sensitive.toLowerCase()) ||
+          key.toLowerCase().includes(sensitive.toLowerCase()),
+        )) {
+          obj[key] = typeof value === "string" ? "****...****" : "[REDACTED]";
+        } else if (typeof value === "object" && value !== null) {
+          maskValue(value, fullPath);
+        }
+      }
+    };
+    
+    maskValue(masked);
+    return masked;
+  }
+
+  /**
+   * Tracks configuration changes
+   */
+  private trackChanges(path: string, oldValue: any, newValue: any, options: any = {}): void {
+    const change: ConfigChange = {
+      timestamp: new Date().toISOString(),
+      path,
+      oldValue,
+      newValue,
+      user: options.user,
+      reason: options.reason,
+      source: options.source || "api",
+    };
+    
+    this.changeHistory.push(change);
+    
+    // Keep only last 100 changes
+    if (this.changeHistory.length > 100) {
+      this.changeHistory = this.changeHistory.slice(-100);
+    }
+  }
+
+  /**
+   * Track changes from config updates
+   */
+  private trackConfigChanges(oldConfig: Config, updates: Partial<Config>, options: any = {}): void {
+    // For now, just track that an update occurred
+    this.trackChanges("config", oldConfig, updates, options);
+  }
+
+  /**
+   * Records a configuration change
+   */
+  private recordChange(path: string, oldValue: any, newValue: any, options: any = {}): void {
+    this.trackChanges(path, oldValue, newValue, options);
+  }
+
+  /**
+   * Checks if a configuration path is sensitive
+   */
+  private isSensitivePath(path: string): boolean {
+    return SENSITIVE_PATHS.some(sensitive => 
+      path.toLowerCase().includes(sensitive.toLowerCase()),
+    );
+  }
+
+  /**
+   * Encrypts a value if encryption is enabled
+   */
+  private encryptValue(value: string): string {
+    if (!this.encryptionKey) {
+      return value;
+    }
+    
+    try {
+      const cipher = createCipher("aes-256-cbc", this.encryptionKey);
+      let encrypted = cipher.update(value, "utf8", "hex");
+      encrypted += cipher.final("hex");
+      return `enc:${encrypted}`;
+    } catch (error) {
+      console.warn("Failed to encrypt value:", (error as Error).message);
+      return value;
+    }
+  }
+
+  /**
+   * Checks if a value is encrypted
+   */
+  private isEncryptedValue(value: any): boolean {
+    return typeof value === "string" && value.startsWith("enc:");
+  }
+
+  /**
+   * Decrypts a value if it's encrypted
+   */
+  private decryptValue(value: string): string {
+    if (!this.isEncryptedValue(value) || !this.encryptionKey) {
+      return value;
+    }
+    
+    try {
+      const encryptedValue = value.substring(4); // Remove 'enc:' prefix
+      const decipher = createDecipher("aes-256-cbc", this.encryptionKey);
+      let decrypted = decipher.update(encryptedValue, "hex", "utf8");
+      decrypted += decipher.final("utf8");
+      return decrypted;
+    } catch (error) {
+      console.warn("Failed to decrypt value:", (error as Error).message);
+      return value;
+    }
   }
 }
 
@@ -1124,12 +1386,12 @@ export type {
   FormatParser,
   ConfigChange,
   SecurityClassification,
-  ValidationRule
+  ValidationRule,
 };
 
 export {
   SENSITIVE_PATHS,
-  SECURITY_CLASSIFICATIONS
+  SECURITY_CLASSIFICATIONS,
 };
 
 // Custom deepMerge for Config type

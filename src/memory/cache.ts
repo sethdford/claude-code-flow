@@ -2,8 +2,8 @@
  * Memory cache implementation with LRU eviction
  */
 
-import { MemoryEntry } from '../utils/types.js';
-import { ILogger } from '../core/logger.js';
+import { MemoryEntry } from "../utils/types.js";
+import { ILogger } from "../core/logger.js";
 
 interface CacheEntry {
   data: MemoryEntry;
@@ -141,7 +141,7 @@ export class MemoryCache {
     entries: number;
     hitRate: number;
     maxSize: number;
-  } {
+    } {
     const totalRequests = this.hits + this.misses;
     const hitRate = totalRequests > 0 ? this.hits / totalRequests : 0;
 
@@ -170,7 +170,7 @@ export class MemoryCache {
     // Remove expired entries if needed
     // For now, just log metrics
     const metrics = this.getMetrics();
-    this.logger.debug('Cache maintenance', metrics);
+    this.logger.debug("Cache maintenance", metrics);
   }
 
   private calculateSize(entry: MemoryEntry): number {
@@ -202,7 +202,7 @@ export class MemoryCache {
   }
 
   private evict(requiredSpace: number): void {
-    this.logger.debug('Cache eviction triggered', { 
+    this.logger.debug("Cache eviction triggered", { 
       requiredSpace,
       currentSize: this.currentSize,
     });
@@ -230,7 +230,7 @@ export class MemoryCache {
       evicted.push(id);
     }
 
-    this.logger.debug('Cache entries evicted', { 
+    this.logger.debug("Cache entries evicted", { 
       count: evicted.length,
       freedSpace,
     });

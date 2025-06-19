@@ -3,19 +3,19 @@
  * Handles server lifecycle operations including start, stop, restart, and health checks
  */
 
-import { EventEmitter } from 'node:events';
-import { ILogger } from '../core/logger.js';
-import { MCPConfig, MCPSession, MCPMetrics, HealthStatus } from '../utils/types.js';
-import { MCPError } from '../utils/errors.js';
-import { IMCPServer } from './server.js';
+import { EventEmitter } from "node:events";
+import { ILogger } from "../core/logger.js";
+import { MCPConfig, MCPSession, MCPMetrics, HealthStatus } from "../utils/types.js";
+import { MCPError } from "../utils/errors.js";
+import { IMCPServer } from "./server.js";
 
 export enum LifecycleState {
-  STOPPED = 'stopped',
-  STARTING = 'starting',
-  RUNNING = 'running',
-  STOPPING = 'stopping',
-  RESTARTING = 'restarting',
-  ERROR = 'error',
+  STOPPED = "stopped",
+  STARTING = "starting",
+  RUNNING = "running",
+  STOPPING = "stopping",
+  RESTARTING = "restarting",
+  ERROR = "error",
 }
 
 export interface LifecycleEvent {
@@ -99,7 +99,7 @@ export class MCPLifecycleManager extends EventEmitter {
     }
 
     this.setState(LifecycleState.STARTING);
-    this.logger.info('Starting MCP server lifecycle manager');
+    this.logger.info("Starting MCP server lifecycle manager");
 
     try {
       // Create server instance
@@ -118,10 +118,10 @@ export class MCPLifecycleManager extends EventEmitter {
       }
 
       this.setState(LifecycleState.RUNNING);
-      this.logger.info('MCP server started successfully');
+      this.logger.info("MCP server started successfully");
     } catch (error) {
       this.setState(LifecycleState.ERROR, error as Error);
-      this.logger.error('Failed to start MCP server', error);
+      this.logger.error("Failed to start MCP server", error);
       throw error;
     }
   }
@@ -139,7 +139,7 @@ export class MCPLifecycleManager extends EventEmitter {
     }
 
     this.setState(LifecycleState.STOPPING);
-    this.logger.info('Stopping MCP server');
+    this.logger.info("Stopping MCP server");
 
     this.shutdownPromise = this.performShutdown();
     await this.shutdownPromise;
@@ -155,7 +155,7 @@ export class MCPLifecycleManager extends EventEmitter {
     }
 
     this.setState(LifecycleState.RESTARTING);
-    this.logger.info('Restarting MCP server');
+    this.logger.info("Restarting MCP server");
 
     try {
       await this.stop();
@@ -169,10 +169,10 @@ export class MCPLifecycleManager extends EventEmitter {
       this.lastRestart = new Date();
       this.restartAttempts++;
 
-      this.logger.info('MCP server restarted successfully');
+      this.logger.info("MCP server restarted successfully");
     } catch (error) {
       this.setState(LifecycleState.ERROR, error as Error);
-      this.logger.error('Failed to restart MCP server', error);
+      this.logger.error("Failed to restart MCP server", error);
       throw error;
     }
   }
@@ -199,7 +199,7 @@ export class MCPLifecycleManager extends EventEmitter {
 
     try {
       if (!this.server || this.state !== LifecycleState.RUNNING) {
-        result.error = 'Server not running';
+        result.error = "Server not running";
         return result;
       }
 
@@ -230,7 +230,7 @@ export class MCPLifecycleManager extends EventEmitter {
         result.metrics.healthCheckDuration = checkDuration;
       }
 
-      this.logger.debug('Health check completed', { 
+      this.logger.debug("Health check completed", { 
         healthy: result.healthy, 
         duration: checkDuration,
         components: result.components,
@@ -238,8 +238,8 @@ export class MCPLifecycleManager extends EventEmitter {
 
       return result;
     } catch (error) {
-      result.error = error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error('Health check failed', error);
+      result.error = error instanceof Error ? error.message : "Unknown error";
+      this.logger.error("Health check failed", error);
       return result;
     }
   }
@@ -283,7 +283,7 @@ export class MCPLifecycleManager extends EventEmitter {
    * Force terminate server (emergency stop)
    */
   async forceStop(): Promise<void> {
-    this.logger.warn('Force stopping MCP server');
+    this.logger.warn("Force stopping MCP server");
     
     // Stop health checks
     this.stopHealthChecks();
@@ -293,7 +293,7 @@ export class MCPLifecycleManager extends EventEmitter {
       try {
         await this.server.stop();
       } catch (error) {
-        this.logger.error('Error during force stop', error);
+        this.logger.error("Error during force stop", error);
       }
       this.server = undefined;
     }
@@ -307,7 +307,7 @@ export class MCPLifecycleManager extends EventEmitter {
    */
   setAutoRestart(enabled: boolean): void {
     this.config.enableAutoRestart = enabled;
-    this.logger.info('Auto-restart', { enabled });
+    this.logger.info("Auto-restart", { enabled });
   }
 
   /**
@@ -322,7 +322,7 @@ export class MCPLifecycleManager extends EventEmitter {
       this.stopHealthChecks();
     }
     
-    this.logger.info('Health checks', { enabled });
+    this.logger.info("Health checks", { enabled });
   }
 
   private setState(newState: LifecycleState, error?: Error): void {
@@ -343,8 +343,8 @@ export class MCPLifecycleManager extends EventEmitter {
       this.history.shift();
     }
 
-    this.emit('stateChange', event);
-    this.logger.info('State change', { 
+    this.emit("stateChange", event);
+    this.logger.info("State change", { 
       from: previousState, 
       to: newState, 
       error: error?.message,
@@ -353,40 +353,40 @@ export class MCPLifecycleManager extends EventEmitter {
 
   private setupEventHandlers(): void {
     // Handle uncaught errors
-    process.on('uncaughtException', (error) => {
-      this.logger.error('Uncaught exception', error);
+    process.on("uncaughtException", (error) => {
+      this.logger.error("Uncaught exception", error);
       this.handleServerError(error);
     });
 
-    process.on('unhandledRejection', (reason) => {
-      this.logger.error('Unhandled rejection', reason);
+    process.on("unhandledRejection", (reason) => {
+      this.logger.error("Unhandled rejection", reason);
       this.handleServerError(reason instanceof Error ? reason : new Error(String(reason)));
     });
 
     // Handle process signals
-    process.on('SIGINT', () => {
-      this.logger.info('Received SIGINT, shutting down gracefully');
+    process.on("SIGINT", () => {
+      this.logger.info("Received SIGINT, shutting down gracefully");
       this.stop().catch(error => {
-        this.logger.error('Error during graceful shutdown', error);
+        this.logger.error("Error during graceful shutdown", error);
         process.exit(1);
       });
     });
 
-    process.on('SIGTERM', () => {
-      this.logger.info('Received SIGTERM, shutting down gracefully');
+    process.on("SIGTERM", () => {
+      this.logger.info("Received SIGTERM, shutting down gracefully");
       this.stop().catch(error => {
-        this.logger.error('Error during graceful shutdown', error);
+        this.logger.error("Error during graceful shutdown", error);
         process.exit(1);
       });
     });
   }
 
   private async handleServerError(error: Error): Promise<void> {
-    this.logger.error('Server error detected', error);
+    this.logger.error("Server error detected", error);
     this.setState(LifecycleState.ERROR, error);
 
     if (this.config.enableAutoRestart && this.restartAttempts < this.config.maxRestartAttempts) {
-      this.logger.info('Attempting auto-restart', { 
+      this.logger.info("Attempting auto-restart", { 
         attempt: this.restartAttempts + 1, 
         maxAttempts: this.config.maxRestartAttempts,
       });
@@ -394,10 +394,10 @@ export class MCPLifecycleManager extends EventEmitter {
       try {
         await this.restart();
       } catch (restartError) {
-        this.logger.error('Auto-restart failed', restartError);
+        this.logger.error("Auto-restart failed", restartError);
       }
     } else {
-      this.logger.error('Max restart attempts reached or auto-restart disabled');
+      this.logger.error("Max restart attempts reached or auto-restart disabled");
       await this.forceStop();
     }
   }
@@ -412,22 +412,22 @@ export class MCPLifecycleManager extends EventEmitter {
         const health = await this.healthCheck();
         
         if (!health.healthy && this.state === LifecycleState.RUNNING) {
-          this.logger.warn('Health check failed', health);
-          this.handleServerError(new Error(health.error || 'Health check failed'));
+          this.logger.warn("Health check failed", health);
+          this.handleServerError(new Error(health.error || "Health check failed"));
         }
       } catch (error) {
-        this.logger.error('Health check error', error);
+        this.logger.error("Health check error", error);
       }
     }, this.config.healthCheckInterval);
 
-    this.logger.debug('Health checks started', { interval: this.config.healthCheckInterval });
+    this.logger.debug("Health checks started", { interval: this.config.healthCheckInterval });
   }
 
   private stopHealthChecks(): void {
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
       this.healthCheckTimer = undefined;
-      this.logger.debug('Health checks stopped');
+      this.logger.debug("Health checks stopped");
     }
   }
 
@@ -439,7 +439,7 @@ export class MCPLifecycleManager extends EventEmitter {
       // Graceful shutdown with timeout
       const shutdownPromise = this.server?.stop() || Promise.resolve();
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Shutdown timeout')), this.config.gracefulShutdownTimeout);
+        setTimeout(() => reject(new Error("Shutdown timeout")), this.config.gracefulShutdownTimeout);
       });
 
       await Promise.race([shutdownPromise, timeoutPromise]);
@@ -448,9 +448,9 @@ export class MCPLifecycleManager extends EventEmitter {
       this.setState(LifecycleState.STOPPED);
       this.startTime = undefined;
       
-      this.logger.info('MCP server stopped successfully');
+      this.logger.info("MCP server stopped successfully");
     } catch (error) {
-      this.logger.error('Error during shutdown', error);
+      this.logger.error("Error during shutdown", error);
       await this.forceStop();
       throw error;
     }

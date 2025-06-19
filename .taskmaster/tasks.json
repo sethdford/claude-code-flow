@@ -1,0 +1,42 @@
+{
+  "projects": [
+    {
+      "projectId": "proj-1",
+      "initialPrompt": "Fix the claude-flow build",
+      "projectPlan": "Systematically resolve all build, lint, and test errors to get the project into a runnable state.",
+      "completed": false,
+      "tasks": [
+        {
+          "id": "task-1",
+          "title": "Fix Architectural Errors (Deno & VSCode)",
+          "description": "Refactor all code that uses Deno or VSCode APIs to use Node.js equivalents. This is the highest priority as it is the root cause of many build failures.",
+          "status": "not started",
+          "approved": false,
+          "completedDetails": "",
+          "toolRecommendations": "grep, edit_file",
+          "ruleRecommendations": "Architectural Principles"
+        },
+        {
+          "id": "task-2",
+          "title": "Fix Module Resolution Errors",
+          "description": "Correct all import paths across the codebase. Remove `.ts` extensions from imports and fix any broken relative paths.",
+          "status": "not started",
+          "approved": false,
+          "completedDetails": "",
+          "toolRecommendations": "edit_file, run_terminal_cmd (for npm run build)",
+          "ruleRecommendations": "Coding & Linter Style Rules"
+        },
+        {
+          "id": "task-3",
+          "title": "Fix Type-Checking Errors",
+          "description": "Resolve all remaining TypeScript errors (e.g., 'is of type unknown', 'property does not exist') after the major architectural and module issues are fixed.",
+          "status": "not started",
+          "approved": false,
+          "completedDetails": "",
+          "toolRecommendations": "edit_file, run_terminal_cmd (for npm run build)",
+          "ruleRecommendations": "TypeScript Best Practices"
+        }
+      ]
+    }
+  ]
+} 

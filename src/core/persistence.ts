@@ -34,7 +34,7 @@ export interface PersistedTask {
 }
 
 export class PersistenceManager {
-  private db: Database.Database;
+  private db!: InstanceType<typeof Database>;
   private dbPath: string;
 
   constructor(dataDir: string = "./memory") {
@@ -54,7 +54,7 @@ export class PersistenceManager {
 
   private createTables(): void {
     // Agents table
-    this.db.execute(`
+    this.db.exec(`
       CREATE TABLE IF NOT EXISTS agents (
         id TEXT PRIMARY KEY,
         type TEXT NOT NULL,
@@ -69,7 +69,7 @@ export class PersistenceManager {
     `);
 
     // Tasks table
-    this.db.execute(`
+    this.db.exec(`
       CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,
         type TEXT NOT NULL,
@@ -87,7 +87,7 @@ export class PersistenceManager {
     `);
 
     // Sessions table for terminal sessions
-    this.db.execute(`
+    this.db.exec(`
       CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
         agent_id TEXT NOT NULL,
@@ -104,7 +104,7 @@ export class PersistenceManager {
     const stmt = this.db.prepare(
       `INSERT OR REPLACE INTO agents 
        (id, type, name, status, capabilities, system_prompt, max_concurrent_tasks, priority, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     stmt.run(
       agent.id,
@@ -115,7 +115,7 @@ export class PersistenceManager {
       agent.systemPrompt,
       agent.maxConcurrentTasks,
       agent.priority,
-      agent.createdAt
+      agent.createdAt,
     );
   }
 
@@ -165,7 +165,7 @@ export class PersistenceManager {
     const stmt = this.db.prepare(
       `INSERT OR REPLACE INTO tasks 
        (id, type, description, status, priority, dependencies, metadata, assigned_agent, progress, error, created_at, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     stmt.run(
       task.id,
@@ -179,7 +179,7 @@ export class PersistenceManager {
       task.progress,
       task.error || null,
       task.createdAt,
-      task.completedAt || null
+      task.completedAt || null,
     );
   }
 

@@ -11,7 +11,7 @@ export class CircularBuffer<T> {
   
   constructor(private capacity: number) {
     if (capacity <= 0) {
-      throw new Error('Capacity must be greater than 0');
+      throw new Error("Capacity must be greater than 0");
     }
     this.buffer = new Array(capacity);
   }
@@ -157,14 +157,14 @@ export class CircularBuffer<T> {
     totalItemsWritten: number;
     overwrittenCount: number;
     memoryUsage: number;
-  } {
+    } {
     return {
       items: this.getAll(),
       capacity: this.capacity,
       size: this.size,
       totalItemsWritten: this.totalItemsWritten,
       overwrittenCount: this.getOverwrittenCount(),
-      memoryUsage: this.getMemoryUsage()
+      memoryUsage: this.getMemoryUsage(),
     };
   }
   
@@ -173,7 +173,7 @@ export class CircularBuffer<T> {
    */
   resize(newCapacity: number): void {
     if (newCapacity <= 0) {
-      throw new Error('New capacity must be greater than 0');
+      throw new Error("New capacity must be greater than 0");
     }
     
     const items = this.getAll();

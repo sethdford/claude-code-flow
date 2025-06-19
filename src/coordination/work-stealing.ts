@@ -2,9 +2,9 @@
  * Work stealing algorithm for load balancing between agents
  */
 
-import { Task, AgentProfile } from '../utils/types.js';
-import { IEventBus } from '../core/event-bus.js';
-import { ILogger } from '../core/logger.js';
+import { Task, AgentProfile } from "../utils/types.js";
+import { IEventBus } from "../core/event-bus.js";
+import { ILogger } from "../core/logger.js";
 
 export interface WorkStealingConfig {
   enabled: boolean;
@@ -39,11 +39,11 @@ export class WorkStealingCoordinator {
 
   async initialize(): Promise<void> {
     if (!this.config.enabled) {
-      this.logger.info('Work stealing is disabled');
+      this.logger.info("Work stealing is disabled");
       return;
     }
 
-    this.logger.info('Initializing work stealing coordinator');
+    this.logger.info("Initializing work stealing coordinator");
     
     // Start periodic steal checks
     this.stealInterval = setInterval(
@@ -117,7 +117,7 @@ export class WorkStealingCoordinator {
       this.config.maxStealBatch,
     );
 
-    this.logger.info('Initiating work stealing', {
+    this.logger.info("Initiating work stealing", {
       from: maxLoaded.agentId,
       to: minLoaded.agentId,
       tasksToSteal,
@@ -125,7 +125,7 @@ export class WorkStealingCoordinator {
     });
 
     // Emit steal request event
-    this.eventBus.emit('workstealing:request', {
+    this.eventBus.emit("workstealing:request", {
       sourceAgent: maxLoaded.agentId,
       targetAgent: minLoaded.agentId,
       taskCount: tasksToSteal,
@@ -182,7 +182,7 @@ export class WorkStealingCoordinator {
     // Sort by score (descending) and return best
     candidates.sort((a, b) => b.score - a.score);
     
-    this.logger.debug('Agent selection scores', {
+    this.logger.debug("Agent selection scores", {
       taskId: task.id,
       candidates: candidates.slice(0, 5), // Top 5
     });

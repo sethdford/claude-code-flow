@@ -22,8 +22,8 @@ export interface ITerminalAdapter {
 }
 
 export interface TerminalEvents {
-  'terminal:created': { terminalId: string; pid?: number };
-  'terminal:closed': { terminalId: string; code?: number; signal?: string };
-  'terminal:error': { terminalId: string; error: Error };
-  'terminal:output': { terminalId: string; data: string };
+  "terminal:created": { terminalId: string; pid?: number };
+  "terminal:closed": { terminalId: string; code?: number; signal?: string };
+  "terminal:error": { terminalId: string; error: Error };
+  "terminal:output": { terminalId: string; data: string };
 }
