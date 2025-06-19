@@ -1,0 +1,3 @@
+[submodule "memory"]
+	path = memory
+	url = https://github.com/sethdford/vibex-claude-code-flow-memory.git
