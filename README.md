@@ -153,6 +153,50 @@ Claude Flow is built on a modular architecture:
 - **Communication Layer**: Inter-agent messaging and coordination
 - **Memory System**: Persistent storage and context management
 
+## 🧠 Memory Module
+
+The SPARC Memory Bank system is now maintained as a separate git submodule for better modularity and independent versioning.
+
+### Repository Structure
+- **Main Project**: [vibex-claude-code-flow](https://github.com/sethdford/vibex-claude-code-flow) - Core Claude Flow application
+- **Memory Module**: [vibex-claude-code-flow-memory](https://github.com/sethdford/vibex-claude-code-flow-memory) - SPARC Memory Bank system
+
+### Working with the Memory Submodule
+
+#### Initial Setup (for new clones)
+```bash
+git clone --recurse-submodules https://github.com/sethdford/vibex-claude-code-flow.git
+cd claude-code-flow
+```
+
+#### If you already have the repo cloned
+```bash
+git submodule update --init --recursive
+```
+
+#### Updating the Memory Module
+```bash
+# Update to latest memory module version
+git submodule update --remote memory
+
+# Build the memory module
+cd memory && npm install && npm run build && cd ..
+
+# Commit the submodule update
+git add memory
+git commit -m "Update memory submodule to latest version"
+```
+
+#### Memory Module Features
+- **CRDT-based conflict resolution** for distributed memory
+- **Vector search capabilities** with semantic similarity
+- **Multiple backends**: SQLite and Markdown
+- **Namespace management** with permissions
+- **Replication and synchronization**
+- **Advanced caching** with LRU/LFU/FIFO strategies
+- **Import/export** with multiple formats
+- **Comprehensive test suite** with Vitest
+
 ## 🔧 Development
 
 ### Prerequisites
