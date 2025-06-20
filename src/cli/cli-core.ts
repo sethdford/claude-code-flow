@@ -5,8 +5,25 @@
 
 import chalk from "chalk";
 import fs from "fs-extra";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
-export const VERSION = "1.0.43";
+// Get version from package.json
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJsonPath = join(__dirname, "../../package.json");
+
+let VERSION = "1.0.72"; // fallback version
+
+try {
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  VERSION = packageJson.version;
+} catch (error) {
+  // Use fallback version if package.json can't be read
+  console.warn("Could not read version from package.json, using fallback");
+}
+
+export { VERSION };
 
 interface ParsedFlags {
   _: string[];
