@@ -1,4 +1,6 @@
 // init/directory-structure.ts - Directory structure creation
+import { getVersion } from "../../utils/version.js";
+
 export async function createDirectoryStructure(): Promise<void> {
   const fs = await import("fs/promises");
   const path = await import("path");
@@ -53,7 +55,7 @@ export async function createDirectoryStructure(): Promise<void> {
     tasks: [],
     swarms: [],
     lastUpdated: Date.now(),
-    version: "1.0.71",
+    version: getVersion(),
   };
   
   await fs.writeFile("memory/claude-flow-data.json", JSON.stringify(initialData, null, 2));

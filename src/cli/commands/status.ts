@@ -8,6 +8,7 @@ import { Command } from "../cliffy-compat.js";
 import { formatDuration, formatStatusIndicator } from "../formatter.js";
 import { existsSync } from "node:fs";
 import { promises as fs } from "node:fs";
+import { getVersion } from "../../utils/version.js";
 
 // Color compatibility
 const colors = {
@@ -240,7 +241,7 @@ async function getSystemStatus(options: any = {}): Promise<any> {
   // Mock status for now - in production, this would call the orchestrator API
   const baseStatus = {
     overall: "healthy",
-    version: "1.0.71",
+    version: getVersion(),
     uptime: Date.now() - (Date.now() - 3600000), // 1 hour ago
     startTime: new Date(Date.now() - 3600000),
     components: {

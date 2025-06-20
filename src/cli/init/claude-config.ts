@@ -1,5 +1,6 @@
 // init/claude-config.ts - Claude configuration creation
 import type { InitOptions } from "./index.js";
+import { getVersion } from "../../utils/version.js";
 
 export async function createClaudeConfig(options: InitOptions): Promise<void> {
   const fs = await import("fs/promises");
@@ -7,7 +8,7 @@ export async function createClaudeConfig(options: InitOptions): Promise<void> {
   
   // Create base configuration
   const claudeConfig = {
-    version: "1.0.71",
+    version: getVersion(),
     project: {
       name: path.basename(process.cwd()),
       type: "claude-flow",
@@ -61,7 +62,7 @@ async function createBatchToolsConfig(): Promise<void> {
   const fs = await import("fs/promises");
   
   const batchConfig = {
-    version: "1.0.71",
+    version: getVersion(),
     description: "Batch tools configuration for Claude Code orchestration",
     tools: {
       todoWrite: {
@@ -142,7 +143,7 @@ async function createSwarmConfig(): Promise<void> {
   const fs = await import("fs/promises");
   
   const swarmConfig = {
-    version: "1.0.71",
+    version: getVersion(),
     description: "Swarm orchestration configuration for Claude-Flow",
     strategies: {
       research: {
@@ -236,7 +237,7 @@ async function createCoordinationConfig(): Promise<void> {
   const fs = await import("fs/promises");
   
   const coordinationConfig = {
-    version: "1.0.71",
+    version: getVersion(),
     description: "Agent coordination and orchestration configuration",
     coordination: {
       taskManagement: {
