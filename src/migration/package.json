@@ -66,11 +66,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/claude-code-flow",
+    "url": "https://github.com/sethdford/vibex-claude-code-flow",
     "directory": "src/migration"
   },
   "bugs": {
-    "url": "https://github.com/ruvnet/claude-code-flow/issues"
-  },
-  "homepage": "https://github.com/ruvnet/claude-code-flow#readme"
+    "url": "https://github.com/sethdford/vibex-claude-code-flow/issues"
+    },
+    "homepage": "https://github.com/sethdford/vibex-claude-code-flow#readme"
 }

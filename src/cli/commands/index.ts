@@ -1940,7 +1940,7 @@ Now, please proceed with the task: ${task}`;
         console.log(`  ${blue("claude-flow claude spawn")} "fix payment bug" --tools "View,Edit,Bash" --no-permissions`);
         console.log(`  ${blue("claude-flow claude batch")} workflow.json --dry-run`);
         console.log();
-        console.log("For more information, see: https://github.com/ruvnet/claude-code-flow/docs/11-claude-spawning.md");
+        console.log("For more information, see: https://github.com/sethdford/vibex-claude-code-flow/docs/11-claude-spawning.md");
       } else if (command === "swarm" || command === "swarm-ui") {
         console.log(bold(blue("Claude Swarm Mode")));
         console.log();
@@ -1979,8 +1979,8 @@ Now, please proceed with the task: ${task}`;
         console.log(`  - ${blue("claude-flow swarm")} <objective> --ui`);
         console.log();
         console.log("For more information, see:");
-        console.log("  - https://github.com/ruvnet/claude-code-flow/docs/12-swarm.md");
-        console.log("  - https://github.com/ruvnet/claude-code-flow/SWARM_TTY_SOLUTION.md");
+        console.log("  - https://github.com/sethdford/vibex-claude-code-flow/docs/12-swarm.md");
+          console.log("  - https://github.com/sethdford/vibex-claude-code-flow/SWARM_TTY_SOLUTION.md");
       } else if (command === "sparc") {
         console.log(bold(blue("SPARC Development Mode")));
         console.log();
@@ -2018,7 +2018,7 @@ Now, please proceed with the task: ${task}`;
         console.log(`  ${blue("claude-flow sparc tdd")} "payment processing system"    # Full TDD workflow`);
         console.log(`  ${blue("claude-flow sparc workflow")} project-workflow.json     # Custom workflow`);
         console.log();
-        console.log("For more information, see: https://github.com/ruvnet/claude-code-flow/docs/sparc.md");
+        console.log("For more information, see: https://github.com/sethdford/vibex-claude-code-flow/docs/sparc.md");
       } else if (command === "start") {
         console.log(bold(blue("Enhanced Start Command")));
         console.log();

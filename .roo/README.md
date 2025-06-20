@@ -4,7 +4,7 @@
 
 This guide provides information about the various modes available in Roo and detailed documentation on the Model Context Protocol (MCP) integration capabilities.
 
-Create by @ruvnet
+**Originally created by [@ruvnet](https://github.com/ruvnet) - this fork is a complete rebuild to modernize the architecture and ensure full functionality.**
 
 ## Available Modes
 

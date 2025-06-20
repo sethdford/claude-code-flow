@@ -229,7 +229,7 @@ claude-flow config init --force
 
 - Use `claude-flow help` for command-line help
 - Join our [Discord community](https://discord.gg/claude-flow)
-- Check [GitHub Issues](https://github.com/ruvnet/claude-code-flow/issues)
+- Check [GitHub Issues](https://github.com/sethdford/vibex-claude-code-flow/issues)
 - Review the [full documentation](https://claude-flow.dev/docs)
 
 ## Troubleshooting Common Issues

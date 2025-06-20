@@ -611,9 +611,10 @@ if (version[0] < 16) {
 
 ### Community Support
 
-1. **GitHub Issues**: https://github.com/ruvnet/claude-code-flow/issues
-2. **Documentation**: https://github.com/ruvnet/claude-code-flow/docs
-3. **Discussions**: https://github.com/ruvnet/claude-code-flow/discussions
+1. **GitHub Issues**: https://github.com/sethdford/vibex-claude-code-flow/issues
+2. **Documentation**: https://github.com/sethdford/vibex-claude-code-flow/docs
+3. **Discussions**: https://github.com/sethdford/vibex-claude-code-flow/discussions
+4. **Original Project**: https://github.com/ruvnet/claude-code-flow (by @ruvnet)
 
 ### Reporting Bugs
 

@@ -3,8 +3,10 @@
 > Advanced AI agent orchestration system for multi-agent coordination
 
 [![npm version](https://badge.fury.io/js/@sethdford/claude-flow.svg)](https://badge.fury.io/js/@sethdford/claude-flow)
-[![Build Status](https://github.com/ruvnet/claude-code-flow/workflows/CI/badge.svg)](https://github.com/ruvnet/claude-code-flow/actions)
+[![Build Status](https://github.com/sethdford/vibex-claude-code-flow/workflows/CI/badge.svg)](https://github.com/sethdford/vibex-claude-code-flow/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**Originally created by [@ruvnet](https://github.com/ruvnet) - this fork is a complete rebuild to modernize the architecture and ensure full functionality.**
 
 Claude Flow is a powerful command-line tool and framework for orchestrating AI agents, managing complex workflows, and coordinating multi-agent systems. Built with TypeScript and Node.js, it provides a comprehensive platform for AI-driven automation and coordination.
 
@@ -209,7 +211,7 @@ git commit -m "Update memory submodule to latest version"
 
 ```bash
 # Clone the repository
-git clone https://github.com/ruvnet/claude-code-flow.git
+git clone https://github.com/sethdford/vibex-claude-code-flow.git
 cd claude-code-flow
 
 # Install dependencies
@@ -263,9 +265,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📖 [Documentation](https://github.com/ruvnet/claude-code-flow/docs)
-- 🐛 [Issue Tracker](https://github.com/ruvnet/claude-code-flow/issues)
-- 💬 [Discussions](https://github.com/ruvnet/claude-code-flow/discussions)
+- 📖 [Documentation](https://github.com/sethdford/vibex-claude-code-flow/docs)
+- 🐛 [Issue Tracker](https://github.com/sethdford/vibex-claude-code-flow/issues)
+- 💬 [Discussions](https://github.com/sethdford/vibex-claude-code-flow/discussions)
+- 🔗 [Original Project](https://github.com/ruvnet/claude-code-flow) by [@ruvnet](https://github.com/ruvnet)
 
 ---
 

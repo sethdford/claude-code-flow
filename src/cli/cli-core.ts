@@ -242,8 +242,9 @@ ${chalk.bold("EXAMPLES:")}
 For more detailed help on specific commands, use:
   ${this.name} [COMMAND] --help
 
-Documentation: https://github.com/ruvnet/claude-code-flow
-Issues: https://github.com/ruvnet/claude-code-flow/issues
+Documentation: https://github.com/sethdford/vibex-claude-code-flow
+Issues: https://github.com/sethdford/vibex-claude-code-flow/issues
+Original by @ruvnet: https://github.com/ruvnet/claude-code-flow
 
 Created by rUv - Built with ❤️ for the Claude community
 `);

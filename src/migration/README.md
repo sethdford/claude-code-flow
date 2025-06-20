@@ -434,7 +434,7 @@ Typical performance metrics:
 
 ```bash
 # Clone and setup
-git clone https://github.com/ruvnet/claude-code-flow
+git clone https://github.com/sethdford/vibex-claude-code-flow
 cd claude-code-flow
 npm install
 

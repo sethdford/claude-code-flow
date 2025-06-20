@@ -1174,6 +1174,7 @@ ADVANCED FEATURES:
   🔒 Security and encryption options
   🖥️  Interactive terminal UI
 
-For more information, visit: https://github.com/ruvnet/claude-code-flow
+For more information, visit: https://github.com/sethdford/vibex-claude-code-flow
+Original project by @ruvnet: https://github.com/ruvnet/claude-code-flow
 `);
 }

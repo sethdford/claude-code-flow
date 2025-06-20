@@ -6,15 +6,14 @@ import Database from "better-sqlite3";
 import { promises as fs } from "fs";
 import path from "path";
 import { IMemoryBackend } from "./base.js";
-import { MemoryEntry, MemoryQuery } from "../../utils/types.js";
-import { ILogger } from "../../core/logger.js";
+import { MemoryEntry, MemoryQuery, ILogger } from "../../utils/types.js";
 import { MemoryBackendError } from "../../utils/errors.js";
 
 /**
  * SQLite-based memory backend
  */
 export class SQLiteBackend implements IMemoryBackend {
-  private db?: Database.Database;
+  private db: Database.Database | null = null;
 
   constructor(
     private dbPath: string,
@@ -55,7 +54,7 @@ export class SQLiteBackend implements IMemoryBackend {
 
     if (this.db) {
       this.db.close();
-      delete this.db;
+      this.db = null;
     }
   }
 
@@ -64,14 +63,13 @@ export class SQLiteBackend implements IMemoryBackend {
       throw new MemoryBackendError("Database not initialized");
     }
 
-    const sql = `
-      INSERT OR REPLACE INTO memory_entries (
-        id, agent_id, session_id, type, content, 
-        context, timestamp, tags, version, parent_id, metadata
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO memory_entries 
+      (id, agentId, sessionId, type, content, context, timestamp, tags, version, parentId, metadata, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `);
 
-    const params = [
+    stmt.run(
       entry.id,
       entry.agentId,
       entry.sessionId,
@@ -83,14 +81,7 @@ export class SQLiteBackend implements IMemoryBackend {
       entry.version,
       entry.parentId || null,
       entry.metadata ? JSON.stringify(entry.metadata) : null,
-    ];
-
-    try {
-      const stmt = this.db.prepare(sql);
-      stmt.run(...params);
-    } catch (error) {
-      throw new MemoryBackendError("Failed to store entry", { error });
-    }
+    );
   }
 
   async retrieve(id: string): Promise<MemoryEntry | undefined> {
@@ -98,25 +89,41 @@ export class SQLiteBackend implements IMemoryBackend {
       throw new MemoryBackendError("Database not initialized");
     }
 
-    const sql = "SELECT * FROM memory_entries WHERE id = ?";
-    
-    try {
-      const stmt = this.db.prepare(sql);
-      const row = stmt.get(id);
-      
-      if (!row) {
-        return undefined;
-      }
+    const stmt = this.db.prepare("SELECT * FROM memory_entries WHERE id = ?");
+    const row = stmt.get(id) as Record<string, unknown> | undefined;
 
-      return this.rowToEntry(row as Record<string, unknown>);
-    } catch (error) {
-      throw new MemoryBackendError("Failed to retrieve entry", { error });
+    if (!row) {
+      return undefined;
     }
+
+    return this.rowToEntry(row);
   }
 
   async update(id: string, entry: MemoryEntry): Promise<void> {
-    // SQLite INSERT OR REPLACE handles updates
-    await this.store(entry);
+    if (!this.db) {
+      throw new MemoryBackendError("Database not initialized");
+    }
+
+    const stmt = this.db.prepare(`
+      UPDATE memory_entries 
+      SET agentId = ?, sessionId = ?, type = ?, content = ?, context = ?, 
+          timestamp = ?, tags = ?, version = ?, parentId = ?, metadata = ?, updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `);
+
+    stmt.run(
+      entry.agentId,
+      entry.sessionId,
+      entry.type,
+      entry.content,
+      JSON.stringify(entry.context),
+      entry.timestamp.toISOString(),
+      JSON.stringify(entry.tags),
+      entry.version,
+      entry.parentId || null,
+      entry.metadata ? JSON.stringify(entry.metadata) : null,
+      id,
+    );
   }
 
   async delete(id: string): Promise<void> {
@@ -124,14 +131,8 @@ export class SQLiteBackend implements IMemoryBackend {
       throw new MemoryBackendError("Database not initialized");
     }
 
-    const sql = "DELETE FROM memory_entries WHERE id = ?";
-    
-    try {
-      const stmt = this.db.prepare(sql);
-      stmt.run(id);
-    } catch (error) {
-      throw new MemoryBackendError("Failed to delete entry", { error });
-    }
+    const stmt = this.db.prepare("DELETE FROM memory_entries WHERE id = ?");
+    stmt.run(id);
   }
 
   async query(query: MemoryQuery): Promise<MemoryEntry[]> {
@@ -139,48 +140,44 @@ export class SQLiteBackend implements IMemoryBackend {
       throw new MemoryBackendError("Database not initialized");
     }
 
-    const conditions: string[] = [];
+    let sql = "SELECT * FROM memory_entries WHERE 1=1";
     const params: unknown[] = [];
 
     if (query.agentId) {
-      conditions.push("agent_id = ?");
+      sql += " AND agentId = ?";
       params.push(query.agentId);
     }
 
     if (query.sessionId) {
-      conditions.push("session_id = ?");
+      sql += " AND sessionId = ?";
       params.push(query.sessionId);
     }
 
     if (query.type) {
-      conditions.push("type = ?");
+      sql += " AND type = ?";
       params.push(query.type);
     }
 
+    if (query.tags && query.tags.length > 0) {
+      for (const tag of query.tags) {
+        sql += " AND tags LIKE ?";
+        params.push(`%"${tag}"%`);
+      }
+    }
+
     if (query.startTime) {
-      conditions.push("timestamp >= ?");
+      sql += " AND timestamp >= ?";
       params.push(query.startTime.toISOString());
     }
 
     if (query.endTime) {
-      conditions.push("timestamp <= ?");
+      sql += " AND timestamp <= ?";
       params.push(query.endTime.toISOString());
     }
 
     if (query.search) {
-      conditions.push("(content LIKE ? OR tags LIKE ?)");
+      sql += " AND (content LIKE ? OR tags LIKE ?)";
       params.push(`%${query.search}%`, `%${query.search}%`);
-    }
-
-    if (query.tags && query.tags.length > 0) {
-      const tagConditions = query.tags.map(() => "tags LIKE ?");
-      conditions.push(`(${tagConditions.join(" OR ")})`);
-      query.tags.forEach((tag: string) => params.push(`%"${tag}"%`));
-    }
-
-    let sql = "SELECT * FROM memory_entries";
-    if (conditions.length > 0) {
-      sql += ` WHERE ${  conditions.join(" AND ")}`;
     }
 
     sql += " ORDER BY timestamp DESC";
@@ -191,21 +188,17 @@ export class SQLiteBackend implements IMemoryBackend {
     }
 
     if (query.offset) {
-      // SQLite requires LIMIT when using OFFSET
       if (!query.limit) {
-        sql += " LIMIT -1";  // -1 means no limit in SQLite
+        sql += " LIMIT -1";
       }
       sql += " OFFSET ?";
       params.push(query.offset);
     }
 
-    try {
-      const stmt = this.db.prepare(sql);
-      const rows = stmt.all(...params);
-      return rows.map((row: any) => this.rowToEntry(row as Record<string, unknown>));
-    } catch (error) {
-      throw new MemoryBackendError("Failed to query entries", { error });
-    }
+    const stmt = this.db.prepare(sql);
+    const rows = stmt.all(...params) as Record<string, unknown>[];
+
+    return Promise.resolve(rows.map(row => this.rowToEntry(row)));
   }
 
   async getAllEntries(): Promise<MemoryEntry[]> {
@@ -213,15 +206,10 @@ export class SQLiteBackend implements IMemoryBackend {
       throw new MemoryBackendError("Database not initialized");
     }
 
-    const sql = "SELECT * FROM memory_entries ORDER BY timestamp DESC";
-    
-    try {
-      const stmt = this.db.prepare(sql);
-      const rows = stmt.all();
-      return rows.map((row: any) => this.rowToEntry(row as Record<string, unknown>));
-    } catch (error) {
-      throw new MemoryBackendError("Failed to get all entries", { error });
-    }
+    const stmt = this.db.prepare("SELECT * FROM memory_entries ORDER BY timestamp DESC");
+    const rows = stmt.all() as Record<string, unknown>[];
+
+    return Promise.resolve(rows.map(row => this.rowToEntry(row)));
   }
 
   async getHealthStatus(): Promise<{ 
@@ -263,34 +251,38 @@ export class SQLiteBackend implements IMemoryBackend {
   }
 
   private createTables(): void {
-    const sql = `
+    this.db!.exec(`
       CREATE TABLE IF NOT EXISTS memory_entries (
         id TEXT PRIMARY KEY,
-        agent_id TEXT NOT NULL,
-        session_id TEXT NOT NULL,
+        agentId TEXT NOT NULL,
+        sessionId TEXT NOT NULL,
         type TEXT NOT NULL,
         content TEXT NOT NULL,
         context TEXT NOT NULL,
         timestamp TEXT NOT NULL,
         tags TEXT NOT NULL,
         version INTEGER NOT NULL,
-        parent_id TEXT,
+        parentId TEXT,
         metadata TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-
-    this.db!.exec(sql);
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_agent_id ON memory_entries(agentId);
+      CREATE INDEX IF NOT EXISTS idx_session_id ON memory_entries(sessionId);
+      CREATE INDEX IF NOT EXISTS idx_type ON memory_entries(type);
+      CREATE INDEX IF NOT EXISTS idx_timestamp ON memory_entries(timestamp);
+      CREATE INDEX IF NOT EXISTS idx_created_at ON memory_entries(createdAt);
+    `);
   }
 
   private createIndexes(): void {
     const indexes = [
-      "CREATE INDEX IF NOT EXISTS idx_agent_id ON memory_entries(agent_id)",
-      "CREATE INDEX IF NOT EXISTS idx_session_id ON memory_entries(session_id)",
+      "CREATE INDEX IF NOT EXISTS idx_agent_id ON memory_entries(agentId)",
+      "CREATE INDEX IF NOT EXISTS idx_session_id ON memory_entries(sessionId)",
       "CREATE INDEX IF NOT EXISTS idx_type ON memory_entries(type)",
       "CREATE INDEX IF NOT EXISTS idx_timestamp ON memory_entries(timestamp)",
-      "CREATE INDEX IF NOT EXISTS idx_parent_id ON memory_entries(parent_id)",
+      "CREATE INDEX IF NOT EXISTS idx_parent_id ON memory_entries(parentId)",
     ];
 
     for (const sql of indexes) {
@@ -301,22 +293,22 @@ export class SQLiteBackend implements IMemoryBackend {
   private rowToEntry(row: Record<string, unknown>): MemoryEntry {
     const entry: MemoryEntry = {
       id: row.id as string,
-      agentId: row.agent_id as string,
-      sessionId: row.session_id as string,
+      agentId: row.agentId as string,
+      sessionId: row.sessionId as string,
       type: row.type as MemoryEntry["type"],
       content: row.content as string,
-      context: JSON.parse(row.context as string),
+      context: JSON.parse(row.context as string) as Record<string, unknown>,
       timestamp: new Date(row.timestamp as string),
-      tags: JSON.parse(row.tags as string),
+      tags: JSON.parse(row.tags as string) as string[],
       version: row.version as number,
     };
     
-    if (row.parent_id) {
-      entry.parentId = row.parent_id as string;
+    if (row.parentId) {
+      entry.parentId = row.parentId as string;
     }
     
     if (row.metadata) {
-      entry.metadata = JSON.parse(row.metadata as string);
+      entry.metadata = JSON.parse(row.metadata as string) as Record<string, unknown>;
     }
     
     return entry;

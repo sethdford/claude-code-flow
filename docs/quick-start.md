@@ -366,7 +366,7 @@ If you encounter any issues:
 2. **Validate configuration**: Run `claude-flow config validate`
 3. **System status**: Run `claude-flow status` to check system health
 4. **Documentation**: Visit the [Troubleshooting Guide](./troubleshooting.md)
-5. **Community**: Ask questions in [GitHub Discussions](https://github.com/ruvnet/claude-code-flow/discussions)
+5. **Community**: Ask questions in [GitHub Discussions](https://github.com/sethdford/vibex-claude-code-flow/discussions)
 
 ## What's Next?
 
