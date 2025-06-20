@@ -6,11 +6,12 @@
 import { promises as fs } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-import { randomBytes, createCipher, createDecipher, scrypt } from "crypto";
+import { randomBytes, createCipheriv, createDecipheriv, scrypt } from "crypto";
 import { Config } from "../utils/types.js";
 import { deepMerge, safeParseJSON } from "../utils/helpers.js";
 import { ConfigError, ValidationError } from "../utils/errors.js";
 import { promisify } from "util";
+import { existsSync } from "fs";
 
 const scryptAsync = promisify(scrypt);
 
@@ -286,13 +287,12 @@ export class ConfigManager {
   }
 
   /**
-   * Initializes encryption for sensitive configuration values
+   * Initializes encryption key for sensitive configuration values
    */
   private initializeEncryption(): void {
     try {
       const keyFile = join(this.userConfigDir, ".encryption-key");
-      // Check if key file exists (simplified for demo)
-      const { existsSync } = require("node:fs");
+      // Check if key file exists using ES module import
       if (existsSync(keyFile)) {
         // In a real implementation, this would be more secure
         this.encryptionKey = randomBytes(32);
@@ -1467,17 +1467,22 @@ export class ConfigManager {
    * Encrypts a value if encryption is enabled
    */
   private encryptValue(value: string): string {
-    if (!this.encryptionKey) {
-      return value;
-    }
+    if (!this.encryptionKey) return value;
     
     try {
-      const cipher = createCipher("aes-256-gcm", this.encryptionKey);
-      let encrypted = cipher.update(value, "utf8", "hex");
-      encrypted += cipher.final("hex");
-      return `enc:${encrypted}`;
+      const algorithm = 'aes-256-gcm';
+      const iv = randomBytes(16);
+      const cipher = createCipheriv(algorithm, this.encryptionKey, iv);
+      
+      let encrypted = cipher.update(value, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      
+      const authTag = cipher.getAuthTag();
+      
+      // Return iv:authTag:encrypted format
+      return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
     } catch (error) {
-      console.warn("Failed to encrypt value:", (error as Error).message);
+      console.warn("Failed to encrypt value:", error);
       return value;
     }
   }
@@ -1486,25 +1491,43 @@ export class ConfigManager {
    * Checks if a value is encrypted
    */
   private isEncryptedValue(value: any): boolean {
-    return typeof value === "string" && value.startsWith("enc:");
+    if (typeof value !== "string") return false;
+    // New format: iv:authTag:encrypted (3 parts separated by colons)
+    const parts = value.split(':');
+    return parts.length === 3 && 
+           parts[0].length === 32 && // IV is 16 bytes = 32 hex chars
+           parts[1].length === 32 && // Auth tag is 16 bytes = 32 hex chars
+           parts[2].length > 0;      // Encrypted data
   }
 
   /**
    * Decrypts a value if it's encrypted
    */
   private decryptValue(value: string): string {
-    if (!this.isEncryptedValue(value) || !this.encryptionKey) {
-      return value;
-    }
+    if (!this.encryptionKey) return value;
     
     try {
-      const encryptedValue = value.substring(4); // Remove 'enc:' prefix
-      const decipher = createDecipher("aes-256-gcm", this.encryptionKey);
-      let decrypted = decipher.update(encryptedValue, "hex", "utf8");
-      decrypted += decipher.final("utf8");
+      const algorithm = 'aes-256-gcm';
+      const parts = value.split(':');
+      
+      if (parts.length !== 3) {
+        // Not encrypted format, return as-is
+        return value;
+      }
+      
+      const iv = Buffer.from(parts[0], 'hex');
+      const authTag = Buffer.from(parts[1], 'hex');
+      const encrypted = parts[2];
+      
+      const decipher = createDecipheriv(algorithm, this.encryptionKey, iv);
+      decipher.setAuthTag(authTag);
+      
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      
       return decrypted;
     } catch (error) {
-      console.warn("Failed to decrypt value:", (error as Error).message);
+      console.warn("Failed to decrypt value:", error);
       return value;
     }
   }

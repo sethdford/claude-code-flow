@@ -120,7 +120,7 @@ The CI/CD pipeline creates several artifacts:
 3. **Test npm package**:
    ```bash
    npm pack
-   npm install -g ./claude-flow-*.tgz
+   npm install -g ./sethdouglasford-claude-flow-*.tgz
    claude-flow --version
    ```
 

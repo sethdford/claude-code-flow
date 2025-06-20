@@ -37,7 +37,7 @@ jobs:
         run: |
           # Test that the built package can be installed
           npm pack
-          npm install -g ./claude-flow-*.tgz
+          npm install -g ./sethdouglasford-claude-flow-*.tgz
           claude-flow --version
 
   build-sea:
