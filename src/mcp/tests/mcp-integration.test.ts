@@ -21,6 +21,7 @@ const mockLogger: ILogger = {
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+  configure: jest.fn().mockImplementation(async () => {}),
 };
 
 // Mock event bus
@@ -173,11 +174,44 @@ describe('MCP Lifecycle Manager', () => {
   let mockServerFactory: Mock;
 
   beforeEach(() => {
-    mockServerFactory = jest.fn(() => new MCPServer(
-      mockMCPConfig,
-      mockEventBus,
-      mockLogger,
-    ));
+    // Create a mock server that properly reports as healthy
+    const mockServer = {
+      start: jest.fn().mockResolvedValue(undefined),
+      stop: jest.fn().mockResolvedValue(undefined),
+      registerTool: jest.fn(),
+      getHealthStatus: jest.fn().mockResolvedValue({
+        healthy: true,
+        metrics: {
+          registeredTools: 4,
+          totalRequests: 0,
+          successfulRequests: 0,
+          failedRequests: 0,
+          totalSessions: 0,
+          activeSessions: 0,
+          authenticatedSessions: 0,
+          expiredSessions: 0,
+          transportConnections: 1,
+          messagesReceived: 0,
+          notificationsSent: 0,
+          stdinOpen: 1,
+        },
+      }),
+      getMetrics: jest.fn().mockReturnValue({
+        totalRequests: 0,
+        successfulRequests: 0,
+        failedRequests: 0,
+        averageResponseTime: 0,
+        activeSessions: 0,
+        toolInvocations: {},
+        errors: {},
+        lastReset: new Date(),
+      }),
+      getSessions: jest.fn().mockReturnValue([]),
+      getSession: jest.fn().mockReturnValue(undefined),
+      terminateSession: jest.fn(),
+    };
+
+    mockServerFactory = jest.fn(() => mockServer);
     
     lifecycleManager = new MCPLifecycleManager(
       mockMCPConfig,
@@ -386,7 +420,7 @@ describe('Tool Registry', () => {
             input: { type: 'string' },
           },
         },
-        handler: jest.fn().mockResolvedValue('test result'),
+        handler: jest.fn().mockImplementation(async () => 'test result'),
       };
 
       const capability = {
@@ -409,14 +443,14 @@ describe('Tool Registry', () => {
         name: 'file/read',
         description: 'Read files',
         inputSchema: { type: 'object', properties: {} },
-        handler: jest.fn(),
+        handler: jest.fn().mockImplementation(async () => 'result'),
       };
 
       const tool2 = {
         name: 'memory/query',
         description: 'Query memory',
         inputSchema: { type: 'object', properties: {} },
-        handler: jest.fn(),
+        handler: jest.fn().mockImplementation(async () => 'result'),
       };
 
       toolRegistry.register(tool1);
@@ -436,7 +470,7 @@ describe('Tool Registry', () => {
         name: 'test/metric-tool',
         description: 'Tool for metrics testing',
         inputSchema: { type: 'object', properties: {} },
-        handler: jest.fn().mockResolvedValue('success'),
+        handler: jest.fn().mockImplementation(async () => 'success'),
       };
 
       toolRegistry.register(tool);
@@ -457,6 +491,9 @@ describe('MCP Orchestration Integration', () => {
   let mockComponents: any;
 
   beforeEach(() => {
+    // Use fake timers to prevent real timers from being created
+    jest.useFakeTimers();
+    
     mockComponents = {
       orchestrator: {
         getStatus: jest.fn().mockResolvedValue({ status: 'running' }),
@@ -490,11 +527,19 @@ describe('MCP Orchestration Integration', () => {
   });
 
   afterEach(async () => {
+    // Restore real timers first
+    jest.useRealTimers();
+    
     if (integration) {
-      await integration.stop();
-      integration.destroy();
+      try {
+        await integration.stop();
+        integration.destroy();
+      } catch (error) {
+        // Ignore cleanup errors in tests
+      }
       integration = null;
     }
+    
     // Clear any remaining timers
     jest.clearAllTimers();
   });
@@ -508,10 +553,6 @@ describe('MCP Orchestration Integration', () => {
       
       const orchestratorStatus = status.find(s => s.component === 'orchestrator');
       expect(orchestratorStatus?.enabled).toBe(true);
-      
-      // Manual cleanup for this test
-      await integration.stop();
-      integration.destroy();
     });
 
     it('should register orchestrator tools when enabled', async () => {
@@ -524,20 +565,15 @@ describe('MCP Orchestration Integration', () => {
       const tools = (server as any).toolRegistry.listTools();
       const orchestratorTools = tools.filter((t: any) => t.name.startsWith('orchestrator/'));
       expect(orchestratorTools.length).toBeGreaterThan(0);
-      
-      // Manual cleanup for this test
-      await integration.stop();
-      integration.destroy();
     });
-
   });
 
   describe('Health Monitoring', () => {
     it('should monitor component health', async () => {
       await integration.start();
       
-      // Wait for health check
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Advance timers to trigger health check
+      jest.advanceTimersByTime(100);
       
       const status = integration.getIntegrationStatus();
       const enabledComponents = status.filter(s => s.enabled);
@@ -545,10 +581,6 @@ describe('MCP Orchestration Integration', () => {
       for (const component of enabledComponents) {
         expect(component.lastCheck).toBeInstanceOf(Date);
       }
-      
-      // Manual cleanup for this test
-      await integration.stop();
-      integration.destroy();
     });
   });
 });
