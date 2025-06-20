@@ -4,7 +4,7 @@
  */
 
 import { DistributedMemorySystem } from "../memory/distributed-memory.js";
-import { AgentState, AgentId, AgentType, AgentStatus } from "../swarm/types.js";
+import { AgentState, AgentType, AgentStatus } from "../swarm/types.js";
 import { EventEmitter } from "node:events";
 
 // Coordination data interfaces

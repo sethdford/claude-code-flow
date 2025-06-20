@@ -173,7 +173,7 @@ export const agentCommands = {
     }
   },
 
-  async info(args: string[], options: Record<string, any> = {}): Promise<void> {
+  async info(args: string[], _options: Record<string, any> = {}): Promise<void> {
     try {
       const { manager } = await initializeAgentSystem();
       
@@ -317,7 +317,7 @@ export const agentCommands = {
     }
   },
 
-  async start(args: string[], options: Record<string, any> = {}): Promise<void> {
+  async start(args: string[], _options: Record<string, any> = {}): Promise<void> {
     try {
       const { manager } = await initializeAgentSystem();
       

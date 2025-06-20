@@ -20,15 +20,7 @@ const Confirm = async (message: string): Promise<boolean> => {
   return answer.result;
 };
 
-const Input = async (message: string, defaultValue?: string): Promise<string> => {
-  const answer = await inquirer.prompt([{
-    type: "input",
-    name: "result",
-    message,
-    default: defaultValue,
-  }]);
-  return answer.result;
-};
+// Input function removed - not used
 
 // Color compatibility
 const colors = {

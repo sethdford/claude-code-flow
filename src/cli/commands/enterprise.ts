@@ -1,10 +1,10 @@
 import { Command, CommandContext } from "../cli-core.js";
 import { success, error, warning, info } from "../cli-core.js";
 import colors from "chalk";
-import { ProjectManager, Project } from "../../enterprise/project-manager.js";
-import { DeploymentManager, Deployment, DeploymentEnvironment } from "../../enterprise/deployment-manager.js";
-import { CloudManager, CloudProvider, CloudResource } from "../../enterprise/cloud-manager.js";
-import { SecurityManager, SecurityScan } from "../../enterprise/security-manager.js";
+import { ProjectManager } from "../../enterprise/project-manager.js";
+import { DeploymentManager, Deployment } from "../../enterprise/deployment-manager.js";
+import { CloudManager } from "../../enterprise/cloud-manager.js";
+import { SecurityManager } from "../../enterprise/security-manager.js";
 import { AnalyticsManager } from "../../enterprise/analytics-manager.js";
 import { AuditManager } from "../../enterprise/audit-manager.js";
 import { Logger } from "../../core/logger.js";

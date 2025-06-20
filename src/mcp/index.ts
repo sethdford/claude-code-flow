@@ -4,7 +4,7 @@
  */
 
 // Import needed types for the static class methods
-import type { MCPOrchestrationConfig, OrchestrationComponents, MCPOrchestrationIntegration as MCPOrchestrationIntegrationType } from "./orchestration-integration.js";
+import type { MCPOrchestrationConfig, OrchestrationComponents } from "./orchestration-integration.js";
 import { MCPOrchestrationIntegration } from "./orchestration-integration.js";
 import { MCPServer } from "./server.js";
 import { MCPLifecycleManager } from "./lifecycle-manager.js";

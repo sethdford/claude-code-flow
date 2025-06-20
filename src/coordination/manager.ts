@@ -126,12 +126,12 @@ export class CoordinationManager implements ICoordinationManager {
     await this.scheduler.assignTask(task, agentId);
   }
 
-  getAgentTaskCount(agentId: string): Promise<number> {
+  async getAgentTaskCount(agentId: string): Promise<number> {
     if (!this.initialized) {
       throw new CoordinationError("Coordination manager not initialized");
     }
 
-    return this.scheduler.getAgentTaskCount(agentId);
+    return await this.scheduler.getAgentTaskCount(agentId);
   }
 
   async acquireResource(resourceId: string, agentId: string): Promise<void> {
@@ -247,6 +247,7 @@ export class CoordinationManager implements ICoordinationManager {
             // Attempt to resolve deadlock
             return this.resolveDeadlock(deadlock);
           }
+          return Promise.resolve();
         })
         .catch((error) => {
           this.logger.error("Error during deadlock detection", error);

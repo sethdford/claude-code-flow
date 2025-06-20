@@ -27,7 +27,7 @@ Welcome to Claude-Flow v1.0.71 - Advanced AI Agent Orchestration System
 
 ### Advanced Features
 - **[Advanced Usage](./10-advanced-usage.md)** - Power user features
-- **[Swarm Coordination](./SWARM_DOCUMENTATION.md)** - Multi-agent swarms
+- **[Swarm Coordination](./swarm-documentation.md)** - Multi-agent swarms
 - **[Swarm Commands](./12-swarm.md)** - Swarm command reference
 
 ## 🛠️ Guides & References
@@ -51,8 +51,8 @@ Welcome to Claude-Flow v1.0.71 - Advanced AI Agent Orchestration System
 
 ## 📦 Publishing & Distribution
 
-- **[NPM Publishing Guide](./NPM_PUBLISHING_GUIDE.md)** - Publishing to npm
-- **[Publishing Setup](./PUBLISHING_SETUP.md)** - CI/CD configuration
+- **[NPM Publishing Guide](./npm-publishing-guide.md)** - Publishing to npm
+- **[Publishing Setup](./publishing-setup.md)** - CI/CD configuration
 
 ## 🎯 What's New in v1.0.71
 

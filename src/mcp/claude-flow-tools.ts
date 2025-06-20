@@ -4,7 +4,6 @@
 
 import { MCPTool, MCPContext, AgentProfile, Task, MemoryEntry } from "../utils/types.js";
 import { ILogger } from "../core/logger.js";
-import { Permissions } from "./auth.js";
 
 export interface ClaudeFlowToolContext extends MCPContext {
   orchestrator?: any; // Reference to orchestrator instance

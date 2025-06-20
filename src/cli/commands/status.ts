@@ -2,10 +2,9 @@
  * Status command for Claude-Flow
  */
 
-import { Command } from "../cliffy-compat.js";
 import chalk from "chalk";
 import Table from "cli-table3";
-import { formatHealthStatus, formatDuration, formatStatusIndicator } from "../formatter.js";
+import { formatDuration, formatStatusIndicator } from "../formatter.js";
 import { existsSync } from "node:fs";
 import { promises as fs } from "node:fs";
 
@@ -72,29 +71,7 @@ async function showStatus(options: any): Promise<void> {
   }
 }
 
-async function watchStatus(options: any): Promise<void> {
-  const interval = options.interval * 1000;
-  
-  console.log(colors.cyan("Watching Claude-Flow status..."));
-  console.log(colors.gray(`Update interval: ${options.interval}s`));
-  console.log(colors.gray("Press Ctrl+C to stop\n"));
-
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    // Clear screen and show status
-    console.clear();
-    console.log(colors.cyan.bold("Claude-Flow Status Monitor"));
-    console.log(colors.gray(`Last updated: ${new Date().toLocaleTimeString()}\n`));
-    
-    try {
-      await showStatus({ ...options, json: false });
-    } catch (error) {
-      console.error(colors.red("Status update failed:"), (error as Error).message);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, interval));
-  }
-}
+// watchStatus function removed - not used
 
 function showFullStatus(status: any): void {
   // System overview

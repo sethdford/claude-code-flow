@@ -2,6 +2,15 @@
 
 Welcome to the comprehensive documentation for Claude-Flow v1.0.71!
 
+## 🏢 Enterprise AWS Bedrock Integration
+
+**Claude-Flow is specifically designed for enterprises wanting to leverage Claude 4 through AWS Bedrock:**
+
+- **[AWS Bedrock Integration](./AWS_BEDROCK_INTEGRATION.md)** - Complete enterprise setup guide
+- **[Enterprise Configuration](./03-configuration-guide.md#aws-bedrock-enterprise-setup)** - Enterprise-specific configurations
+- **Automatic AWS credential detection** - Works with existing AWS infrastructure
+- **Claude 4 Opus & Sonnet access** - Latest models via your AWS account
+
 ## 🚀 Getting Started
 
 ### Quick Links

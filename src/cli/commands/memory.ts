@@ -3,7 +3,6 @@
  */
 
 import { mkdir } from "node:fs/promises";
-import colors from "chalk";
 import { promises as fs } from "node:fs";
 
 interface MemoryEntry {

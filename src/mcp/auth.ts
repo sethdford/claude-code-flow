@@ -4,7 +4,6 @@
 
 import { MCPAuthConfig, MCPSession } from "../utils/types.js";
 import { ILogger } from "../core/logger.js";
-import { MCPError } from "../utils/errors.js";
 import { createHash, timingSafeEqual } from "node:crypto";
 
 export interface IAuthManager {
@@ -271,7 +270,7 @@ export class AuthManager implements IAuthManager {
     };
   }
 
-  private async authenticateOAuth(credentials: unknown): Promise<AuthResult> {
+  private async authenticateOAuth(_credentials: unknown): Promise<AuthResult> {
     // TODO: Implement OAuth authentication
     // This would typically involve:
     // 1. Validating JWT tokens

@@ -29,12 +29,7 @@ interface AnalyzeOptions {
   verbose?: boolean;
 }
 
-interface RollbackOptions {
-  backup: string;
-  timestamp?: string;
-  force?: boolean;
-  list?: boolean;
-}
+// RollbackOptions interface removed - not used
 
 export function createMigrateCommand(): Command {
   const command = new Command("migrate");

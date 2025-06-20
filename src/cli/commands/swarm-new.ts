@@ -5,13 +5,12 @@
 import { TaskExecutor } from "../../swarm/executor.js";
 import { SwarmMemoryManager } from "../../swarm/memory.js";
 import { generateId } from "../../utils/helpers.js";
-import { success, error, warning, info } from "../cli-core.js";
+import { success, error, warning } from "../cli-core.js";
 import type { CommandContext } from "../cli-core.js";
-import { SwarmStrategy, SwarmMode, AgentType, TaskDefinition, AgentState, TaskStatus } from "../../swarm/types.js";
+import { SwarmStrategy, SwarmMode, AgentType, TaskDefinition } from "../../swarm/types.js";
 
 import * as fs from "node:fs/promises";
-import * as path from "node:path";
-import { existsSync } from "node:fs";
+// path and existsSync imports removed - not used
 
 // Temporary SwarmCoordinator stub until proper implementation is available
 class SwarmCoordinator {

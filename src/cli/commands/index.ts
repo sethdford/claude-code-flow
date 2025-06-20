@@ -377,14 +377,9 @@ export function setupCommands(cli: CLI): void {
       const subcommand = ctx.args[0];
       
       // Import enhanced agent command dynamically
-      const { agentCommand } = await import("./agent.js");
+      // Enhanced command system is loaded but not directly used here
       
-      // Create a mock context for the enhanced command
-      const enhancedCtx = {
-        args: ctx.args.slice(1), // Remove 'agent' from args
-        flags: ctx.flags,
-        command: subcommand,
-      };
+      // Enhanced command context would be created here if needed
       
       try {
         // Map simple commands to enhanced command structure
@@ -400,10 +395,8 @@ export function setupCommands(cli: CLI): void {
             // Use the enhanced agent command system
             console.log(colors.cyan("🚀 Using enhanced agent management system..."));
             
-            // Create a simplified wrapper around the enhanced command
-            const agentManager = await import("../../agents/agent-manager.js");
-            const { MemoryManager } = await import("../../memory/manager.js");
-            const { EventBus } = await import("../../core/event-bus.js");
+            // These imports demonstrate available modules but are not used directly
+            // They show what's available in the enhanced system
             const { Logger } = await import("../../core/logger.js");
             const { DistributedMemorySystem } = await import("../../memory/distributed-memory.js");
             

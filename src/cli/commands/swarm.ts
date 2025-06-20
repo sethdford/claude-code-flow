@@ -323,7 +323,7 @@ async function decomposeObjective(objective: string, options: SwarmOptions): Pro
  * Execute tasks in parallel
  */
 async function executeParallelTasks(tasks: Task[], options: SwarmOptions, swarmId: string, swarmDir: string) {
-  const promises = tasks.map(async (task, index) => {
+  const promises = tasks.map(async (task, _index) => {
     const agentId = generateId("agent");
     console.log(`  🤖 Spawning agent ${agentId} for: ${task.type}`);
     
@@ -359,7 +359,7 @@ async function executeParallelTasks(tasks: Task[], options: SwarmOptions, swarmI
  * Execute tasks sequentially
  */
 async function executeSequentialTasks(tasks: Task[], options: SwarmOptions, swarmId: string, swarmDir: string) {
-  for (const [index, task] of tasks.entries()) {
+  for (const [_index, task] of tasks.entries()) {
     const agentId = generateId("agent");
     console.log(`  🤖 Spawning agent ${agentId} for: ${task.type}`);
     

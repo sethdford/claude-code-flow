@@ -18,19 +18,19 @@ import type { AgentManager } from "../../agents/agent-manager.js";
 let agentManager: any = null;
 
 // Initialize agent manager - simplified for now
-async function initializeAgentManager(): Promise<any> {
+function initializeAgentManager(): any {
   if (agentManager) return agentManager;
   
   // Simplified mock agent manager to avoid complex dependencies
   agentManager = {
     getAllAgents: () => [],
-    getAgent: (id: string) => null,
-    createAgent: async (template: string, options: any) => generateId("agent"),
-    startAgent: async (id: string) => {},
-    stopAgent: async (id: string) => {},
-    restartAgent: async (id: string) => {},
-    removeAgent: async (id: string) => {},
-    getAgentHealth: (id: string) => null,
+    getAgent: (_id: string) => null,
+    createAgent: (_template: string, _options: any) => generateId("agent"),
+    startAgent: (_id: string) => {},
+    stopAgent: (_id: string) => {},
+    restartAgent: (_id: string) => {},
+    removeAgent: (_id: string) => {},
+    getAgentHealth: (_id: string) => null,
     getSystemStats: () => ({
       totalAgents: 0,
       activeAgents: 0,
@@ -45,9 +45,9 @@ async function initializeAgentManager(): Promise<any> {
       { name: "analyzer", type: "analyzer" },
     ],
     getAllPools: () => [],
-    createAgentPool: async (name: string, template: string, config: any) => generateId("pool"),
-    scalePool: async (id: string, size: number) => {},
-    memory: { store: async () => {} },
+    createAgentPool: (_name: string, _template: string, _config: any) => generateId("pool"),
+    scalePool: (_id: string, _size: number) => {},
+    memory: { store: () => {} },
   };
   
   return agentManager;
@@ -79,7 +79,7 @@ export const agentCommand = new Command()
   .option("--sort <field>", "Sort by field (name, type, status, health, workload)", "name")
   .action(async (options: any) => {
     try {
-      const manager = await initializeAgentManager();
+      const manager = initializeAgentManager();
       let agents = manager.getAllAgents();
         
       // Apply filters
@@ -152,7 +152,7 @@ export const agentCommand = new Command()
   .option("--config <path>", "Load configuration from JSON file")
   .action(async (options: any, template?: string) => {
     try {
-      const manager = await initializeAgentManager();
+      const manager = initializeAgentManager();
         
       let agentConfig: any = {};
         
@@ -254,7 +254,7 @@ export const agentCommand = new Command()
   .option("--reason <reason>", "Termination reason for logging")
   .action(async (options: any, agentId: string) => {
     try {
-      const manager = await initializeAgentManager();
+      const manager = initializeAgentManager();
       const agent = manager.getAgent(agentId);
         
       if (!agent) {
@@ -339,7 +339,7 @@ export const agentCommand = new Command()
   .option("--json", "Output in JSON format")
   .action(async (options: any, agentId: string) => {
     try {
-      const manager = await initializeAgentManager();
+      const manager = initializeAgentManager();
       const agent = manager.getAgent(agentId);
         
       if (!agent) {
@@ -363,8 +363,8 @@ export const agentCommand = new Command()
         const fullInfo = {
           agent,
           health: manager.getAgentHealth(agentId),
-          logs: options.logs ? await getAgentLogs(agentId) : undefined,
-          metrics: options.metrics ? await getDetailedMetrics(agentId, manager) : undefined,
+          logs: options.logs ? getAgentLogs(agentId) : undefined,
+          metrics: options.metrics ? getDetailedMetrics(agentId, manager) : undefined,
         };
         console.log(JSON.stringify(fullInfo, null, 2));
         return;
@@ -386,7 +386,7 @@ export const agentCommand = new Command()
         
       // Metrics
       if (options.metrics) {
-        await displayAgentMetrics(agent, manager);
+        displayAgentMetrics(agent, manager);
       }
         
       // Health details
@@ -401,7 +401,7 @@ export const agentCommand = new Command()
         
       // Logs
       if (options.logs) {
-        await displayAgentLogs(agentId);
+        displayAgentLogs(agentId);
       }
         
     } catch (error) {
@@ -416,7 +416,7 @@ export const agentCommand = new Command()
   .arguments("<agent-id>")
   .action(async (options: any, agentId: string) => {
     try {
-      const manager = await initializeAgentManager();
+      const manager = initializeAgentManager();
       console.log(chalk.cyan(`🚀 Starting agent ${agentId}...`));
       await manager.startAgent(agentId);
       console.log(chalk.green("✅ Agent started successfully"));
@@ -431,7 +431,7 @@ export const agentCommand = new Command()
   .option("--reason <reason>", "Restart reason")
   .action(async (options: any, agentId: string) => {
     try {
-      const manager = await initializeAgentManager();
+      const manager = initializeAgentManager();
       console.log(chalk.cyan(`🔄 Restarting agent ${agentId}...`));
       await manager.restartAgent(agentId, options.reason);
       console.log(chalk.green("✅ Agent restarted successfully"));
@@ -452,7 +452,7 @@ export const agentCommand = new Command()
   .option("--size <size:number>", "Target size for scaling")
   .action(async (options: any) => {
     try {
-      const manager = await initializeAgentManager();
+      const manager = initializeAgentManager();
         
       if (options.create) {
         if (!options.template) {
@@ -521,7 +521,7 @@ export const agentCommand = new Command()
   .option("--agent <agent-id>", "Monitor specific agent")
   .action(async (options: any) => {
     try {
-      const manager = await initializeAgentManager();
+      const manager = initializeAgentManager();
         
       if (options.watch) {
         console.log(chalk.cyan("🔍 Monitoring agent health (Ctrl+C to stop)..."));
@@ -694,7 +694,7 @@ function displayAgentConfiguration(agent: any): void {
   console.log(`Working Directory: ${agent.environment.workingDirectory}`);
 }
 
-async function displayAgentMetrics(agent: any, manager: AgentManager): Promise<void> {
+function displayAgentMetrics(agent: any, _manager: AgentManager): void {
   console.log(`\n${  chalk.cyan("Performance Metrics:")}`);
   if (agent.metrics) {
     console.log(`Tasks Completed: ${agent.metrics.tasksCompleted}`);
@@ -740,9 +740,9 @@ function displayAgentTaskHistory(agent: any): void {
   }
 }
 
-async function displayAgentLogs(agentId: string): Promise<void> {
+function displayAgentLogs(agentId: string): void {
   console.log(`\n${  chalk.cyan("Recent Logs:")}`);
-  const logs = await getAgentLogs(agentId);
+  const logs = getAgentLogs(agentId);
   if (logs && logs.length > 0) {
     logs.slice(-10).forEach((log: any) => {
       const level = getLogLevelColor(log.level);
@@ -785,13 +785,13 @@ function displayHealthDashboard(manager: AgentManager, threshold: number, specif
 
 // === UTILITY FUNCTIONS ===
 
-async function getAgentLogs(agentId: string): Promise<any[]> {
+function getAgentLogs(_agentId: string): any[] {
   // This would fetch logs from the logging system
   // For now, return empty array
   return [];
 }
 
-async function getDetailedMetrics(agentId: string, manager: AgentManager): Promise<any> {
+function getDetailedMetrics(agentId: string, manager: AgentManager): any {
   // This would fetch detailed metrics
   const agent = manager.getAgent(agentId);
   return agent?.metrics || {};
@@ -867,26 +867,4 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString();
 }
 
-function getCapabilitiesForType(type: string): string[] {
-  const capabilities: Record<string, string[]> = {
-    coordinator: ["task-assignment", "planning", "delegation"],
-    researcher: ["web-search", "information-gathering", "analysis"],
-    implementer: ["code-generation", "file-manipulation", "testing"],
-    analyst: ["data-analysis", "pattern-recognition", "reporting"],
-    custom: ["user-defined"],
-  };
-
-  return capabilities[type] || capabilities.custom;
-}
-
-function getDefaultPromptForType(type: string): string {
-  const prompts: Record<string, string> = {
-    coordinator: "You are a coordination agent responsible for planning and delegating tasks.",
-    researcher: "You are a research agent specialized in gathering and analyzing information.",
-    implementer: "You are an implementation agent focused on writing code and creating solutions.",
-    analyst: "You are an analysis agent that identifies patterns and generates insights.",
-    custom: "You are a custom agent. Follow the user's instructions.",
-  };
-
-  return prompts[type] || prompts.custom;
-}
+// Removed unused helper functions getCapabilitiesForType and getDefaultPromptForType

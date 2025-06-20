@@ -863,7 +863,7 @@ export class AgentManager extends EventEmitter {
 
   private checkResponsiveness(agentId: string): number {
     // Send ping and measure response time
-    const startTime = Date.now();
+    const _startTime = Date.now();
     
     try {
       // This would send an actual ping to the agent

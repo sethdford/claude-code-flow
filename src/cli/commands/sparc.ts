@@ -1,7 +1,7 @@
 import { success, error, warning, info } from "../cli-core.js";
 import type { CommandContext } from "../cli-core.js";
 import colors from "chalk";
-const { blue, yellow, green, magenta, cyan } = colors;
+const { blue, yellow, green, cyan } = colors;
 
 interface SparcMode {
   slug: string;

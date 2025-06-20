@@ -48,13 +48,13 @@ export const taskCommand = new Command()
   .description("List all tasks")
   .option("-s, --status <status>", "Filter by status")
   .option("-a, --agent <agent>", "Filter by assigned agent")
-  .action(async (options: any) => {
+  .action(async (_options: any) => {
     console.log(colors.yellow("Task listing requires a running Claude-Flow instance"));
   })
   .command("status")
   .description("Get task status")
   .arguments("<task-id>")
-  .action(async (options: any, taskId: string) => {
+  .action(async (_options: any, _taskId: string) => {
     console.log(colors.yellow("Task status requires a running Claude-Flow instance"));
   })
   .command("cancel")

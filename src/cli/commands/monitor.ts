@@ -420,13 +420,6 @@ class Dashboard {
   }
 
   private generateMockEvents(): any[] {
-    const events = [
-      { type: "task_completed", message: "Research task completed successfully" },
-      { type: "agent_spawned", message: "New implementer agent spawned" },
-      { type: "task_assigned", message: "Task assigned to coordinator agent" },
-      { type: "system_warning", message: "High memory usage detected" },
-    ];
-    
     const eventTypes = [
       { type: "task_completed", message: "Research task completed successfully", level: "info" as const },
       { type: "agent_spawned", message: "New implementer agent spawned", level: "info" as const },
