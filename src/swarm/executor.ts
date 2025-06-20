@@ -40,8 +40,8 @@ export interface ExecutionResult {
   exitCode: number;
   duration: number;
   resourcesUsed: ResourceUsage;
-  artifacts: Record<string, any>;
-  metadata: Record<string, any>;
+  artifacts: Record<string, unknown>;
+  metadata: Record<string, unknown>;
 }
 
 export interface ResourceUsage {
@@ -76,7 +76,7 @@ export class TaskExecutor extends EventEmitter {
     
     this.config = this.mergeWithDefaults(config);
     this.logger = new Logger(
-      { level: (this.config.logLevel || "info") as "error" | "debug" | "info" | "warn", format: "text", destination: "console" },
+      { level: (this.config.logLevel ?? "info") as "error" | "debug" | "info" | "warn", format: "text", destination: "console" },
       { component: "TaskExecutor" },
     );
     this.resourceMonitor = new ResourceMonitor();
@@ -264,7 +264,7 @@ export class TaskExecutor extends EventEmitter {
     options: ClaudeExecutionOptions,
   ): Promise<ExecutionResult> {
     const startTime = Date.now();
-    const timeout = options.timeout || this.config.timeoutMs;
+    const timeout = options.timeout ?? this.config.timeoutMs;
 
     // Build Claude command
     const command = this.buildClaudeCommand(task, agent, options);
@@ -320,7 +320,7 @@ export class TaskExecutor extends EventEmitter {
           cwd: context.workingDirectory,
           env,
           stdio: ["pipe", "pipe", "pipe"],
-          detached: options.detached || false,
+          detached: options.detached ?? false,
         });
 
         if (!process.pid) {
@@ -371,7 +371,7 @@ export class TaskExecutor extends EventEmitter {
           clearTimeout(timeoutHandle);
           
           const duration = Date.now() - startTime;
-          const exitCode = code || 0;
+          const exitCode = code ?? 0;
           
           this.logger.info("Claude process completed", {
             sessionId,
@@ -494,7 +494,7 @@ export class TaskExecutor extends EventEmitter {
     }
 
     return {
-      command: options.claudePath || "claude",
+      command: options.claudePath ?? "claude",
       args,
       input,
     };
@@ -564,7 +564,7 @@ export class TaskExecutor extends EventEmitter {
 
     // Quality requirements
     sections.push("QUALITY REQUIREMENTS:");
-    sections.push(`- Quality threshold: ${task.requirements.minReliability || 0.8}`);
+    sections.push(`- Quality threshold: ${task.requirements.minReliability ?? 0.8}`);
     if (task.requirements.reviewRequired) {
       sections.push("- Review required before completion");
     }
@@ -782,7 +782,7 @@ export class TaskExecutor extends EventEmitter {
 
   private setupEventHandlers(): void {
     // Handle resource limit violations
-    this.resourceMonitor.on("limit-violation", (data: any) => {
+    this.resourceMonitor.on("limit-violation", (data: unknown) => {
       this.logger.warn("Resource limit violation", data);
       
       const session = this.activeExecutions.get(data.sessionId);
@@ -797,7 +797,7 @@ export class TaskExecutor extends EventEmitter {
     });
 
     // Handle process pool events
-    this.processPool.on("process-failed", (data: any) => {
+    this.processPool.on("process-failed", (data: unknown) => {
       this.logger.error("Process failed in pool", data);
     });
   }
@@ -921,7 +921,7 @@ class ResourceMonitor extends EventEmitter {
   }
 
   getUsage(sessionId: string): ResourceUsage {
-    return this.usage.get(sessionId) || {
+    return this.usage.get(sessionId) ?? {
       cpuTime: 0,
       maxMemory: 0,
       diskIO: 0,

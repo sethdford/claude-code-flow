@@ -624,3 +624,263 @@ claude-flow config validate --strict
 - Implement proper retention policies
 
 This configuration guide provides comprehensive coverage of all Claude-Flow configuration options. Use these settings to optimize Claude-Flow for your specific use case and environment.
+
+## Environment Variables
+
+Claude Code Flow supports various environment variables for configuration:
+
+### Core Configuration
+- `CLAUDE_FLOW_DEBUG` - Enable debug logging
+- `CLAUDE_FLOW_LOG_LEVEL` - Set log level (debug, info, warn, error)
+- `CLAUDE_FLOW_CONFIG` - Path to custom config file
+- `NODE_ENV` - Environment mode (development, production, test)
+
+### API Keys
+- `ANTHROPIC_API_KEY` - Anthropic API key for direct Claude API access
+- `OPENAI_API_KEY` - OpenAI API key for GPT models
+
+### AWS Bedrock Integration
+
+Claude Code Flow supports using Claude 4 through AWS Bedrock instead of the direct Anthropic API. This is useful for enterprise deployments or when you want to use AWS credits.
+
+#### Required Environment Variables
+
+```bash
+# Enable Bedrock integration for Claude Code
+CLAUDE_CODE_USE_BEDROCK=true
+
+# AWS Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_access_key_id
+AWS_SECRET_ACCESS_KEY=your_secret_access_key
+
+# Optional: Use AWS profile instead of access keys
+# AWS_PROFILE=your_profile_name
+
+# Optional: AWS session token for temporary credentials
+# AWS_SESSION_TOKEN=your_session_token
+
+# Claude model configuration
+ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
+ANTHROPIC_SMALL_FAST_MODEL=anthropic.claude-3-haiku-20240307-v1:0
+```
+
+#### AWS Bedrock Setup
+
+1. **Enable Claude Models in AWS Bedrock**:
+   - Go to AWS Bedrock console
+   - Navigate to Model Access
+   - Request access to Claude models (Claude 3.5 Sonnet, Claude 3 Haiku, etc.)
+   - Wait for approval (usually instant for most regions)
+
+2. **Configure AWS Credentials**:
+   
+   **Option A: Environment Variables**
+   ```bash
+   export AWS_ACCESS_KEY_ID=your_access_key_id
+   export AWS_SECRET_ACCESS_KEY=your_secret_access_key
+   export AWS_REGION=us-east-1
+   ```
+   
+   **Option B: AWS Profile**
+   ```bash
+   aws configure --profile claude-flow
+   export AWS_PROFILE=claude-flow
+   ```
+   
+   **Option C: IAM Role (for EC2/ECS/Lambda)**
+   No additional configuration needed if running on AWS with proper IAM role.
+
+3. **Enable Bedrock in Claude Code Flow**:
+   ```bash
+   export CLAUDE_CODE_USE_BEDROCK=true
+   export ANTHROPIC_MODEL=anthropic.claude-opus-4-20250514-v1:0
+   ```
+
+#### Available Claude Models on Bedrock
+
+| Model ID | Description | Use Case |
+|----------|-------------|----------|
+| `anthropic.claude-opus-4-20250514-v1:0` | **Claude 4 Opus (Latest)** | Most powerful model for complex coding, agents, long-running tasks |
+| `anthropic.claude-sonnet-4-20250514-v1:0` | **Claude 4 Sonnet (Latest)** | High-performance balanced model for production workflows |
+| `anthropic.claude-3-7-sonnet-20250219-v1:0` | Claude 3.7 Sonnet | Advanced reasoning with extended thinking |
+| `anthropic.claude-3-5-sonnet-20241022-v2:0` | Claude 3.5 Sonnet | General purpose, coding, analysis |
+| `anthropic.claude-3-5-haiku-20241022-v1:0` | Claude 3.5 Haiku | Fast responses, simple tasks |
+| `anthropic.claude-3-opus-20240229-v1:0` | Claude 3 Opus | Complex reasoning, research |
+
+#### Example .env File for Bedrock
+
+Create a `.env` file in your project root:
+
+```bash
+# AWS Bedrock Configuration
+CLAUDE_CODE_USE_BEDROCK=true
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+ANTHROPIC_MODEL=anthropic.claude-opus-4-20250514-v1:0
+ANTHROPIC_SMALL_FAST_MODEL=anthropic.claude-sonnet-4-20250514-v1:0
+
+# Claude Code Flow Configuration
+CLAUDE_FLOW_LOG_LEVEL=info
+NODE_ENV=production
+```
+
+#### Testing Bedrock Integration
+
+1. **Verify AWS Credentials**:
+   ```bash
+   aws bedrock list-foundation-models --region us-east-1
+   ```
+
+2. **Test Claude Code Flow with Bedrock**:
+   ```bash
+   # Set environment variables
+   export CLAUDE_CODE_USE_BEDROCK=true
+   export AWS_REGION=us-east-1
+   export ANTHROPIC_MODEL=anthropic.claude-opus-4-20250514-v1:0
+   
+   # Test with a simple task
+   claude-flow claude spawn "Hello, please introduce yourself and confirm you're running via AWS Bedrock"
+   ```
+
+3. **Check Logs**:
+   Look for log messages indicating Bedrock integration is enabled:
+   ```
+   AWS Bedrock integration enabled for Claude Code {
+     region: 'us-east-1',
+     model: 'anthropic.claude-opus-4-20250514-v1:0',
+     smallFastModel: 'anthropic.claude-sonnet-4-20250514-v1:0'
+   }
+   ```
+
+#### Cost Considerations
+
+- AWS Bedrock pricing is per-token, similar to direct Anthropic API
+- Costs may vary by region
+- Consider using Claude 3.5 Haiku for simple tasks to reduce costs
+- Monitor usage through AWS Cost Explorer
+
+#### Troubleshooting
+
+**Common Issues:**
+
+1. **Model Access Denied**:
+   - Ensure you've requested access to Claude models in Bedrock console
+   - Check that your AWS region supports the requested model
+
+2. **Authentication Errors**:
+   - Verify AWS credentials are correctly configured
+   - Check IAM permissions for Bedrock service
+
+3. **Region Issues**:
+   - Claude models may not be available in all regions
+   - Try `us-east-1` or `us-west-2` which typically have the latest models
+
+**Debug Commands:**
+```bash
+# Check AWS configuration
+aws configure list
+
+# Test Bedrock access
+aws bedrock list-foundation-models --region us-east-1
+
+# Enable debug logging
+export CLAUDE_FLOW_LOG_LEVEL=debug
+```
+
+### Terminal Configuration
+- `CLAUDE_FLOW_TERMINAL_TYPE` - Terminal adapter (vscode, native, auto)
+
+### Memory Configuration
+- `CLAUDE_FLOW_MEMORY_BACKEND` - Memory backend (sqlite, markdown, hybrid)
+
+### MCP Configuration
+- `CLAUDE_FLOW_MCP_TRANSPORT` - MCP transport (stdio, http, websocket)
+- `CLAUDE_FLOW_MCP_PORT` - MCP server port
+
+### Orchestrator Configuration
+- `CLAUDE_FLOW_MAX_AGENTS` - Maximum concurrent agents
+
+## Config Files
+
+Claude Code Flow uses JSON configuration files for advanced settings. The default location is `.claude-flow/config.json` in your project directory.
+
+### Example config.json
+
+```json
+{
+  "orchestrator": {
+    "maxConcurrentAgents": 5,
+    "defaultTimeout": 300000,
+    "retryAttempts": 3
+  },
+  "terminal": {
+    "type": "auto",
+    "timeout": 30000
+  },
+  "memory": {
+    "backend": "sqlite",
+    "maxEntries": 10000,
+    "ttl": 86400000
+  },
+  "mcp": {
+    "transport": "stdio",
+    "port": 3000,
+    "timeout": 10000
+  },
+  "logging": {
+    "level": "info",
+    "file": "claude-flow.log"
+  }
+}
+```
+
+## Advanced Configuration
+
+### Custom Tool Configurations
+
+You can configure custom tools and their permissions in the config file:
+
+```json
+{
+  "tools": {
+    "allowed": ["View", "Edit", "Bash", "WebFetch"],
+    "restricted": ["SystemControl"],
+    "custom": {
+      "MyTool": {
+        "path": "./tools/my-tool.js",
+        "permissions": ["read", "write"]
+      }
+    }
+  }
+}
+```
+
+### Workflow Templates
+
+Define reusable workflow templates:
+
+```json
+{
+  "workflows": {
+    "templates": {
+      "web-development": {
+        "description": "Full-stack web development workflow",
+        "steps": [
+          {
+            "name": "setup",
+            "tools": ["Bash", "Edit"],
+            "task": "Set up project structure"
+          },
+          {
+            "name": "backend",
+            "tools": ["Edit", "Bash", "WebFetch"],
+            "task": "Implement backend API"
+          }
+        ]
+      }
+    }
+  }
+}
+```

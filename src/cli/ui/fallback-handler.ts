@@ -187,8 +187,8 @@ export function showUISupport(): void {
   
   console.log();
   console.log(chalk.white("Environment details:"));
-  console.log(chalk.gray(`• Terminal: ${process.env.TERM || "unknown"}`));
+  console.log(chalk.gray(`• Terminal: ${process.env.TERM ?? "unknown"}`));
   console.log(chalk.gray(`• TTY: ${process.stdin.isTTY ? "yes" : "no"}`));
-  console.log(chalk.gray(`• Program: ${process.env.TERM_PROGRAM || "unknown"}`));
+  console.log(chalk.gray(`• Program: ${process.env.TERM_PROGRAM ?? "unknown"}`));
   console.log(chalk.gray(`• Platform: ${process.platform}`));
 }

@@ -133,7 +133,7 @@ export class AsyncFileManager {
         } catch (statError) {
           // In test environment, stat might fail, so use the data size
           if (process.env.NODE_ENV === "test") {
-            size = dataSize || 100; // Default size for tests
+            size = dataSize ?? 100; // Default size for tests
           } else if (this.logger) {
             this.logger.debug("Failed to stat file after write, using data size", { path, error: statError });
           }
@@ -327,7 +327,7 @@ export class AsyncFileManager {
   }
   
   private trackOperation(type: string, bytes: number): void {
-    const count = this.metrics.operations.get(type) || 0;
+    const count = this.metrics.operations.get(type) ?? 0;
     this.metrics.operations.set(type, count + 1);
     this.metrics.totalBytes += bytes;
   }

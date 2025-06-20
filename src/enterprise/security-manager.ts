@@ -1432,9 +1432,10 @@ export class SecurityManager extends EventEmitter {
     
     if (resolvedIncidents.length === 0) return 0;
     
-    const totalTime = resolvedIncidents.reduce((sum, i) => 
-      sum + (i.timeline.resolved!.getTime() - i.timeline.reported.getTime()), 0,
-    );
+    const totalTime = resolvedIncidents.reduce((sum, i) => {
+      if (!i.timeline.resolved) return sum;
+      return sum + (i.timeline.resolved.getTime() - i.timeline.reported.getTime());
+    }, 0);
     
     return totalTime / resolvedIncidents.length;
   }

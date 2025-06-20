@@ -19,7 +19,7 @@ export class DirectTaskExecutor {
   private timeout: number;
 
   constructor(config: DirectExecutorConfig = {}) {
-    this.logger = config.logger || new Logger(
+    this.logger = config.logger ?? new Logger(
       { level: "info", format: "text", destination: "console" },
       { component: "DirectTaskExecutor" },
     );
@@ -106,13 +106,16 @@ export class DirectTaskExecutor {
         return this.executeAnalyzerTask(task, targetDir);
       
       case "developer":
-        if (isRestAPI) return this.createRestAPI(targetDir!, task);
-        if (isTodo) return this.createTodoApp(targetDir!, task);
-        if (isChat) return this.createChatApp(targetDir!, task);
-        if (isAuth) return this.createAuthService(targetDir!, task);
-        if (isHelloWorld) return this.createHelloWorld(targetDir!, task);
-        if (isCalculator) return this.createCalculator(targetDir!, task);
-        return this.createGenericApp(targetDir!, task);
+        if (!targetDir) {
+          throw new Error("Target directory is required for developer tasks");
+        }
+        if (isRestAPI) return this.createRestAPI(targetDir, task);
+        if (isTodo) return this.createTodoApp(targetDir, task);
+        if (isChat) return this.createChatApp(targetDir, task);
+        if (isAuth) return this.createAuthService(targetDir, task);
+        if (isHelloWorld) return this.createHelloWorld(targetDir, task);
+        if (isCalculator) return this.createCalculator(targetDir, task);
+        return this.createGenericApp(targetDir, task);
       
       case "tester":
         return this.executeTestingTask(task, targetDir);
@@ -656,7 +659,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT ?? 3000;
 
 // Middleware
 app.use(cors());
@@ -866,7 +869,7 @@ io.on('connection', (socket) => {
   socket.on('message', (data) => {
     const message = {
       id: Date.now(),
-      username: users.get(socket.id) || 'Anonymous',
+      username: users.get(socket.id) ?? 'Anonymous',
       text: data.text,
       timestamp: new Date()
     };
@@ -886,7 +889,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT ?? 3000;
 server.listen(PORT, () => {
   console.log(\`Chat server running on port \${PORT}\`);
 });
@@ -930,7 +933,7 @@ const messageForm = document.getElementById('messageForm');
 const messageInput = document.getElementById('messageInput');
 const userCountDiv = document.getElementById('userCount');
 
-const username = prompt('Enter your username:') || 'Anonymous';
+const username = prompt('Enter your username:') ?? 'Anonymous';
 socket.emit('join', username);
 
 socket.on('history', (messages) => {
@@ -992,7 +995,7 @@ const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT ?? 3000;
 
 app.use(express.json());
 
@@ -1024,7 +1027,7 @@ app.post('/api/register', async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { id: user.id, username: user.username },
-      process.env.JWT_SECRET || 'default-secret',
+      process.env.JWT_SECRET ?? 'default-secret',
       { expiresIn: '24h' }
     );
     
@@ -1054,7 +1057,7 @@ app.post('/api/login', async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { id: user.id, username: user.username },
-      process.env.JWT_SECRET || 'default-secret',
+      process.env.JWT_SECRET ?? 'default-secret',
       { expiresIn: '24h' }
     );
     
@@ -1086,7 +1089,7 @@ module.exports = (req, res, next) => {
   }
   
   try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
+    const verified = jwt.verify(token, process.env.JWT_SECRET ?? 'default-secret');
     req.user = verified;
     next();
   } catch (error) {

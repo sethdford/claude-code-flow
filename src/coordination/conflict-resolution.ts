@@ -50,7 +50,7 @@ export class PriorityResolutionStrategy implements ConflictResolutionStrategy {
   ): Promise<ConflictResolution> {
     const priorities = conflict.agents.map(agentId => ({
       agentId,
-      priority: context.agentPriorities.get(agentId) || 0,
+      priority: context.agentPriorities.get(agentId) ?? 0,
     }));
 
     // Sort by priority (descending)
@@ -81,7 +81,7 @@ export class TimestampResolutionStrategy implements ConflictResolutionStrategy {
   ): Promise<ConflictResolution> {
     const timestamps = conflict.agents.map(agentId => ({
       agentId,
-      timestamp: context.requestTimestamps.get(agentId) || new Date(),
+      timestamp: context.requestTimestamps.get(agentId) ?? new Date(),
     }));
 
     // Sort by timestamp (ascending - earliest first)
@@ -359,7 +359,7 @@ export class ConflictResolver {
         if (conflict.resolution) {
           const strategy = conflict.resolution.type;
           stats.resolutionsByStrategy[strategy] = 
-            (stats.resolutionsByStrategy[strategy] || 0) + 1;
+            (stats.resolutionsByStrategy[strategy] ?? 0) + 1;
         }
       } else {
         stats.activeConflicts++;
@@ -389,7 +389,7 @@ export class OptimisticLockManager {
    * Acquire an optimistic lock
    */
   acquireLock(resourceId: string, agentId: string): number {
-    const currentVersion = this.versions.get(resourceId) || 0;
+    const currentVersion = this.versions.get(resourceId) ?? 0;
     
     this.locks.set(resourceId, {
       version: currentVersion,
@@ -414,7 +414,7 @@ export class OptimisticLockManager {
     agentId: string,
     expectedVersion: number,
   ): boolean {
-    const currentVersion = this.versions.get(resourceId) || 0;
+    const currentVersion = this.versions.get(resourceId) ?? 0;
     const lock = this.locks.get(resourceId);
 
     // Check if versions match

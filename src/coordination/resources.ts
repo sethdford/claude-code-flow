@@ -196,7 +196,7 @@ export class ResourceManager {
       if (queue.length > 0) {
         waiting.set(
           queue[0].agentId,
-          [...(waiting.get(queue[0].agentId) || []), resourceId],
+          [...(waiting.get(queue[0].agentId) ?? []), resourceId],
         );
       }
     }

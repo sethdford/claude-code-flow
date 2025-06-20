@@ -47,10 +47,10 @@ export class PromptManager extends EventEmitter {
     super();
     
     this.options = {
-      configPath: options.configPath || ".prompt-config.json",
-      basePath: options.basePath || process.cwd(),
+      configPath: options.configPath ?? ".prompt-config.json",
+      basePath: options.basePath ?? process.cwd(),
       autoDiscovery: options.autoDiscovery ?? true,
-      defaultProfile: options.defaultProfile || "sparc",
+      defaultProfile: options.defaultProfile ?? "sparc",
     };
 
     this.configManager = new PromptConfigManager(

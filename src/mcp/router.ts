@@ -74,7 +74,7 @@ export class RequestRouter {
   /**
    * Handles built-in RPC methods
    */
-  private async handleRPCMethod(method: string, params: unknown): Promise<unknown> {
+  private handleRPCMethod(method: string, params: unknown): unknown {
     switch (method) {
       case "rpc.discover":
         return this.discoverMethods();

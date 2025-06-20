@@ -443,7 +443,7 @@ function startWebUI(host: string, port: number) {
     // Handle incoming commands
     ws.on("message", (message) => {
       try {
-        const data = JSON.parse(message.toString());
+        const data = JSON.parse(String(message));
         if (data.type === "command") {
           handleCliCommand(data.data, ws);
         }

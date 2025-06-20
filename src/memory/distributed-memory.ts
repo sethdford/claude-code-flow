@@ -270,7 +270,10 @@ export class DistributedMemorySystem extends EventEmitter {
     this.partitions.set(partitionId, partition);
 
     // Update local node partition list
-    const localNode = this.nodes.get(this.localNodeId)!;
+    const localNode = this.nodes.get(this.localNodeId);
+    if (!localNode) {
+      throw new Error("Local node not found");
+    }
     localNode.partitions.push(partitionId);
 
     this.logger.info("Created partition", { partitionId, name, type });
@@ -302,7 +305,10 @@ export class DistributedMemorySystem extends EventEmitter {
     this.partitions.delete(partitionId);
 
     // Update local node
-    const localNode = this.nodes.get(this.localNodeId)!;
+    const localNode = this.nodes.get(this.localNodeId);
+    if (!localNode) {
+      throw new Error("Local node not found");
+    }
     localNode.partitions = localNode.partitions.filter(p => p !== partitionId);
 
     this.logger.info("Deleted partition", { partitionId });
@@ -420,7 +426,8 @@ export class DistributedMemorySystem extends EventEmitter {
         : Array.from(this.partitions.values());
 
       for (const partition of partitions) {
-        const entry = partition!.entries.find(e => e.key === key);
+        if (!partition) continue;
+        const entry = partition.entries.find(e => e.key === key);
         if (entry) {
           // Check if entry is expired
           if (entry.expiresAt && entry.expiresAt < new Date()) {
@@ -494,7 +501,10 @@ export class DistributedMemorySystem extends EventEmitter {
       }
 
       // Update entry
-      const partition = this.partitions.get(this.getEntryPartition(entry.id))!;
+      const partition = this.partitions.get(this.getEntryPartition(entry.id));
+      if (!partition) {
+        throw new Error("Partition not found for entry update");
+      }
       
       entry.value = options.merge 
         ? await this.mergeValues(entry.value, value, partition)
@@ -588,7 +598,8 @@ export class DistributedMemorySystem extends EventEmitter {
         : Array.from(this.partitions.values());
 
       for (const partition of partitions) {
-        for (const entry of partition!.entries) {
+        if (!partition) continue;
+        for (const entry of partition.entries) {
           if (this.matchesQuery(entry, query)) {
             results.push(entry);
           }
@@ -714,7 +725,7 @@ export class DistributedMemorySystem extends EventEmitter {
     }
     
     // Default to first available partition
-    return Array.from(this.partitions.keys())[0] || "";
+    return Array.from(this.partitions.keys())[0] ?? "";
   }
 
   private getPartitionSize(partitionId: string): number {
@@ -807,7 +818,7 @@ export class DistributedMemorySystem extends EventEmitter {
   }
 
   private recordMetric(operation: string, duration: number): void {
-    const current = this.operationMetrics.get(operation) || { count: 0, totalTime: 0 };
+    const current = this.operationMetrics.get(operation) ?? { count: 0, totalTime: 0 };
     current.count++;
     current.totalTime += duration;
     this.operationMetrics.set(operation, current);
@@ -845,8 +856,8 @@ export class DistributedMemorySystem extends EventEmitter {
     this.statistics.nodeCount = this.nodes.size;
     
     // Calculate performance metrics
-    const readMetrics = this.operationMetrics.get("retrieve") || { count: 0, totalTime: 0 };
-    const writeMetrics = this.operationMetrics.get("store") || { count: 0, totalTime: 0 };
+    const readMetrics = this.operationMetrics.get("retrieve") ?? { count: 0, totalTime: 0 };
+    const writeMetrics = this.operationMetrics.get("store") ?? { count: 0, totalTime: 0 };
     
     this.statistics.performance.readLatency = readMetrics.count > 0 
       ? readMetrics.totalTime / readMetrics.count : 0;

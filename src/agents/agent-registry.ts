@@ -7,12 +7,34 @@ import { DistributedMemorySystem } from "../memory/distributed-memory.js";
 import { AgentState, AgentId, AgentType, AgentStatus } from "../swarm/types.js";
 import { EventEmitter } from "node:events";
 
+// Coordination data interfaces
+export interface AgentCoordinationData {
+  agentId: string;
+  data: {
+    taskAssignments?: Record<string, unknown>;
+    collaborations?: string[];
+    state?: Record<string, unknown>;
+    capabilities?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+  timestamp: Date;
+}
+
+export interface AgentMetadata {
+  registeredBy: string;
+  version: string;
+  lastSeen?: Date;
+  platform?: string;
+  environment?: string;
+  [key: string]: unknown;
+}
+
 export interface AgentRegistryEntry {
   agent: AgentState;
   createdAt: Date;
   lastUpdated: Date;
   tags: string[];
-  metadata: Record<string, any>;
+  metadata: AgentMetadata;
 }
 
 export interface AgentQuery {
@@ -154,7 +176,7 @@ export class AgentRegistry extends EventEmitter {
    */
   async getAgent(agentId: string): Promise<AgentState | null> {
     const entry = await this.getAgentEntry(agentId);
-    return entry?.agent || null;
+    return entry?.agent ?? null;
   }
 
   /**
@@ -163,7 +185,7 @@ export class AgentRegistry extends EventEmitter {
   async getAgentEntry(agentId: string): Promise<AgentRegistryEntry | null> {
     // Check cache first
     if (this.cache.has(agentId) && this.isCacheValid()) {
-      return this.cache.get(agentId) || null;
+      return this.cache.get(agentId) ?? null;
     }
 
     // Load from memory
@@ -281,8 +303,8 @@ export class AgentRegistry extends EventEmitter {
 
     // Count by type and status
     for (const agent of agents) {
-      stats.byType[agent.type] = (stats.byType[agent.type] || 0) + 1;
-      stats.byStatus[agent.status] = (stats.byStatus[agent.status] || 0) + 1;
+      stats.byType[agent.type] = (stats.byType[agent.type] ?? 0) + 1;
+      stats.byStatus[agent.status] = (stats.byStatus[agent.status] ?? 0) + 1;
       
       if (agent.status === "idle" || agent.status === "busy") {
         stats.activeAgents++;
@@ -367,19 +389,20 @@ export class AgentRegistry extends EventEmitter {
     // Sort by score (highest first)
     scored.sort((a, b) => b.score - a.score);
 
-    return scored[0]?.agent || null;
+    return scored[0]?.agent ?? null;
   }
 
   /**
    * Store agent coordination data
    */
-  async storeCoordinationData(agentId: string, data: any): Promise<void> {
+  async storeCoordinationData(agentId: string, data: AgentCoordinationData["data"]): Promise<void> {
     const key = `coordination:${agentId}`;
-    await this.memory.store(key, {
+    const coordinationData: AgentCoordinationData = {
       agentId,
       data,
       timestamp: new Date(),
-    }, {
+    };
+    await this.memory.store(key, coordinationData, {
       type: "agent-coordination",
       tags: ["coordination", agentId],
       partition: this.namespace,
@@ -389,23 +412,39 @@ export class AgentRegistry extends EventEmitter {
   /**
    * Retrieve agent coordination data
    */
-  async getCoordinationData(agentId: string): Promise<any> {
+  async getCoordinationData(agentId: string): Promise<AgentCoordinationData | null> {
     const key = `coordination:${agentId}`;
     const result = await this.memory.retrieve(key);
-    return result?.value || null;
+    if (result?.value && this.isValidCoordinationData(result.value)) {
+      return result.value;
+    }
+    return null;
   }
 
   // === PRIVATE METHODS ===
 
-  private isValidAgentRegistryEntry(value: any): value is AgentRegistryEntry {
+  private isValidAgentRegistryEntry(value: unknown): value is AgentRegistryEntry {
+    if (typeof value !== "object" || value === null) return false;
+    const candidate = value as Record<string, unknown>;
     return (
-      value &&
-      typeof value === "object" &&
-      "agent" in value &&
-      "createdAt" in value &&
-      "lastUpdated" in value &&
-      "tags" in value &&
-      "metadata" in value
+      typeof candidate.agent === "object" &&
+      candidate.agent !== null &&
+      candidate.createdAt instanceof Date &&
+      candidate.lastUpdated instanceof Date &&
+      Array.isArray(candidate.tags) &&
+      typeof candidate.metadata === "object" &&
+      candidate.metadata !== null
+    );
+  }
+
+  private isValidCoordinationData(value: unknown): value is AgentCoordinationData {
+    if (typeof value !== "object" || value === null) return false;
+    const candidate = value as Record<string, unknown>;
+    return (
+      typeof candidate.agentId === "string" &&
+      typeof candidate.data === "object" &&
+      candidate.data !== null &&
+      candidate.timestamp instanceof Date
     );
   }
 

@@ -48,7 +48,7 @@ claude-flow init --config examples/batch-config-advanced.json
 - `user-api/` (Web API with PostgreSQL)
 - `notification-service/` (Microservice with RabbitMQ)
 - `admin-portal/` (React app with Material-UI)
-- `cli-tools/` (CLI tool for Node/Deno)
+- `cli-tools/` (CLI tool for Node.js)
 - `payment-gateway/` (High-security microservice)
 
 #### `batch-config-enterprise.json`

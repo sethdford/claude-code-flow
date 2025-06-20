@@ -3,14 +3,39 @@
  */
 
 import { generateId } from "../../utils/helpers.js";
-import { success, error, warning, info } from "../cli-core.js";
+import { success, error, warning } from "../cli-core.js";
 import type { CommandContext } from "../cli-core.js";
 import { BackgroundExecutor } from "../../coordination/background-executor.js";
 import { SwarmMemoryManager } from "../../memory/swarm-memory.js";
 
-import { existsSync } from "node:fs";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir } from "node:fs/promises";
 import { spawn } from "node:child_process";
+
+interface Task {
+  type: string;
+  description: string;
+}
+
+interface SwarmOptions {
+  strategy: string;
+  maxAgents: number;
+  maxDepth: number;
+  research: boolean;
+  parallel: boolean;
+  memoryNamespace: string;
+  timeout: number;
+  review: boolean;
+  coordinator: boolean;
+  config?: string;
+  verbose: boolean;
+  dryRun: boolean;
+  monitor: boolean;
+  ui: boolean;
+  background: boolean;
+  persistence: boolean;
+  distributed: boolean;
+  simulate?: boolean;
+}
 
 export async function swarmAction(ctx: CommandContext) {
   // First check if help is requested
@@ -96,8 +121,8 @@ export async function swarmAction(ctx: CommandContext) {
     // Initialize swarm coordination system
     // TODO: Import and use SwarmCoordinator when available
     const coordinator = {
-      createObjective: async (obj: string, strat: string) => `obj-${  Date.now()}`,
-      registerAgent: async (name: string, type: string, capabilities: any) => `agent-${name}-${Date.now()}`,
+      createObjective: async (_obj: string, _strat: string) => `obj-${  Date.now()}`,
+      registerAgent: async (name: string, _type: string, _capabilities: unknown) => `agent-${name}-${Date.now()}`,
       executeObjective: async (objectiveId: string) => {
         console.log(`🎯 Executing objective: ${objectiveId}`);
         // Simulate some work
@@ -239,8 +264,8 @@ export async function swarmAction(ctx: CommandContext) {
 /**
  * Decompose objective into subtasks based on strategy
  */
-async function decomposeObjective(objective: string, options: any): Promise<any[]> {
-  const subtasks = [];
+async function decomposeObjective(objective: string, options: SwarmOptions): Promise<Task[]> {
+  const subtasks: Task[] = [];
   
   switch (options.strategy) {
     case "research":
@@ -297,7 +322,7 @@ async function decomposeObjective(objective: string, options: any): Promise<any[
 /**
  * Execute tasks in parallel
  */
-async function executeParallelTasks(tasks: any[], options: any, swarmId: string, swarmDir: string) {
+async function executeParallelTasks(tasks: Task[], options: SwarmOptions, swarmId: string, swarmDir: string) {
   const promises = tasks.map(async (task, index) => {
     const agentId = generateId("agent");
     console.log(`  🤖 Spawning agent ${agentId} for: ${task.type}`);
@@ -333,7 +358,7 @@ async function executeParallelTasks(tasks: any[], options: any, swarmId: string,
 /**
  * Execute tasks sequentially
  */
-async function executeSequentialTasks(tasks: any[], options: any, swarmId: string, swarmDir: string) {
+async function executeSequentialTasks(tasks: Task[], options: SwarmOptions, swarmId: string, swarmDir: string) {
   for (const [index, task] of tasks.entries()) {
     const agentId = generateId("agent");
     console.log(`  🤖 Spawning agent ${agentId} for: ${task.type}`);
@@ -367,7 +392,7 @@ async function executeSequentialTasks(tasks: any[], options: any, swarmId: strin
 /**
  * Execute a single agent task using claude
  */
-async function executeAgentTask(agentId: string, task: any, options: any, agentDir: string) {
+async function executeAgentTask(agentId: string, task: Task, options: SwarmOptions, agentDir: string) {
   console.log(`    → Executing: ${task.type} task`);
   
   try {
@@ -495,9 +520,10 @@ exit \${PIPESTATUS[0]}`;
         if (stderr) {
           await writeFile(`${agentDir}/error.txt`, stderr, "utf-8");
         }
-      } catch (execError: any) {
-        await writeFile(`${agentDir}/error.txt`, execError.message || String(execError), "utf-8");
-        console.log(`    ⚠️  Command failed: ${execError.message}`);
+      } catch (execError: unknown) {
+        const errorMessage = execError instanceof Error ? execError.message : String(execError);
+        await writeFile(`${agentDir}/error.txt`, errorMessage, "utf-8");
+        console.log(`    ⚠️  Command failed: ${errorMessage}`);
       }
     }
   } catch (err) {
@@ -537,7 +563,7 @@ function getCapabilitiesForType(type: string): string[] {
   }
 }
 
-async function waitForObjectiveCompletion(coordinator: any, objectiveId: string, options: any): Promise<void> {
+async function waitForObjectiveCompletion(coordinator: any, objectiveId: string, options: SwarmOptions): Promise<void> {
   return new Promise((resolve) => {
     const checkInterval = setInterval(() => {
       const objective = coordinator.getObjectiveStatus(objectiveId);

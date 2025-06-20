@@ -1225,7 +1225,7 @@ export class DeploymentManager extends EventEmitter {
       )
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-    return deployments[0] || null;
+    return deployments[0] ?? null;
   }
 
   private async executeRollbackStrategy(

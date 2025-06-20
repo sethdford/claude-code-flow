@@ -37,7 +37,7 @@ export class WorkStealingCoordinator {
     private logger: ILogger,
   ) {}
 
-  async initialize(): Promise<void> {
+  initialize(): void {
     if (!this.config.enabled) {
       this.logger.info("Work stealing is disabled");
       return;
@@ -62,7 +62,7 @@ export class WorkStealingCoordinator {
   }
 
   updateAgentWorkload(agentId: string, workload: Partial<AgentWorkload>): void {
-    const existing = this.workloads.get(agentId) || {
+    const existing = this.workloads.get(agentId) ?? {
       agentId,
       taskCount: 0,
       avgTaskDuration: 0,
@@ -93,7 +93,7 @@ export class WorkStealingCoordinator {
     this.updateAgentWorkload(agentId, { avgTaskDuration: avg });
   }
 
-  async checkAndSteal(): Promise<void> {
+  checkAndSteal(): void {
     const workloads = Array.from(this.workloads.values());
     if (workloads.length < 2) {
       return; // Need at least 2 agents

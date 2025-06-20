@@ -248,7 +248,7 @@ export class SwarmMemoryManager extends EventEmitter {
       key,
       value: await this.serializeValue(value),
       type: options.type || "knowledge",
-      tags: options.tags || [],
+      tags: options.tags ?? [],
       owner: options.owner || { id: "system", swarmId: "", type: "coordinator", instance: 0 },
       accessLevel: options.accessLevel || "team",
       createdAt: now,
@@ -382,7 +382,7 @@ export class SwarmMemoryManager extends EventEmitter {
 
     // Create backup of old version
     if (options.incrementVersion !== false) {
-      entry.previousVersions = entry.previousVersions || [];
+      entry.previousVersions = entry.previousVersions ?? [];
       entry.previousVersions.push({ ...entry });
       
       // Limit version history
@@ -523,8 +523,8 @@ export class SwarmMemoryManager extends EventEmitter {
     }
 
     // Apply pagination
-    const offset = query.offset || 0;
-    const limit = query.limit || results.length;
+    const offset = query.offset ?? 0;
+    const limit = query.limit ?? results.length;
     results = results.slice(offset, offset + limit);
 
     return results;
@@ -1003,7 +1003,10 @@ export class SwarmMemoryManager extends EventEmitter {
     let partition = this.partitions.get(name);
     if (!partition) {
       await this.createPartition(name, {}, !this.isInitialized);
-      partition = this.partitions.get(name)!;
+      partition = this.partitions.get(name);
+      if (!partition) {
+        throw new Error(`Failed to create partition: ${name}`);
+      }
     }
     return partition;
   }
@@ -1129,17 +1132,17 @@ export class SwarmMemoryManager extends EventEmitter {
       const state = await this.persistence.loadState();
       if (state) {
         // Load entries
-        for (const entry of state.entries || []) {
+        for (const entry of state.entries ?? []) {
           this.entries.set(entry.id, entry);
           await this.index.addEntry(entry);
         }
         
         // Load partitions
-        for (const partition of state.partitions || []) {
+        for (const partition of state.partitions ?? []) {
           this.partitions.set(partition.name, partition);
         }
         
-        this.memory.partitions = state.partitions || [];
+        this.memory.partitions = state.partitions ?? [];
         
         this.logger.info("Loaded memory state", {
           entries: this.entries.size,
@@ -1313,7 +1316,10 @@ class MemoryIndex {
       if (!this.index.has(normalizedTerm)) {
         this.index.set(normalizedTerm, new Set());
       }
-      this.index.get(normalizedTerm)!.add(entryId);
+      const termSet = this.index.get(normalizedTerm);
+      if (termSet) {
+        termSet.add(entryId);
+      }
     }
   }
 }

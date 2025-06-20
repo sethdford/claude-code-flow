@@ -14,6 +14,7 @@ import {
   ValidationResult,
   MigrationProgress,
   MigrationManifest,
+  MigrationAnalysis,
 } from "./types";
 import { MigrationAnalyzer } from "./migration-analyzer";
 import { logger } from "./logger";
@@ -150,7 +151,7 @@ export class MigrationRunner {
     await this.copyRequiredFiles(result);
   }
 
-  private async selectiveMigration(result: MigrationResult, analysis: any): Promise<void> {
+  private async selectiveMigration(result: MigrationResult, analysis: MigrationAnalysis): Promise<void> {
     const sourcePath = path.join(__dirname, "../../.claude");
     const targetPath = path.join(this.options.projectPath, ".claude");
 
@@ -206,7 +207,7 @@ export class MigrationRunner {
     await this.updateConfigurations(result);
   }
 
-  private async mergeMigration(result: MigrationResult, analysis: any): Promise<void> {
+  private async mergeMigration(result: MigrationResult, analysis: MigrationAnalysis): Promise<void> {
     // Similar to selective but merges configurations
     await this.selectiveMigration(result, analysis);
 
@@ -216,7 +217,7 @@ export class MigrationRunner {
     }
   }
 
-  private async mergeConfigurations(result: MigrationResult, analysis: any): Promise<void> {
+  private async mergeConfigurations(result: MigrationResult, analysis: MigrationAnalysis): Promise<void> {
     // Merge CLAUDE.md
     const claudeMdPath = path.join(this.options.projectPath, "CLAUDE.md");
     if (await fs.pathExists(claudeMdPath)) {
@@ -446,7 +447,7 @@ export class MigrationRunner {
     console.log(chalk.gray(`\n${  "─".repeat(50)}`));
   }
 
-  private async confirmMigration(analysis: any): Promise<boolean> {
+  private async confirmMigration(analysis: MigrationAnalysis): Promise<boolean> {
     const questions = [
       {
         type: "confirm",
@@ -507,14 +508,15 @@ export class MigrationRunner {
     return templateContent;
   }
 
-  private async getMergedRoomodes(existing: any): Promise<any> {
+  private async getMergedRoomodes(existing: unknown): Promise<unknown> {
     const templatePath = path.join(__dirname, "../../.roomodes");
     const template = await fs.readJson(templatePath);
 
     // Merge custom modes with template
     const merged = { ...template };
     
-    for (const [mode, config] of Object.entries(existing)) {
+    const existingModes = existing as Record<string, unknown>;
+    for (const [mode, config] of Object.entries(existingModes)) {
       if (!merged[mode]) {
         merged[mode] = config;
       }

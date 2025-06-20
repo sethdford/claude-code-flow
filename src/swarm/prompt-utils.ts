@@ -67,7 +67,7 @@ export class PromptConfigManager {
   private config: PromptConfig;
 
   constructor(configPath?: string) {
-    this.configPath = configPath || path.join(process.cwd(), ".prompt-config.json");
+    this.configPath = configPath ?? path.join(process.cwd(), ".prompt-config.json");
     this.config = { ...DEFAULT_CONFIG };
   }
 

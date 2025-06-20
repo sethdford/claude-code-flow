@@ -180,7 +180,10 @@ export class SwarmMemoryManager extends EventEmitter {
     if (!this.agentMemories.has(agentId)) {
       this.agentMemories.set(agentId, new Set());
     }
-    this.agentMemories.get(agentId)!.add(entryId);
+    const agentMemorySet = this.agentMemories.get(agentId);
+    if (agentMemorySet) {
+      agentMemorySet.add(entryId);
+    }
 
     // Store in base memory for persistence
     await this.baseMemory.store({
@@ -241,7 +244,7 @@ export class SwarmMemoryManager extends EventEmitter {
     if (query.tags && query.tags.length > 0) {
       results = results.filter(e => 
         e.metadata.tags && 
-        query.tags!.some(tag => e.metadata.tags!.includes(tag)),
+        query.tags!.some(tag => e.metadata.tags?.includes(tag)),
       );
     }
 
@@ -303,7 +306,10 @@ export class SwarmMemoryManager extends EventEmitter {
     if (!this.agentMemories.has(targetAgentId)) {
       this.agentMemories.set(targetAgentId, new Set());
     }
-    this.agentMemories.get(targetAgentId)!.add(sharedEntry.id);
+    const targetAgentMemorySet = this.agentMemories.get(targetAgentId);
+    if (targetAgentMemorySet) {
+      targetAgentMemorySet.add(sharedEntry.id);
+    }
 
     this.logger.info(`Shared memory ${entryId} from ${entry.agentId} to ${targetAgentId}`);
     this.emit("memory:shared", { original: entry, shared: sharedEntry });
@@ -466,7 +472,10 @@ export class SwarmMemoryManager extends EventEmitter {
           if (!this.agentMemories.has(entry.agentId)) {
             this.agentMemories.set(entry.agentId, new Set());
           }
-          this.agentMemories.get(entry.agentId)!.add(entry.id);
+          const entryAgentMemorySet = this.agentMemories.get(entry.agentId);
+          if (entryAgentMemorySet) {
+            entryAgentMemorySet.add(entry.id);
+          }
         }
 
         this.logger.info(`Loaded ${entriesArray.length} memory entries`);

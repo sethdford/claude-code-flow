@@ -486,10 +486,11 @@ export class MCPServer implements IMCPServer {
         },
         required: ["name"],
       },
-      handler: async (input: any) => {
-        const tool = this.toolRegistry.getTool(input.name);
+      handler: async (input: unknown) => {
+        const toolInput = input as { name: string };
+        const tool = this.toolRegistry.getTool(toolInput.name);
         if (!tool) {
-          throw new Error(`Tool not found: ${input.name}`);
+          throw new Error(`Tool not found: ${toolInput.name}`);
         }
         return {
           name: tool.name,

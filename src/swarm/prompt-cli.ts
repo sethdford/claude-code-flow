@@ -44,19 +44,19 @@ program
       if (options.profile) {
         const profileOptions = configManager.getProfile(options.profile);
         copyOptions = {
-          source: options.source || config.sourceDirectories[0],
-          destination: options.destination || config.destinationDirectory,
+          source: options.source ?? config.sourceDirectories[0],
+          destination: options.destination ?? config.destinationDirectory,
           ...profileOptions,
         };
       } else {
         copyOptions = {
-          source: options.source || config.sourceDirectories[0],
-          destination: options.destination || config.destinationDirectory,
+          source: options.source ?? config.sourceDirectories[0],
+          destination: options.destination ?? config.destinationDirectory,
           backup: options.backup,
           verify: options.verify,
           parallel: options.parallel,
-          maxWorkers: options.workers || config.defaultOptions.maxWorkers,
-          conflictResolution: options.conflict || config.defaultOptions.conflictResolution,
+          maxWorkers: options.workers ?? config.defaultOptions.maxWorkers,
+          conflictResolution: options.conflict ?? config.defaultOptions.conflictResolution,
           includePatterns: options.include ? options.include.split(",") : config.defaultOptions.includePatterns,
           excludePatterns: options.exclude ? options.exclude.split(",") : config.defaultOptions.excludePatterns,
           dryRun: options.dryRun,

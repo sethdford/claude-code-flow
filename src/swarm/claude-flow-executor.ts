@@ -24,11 +24,11 @@ export class ClaudeFlowExecutor {
   private timeoutMinutes: number;
 
   constructor(config: ClaudeFlowExecutorConfig = {}) {
-    this.logger = config.logger || new Logger(
+    this.logger = config.logger ?? new Logger(
       { level: "info", format: "text", destination: "console" },
       { component: "ClaudeFlowExecutor" },
     );
-    this.claudeFlowPath = config.claudeFlowPath || "/workspaces/claude-code-flow/bin/claude-flow";
+    this.claudeFlowPath = config.claudeFlowPath ?? "/workspaces/claude-code-flow/bin/claude-flow";
     this.enableSparc = config.enableSparc ?? true;
     this.verbose = config.verbose ?? false;
     this.timeoutMinutes = config.timeoutMinutes ?? 59;
@@ -190,7 +190,7 @@ export class ClaudeFlowExecutor {
 
     // Add context if available
     if (task.context?.targetDir) {
-      description += ` in ${task.context.targetDir}`;
+      description += ` in ${String(task.context.targetDir)}`;
     }
 
     return description.replace(/"/g, '\\"');

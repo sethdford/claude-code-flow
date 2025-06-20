@@ -42,7 +42,8 @@ export const mcpCommand = new Command()
   .option("--transport <transport>", "Transport type (stdio, http)", "stdio")
   .action(async (options: any) => {
     try {
-      const config = await configManager.load();
+      await configManager.load();
+      const config = configManager.get();
         
       // Override with CLI options
       const mcpConfig = {
@@ -84,7 +85,8 @@ export const mcpCommand = new Command()
   .description("Show MCP server status")
   .action(async () => {
     try {
-      const config = await configManager.load();
+      await configManager.load();
+      const config = configManager.get();
       const isRunning = mcpServer !== null;
 
       console.log(colors.cyan("MCP Server Status:"));
@@ -132,7 +134,8 @@ export const mcpCommand = new Command()
   .description("Show MCP configuration")
   .action(async () => {
     try {
-      const config = await configManager.load();
+      await configManager.load();
+      const config = configManager.get();
         
       console.log(colors.cyan("MCP Configuration:"));
       console.log(JSON.stringify(config.mcp, null, 2));
@@ -151,7 +154,8 @@ export const mcpCommand = new Command()
       }
         
       console.log(colors.yellow("🔄 Starting MCP server..."));
-      const config = await configManager.load();
+      await configManager.load();
+      const config = configManager.get();
       mcpServer = new MCPServer(config.mcp, eventBus, logger);
       await mcpServer.start();
         

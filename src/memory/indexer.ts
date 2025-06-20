@@ -19,7 +19,7 @@ class SimpleIndex<T> implements Index<T> {
   private index = new Map<T, Set<string>>();
 
   get(key: T): Set<string> {
-    return this.index.get(key) || new Set();
+    return this.index.get(key) ?? new Set();
   }
 
   add(key: T, entryId: string): void {

@@ -129,7 +129,12 @@ export class MCPOrchestrationIntegration extends EventEmitter {
       this.lifecycleManager = new MCPLifecycleManager(
         this.mcpConfig,
         this.logger,
-        () => this.server!,
+        () => {
+          if (!this.server) {
+            throw new MCPError("MCP server not initialized");
+          }
+          return this.server;
+        },
       );
 
       // Setup lifecycle event handlers
@@ -437,7 +442,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
     ];
 
     for (const tool of tools) {
-      this.server!.registerTool(tool);
+      if (!this.server) {
+        throw new MCPError("MCP server not initialized");
+      }
+      this.server.registerTool(tool);
     }
   }
 
@@ -468,7 +476,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
     ];
 
     for (const tool of tools) {
-      this.server!.registerTool(tool);
+      if (!this.server) {
+        throw new MCPError("MCP server not initialized");
+      }
+      this.server.registerTool(tool);
     }
   }
 
@@ -506,7 +517,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
     ];
 
     for (const tool of tools) {
-      this.server!.registerTool(tool);
+      if (!this.server) {
+        throw new MCPError("MCP server not initialized");
+      }
+      this.server.registerTool(tool);
     }
   }
 
@@ -537,7 +551,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
     ];
 
     for (const tool of tools) {
-      this.server!.registerTool(tool);
+      if (!this.server) {
+        throw new MCPError("MCP server not initialized");
+      }
+      this.server.registerTool(tool);
     }
   }
 
@@ -584,7 +601,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
     ];
 
     for (const tool of tools) {
-      this.server!.registerTool(tool);
+      if (!this.server) {
+        throw new MCPError("MCP server not initialized");
+      }
+      this.server.registerTool(tool);
     }
   }
 
@@ -615,7 +635,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
     ];
 
     for (const tool of tools) {
-      this.server!.registerTool(tool);
+      if (!this.server) {
+        throw new MCPError("MCP server not initialized");
+      }
+      this.server.registerTool(tool);
     }
   }
 
@@ -653,7 +676,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
     ];
 
     for (const tool of tools) {
-      this.server!.registerTool(tool);
+      if (!this.server) {
+        throw new MCPError("MCP server not initialized");
+      }
+      this.server.registerTool(tool);
     }
   }
 

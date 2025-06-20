@@ -112,7 +112,7 @@ export class Orchestrator {
     this.logger.info(`Loaded ${this.agents.size} agents and ${this.tasks.size} tasks from persistence`);
   }
 
-  async stop(): Promise<void> {
+  stop(): void {
     if (!this.started) {
       return;
     }
@@ -248,7 +248,7 @@ export class Orchestrator {
     return this.tasks.get(taskId);
   }
 
-  async cancelTask(taskId: string): Promise<void> {
+  cancelTask(taskId: string): void {
     const task = this.tasks.get(taskId);
     if (!task) {
       throw new Error(`Task ${taskId} not found`);
@@ -272,7 +272,7 @@ export class Orchestrator {
     this.eventBus.emit("session:terminated", { sessionId });
   }
 
-  async executeWorkflow(workflow: any): Promise<string> {
+  async executeWorkflow(workflow: unknown): Promise<string> {
     const workflowId = `workflow-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     const status: WorkflowStatus = {

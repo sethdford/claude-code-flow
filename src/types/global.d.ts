@@ -14,20 +14,20 @@ export interface Command {
   options?: Array<{
     flags: string;
     description?: string;
-    default?: any;
+    default?: unknown;
   }>;
-  action?: (...args: any[]) => void | Promise<void>;
+  action?: (...args: unknown[]) => void | Promise<void>;
   command?: (name: string, description?: string) => Command;
-  option?: (flags: string, description?: string, defaultValue?: any) => Command;
+  option?: (flags: string, description?: string, defaultValue?: unknown) => Command;
   parse?: (argv?: string[]) => void | Promise<void>;
 }
 
 // Logger interface
 export interface Logger {
-  info(message: string, ...args: any[]): void;
-  warn(message: string, ...args: any[]): void;
-  error(message: string, ...args: any[]): void;
-  debug(message: string, ...args: any[]): void;
+  info(message: string, ...args: unknown[]): void;
+  warn(message: string, ...args: unknown[]): void;
+  error(message: string, ...args: unknown[]): void;
+  debug(message: string, ...args: unknown[]): void;
 }
 
 // Export for use across the codebase
@@ -40,10 +40,20 @@ declare global {
       CLAUDE_FLOW_LOG_LEVEL?: string;
       CLAUDE_FLOW_CONFIG?: string;
       NODE_ENV?: "development" | "production" | "test";
+      
+      // AWS Bedrock Configuration for Claude Code
+      CLAUDE_CODE_USE_BEDROCK?: string;
+      AWS_REGION?: string;
+      AWS_ACCESS_KEY_ID?: string;
+      AWS_SECRET_ACCESS_KEY?: string;
+      AWS_SESSION_TOKEN?: string;
+      AWS_PROFILE?: string;
+      ANTHROPIC_MODEL?: string;
+      ANTHROPIC_SMALL_FAST_MODEL?: string;
     }
   }
 
   interface Window {
-    claudeFlow?: any;
+    claudeFlow?: Record<string, unknown>;
   }
 }

@@ -70,7 +70,7 @@ function printWarning(message: string) {
   console.log(colors.yellow(`⚠️  ${  message}`));
 }
 
-async function main() {
+function main() {
   const args = process.argv.slice(2);
   const command = args[0] || "help";
   const subArgs = args.slice(1);
@@ -133,8 +133,5 @@ const isMainModule = import.meta.url === `file://${process.argv[1]}` ||
   process.argv[1]?.endsWith("\\index-remote.js");
 
 if (isMainModule) {
-  main().catch((error) => {
-    printError(`Error: ${error.message}`);
-    process.exit(1);
-  });
+  main();
 }

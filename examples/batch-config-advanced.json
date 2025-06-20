@@ -34,7 +34,7 @@
       "template": "cli-tool",
       "environment": "dev",
       "customConfig": {
-        "targets": ["node", "deno"]
+        "targets": ["node"]
       }
     },
     "payment-gateway": {

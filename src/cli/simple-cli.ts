@@ -524,7 +524,7 @@ async function createProgram() {
       
       commands.forEach(subcmd => {
         const name = subcmd.name().padEnd(maxCmdLength + 2);
-        const desc = subcmd.description() || "";
+        const desc = subcmd.description() ?? "";
         output += `  ${chalk.green(name)} ${desc}\n`;
       });
       
@@ -1255,9 +1255,9 @@ async function createProgram() {
         
         console.log();
         console.log(chalk.default.white("Environment details:"));
-        console.log(chalk.default.gray(`• Terminal: ${process.env.TERM || "unknown"}`));
+        console.log(chalk.default.gray(`• Terminal: ${process.env.TERM ?? "unknown"}`));
         console.log(chalk.default.gray(`• TTY: ${isTTY ? "yes" : "no"}`));
-        console.log(chalk.default.gray(`• Program: ${process.env.TERM_PROGRAM || "unknown"}`));
+        console.log(chalk.default.gray(`• Program: ${process.env.TERM_PROGRAM ?? "unknown"}`));
         console.log(chalk.default.gray(`• Platform: ${process.platform}`));
       } catch (error) {
         printError("Failed to check UI support");

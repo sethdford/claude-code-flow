@@ -158,7 +158,7 @@ export interface AgentConfig {
   
   // Specialization
   expertise: Record<string, number>;
-  preferences: Record<string, any>;
+  preferences: Record<string, unknown>;
 }
 
 export interface AgentEnvironment {
@@ -181,7 +181,7 @@ export interface AgentEnvironment {
   
   // Tool access
   availableTools: string[];
-  toolConfigs: Record<string, any>;
+  toolConfigs: Record<string, unknown>;
   toolVersions?: Record<string, string>;
   
   // System capabilities
@@ -279,7 +279,7 @@ export interface AgentError {
   type: string;
   message: string;
   stack?: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   severity: "low" | "medium" | "high" | "critical";
   resolved: boolean;
 }
@@ -338,7 +338,7 @@ export interface TaskRequirements {
   // Environment requirements
   tools: string[];
   permissions: string[];
-  environment?: Record<string, any>;
+  environment?: Record<string, unknown>;
   
   // Quality requirements
   reviewRequired?: boolean;
@@ -370,9 +370,9 @@ export interface TaskConstraints {
 
 export interface TaskResult {
   // Result data
-  output: any;
-  artifacts: Record<string, any>;
-  metadata: Record<string, any>;
+  output: unknown;
+  artifacts: Record<string, unknown>;
+  metadata: Record<string, unknown>;
   
   // Quality metrics
   quality: number;
@@ -385,14 +385,14 @@ export interface TaskResult {
   
   // Validation
   validated: boolean;
-  validationResults?: any;
+  validationResults?: unknown;
   
   // Follow-up
   recommendations?: string[];
   nextSteps?: string[];
   
   // Error information (optional)
-  error?: any;
+  error?: unknown;
 }
 
 export interface TaskDefinition {
@@ -407,13 +407,13 @@ export interface TaskDefinition {
   priority: TaskPriority;
   
   // Input/Output
-  input: any;
-  expectedOutput?: any;
+  input: unknown;
+  expectedOutput?: unknown;
   
   // Execution details
   instructions: string;
-  context: Record<string, any>;
-  examples?: any[];
+  context: Record<string, unknown>;
+  examples?: unknown[];
   
   // Enhanced metadata properties
   metadata?: TaskMetadata;
@@ -465,7 +465,7 @@ export interface TaskMetadata {
   sharedResources?: string[];
   
   // Custom metadata
-  customProperties?: Record<string, any>;
+  customProperties?: Record<string, unknown>;
 }
 
 export interface QualityRequirements {
@@ -522,7 +522,7 @@ export interface TaskError {
   message: string;
   code?: string;
   stack?: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   recoverable: boolean;
   retryable: boolean;
 }
@@ -677,9 +677,9 @@ export interface SwarmProgress {
 
 export interface SwarmResults {
   // Primary outputs
-  outputs: Record<string, any>;
-  artifacts: Record<string, any>;
-  reports: Record<string, any>;
+  outputs: Record<string, unknown>;
+  artifacts: Record<string, unknown>;
+  reports: Record<string, unknown>;
   
   // Quality metrics
   overallQuality: number;
@@ -865,7 +865,7 @@ export type MemoryType =
 export interface MemoryEntry {
   id: string;
   key: string;
-  value: any;
+  value: unknown;
   
   // Metadata
   type: string;
@@ -973,7 +973,7 @@ export interface Alert {
   
   // Context
   source: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   
   // Handling
   acknowledged: boolean;
@@ -1010,7 +1010,7 @@ export interface SwarmEvent {
   source: string;
   
   // Event data
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   
   // Routing
   targets?: string[];
@@ -1171,7 +1171,7 @@ export interface ValidationResult {
   // Context
   validatedAt: Date;
   validator: string;
-  context: Record<string, any>;
+  context: Record<string, unknown>;
 }
 
 export interface ValidationError {
@@ -1190,33 +1190,33 @@ export interface ValidationWarning {
 
 // ===== TYPE GUARDS =====
 
-export function isAgentId(obj: any): obj is AgentId {
+export function isAgentId(obj: unknown): obj is AgentId {
   return obj && typeof obj.id === "string" && typeof obj.swarmId === "string";
 }
 
-export function isTaskId(obj: any): obj is TaskId {
+export function isTaskId(obj: unknown): obj is TaskId {
   return obj && typeof obj.id === "string" && typeof obj.swarmId === "string";
 }
 
-export function isSwarmEvent(obj: any): obj is SwarmEvent {
+export function isSwarmEvent(obj: unknown): obj is SwarmEvent {
   return obj && typeof obj.id === "string" && typeof obj.type === "string";
 }
 
-export function isTaskDefinition(obj: any): obj is TaskDefinition {
+export function isTaskDefinition(obj: unknown): obj is TaskDefinition {
   return obj && isTaskId(obj.id) && typeof obj.type === "string";
 }
 
-export function isAgentState(obj: any): obj is AgentState {
+export function isAgentState(obj: unknown): obj is AgentState {
   return obj && isAgentId(obj.id) && typeof obj.status === "string";
 }
 
 // Enhanced type guards for new interfaces
 
-export function isTaskMetadata(obj: any): obj is TaskMetadata {
+export function isTaskMetadata(obj: unknown): obj is TaskMetadata {
   return obj && typeof obj === "object" && !Array.isArray(obj);
 }
 
-export function isQualityRequirements(obj: any): obj is QualityRequirements {
+export function isQualityRequirements(obj: unknown): obj is QualityRequirements {
   return obj && typeof obj === "object" && 
     (obj.minQualityScore === undefined || typeof obj.minQualityScore === "number") &&
     (obj.codeQualityRules === undefined || Array.isArray(obj.codeQualityRules)) &&
@@ -1224,7 +1224,7 @@ export function isQualityRequirements(obj: any): obj is QualityRequirements {
     (obj.peerReviewRequired === undefined || typeof obj.peerReviewRequired === "boolean");
 }
 
-export function isTestingRequirements(obj: any): obj is TestingRequirements {
+export function isTestingRequirements(obj: unknown): obj is TestingRequirements {
   return obj && typeof obj === "object" &&
     (obj.unitTestsRequired === undefined || typeof obj.unitTestsRequired === "boolean") &&
     (obj.integrationTestsRequired === undefined || typeof obj.integrationTestsRequired === "boolean") &&
@@ -1233,7 +1233,7 @@ export function isTestingRequirements(obj: any): obj is TestingRequirements {
     (obj.coverageThreshold === undefined || typeof obj.coverageThreshold === "number");
 }
 
-export function isResourceHints(obj: any): obj is ResourceHints {
+export function isResourceHints(obj: unknown): obj is ResourceHints {
   return obj && typeof obj === "object" &&
     (obj.preferredAgentTypes === undefined || Array.isArray(obj.preferredAgentTypes)) &&
     (obj.memoryIntensive === undefined || typeof obj.memoryIntensive === "boolean") &&
@@ -1242,7 +1242,7 @@ export function isResourceHints(obj: any): obj is ResourceHints {
     (obj.storageIntensive === undefined || typeof obj.storageIntensive === "boolean");
 }
 
-export function isPerformanceTargets(obj: any): obj is PerformanceTargets {
+export function isPerformanceTargets(obj: unknown): obj is PerformanceTargets {
   return obj && typeof obj === "object" &&
     (obj.maxExecutionTime === undefined || typeof obj.maxExecutionTime === "number") &&
     (obj.maxMemoryUsage === undefined || typeof obj.maxMemoryUsage === "number") &&
@@ -1250,7 +1250,7 @@ export function isPerformanceTargets(obj: any): obj is PerformanceTargets {
     (obj.throughputTarget === undefined || typeof obj.throughputTarget === "number");
 }
 
-export function isAgentEnvironment(obj: any): obj is AgentEnvironment {
+export function isAgentEnvironment(obj: unknown): obj is AgentEnvironment {
   return obj && typeof obj === "object" &&
     typeof obj.runtime === "string" &&
     typeof obj.version === "string" &&
@@ -1263,14 +1263,14 @@ export function isAgentEnvironment(obj: any): obj is AgentEnvironment {
     typeof obj.toolConfigs === "object";
 }
 
-export function isNetworkConfig(obj: any): obj is NetworkConfig {
+export function isNetworkConfig(obj: unknown): obj is NetworkConfig {
   return obj && typeof obj === "object" &&
     (obj.maxConnections === undefined || typeof obj.maxConnections === "number") &&
     (obj.timeout === undefined || typeof obj.timeout === "number") &&
     (obj.rateLimits === undefined || typeof obj.rateLimits === "object");
 }
 
-export function isSystemInfo(obj: any): obj is SystemInfo {
+export function isSystemInfo(obj: unknown): obj is SystemInfo {
   return obj && typeof obj === "object" &&
     typeof obj.platform === "string" &&
     typeof obj.architecture === "string" &&
@@ -1280,7 +1280,7 @@ export function isSystemInfo(obj: any): obj is SystemInfo {
     typeof obj.diskSpace === "number";
 }
 
-export function isResourceLimits(obj: any): obj is ResourceLimits {
+export function isResourceLimits(obj: unknown): obj is ResourceLimits {
   return obj && typeof obj === "object" &&
     (obj.maxMemoryUsage === undefined || typeof obj.maxMemoryUsage === "number") &&
     (obj.maxCpuUsage === undefined || typeof obj.maxCpuUsage === "number") &&
@@ -1290,7 +1290,7 @@ export function isResourceLimits(obj: any): obj is ResourceLimits {
     (obj.maxProcesses === undefined || typeof obj.maxProcesses === "number");
 }
 
-export function isSecurityConfig(obj: any): obj is SecurityConfig {
+export function isSecurityConfig(obj: unknown): obj is SecurityConfig {
   return obj && typeof obj === "object" &&
     (obj.allowedDomains === undefined || Array.isArray(obj.allowedDomains)) &&
     (obj.blockedDomains === undefined || Array.isArray(obj.blockedDomains)) &&
@@ -1301,7 +1301,7 @@ export function isSecurityConfig(obj: any): obj is SecurityConfig {
     (obj.permissions === undefined || Array.isArray(obj.permissions));
 }
 
-export function isContainerConfig(obj: any): obj is ContainerConfig {
+export function isContainerConfig(obj: unknown): obj is ContainerConfig {
   return obj && typeof obj === "object" &&
     typeof obj.isContainerized === "boolean" &&
     (obj.containerRuntime === undefined || typeof obj.containerRuntime === "string") &&
@@ -1310,7 +1310,7 @@ export function isContainerConfig(obj: any): obj is ContainerConfig {
     (obj.networkMode === undefined || typeof obj.networkMode === "string");
 }
 
-export function isMonitoringConfig(obj: any): obj is MonitoringConfig {
+export function isMonitoringConfig(obj: unknown): obj is MonitoringConfig {
   return obj && typeof obj === "object" &&
     typeof obj.metricsEnabled === "boolean" &&
     typeof obj.logLevel === "string" &&
@@ -1321,7 +1321,7 @@ export function isMonitoringConfig(obj: any): obj is MonitoringConfig {
 }
 
 // Validation helpers for enhanced interfaces
-export function validateTaskDefinitionWithMetadata(obj: any): string[] {
+export function validateTaskDefinitionWithMetadata(obj: unknown): string[] {
   const errors: string[] = [];
   
   if (!isTaskDefinition(obj)) {
@@ -1352,7 +1352,7 @@ export function validateTaskDefinitionWithMetadata(obj: any): string[] {
   return errors;
 }
 
-export function validateAgentEnvironment(obj: any): string[] {
+export function validateAgentEnvironment(obj: unknown): string[] {
   const errors: string[] = [];
   
   if (!isAgentEnvironment(obj)) {

@@ -89,13 +89,13 @@ export class OptimizedExecutor extends EventEmitter {
     
     // Initialize connection pool
     this.connectionPool = new ClaudeConnectionPool({
-      min: config.connectionPool?.min || 2,
-      max: config.connectionPool?.max || 10,
+      min: config.connectionPool?.min ?? 2,
+      max: config.connectionPool?.max ?? 10,
     });
     
     // Initialize file manager
     this.fileManager = new AsyncFileManager({
-      write: config.fileOperations?.concurrency || 10,
+      write: config.fileOperations?.concurrency ?? 10,
       read: config.fileOperations?.concurrency || 20,
     });
     
@@ -154,15 +154,15 @@ export class OptimizedExecutor extends EventEmitter {
             messages: this.buildMessages(task),
             model: (task as any).metadata?.model || "claude-3-5-sonnet-20241022",
             max_tokens: (task.constraints as any).maxTokens || 4096,
-            temperature: (task as any).metadata?.temperature || 0.7,
+            temperature: (task as any).metadata?.temperature ?? 0.7,
           });
           
           return {
             success: true,
-            output: response.content[0]?.text || "",
+            output: response.content[0]?.text ?? "",
             usage: {
-              inputTokens: response.usage?.input_tokens || 0,
-              outputTokens: response.usage?.output_tokens || 0,
+              inputTokens: response.usage?.input_tokens ?? 0,
+              outputTokens: response.usage?.output_tokens ?? 0,
             },
           };
         });

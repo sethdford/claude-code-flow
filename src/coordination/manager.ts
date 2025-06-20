@@ -292,7 +292,7 @@ export class CoordinationManager implements ICoordinationManager {
       visited.add(node);
       recursionStack.add(node);
 
-      const neighbors = graph.get(node) || new Set();
+      const neighbors = graph.get(node) ?? new Set();
       for (const neighbor of neighbors) {
         if (!visited.has(neighbor)) {
           if (hasCycle(neighbor)) {
@@ -319,7 +319,7 @@ export class CoordinationManager implements ICoordinationManager {
         // Find resources involved
         const resources: string[] = [];
         for (const agent of agents) {
-          const waiting = waitingFor.get(agent) || [];
+          const waiting = waitingFor.get(agent) ?? [];
           resources.push(...waiting);
         }
 

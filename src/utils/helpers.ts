@@ -38,7 +38,7 @@ export function timeout<T>(promise: Promise<T>, ms: number, message?: string): P
     timeoutId = setTimeout(() => {
       if (!completed) {
         completed = true;
-        reject(new Error(message || "Operation timed out"));
+        reject(new Error(message ?? "Operation timed out"));
       }
     }, ms);
   });
@@ -554,7 +554,7 @@ export function greeting(name?: string, options?: {
       zh: { informal: "你好", formal: "您好" },
     };
 
-    const localeGreeting = greetings[opts.locale] || greetings.en;
+    const localeGreeting = greetings[opts.locale] ?? greetings.en;
     return opts.formal ? localeGreeting.formal : localeGreeting.informal;
   };
 

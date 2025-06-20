@@ -285,37 +285,41 @@ export class CoordinationMetricsCollector {
       this.recordMetric("task.created", 1);
     });
 
-    this.eventBus.on(SystemEvents.TASK_STARTED, (data: any) => {
-      this.taskStartTimes.set(data.taskId, new Date());
+    this.eventBus.on(SystemEvents.TASK_STARTED, (data: unknown) => {
+      const taskData = data as { taskId: string };
+      this.taskStartTimes.set(taskData.taskId, new Date());
       this.gauges.activeTasks++;
       this.recordMetric("task.started", 1);
     });
 
-    this.eventBus.on(SystemEvents.TASK_COMPLETED, (data: any) => {
+    this.eventBus.on(SystemEvents.TASK_COMPLETED, (data: unknown) => {
+      const taskData = data as { taskId: string };
       this.counters.completedTasks++;
       this.gauges.activeTasks = Math.max(0, this.gauges.activeTasks - 1);
       
-      const startTime = this.taskStartTimes.get(data.taskId);
+      const startTime = this.taskStartTimes.get(taskData.taskId);
       if (startTime) {
         const duration = new Date().getTime() - startTime.getTime();
         this.histograms.taskDurations.push(duration);
-        this.taskStartTimes.delete(data.taskId);
+        this.taskStartTimes.delete(taskData.taskId);
       }
       
       this.recordMetric("task.completed", 1);
     });
 
-    this.eventBus.on(SystemEvents.TASK_FAILED, (data: any) => {
+    this.eventBus.on(SystemEvents.TASK_FAILED, (data: unknown) => {
+      const taskData = data as { taskId: string };
       this.counters.failedTasks++;
       this.gauges.activeTasks = Math.max(0, this.gauges.activeTasks - 1);
-      this.taskStartTimes.delete(data.taskId);
+      this.taskStartTimes.delete(taskData.taskId);
       this.recordMetric("task.failed", 1);
     });
 
-    this.eventBus.on(SystemEvents.TASK_CANCELLED, (data: any) => {
+    this.eventBus.on(SystemEvents.TASK_CANCELLED, (data: unknown) => {
+      const taskData = data as { taskId: string };
       this.counters.cancelledTasks++;
       this.gauges.activeTasks = Math.max(0, this.gauges.activeTasks - 1);
-      this.taskStartTimes.delete(data.taskId);
+      this.taskStartTimes.delete(taskData.taskId);
       this.recordMetric("task.cancelled", 1);
     });
 
@@ -343,22 +347,24 @@ export class CoordinationMetricsCollector {
     });
 
     // Resource events
-    this.eventBus.on(SystemEvents.RESOURCE_ACQUIRED, (data: any) => {
-      this.lockStartTimes.set(data.resourceId, new Date());
+    this.eventBus.on(SystemEvents.RESOURCE_ACQUIRED, (data: unknown) => {
+      const resourceData = data as { resourceId: string };
+      this.lockStartTimes.set(resourceData.resourceId, new Date());
       this.gauges.lockedResources++;
       this.gauges.freeResources = Math.max(0, this.gauges.freeResources - 1);
       this.recordMetric("resource.acquired", 1);
     });
 
-    this.eventBus.on(SystemEvents.RESOURCE_RELEASED, (data: any) => {
+    this.eventBus.on(SystemEvents.RESOURCE_RELEASED, (data: unknown) => {
       this.gauges.freeResources++;
       this.gauges.lockedResources = Math.max(0, this.gauges.lockedResources - 1);
       
-      const startTime = this.lockStartTimes.get(data.resourceId);
+      const resourceData = data as { resourceId: string };
+      const startTime = this.lockStartTimes.get(resourceData.resourceId);
       if (startTime) {
         const duration = new Date().getTime() - startTime.getTime();
         this.histograms.lockDurations.push(duration);
-        this.lockStartTimes.delete(data.resourceId);
+        this.lockStartTimes.delete(resourceData.resourceId);
       }
       
       this.recordMetric("resource.released", 1);
@@ -371,20 +377,22 @@ export class CoordinationMetricsCollector {
     });
 
     // Message events
-    this.eventBus.on(SystemEvents.MESSAGE_SENT, (data: any) => {
+    this.eventBus.on(SystemEvents.MESSAGE_SENT, (data: unknown) => {
+      const messageData = data as { message: { id: string } };
       this.counters.messagesSent++;
-      this.messageStartTimes.set(data.message.id, new Date());
+      this.messageStartTimes.set(messageData.message.id, new Date());
       this.recordMetric("message.sent", 1);
     });
 
-    this.eventBus.on(SystemEvents.MESSAGE_RECEIVED, (data: any) => {
+    this.eventBus.on(SystemEvents.MESSAGE_RECEIVED, (data: unknown) => {
+      const messageData = data as { message: { id: string } };
       this.counters.messagesReceived++;
       
-      const startTime = this.messageStartTimes.get(data.message.id);
+      const startTime = this.messageStartTimes.get(messageData.message.id);
       if (startTime) {
         const duration = new Date().getTime() - startTime.getTime();
         this.histograms.messageDurations.push(duration);
-        this.messageStartTimes.delete(data.message.id);
+        this.messageStartTimes.delete(messageData.message.id);
       }
       
       this.recordMetric("message.received", 1);
@@ -408,8 +416,9 @@ export class CoordinationMetricsCollector {
     });
 
     // Circuit breaker events
-    this.eventBus.on("circuitbreaker:state-change", (data: any) => {
-      if (data.to === "open") {
+    this.eventBus.on("circuitbreaker:state-change", (data: unknown) => {
+      const stateData = data as { to: string };
+      if (stateData.to === "open") {
         this.counters.circuitBreakerTrips++;
         this.recordMetric("circuitbreaker.trip", 1);
       }

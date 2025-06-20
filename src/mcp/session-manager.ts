@@ -45,9 +45,9 @@ export class SessionManager implements ISessionManager {
     private config: MCPConfig,
     private logger: ILogger,
   ) {
-    this.authConfig = config.auth || { enabled: false, method: "token" };
-    this.sessionTimeout = config.sessionTimeout || 3600000; // 1 hour default
-    this.maxSessions = config.maxSessions || 100;
+    this.authConfig = config.auth ?? { enabled: false, method: "token" };
+    this.sessionTimeout = config.sessionTimeout ?? 3600000; // 1 hour default
+    this.maxSessions = config.maxSessions ?? 100;
 
     // Start cleanup timer
     this.cleanupInterval = setInterval(() => {

@@ -24,7 +24,7 @@ export class CompletionGenerator {
   }
 
   private detectShell(): string {
-    const shell = process.env.SHELL || "";
+    const shell = process.env.SHELL ?? "";
     
     if (shell.includes("bash")) return "bash";
     if (shell.includes("zsh")) return "zsh";

@@ -82,7 +82,7 @@ export class BackgroundExecutor extends EventEmitter {
 
     // Start background processing
     this.checkTimer = setInterval(() => {
-      this.processQueue();
+      void this.processQueue();
       this.checkRunningTasks();
     }, this.config.checkInterval);
 
@@ -94,7 +94,7 @@ export class BackgroundExecutor extends EventEmitter {
     this.emit("executor:started");
   }
 
-  async stop(): Promise<void> {
+  stop(): void {
     if (!this.isRunning) return;
 
     this.logger.info("Stopping background executor...");
@@ -152,7 +152,7 @@ export class BackgroundExecutor extends EventEmitter {
     this.emit("task:submitted", task);
 
     // Process immediately if possible
-    this.processQueue();
+    void this.processQueue();
 
     return taskId;
   }

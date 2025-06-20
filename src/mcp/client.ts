@@ -18,7 +18,7 @@ export class MCPClient {
 
   constructor(config: MCPClientConfig) {
     this.transport = config.transport;
-    this.timeout = config.timeout || 30000;
+    this.timeout = config.timeout ?? 30000;
   }
 
   async connect(): Promise<void> {

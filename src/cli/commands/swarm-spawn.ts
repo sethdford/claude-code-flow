@@ -30,7 +30,7 @@ export function initializeSwarm(swarmId: string, objective: string): void {
   });
 }
 
-export async function spawnSwarmAgent(swarmId: string, agentType: string, task: string): Promise<string> {
+export function spawnSwarmAgent(swarmId: string, agentType: string, task: string): string {
   const swarm = swarmStates.get(swarmId);
   if (!swarm) {
     throw new Error(`Swarm ${swarmId} not found`);
@@ -42,7 +42,7 @@ export async function spawnSwarmAgent(swarmId: string, agentType: string, task: 
     type: agentType,
     status: "active",
     name: agentType,
-    task: task || "",
+    task: task ?? "",
   });
   
   // In a real implementation, this would spawn actual Claude instances
@@ -52,7 +52,7 @@ export async function spawnSwarmAgent(swarmId: string, agentType: string, task: 
   return agentId;
 }
 
-export async function monitorSwarm(swarmId: string): Promise<void> {
+export function monitorSwarm(swarmId: string): void {
   const swarm = swarmStates.get(swarmId);
   if (!swarm) {
     throw new Error(`Swarm ${swarmId} not found`);

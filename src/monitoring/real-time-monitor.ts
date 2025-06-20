@@ -98,7 +98,7 @@ export interface AlertRule {
 
 export interface AlertAction {
   type: "email" | "webhook" | "slack" | "log" | "auto-scale" | "restart";
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   enabled: boolean;
 }
 
@@ -115,7 +115,7 @@ export interface HealthCheck {
   interval: number;
   timeout: number;
   retries: number;
-  expectedResponse?: any;
+  expectedResponse?: unknown;
   customCheck?: () => Promise<boolean>;
 }
 
@@ -196,51 +196,58 @@ export class RealTimeMonitor extends EventEmitter {
 
   private setupEventHandlers(): void {
     // Agent events
-    this.eventBus.on("agent:metrics-update", (data: any) => {
-      this.updateAgentMetrics(data.agentId, data.metrics);
+    this.eventBus.on("agent:metrics-update", (data: unknown) => {
+      const agentData = data as { agentId: string; metrics: AgentMetrics };
+      this.updateAgentMetrics(agentData.agentId, agentData.metrics);
     });
 
-    this.eventBus.on("agent:status-changed", (data: any) => {
+    this.eventBus.on("agent:status-changed", (data: unknown) => {
+      const statusData = data as { agentId: string; from: string; to: string };
       this.recordMetric("agent.status.change", 1, {
-        agentId: data.agentId,
-        from: data.from,
-        to: data.to,
+        agentId: statusData.agentId,
+        from: statusData.from,
+        to: statusData.to,
       });
     });
 
     // Task events
-    this.eventBus.on("task:started", (data: any) => {
+    this.eventBus.on("task:started", (data: unknown) => {
+      const taskData = data as { taskId: string; agentId: string };
       this.recordMetric("task.started", 1, {
-        taskId: data.taskId,
-        agentId: data.agentId,
+        taskId: taskData.taskId,
+        agentId: taskData.agentId,
       });
     });
 
-    this.eventBus.on("task:completed", (data: any) => {
-      this.recordMetric("task.completed", 1, { taskId: data.taskId });
-      this.recordMetric("task.duration", data.duration, {
-        taskId: data.taskId,
+    this.eventBus.on("task:completed", (data: unknown) => {
+      const taskData = data as { taskId: string; duration: number };
+      this.recordMetric("task.completed", 1, { taskId: taskData.taskId });
+      this.recordMetric("task.duration", taskData.duration, {
+        taskId: taskData.taskId,
       });
     });
 
-    this.eventBus.on("task:failed", (data: any) => {
+    this.eventBus.on("task:failed", (data: unknown) => {
+      const taskData = data as { taskId: string; error: string };
       this.recordMetric("task.failed", 1, {
-        taskId: data.taskId,
-        error: data.error,
+        taskId: taskData.taskId,
+        error: taskData.error,
       });
     });
 
     // System events
-    this.eventBus.on("system:resource-update", (data: any) => {
-      this.updateSystemMetrics(data);
+    this.eventBus.on("system:resource-update", (data: unknown) => {
+      const systemData = data as Partial<SystemMetrics>;
+      this.updateSystemMetrics(systemData);
     });
 
-    this.eventBus.on("swarm:metrics-update", (data: any) => {
-      this.updateSwarmMetrics(data.metrics);
+    this.eventBus.on("swarm:metrics-update", (data: unknown) => {
+      const swarmData = data as { metrics: SwarmMetrics };
+      this.updateSwarmMetrics(swarmData.metrics);
     });
 
     // Error events
-    this.eventBus.on("error", (data: any) => {
+    this.eventBus.on("error", (data: unknown) => {
       this.handleError(data);
     });
   }
@@ -633,11 +640,11 @@ export class RealTimeMonitor extends EventEmitter {
     return dashboardId;
   }
 
-  getDashboardData(dashboardId: string): any {
+  getDashboardData(dashboardId: string): Record<string, unknown> {
     const dashboard = this.dashboards.get(dashboardId);
     if (!dashboard) return null;
 
-    const data: any = {
+    const data: Record<string, unknown> = {
       dashboard,
       panels: [],
     };
@@ -655,8 +662,8 @@ export class RealTimeMonitor extends EventEmitter {
     return data;
   }
 
-  private getPanelData(panel: DashboardPanel, timeRange: { start: Date; end: Date }): any {
-    const data: any = {};
+  private getPanelData(panel: DashboardPanel, timeRange: { start: Date; end: Date }): Record<string, unknown> {
+    const data: Record<string, unknown> = {};
 
     for (const metricName of panel.metrics) {
       const series = this.timeSeries.get(metricName);
@@ -823,7 +830,7 @@ export class RealTimeMonitor extends EventEmitter {
     return totalQuality / agents.length;
   }
 
-  private calculateAggregations(points: MetricPoint[]): any {
+  private calculateAggregations(points: MetricPoint[]): { min: number; max: number; avg: number; sum: number; count: number } {
     if (points.length === 0) {
       return { min: 0, max: 0, avg: 0, sum: 0, count: 0 };
     }
@@ -990,23 +997,23 @@ export class RealTimeMonitor extends EventEmitter {
     return true;
   }
 
-  private async sendEmailAlert(alert: Alert, config: any): Promise<void> {
+  private async sendEmailAlert(alert: Alert, config: Record<string, unknown>): Promise<void> {
     // Placeholder for email alert
     this.logger.info("Email alert sent", { alertId: alert.id });
   }
 
-  private async sendWebhookAlert(alert: Alert, config: any): Promise<void> {
+  private async sendWebhookAlert(alert: Alert, config: Record<string, unknown>): Promise<void> {
     // Placeholder for webhook alert
     this.logger.info("Webhook alert sent", { alertId: alert.id });
   }
 
-  private async triggerAutoScale(alert: Alert, config: any): Promise<void> {
+  private async triggerAutoScale(alert: Alert, config: Record<string, unknown>): Promise<void> {
     // Placeholder for auto-scaling
     this.logger.info("Auto-scale triggered", { alertId: alert.id, action: config.action });
     this.eventBus.emit("autoscale:triggered", { alert, config });
   }
 
-  private async triggerRestart(alert: Alert, config: any): Promise<void> {
+  private async triggerRestart(alert: Alert, config: Record<string, unknown>): Promise<void> {
     // Placeholder for restart action
     this.logger.info("Restart triggered", { alertId: alert.id });
     this.eventBus.emit("restart:triggered", { alert, config });

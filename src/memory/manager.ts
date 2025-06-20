@@ -129,13 +129,13 @@ export class MemoryManager implements IMemoryManager {
     }
 
     const bank: MemoryBank = {
-      id: `bank_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `bank-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       agentId,
       createdAt: new Date(),
       lastAccessed: new Date(),
       entryCount: 0,
     };
-
+    
     this.banks.set(bank.id, bank);
     
     this.logger.info("Memory bank created", { bankId: bank.id, agentId });
@@ -179,7 +179,7 @@ export class MemoryManager implements IMemoryManager {
       this.indexer.addEntry(entry);
 
       // Store in backend (async, don't wait)
-      this.backend.store(entry).catch(error => {
+      this.backend.store(entry).catch((error: unknown) => {
         this.logger.error("Failed to store entry in backend", { 
           id: entry.id,
           error,
@@ -235,14 +235,15 @@ export class MemoryManager implements IMemoryManager {
 
       // Apply additional filters if needed
       if (query.search) {
+        const searchTerm = query.search.toLowerCase();
         results = results.filter(entry => 
-          entry.content.toLowerCase().includes(query.search!.toLowerCase()) ||
-          entry.tags.some(tag => tag.toLowerCase().includes(query.search!.toLowerCase())),
+          entry.content.toLowerCase().includes(searchTerm) ||
+          entry.tags.some(tag => tag.toLowerCase().includes(searchTerm)),
         );
       }
 
       // Apply time range filter
-      if (query.startTime || query.endTime) {
+      if (query.startTime ?? query.endTime) {
         results = results.filter(entry => {
           const timestamp = entry.timestamp.getTime();
           if (query.startTime && timestamp < query.startTime.getTime()) {
@@ -256,8 +257,8 @@ export class MemoryManager implements IMemoryManager {
       }
 
       // Apply pagination
-      const start = query.offset || 0;
-      const limit = query.limit || 100;
+      const start = query.offset ?? 0;
+      const limit = query.limit ?? 100;
       results = results.slice(start, start + limit);
 
       return results;
@@ -400,36 +401,36 @@ export class MemoryManager implements IMemoryManager {
     switch (this.config.backend) {
       case "sqlite":
         return new SQLiteBackend(
-          this.config.sqlitePath || "./claude-flow.db",
+          this.config.sqlitePath ?? "./claude-flow.db",
           this.logger,
         );
       case "markdown":
         return new MarkdownBackend(
-          this.config.markdownDir || "./memory",
+          this.config.markdownDir ?? "./memory",
           this.logger,
         );
       case "hybrid":
         // Use SQLite for structured data and Markdown for human-readable backup
         return new HybridBackend(
           new SQLiteBackend(
-            this.config.sqlitePath || "./claude-flow.db",
+            this.config.sqlitePath ?? "./claude-flow.db",
             this.logger,
           ),
           new MarkdownBackend(
-            this.config.markdownDir || "./memory",
+            this.config.markdownDir ?? "./memory",
             this.logger,
           ),
           this.logger,
         );
       default:
-        throw new MemoryError(`Unknown memory backend: ${this.config.backend}`);
+        throw new MemoryError(`Unknown memory backend: ${String(this.config.backend)}`);
     }
   }
 
   private startSyncInterval(): void {
-    this.syncInterval = setInterval(async () => {
-      await this.syncCache();
-    }, this.config.syncInterval) as any;
+    this.syncInterval = setInterval(() => {
+      void this.syncCache();
+    }, this.config.syncInterval) as unknown as number;
   }
 
   private async syncCache(): Promise<void> {

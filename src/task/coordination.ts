@@ -370,7 +370,10 @@ export class TaskCoordinator extends EventEmitter {
       if (!groupedOps.has(op.type)) {
         groupedOps.set(op.type, []);
       }
-      groupedOps.get(op.type)!.push(op);
+      const opGroup = groupedOps.get(op.type);
+      if (opGroup) {
+        opGroup.push(op);
+      }
     }
 
     // Store batch coordination info

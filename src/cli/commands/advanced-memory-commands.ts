@@ -10,6 +10,28 @@ import chalk from "chalk";
 import { AdvancedMemoryManager, QueryOptions, ExportOptions, ImportOptions, CleanupOptions } from "../../memory/advanced-memory-manager.js";
 import { Logger } from "../../core/logger.js";
 
+// Command option interfaces
+export interface CommandOptions {
+  namespace?: string;
+  type?: string;
+  tags?: string;
+  owner?: string;
+  keyPattern?: string;
+  limit?: number;
+  offset?: number;
+  format?: string;
+  debug?: boolean;
+  filterQuery?: string;
+  [key: string]: unknown;
+}
+
+export interface StatsData {
+  totalEntries?: number;
+  namespaceStats?: Record<string, unknown>;
+  sizeBytes?: number;
+  [key: string]: unknown;
+}
+
 // Initialize logger
 const logger = Logger.getInstance();
 
@@ -129,15 +151,16 @@ export function createAdvancedMemoryCommand(): Command {
         const startTime = Date.now();
 
         // Build query options
+        const opts = options as CommandOptions;
         const queryOptions: QueryOptions = {
           fullTextSearch: search,
-          namespace: options.namespace,
-          type: options.type,
-          tags: options.tags ? options.tags.split(",").map((t: string) => t.trim()) : undefined,
-          owner: options.owner,
-          keyPattern: options.keyPattern,
-          limit: options.limit,
-          offset: options.offset,
+          namespace: opts.namespace,
+          type: opts.type,
+          tags: typeof opts.tags === "string" ? opts.tags.split(",").map((t: string) => t.trim()) : undefined,
+          owner: opts.owner,
+          keyPattern: opts.keyPattern,
+          limit: opts.limit,
+          offset: opts.offset,
         };
 
         const entries = await manager.query(queryOptions);
@@ -198,7 +221,7 @@ export function createAdvancedMemoryCommand(): Command {
 
         // Show pagination info
         if (total > entries.length) {
-          const showing = (options.offset || 0) + entries.length;
+          const showing = (opts.offset ?? 0) + entries.length;
           console.log(chalk.gray(`Showing ${showing} of ${total} entries`));
         }
 
@@ -243,9 +266,9 @@ export function createAdvancedMemoryCommand(): Command {
 
         // Parse filter query if provided
         let _filtering: QueryOptions | undefined;
-        if (options.filterQuery) {
+        if (typeof options.filterQuery === "string") {
           try {
-            _filtering = JSON.parse(options.filterQuery);
+            _filtering = JSON.parse(options.filterQuery) as QueryOptions;
           } catch (error) {
             printError("Invalid filter query JSON format");
             return;
@@ -354,11 +377,11 @@ export function createAdvancedMemoryCommand(): Command {
           console.log(chalk.red(`⚠️  Conflicts: ${result.conflicts.length}`));
           if (result.conflicts.length <= 10) {
             result.conflicts.forEach(conflict => {
-              console.log(chalk.red(`   • ${conflict}`));
+              console.log(chalk.red(`   • ${conflict.reason}: ${conflict.entry.key || "unknown"}`));
             });
           } else {
             result.conflicts.slice(0, 10).forEach(conflict => {
-              console.log(chalk.red(`   • ${conflict}`));
+              console.log(chalk.red(`   • ${conflict.reason}: ${conflict.entry.key || "unknown"}`));
             });
             console.log(chalk.red(`   ... and ${result.conflicts.length - 10} more`));
           }
@@ -385,15 +408,19 @@ export function createAdvancedMemoryCommand(): Command {
         const startTime = Date.now();
 
         // Get stats - handle both simple and advanced stats formats
-        const rawStats = await (manager as any).getStats?.() || await (manager as any).getStatistics?.() || {};
+        const managerWithStats = manager as unknown as {
+          getStats?: () => Promise<StatsData>;
+          getStatistics?: () => StatsData;
+        };
+        const rawStats = await managerWithStats.getStats?.() ?? managerWithStats.getStatistics?.() ?? {};
         
         // Transform simple stats to expected format if needed
         const stats = {
           overview: {
-            totalEntries: rawStats.totalEntries || 0,
+            totalEntries: rawStats.totalEntries ?? 0,
           },
           distribution: {
-            byNamespace: rawStats.namespaceStats || {},
+            byNamespace: rawStats.namespaceStats ?? {},
             byType: {},
             byOwner: {},
           },
@@ -413,8 +440,8 @@ export function createAdvancedMemoryCommand(): Command {
           health: {
             status: "healthy" as const,
             fragmentation: 0,
-            memoryUsage: rawStats.sizeBytes || 0,
-            diskUsage: rawStats.sizeBytes || 0,
+            memoryUsage: rawStats.sizeBytes ?? 0,
+            diskUsage: rawStats.sizeBytes ?? 0,
             errors: 0,
             warnings: 0,
           },
@@ -467,7 +494,7 @@ export function createAdvancedMemoryCommand(): Command {
         if (Object.keys(stats.distribution.byOwner).length > 0) {
           console.log("   By Owner:");
           for (const [owner, count] of Object.entries(stats.distribution.byOwner)) {
-            console.log(`     ${owner}: ${count} entries`);
+            console.log(`     ${owner}: ${String(count)} entries`);
           }
         }
         console.log();
@@ -497,9 +524,9 @@ export function createAdvancedMemoryCommand(): Command {
         console.log(chalk.yellow("🏥 Health:"));
         const healthColor = stats.health.status === "healthy" ? chalk.green : chalk.red;
         console.log(`   Status: ${healthColor(stats.health.status)}`);
-        console.log(`   Fragmentation: ${(stats.health.fragmentation * 100).toFixed(1)}%`);
-        console.log(`   Memory Usage: ${formatBytes(stats.health.memoryUsage)}`);
-        console.log(`   Disk Usage: ${formatBytes(stats.health.diskUsage)}`);
+        console.log(`   Fragmentation: ${(Number(stats.health.fragmentation) * 100).toFixed(1)}%`);
+        console.log(`   Memory Usage: ${formatBytes(Number(stats.health.memoryUsage) || 0)}`);
+        console.log(`   Disk Usage: ${formatBytes(Number(stats.health.diskUsage) || 0)}`);
         console.log(`   Errors: ${stats.health.errors}`);
         console.log(`   Warnings: ${stats.health.warnings}`);
         console.log();
@@ -507,8 +534,8 @@ export function createAdvancedMemoryCommand(): Command {
         // Optimization
         if (stats.optimization.suggestions.length > 0) {
           console.log(chalk.yellow("💡 Optimization Suggestions:"));
-          stats.optimization.suggestions.forEach((suggestion: any) => {
-            console.log(`   • ${suggestion}`);
+          stats.optimization.suggestions.forEach((suggestion: unknown) => {
+            console.log(`   • ${String(suggestion)}`);
           });
           console.log();
 
@@ -565,10 +592,20 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Parse retention policies
-        let _retentionPolicies;
-        if (options.retentionPolicies) {
+        const opts = options as CommandOptions & { 
+          retentionPolicies?: string;
+          dryRun?: boolean;
+          removeOlderThan?: number;
+          removeUnaccessed?: number;
+          removeDuplicates?: boolean;
+          archiveOld?: boolean;
+          archiveOlderThan?: number;
+          aggressive?: boolean;
+        };
+        let _retentionPolicies: Record<string, unknown> | undefined;
+        if (typeof opts.retentionPolicies === "string") {
           try {
-            _retentionPolicies = JSON.parse(options.retentionPolicies);
+            _retentionPolicies = JSON.parse(opts.retentionPolicies) as Record<string, unknown>;
           } catch (error) {
             printError("Invalid retention policies JSON format");
             return;
@@ -576,18 +613,18 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Apply aggressive settings if requested
-        if (options.aggressive) {
-          options.removeOlderThan = options.removeOlderThan || 30;
-          options.removeUnaccessed = options.removeUnaccessed || 7;
-          options.removeDuplicates = true;
-          options.archiveOld = true;
-          options.archiveOlderThan = options.archiveOlderThan || 90;
+        if (opts.aggressive) {
+          opts.removeOlderThan = opts.removeOlderThan ?? 30;
+          opts.removeUnaccessed = opts.removeUnaccessed ?? 7;
+          opts.removeDuplicates = true;
+          opts.archiveOld = true;
+          opts.archiveOlderThan = opts.archiveOlderThan ?? 90;
         }
 
         // Build cleanup options
         const cleanupOptions: CleanupOptions = {
-          dry: options.dryRun,
-          maxAge: options.removeOlderThan ? options.removeOlderThan * 24 * 60 * 60 * 1000 : undefined,
+          dry: opts.dryRun,
+          maxAge: opts.removeOlderThan ? opts.removeOlderThan * 24 * 60 * 60 * 1000 : undefined,
           namespace: undefined,
         };
 
@@ -606,7 +643,7 @@ export function createAdvancedMemoryCommand(): Command {
         if (result.actions.length > 0) {
           console.log(chalk.cyan("\n📋 Actions Performed:"));
           result.actions.forEach(action => {
-            console.log(`   • ${action}`);
+            console.log(`   • ${action.type}: ${action.id || "unknown"}${action.reason ? ` (${action.reason})` : ""}${action.message ? ` - ${action.message}` : ""}`);
           });
         }
 
@@ -651,10 +688,18 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Parse metadata if provided
-        let _metadata;
-        if (options.metadata) {
+        const opts = options as CommandOptions & {
+          namespace?: string;
+          type?: string;
+          owner?: string;
+          tags?: string;
+          ttl?: number;
+          metadata?: string;
+        };
+        let _metadata: Record<string, unknown> | undefined;
+        if (typeof opts.metadata === "string") {
           try {
-            _metadata = JSON.parse(options.metadata);
+            _metadata = JSON.parse(opts.metadata) as Record<string, unknown>;
           } catch (error) {
             printError("Invalid metadata JSON format");
             return;
@@ -662,16 +707,16 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         const entryId = await manager.store(key, parsedValue, {
-          namespace: options.namespace,
-          type: options.type,
-          owner: options.owner,
+          namespace: opts.namespace,
+          type: opts.type,
+          owner: opts.owner,
         });
 
         printSuccess("Entry stored successfully");
         console.log(`📝 Entry ID: ${entryId}`);
         console.log(`🔑 Key: ${key}`);
-        console.log(`📦 Namespace: ${options.namespace}`);
-        console.log(`🏷️  Type: ${options.type || "auto-detected"}`);
+        console.log(`📦 Namespace: ${opts.namespace}`);
+        console.log(`🏷️  Type: ${opts.type ?? "auto-detected"}`);
         
         if (options.tags) {
           console.log(`🏷️  Tags: [${options.tags}]`);
@@ -895,9 +940,9 @@ export function createAdvancedMemoryCommand(): Command {
       try {
         const manager = await ensureMemoryManager();
 
-        if (options.set) {
+        if (typeof options.set === "string") {
           try {
-            const updates = JSON.parse(options.set);
+            const updates = JSON.parse(options.set) as Record<string, unknown>;
             await manager.updateConfiguration(updates);
             printSuccess("Configuration updated");
           } catch (error) {

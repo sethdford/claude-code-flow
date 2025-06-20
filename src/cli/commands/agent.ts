@@ -822,14 +822,14 @@ function getHealthDisplay(health: number): string {
   if (health < 0.3) color = chalk.red;
   else if (health < 0.7) color = chalk.yellow;
   
-  return `${color}${percentage}%`;
+  return `${color(`${percentage}%`)}`;
 }
 
 function getHealthTrendDisplay(trend: string): string {
   switch (trend) {
-    case "improving": return `${chalk.green}↗ Improving`;
-    case "degrading": return `${chalk.red}↘ Degrading`;
-    default: return `${chalk.blue}→ Stable`;
+    case "improving": return chalk.green("↗ Improving");
+    case "degrading": return chalk.red("↘ Degrading");
+    default: return chalk.blue("→ Stable");
   }
 }
 

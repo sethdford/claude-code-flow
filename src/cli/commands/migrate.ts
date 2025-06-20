@@ -11,6 +11,31 @@ import { logger } from "../../migration/logger";
 import * as path from "path";
 import chalk from "chalk";
 
+interface MigrateOptions {
+  path: string;
+  strategy: string;
+  backup: string;
+  force?: boolean;
+  dryRun?: boolean;
+  preserveCustom?: boolean;
+  skipValidation?: boolean;
+  analyzeOnly?: boolean;
+  verbose?: boolean;
+}
+
+interface AnalyzeOptions {
+  detailed?: boolean;
+  output?: string;
+  verbose?: boolean;
+}
+
+interface RollbackOptions {
+  backup: string;
+  timestamp?: string;
+  force?: boolean;
+  list?: boolean;
+}
+
 export function createMigrateCommand(): Command {
   const command = new Command("migrate");
   
@@ -94,7 +119,7 @@ export function createMigrateCommand(): Command {
   return command;
 }
 
-async function analyzeProject(projectPath: string, options: any): Promise<void> {
+async function analyzeProject(projectPath: string, options: AnalyzeOptions): Promise<void> {
   logger.info(`Analyzing project at ${projectPath}...`);
   
   const analyzer = new MigrationAnalyzer();
@@ -108,7 +133,7 @@ async function analyzeProject(projectPath: string, options: any): Promise<void> 
   analyzer.printAnalysis(analysis, options.detailed || options.verbose);
 }
 
-async function runMigration(projectPath: string, options: any): Promise<void> {
+async function runMigration(projectPath: string, options: MigrateOptions): Promise<void> {
   const runner = new MigrationRunner({
     projectPath,
     strategy: options.strategy as MigrationStrategy,

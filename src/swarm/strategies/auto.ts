@@ -12,7 +12,7 @@ export class AutoStrategy implements IStrategy {
   private logger: Logger;
   private metrics = createMetrics();
 
-  constructor(config: any) {
+  constructor(_config: any) {
     this.logger = new Logger(
       { level: "info", format: "text", destination: "console" },
       { component: "AutoStrategy" },

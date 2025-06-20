@@ -121,7 +121,7 @@ interface TaskDefinition {
   description: string;
   assignTo?: string;
   depends?: string[];
-  input?: Record<string, any>;
+  input?: Record<string, unknown>;
   timeout?: number;
   retries?: number;
   condition?: string;
@@ -156,10 +156,18 @@ interface TaskExecution {
   completedAt?: Date;
   assignedAgent?: string;
   error?: string;
-  output?: any;
+  output?: unknown;
 }
 
-async function runWorkflow(workflowFile: string, options: any): Promise<void> {
+interface RunWorkflowOptions {
+  dryRun?: boolean;
+  variables?: string;
+  watch?: boolean;
+  parallel?: boolean;
+  failFast?: boolean;
+}
+
+async function runWorkflow(workflowFile: string, options: RunWorkflowOptions): Promise<void> {
   try {
     // Load and validate workflow
     const workflow = await loadWorkflow(workflowFile);
@@ -201,7 +209,11 @@ async function runWorkflow(workflowFile: string, options: any): Promise<void> {
   }
 }
 
-async function validateWorkflow(workflowFile: string, options: any): Promise<void> {
+interface ValidateWorkflowOptions {
+  strict?: boolean;
+}
+
+async function validateWorkflow(workflowFile: string, options: ValidateWorkflowOptions): Promise<void> {
   try {
     const workflow = await loadWorkflow(workflowFile);
     await validateWorkflowDefinition(workflow, options.strict);
@@ -221,7 +233,12 @@ async function validateWorkflow(workflowFile: string, options: any): Promise<voi
   }
 }
 
-async function listWorkflows(options: any): Promise<void> {
+interface ListWorkflowOptions {
+  all?: boolean;
+  format?: string;
+}
+
+async function listWorkflows(options: ListWorkflowOptions): Promise<void> {
   try {
     // Mock workflow list - in production, this would query the orchestrator
     const workflows = await getRunningWorkflows(options.all);
@@ -272,7 +289,11 @@ async function listWorkflows(options: any): Promise<void> {
   }
 }
 
-async function showWorkflowStatus(workflowId: string, options: any): Promise<void> {
+interface ShowWorkflowStatusOptions {
+  watch?: boolean;
+}
+
+async function showWorkflowStatus(workflowId: string, options: ShowWorkflowStatusOptions): Promise<void> {
   try {
     if (options.watch) {
       await watchWorkflowStatus(workflowId);
@@ -285,7 +306,11 @@ async function showWorkflowStatus(workflowId: string, options: any): Promise<voi
   }
 }
 
-async function stopWorkflow(workflowId: string, options: any): Promise<void> {
+interface StopWorkflowOptions {
+  force?: boolean;
+}
+
+async function stopWorkflow(workflowId: string, options: StopWorkflowOptions): Promise<void> {
   try {
     const execution = await getWorkflowExecution(workflowId);
     
@@ -319,7 +344,12 @@ async function stopWorkflow(workflowId: string, options: any): Promise<void> {
   }
 }
 
-async function generateTemplate(templateType: string, options: any): Promise<void> {
+interface GenerateTemplateOptions {
+  output?: string;
+  format?: string;
+}
+
+async function generateTemplate(templateType: string, options: GenerateTemplateOptions): Promise<void> {
   const templates: Record<string, WorkflowDefinition> = {
     "research": {
       name: "Research Workflow",
@@ -554,7 +584,7 @@ async function createExecution(workflow: WorkflowDefinition): Promise<WorkflowEx
   };
 }
 
-async function executeWorkflow(execution: WorkflowExecution, workflow: WorkflowDefinition, options: any): Promise<void> {
+async function executeWorkflow(execution: WorkflowExecution, workflow: WorkflowDefinition, options: RunWorkflowOptions): Promise<void> {
   execution.status = "running";
   
   console.log(colors.blue("Executing workflow..."));
@@ -617,7 +647,7 @@ async function executeWorkflow(execution: WorkflowExecution, workflow: WorkflowD
   }
 }
 
-async function executeWorkflowWithWatch(execution: WorkflowExecution, workflow: WorkflowDefinition, options: any): Promise<void> {
+async function executeWorkflowWithWatch(execution: WorkflowExecution, workflow: WorkflowDefinition, options: RunWorkflowOptions): Promise<void> {
   console.log(colors.yellow("Starting workflow execution in watch mode..."));
   console.log(colors.gray("Press Ctrl+C to stop\n"));
 

@@ -6,7 +6,7 @@ import { Command } from "../cliffy-compat.js";
 import { logger } from "../../core/logger.js";
 import { promises as fs } from "node:fs";
 import { platform } from "node:os";
-import { join, dirname } from "node:path";
+import { join } from "node:path";
 import { existsSync } from "node:fs";
 
 interface Session {

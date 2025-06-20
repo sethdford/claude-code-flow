@@ -59,7 +59,7 @@ export class JsonPersistenceManager {
     try {
       await access(this.dataPath);
       const content = await readFile(this.dataPath, "utf-8");
-      this.data = JSON.parse(content);
+      this.data = JSON.parse(content) as PersistenceData;
     } catch (error) {
       // File doesn't exist or can't be read, keep default empty data
       console.error("Failed to load persistence data:", error);

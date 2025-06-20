@@ -91,7 +91,7 @@ export const configCommand = new Command()
       }
 
       // Get user info for change tracking
-      const user = process.env.USER || process.env.USERNAME || "unknown";
+      const user = process.env.USER ?? process.env.USERNAME ?? "unknown";
       const { reason } = options;
         
       configManager.set(path, parsedValue, { user, reason, source: "cli" });

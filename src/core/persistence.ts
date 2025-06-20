@@ -6,6 +6,37 @@ import Database from "better-sqlite3";
 import { join } from "path";
 import { mkdir } from "fs/promises";
 
+interface AgentRow {
+  id: string;
+  type: string;
+  name: string;
+  status: string;
+  capabilities: string;
+  system_prompt: string;
+  max_concurrent_tasks: number;
+  priority: number;
+  created_at: number;
+}
+
+interface TaskRow {
+  id: string;
+  type: string;
+  description: string;
+  status: string;
+  priority: number;
+  dependencies: string;
+  metadata: string;
+  assigned_agent?: string;
+  progress: number;
+  error?: string;
+  created_at: number;
+  completed_at?: number;
+}
+
+interface CountRow {
+  count: number;
+}
+
 export interface PersistedAgent {
   id: string;
   type: string;
@@ -100,7 +131,7 @@ export class PersistenceManager {
   }
 
   // Agent operations
-  async saveAgent(agent: PersistedAgent): Promise<void> {
+  saveAgent(agent: PersistedAgent): void {
     const stmt = this.db.prepare(
       `INSERT OR REPLACE INTO agents 
        (id, type, name, status, capabilities, system_prompt, max_concurrent_tasks, priority, created_at)
@@ -119,9 +150,9 @@ export class PersistenceManager {
     );
   }
 
-  async getAgent(id: string): Promise<PersistedAgent | null> {
+  getAgent(id: string): PersistedAgent | null {
     const stmt = this.db.prepare("SELECT * FROM agents WHERE id = ?");
-    const row = stmt.get(id) as any;
+    const row = stmt.get(id) as AgentRow | undefined;
     
     if (!row) return null;
     
@@ -140,7 +171,7 @@ export class PersistenceManager {
 
   async getActiveAgents(): Promise<PersistedAgent[]> {
     const stmt = this.db.prepare("SELECT * FROM agents WHERE status IN ('active', 'idle') ORDER BY created_at DESC");
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as AgentRow[];
     
     return rows.map(row => ({
       id: row.id,
@@ -185,7 +216,7 @@ export class PersistenceManager {
 
   async getTask(id: string): Promise<PersistedTask | null> {
     const stmt = this.db.prepare("SELECT * FROM tasks WHERE id = ?");
-    const row = stmt.get(id) as any;
+    const row = stmt.get(id) as TaskRow | undefined;
     
     if (!row) return null;
     
@@ -207,7 +238,7 @@ export class PersistenceManager {
 
   async getActiveTasks(): Promise<PersistedTask[]> {
     const stmt = this.db.prepare("SELECT * FROM tasks WHERE status IN ('pending', 'in_progress', 'assigned') ORDER BY priority DESC, created_at ASC");
-    const rows = stmt.all() as any[];
+    const rows = stmt.all() as TaskRow[];
     
     return rows.map(row => ({
       id: row.id,
@@ -248,11 +279,11 @@ export class PersistenceManager {
     pendingTasks: number;
     completedTasks: number;
   }> {
-    const totalAgents = this.db.prepare("SELECT COUNT(*) as count FROM agents").get() as any;
-    const activeAgents = this.db.prepare("SELECT COUNT(*) as count FROM agents WHERE status IN ('active', 'idle')").get() as any;
-    const totalTasks = this.db.prepare("SELECT COUNT(*) as count FROM tasks").get() as any;
-    const pendingTasks = this.db.prepare("SELECT COUNT(*) as count FROM tasks WHERE status IN ('pending', 'in_progress', 'assigned')").get() as any;
-    const completedTasks = this.db.prepare("SELECT COUNT(*) as count FROM tasks WHERE status = 'completed'").get() as any;
+    const totalAgents = this.db.prepare("SELECT COUNT(*) as count FROM agents").get() as CountRow;
+    const activeAgents = this.db.prepare("SELECT COUNT(*) as count FROM agents WHERE status IN ('active', 'idle')").get() as CountRow;
+    const totalTasks = this.db.prepare("SELECT COUNT(*) as count FROM tasks").get() as CountRow;
+    const pendingTasks = this.db.prepare("SELECT COUNT(*) as count FROM tasks WHERE status IN ('pending', 'in_progress', 'assigned')").get() as CountRow;
+    const completedTasks = this.db.prepare("SELECT COUNT(*) as count FROM tasks WHERE status = 'completed'").get() as CountRow;
     
     return {
       totalAgents: totalAgents.count,

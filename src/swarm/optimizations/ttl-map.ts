@@ -33,8 +33,8 @@ export class TTLMap<K, V> {
   };
   
   constructor(options: TTLMapOptions = {}) {
-    this.defaultTTL = options.defaultTTL || 3600000; // 1 hour default
-    this.cleanupInterval = options.cleanupInterval || 60000; // 1 minute default
+    this.defaultTTL = options.defaultTTL ?? 3600000; // 1 hour default
+    this.cleanupInterval = options.cleanupInterval ?? 60000; // 1 minute default
     this.maxSize = options.maxSize;
     this.onExpire = options.onExpire;
     
@@ -43,7 +43,7 @@ export class TTLMap<K, V> {
   
   set(key: K, value: V, ttl?: number): void {
     const now = Date.now();
-    const expiry = now + (ttl || this.defaultTTL);
+    const expiry = now + (ttl ?? this.defaultTTL);
     
     // Check if we need to evict items due to size limit
     if (this.maxSize && this.items.size >= this.maxSize && !this.items.has(key)) {
@@ -128,7 +128,7 @@ export class TTLMap<K, V> {
       return false;
     }
     
-    item.expiry = Date.now() + (ttl || this.defaultTTL);
+    item.expiry = Date.now() + (ttl ?? this.defaultTTL);
     item.lastAccessedAt = Date.now();
     
     return true;
@@ -267,7 +267,7 @@ export class TTLMap<K, V> {
     return {
       ...this.stats,
       size: this.items.size,
-      hitRate: this.stats.hits / (this.stats.hits + this.stats.misses) || 0,
+      hitRate: this.stats.hits / (this.stats.hits + this.stats.misses) ?? 0,
     };
   }
   

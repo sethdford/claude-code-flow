@@ -1507,7 +1507,7 @@ export class AuditManager extends EventEmitter {
       entry.eventType,
       entry.category,
       entry.severity,
-      entry.userId || "",
+      entry.userId ?? "",
       entry.action,
       entry.outcome,
       `${entry.resource.type}:${entry.resource.id}`,

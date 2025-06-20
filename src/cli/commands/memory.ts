@@ -133,7 +133,7 @@ export const memoryCommand = new Command()
     .description('Store information in memory')
     .arguments('<key:string> <value:string>')
     .option('-n, --namespace <namespace>', 'Target namespace', 'default')
-    .action(async (options: any, key: string, value: string) => {
+    .action(async (options: Record<string, unknown>, key: string, value: string) => {
       try {
         const memory = new SimpleMemoryManager();
         await memory.store(key, value, options.namespace);
@@ -152,7 +152,7 @@ export const memoryCommand = new Command()
     .arguments('<search>')
     .option('-n, --namespace <namespace>', 'Filter by namespace')
     .option('-l, --limit <limit>', 'Limit results', '10')
-    .action(async (options: any, search: string) => {
+    .action(async (options: Record<string, unknown>, search: string) => {
       try {
         const memory = new SimpleMemoryManager();
         const results = await memory.query(search, options.namespace);
@@ -184,7 +184,7 @@ export const memoryCommand = new Command()
   .command('export', new Command()
     .description('Export memory to file')
     .arguments('<file>')
-    .action(async (options: any, file: string) => {
+    .action(async (options: Record<string, unknown>, file: string) => {
       try {
         const memory = new SimpleMemoryManager();
         await memory.exportData(file);
@@ -202,7 +202,7 @@ export const memoryCommand = new Command()
   .command('import', new Command()
     .description('Import memory from file')
     .arguments('<file>')
-    .action(async (options: any, file: string) => {
+    .action(async (options: Record<string, unknown>, file: string) => {
       try {
         const memory = new SimpleMemoryManager();
         await memory.importData(file);
@@ -244,7 +244,7 @@ export const memoryCommand = new Command()
   .command('cleanup', new Command()
     .description('Clean up old entries')
     .option('-d, --days <days>', 'Entries older than n days', '30')
-    .action(async (options: any) => {
+    .action(async (options: Record<string, unknown>) => {
       try {
         const memory = new SimpleMemoryManager();
         const removed = await memory.cleanup(options.days);

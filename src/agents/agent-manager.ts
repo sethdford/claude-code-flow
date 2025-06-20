@@ -17,6 +17,41 @@ import {
   AgentMetrics,
   AgentError,
 } from "../swarm/types.js";
+
+// Event data interfaces for type safety
+export interface HeartbeatEventData {
+  agentId: string;
+  timestamp: Date;
+  metrics?: AgentMetrics;
+}
+
+export interface AgentErrorEventData {
+  agentId: string;
+  error: AgentError;
+}
+
+export interface TaskAssignedEventData {
+  agentId: string;
+  taskId?: string;
+  type?: string;
+}
+
+export interface TaskCompletedEventData {
+  agentId: string;
+  taskId?: string;
+  metrics: AgentMetrics;
+  result?: unknown;
+}
+
+export interface ResourceUsageEventData {
+  agentId: string;
+  usage: {
+    cpu: number;
+    memory: number;
+    disk: number;
+  };
+  timestamp?: Date;
+}
 import { DistributedMemorySystem } from "../memory/distributed-memory.js";
 import { generateId } from "../utils/helpers.js";
 
@@ -390,7 +425,7 @@ export class AgentManager extends EventEmitter {
     });
   }
 
-  async initialize(): Promise<void> {
+  initialize(): void {
     this.logger.info("Initializing agent manager", {
       maxAgents: this.config.maxAgents,
       templates: this.templates.size,
@@ -482,7 +517,7 @@ export class AgentManager extends EventEmitter {
 
     const agent: AgentState = {
       id: { id: agentId, swarmId, type: template.type, instance: 1 },
-      name: overrides.name || `${template.name}-${agentId.slice(-8)}`,
+      name: overrides.name ?? `${template.name}-${agentId.slice(-8)}`,
       type: template.type,
       status: "initializing",
       capabilities: { ...template.capabilities },
@@ -536,7 +571,7 @@ export class AgentManager extends EventEmitter {
       this.updateAgentStatus(agentId, "initializing");
 
       // Spawn agent process
-      const process = await this.spawnAgentProcess(agent);
+      const process = this.spawnAgentProcess(agent);
       this.processes.set(agentId, process);
 
       // Wait for agent to signal ready
@@ -677,9 +712,9 @@ export class AgentManager extends EventEmitter {
       availableAgents: [],
       busyAgents: [],
       template,
-      autoScale: config.autoScale || false,
-      scaleUpThreshold: config.scaleUpThreshold || 0.8,
-      scaleDownThreshold: config.scaleDownThreshold || 0.3,
+      autoScale: config.autoScale ?? false,
+      scaleUpThreshold: config.scaleUpThreshold ?? 0.8,
+      scaleDownThreshold: config.scaleDownThreshold ?? 0.3,
     };
 
     this.pools.set(poolId, pool);
@@ -746,7 +781,7 @@ export class AgentManager extends EventEmitter {
 
   private startHealthMonitoring(): void {
     this.healthInterval = setInterval(() => {
-      this.performHealthChecks();
+      void this.performHealthChecks();
     }, this.config.healthCheckInterval);
 
     this.logger.info("Started health monitoring", { 
@@ -781,7 +816,7 @@ export class AgentManager extends EventEmitter {
 
     try {
       // Check responsiveness
-      const responsiveness = await this.checkResponsiveness(agentId);
+      const responsiveness = this.checkResponsiveness(agentId);
       health.components.responsiveness = responsiveness;
 
       // Check performance
@@ -820,14 +855,15 @@ export class AgentManager extends EventEmitter {
     }
   }
 
-  private async checkResponsiveness(agentId: string): Promise<number> {
+  private checkResponsiveness(agentId: string): number {
     // Send ping and measure response time
     const startTime = Date.now();
     
     try {
       // This would send an actual ping to the agent
       // For now, simulate based on last heartbeat
-      const agent = this.agents.get(agentId)!;
+      const agent = this.agents.get(agentId);
+      if (!agent) return 0;
       const timeSinceHeartbeat = Date.now() - agent.lastHeartbeat.getTime();
       
       if (timeSinceHeartbeat > this.config.heartbeatInterval * 3) {
@@ -844,7 +880,7 @@ export class AgentManager extends EventEmitter {
   }
 
   private calculatePerformanceScore(agentId: string): number {
-    const history = this.performanceHistory.get(agentId) || [];
+    const history = this.performanceHistory.get(agentId) ?? [];
     if (history.length === 0) return 1.0;
 
     // Calculate average task completion time vs expected
@@ -857,7 +893,8 @@ export class AgentManager extends EventEmitter {
   }
 
   private calculateReliabilityScore(agentId: string): number {
-    const agent = this.agents.get(agentId)!;
+    const agent = this.agents.get(agentId);
+    if (!agent) return 1.0;
     const totalTasks = agent.metrics.tasksCompleted + agent.metrics.tasksFailed;
     
     if (totalTasks === 0) return 1.0;
@@ -950,62 +987,55 @@ export class AgentManager extends EventEmitter {
 
   // === TYPE GUARDS ===
 
-  private isHeartbeatData(data: unknown): data is { agentId: string; timestamp: Date; metrics?: AgentMetrics } {
+  private isHeartbeatData(data: unknown): data is HeartbeatEventData {
+    if (typeof data !== "object" || data === null) return false;
+    const candidate = data as Record<string, unknown>;
     return (
-      typeof data === "object" &&
-      data !== null &&
-      "agentId" in data &&
-      typeof (data as any).agentId === "string" &&
-      "timestamp" in data &&
-      (data as any).timestamp instanceof Date
+      typeof candidate.agentId === "string" &&
+      candidate.timestamp instanceof Date &&
+      (candidate.metrics === undefined || typeof candidate.metrics === "object")
     );
   }
 
-  private isAgentErrorData(data: unknown): data is { agentId: string; error: AgentError } {
+  private isAgentErrorData(data: unknown): data is AgentErrorEventData {
+    if (typeof data !== "object" || data === null) return false;
+    const candidate = data as Record<string, unknown>;
     return (
-      typeof data === "object" &&
-      data !== null &&
-      "agentId" in data &&
-      typeof (data as any).agentId === "string" &&
-      "error" in data &&
-      typeof (data as any).error === "object"
+      typeof candidate.agentId === "string" &&
+      typeof candidate.error === "object" &&
+      candidate.error !== null
     );
   }
 
-  private isTaskAssignedData(data: unknown): data is { agentId: string } {
+  private isTaskAssignedData(data: unknown): data is TaskAssignedEventData {
+    if (typeof data !== "object" || data === null) return false;
+    const candidate = data as Record<string, unknown>;
+    return typeof candidate.agentId === "string";
+  }
+
+  private isTaskCompletedData(data: unknown): data is TaskCompletedEventData {
+    if (typeof data !== "object" || data === null) return false;
+    const candidate = data as Record<string, unknown>;
     return (
-      typeof data === "object" &&
-      data !== null &&
-      "agentId" in data &&
-      typeof (data as any).agentId === "string"
+      typeof candidate.agentId === "string" &&
+      typeof candidate.metrics === "object" &&
+      candidate.metrics !== null
     );
   }
 
-  private isTaskCompletedData(data: unknown): data is { agentId: string; metrics: AgentMetrics } {
+  private isResourceUsageData(data: unknown): data is ResourceUsageEventData {
+    if (typeof data !== "object" || data === null) return false;
+    const candidate = data as Record<string, unknown>;
     return (
-      typeof data === "object" &&
-      data !== null &&
-      "agentId" in data &&
-      typeof (data as any).agentId === "string" &&
-      "metrics" in data &&
-      typeof (data as any).metrics === "object"
-    );
-  }
-
-  private isResourceUsageData(data: unknown): data is { agentId: string; usage: { cpu: number; memory: number; disk: number } } {
-    return (
-      typeof data === "object" &&
-      data !== null &&
-      "agentId" in data &&
-      typeof (data as any).agentId === "string" &&
-      "usage" in data &&
-      typeof (data as any).usage === "object"
+      typeof candidate.agentId === "string" &&
+      typeof candidate.usage === "object" &&
+      candidate.usage !== null
     );
   }
 
   // === UTILITY METHODS ===
 
-  private async spawnAgentProcess(agent: AgentState): Promise<ChildProcess> {
+  private spawnAgentProcess(agent: AgentState): ChildProcess {
     const processEnv: NodeJS.ProcessEnv = {
       ...process.env,
       AGENT_ID: agent.id.id,
@@ -1018,7 +1048,7 @@ export class AgentManager extends EventEmitter {
     const args = [
       "run",
       "--allow-all",
-      agent.environment.availableTools[0] || "./agents/generic-agent.ts",
+      agent.environment.availableTools[0] ?? "./agents/generic-agent.ts",
       "--config",
       JSON.stringify(agent.config),
     ];
@@ -1114,7 +1144,7 @@ export class AgentManager extends EventEmitter {
     this.emit("agent:process-error", { agentId, error });
   }
 
-  private handleHeartbeat(data: { agentId: string; timestamp: Date; metrics?: AgentMetrics }): void {
+  private handleHeartbeat(data: HeartbeatEventData): void {
     const agent = this.agents.get(data.agentId);
     if (!agent) return;
 
@@ -1131,7 +1161,7 @@ export class AgentManager extends EventEmitter {
     }
   }
 
-  private handleAgentError(data: { agentId: string; error: AgentError }): void {
+  private handleAgentError(data: AgentErrorEventData): void {
     this.addAgentError(data.agentId, data.error);
     
     const agent = this.agents.get(data.agentId);
@@ -1165,7 +1195,7 @@ export class AgentManager extends EventEmitter {
     agent.metrics = { ...agent.metrics, ...metrics };
 
     // Store performance history
-    const history = this.performanceHistory.get(agentId) || [];
+    const history = this.performanceHistory.get(agentId) ?? [];
     history.push({ timestamp: new Date(), metrics: { ...metrics } });
     
     // Keep only last 100 entries

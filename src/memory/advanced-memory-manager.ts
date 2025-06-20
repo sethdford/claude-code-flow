@@ -66,7 +66,7 @@ export class AdvancedMemoryManager extends EventEmitter {
     super();
     
     const __dirname = dirname(fileURLToPath(import.meta.url));
-    this.storageDir = config.storageDir || join(__dirname, "../../../.claude-flow/memory");
+    this.storageDir = config.storageDir ?? join(__dirname, "../../../.claude-flow/memory");
     this.logger = config.logger;
     this.persisted = config.persistenceEnabled !== false;
   }
@@ -111,7 +111,7 @@ export class AdvancedMemoryManager extends EventEmitter {
     return entry.id;
   }
 
-  async get(keyOrId: string): Promise<unknown | undefined> {
+  async get(keyOrId: string): Promise<unknown> {
     // Try direct ID lookup first
     const byId = this.storage.get(keyOrId);
     if (byId) {
@@ -128,7 +128,7 @@ export class AdvancedMemoryManager extends EventEmitter {
     return undefined;
   }
 
-  async query(options: QueryOptions = {}): Promise<MemoryEntry[]> {
+  query(options: QueryOptions = {}): MemoryEntry[] {
     let results = Array.from(this.storage.values());
 
     // Apply filters
@@ -161,7 +161,7 @@ export class AdvancedMemoryManager extends EventEmitter {
     results = results.slice(offset, offset + limit);
 
     // Return in expected format for compatibility
-    const queryResult: any = results;
+    const queryResult: MemoryEntry[] & { total?: number; entries?: () => IterableIterator<[number, MemoryEntry]>; aggregations?: Record<string, unknown> } = results;
     queryResult.total = total;
     queryResult.entries = () => results.entries();
     queryResult.aggregations = {};
@@ -169,7 +169,7 @@ export class AdvancedMemoryManager extends EventEmitter {
     return queryResult;
   }
 
-  async update(keyOrId: string, value: any): Promise<boolean> {
+  async update(keyOrId: string, value: unknown): Promise<boolean> {
     // Try direct ID lookup first
     let entry = this.storage.get(keyOrId);
     
@@ -309,7 +309,7 @@ export class AdvancedMemoryManager extends EventEmitter {
   }
 
   // Restore missing methods with minimal implementations
-  async export(options: ExportOptions = {}): Promise<string> {
+  export(options: ExportOptions = {}): string {
     const entries = Array.from(this.storage.values());
     if (options.format === "csv") {
       // Simple CSV export
@@ -326,7 +326,11 @@ export class AdvancedMemoryManager extends EventEmitter {
   async import(data: string, options: ImportOptions = {}): Promise<{imported: number; skipped: number; conflicts: Array<{ entry: MemoryEntry; reason: string }>}> {
     let entries: MemoryEntry[];
     try {
-      entries = JSON.parse(data);
+      const parsed = JSON.parse(data) as unknown;
+      if (!Array.isArray(parsed)) {
+        throw new Error("Data must be an array");
+      }
+      entries = parsed as MemoryEntry[];
     } catch {
       // Try CSV format
       const lines = data.trim().split("\n");
@@ -407,7 +411,7 @@ export class AdvancedMemoryManager extends EventEmitter {
     return this.delete(keyOrId);
   }
 
-  async listNamespaces(): Promise<string[]> {
+  listNamespaces(): string[] {
     const namespaces = new Set<string>();
     for (const entry of this.storage.values()) {
       namespaces.add(entry.namespace);
@@ -415,7 +419,7 @@ export class AdvancedMemoryManager extends EventEmitter {
     return Array.from(namespaces);
   }
 
-  async listTypes(): Promise<string[]> {
+  listTypes(): string[] {
     const types = new Set<string>();
     for (const entry of this.storage.values()) {
       types.add(entry.type);
@@ -423,22 +427,37 @@ export class AdvancedMemoryManager extends EventEmitter {
     return Array.from(types);
   }
 
-  async listTags(): Promise<string[]> {
+  listTags(): string[] {
     // Simple implementation - return empty array since we don't track tags
     return [];
   }
 
-  async updateConfiguration(config: Record<string, unknown>): Promise<void> {
+  updateConfiguration(config: Record<string, unknown>): void {
     // No-op for simplicity
     this.logger?.info("Configuration update requested", config);
   }
 
-  async getConfiguration(): Promise<{ storageDir: string; persisted: boolean; entriesCount: number }> {
+  getConfiguration(): { storageDir: string; persisted: boolean; entriesCount: number } {
     return {
       storageDir: this.storageDir,
       persisted: this.persisted,
       entriesCount: this.storage.size,
     };
+  }
+
+  // Type guard for validating memory entries
+  private isValidMemoryEntry(obj: unknown): obj is MemoryEntry {
+    if (typeof obj !== "object" || obj === null) return false;
+    const candidate = obj as Record<string, unknown>;
+    return (
+      typeof candidate.id === "string" &&
+      typeof candidate.key === "string" &&
+      typeof candidate.type === "string" &&
+      typeof candidate.namespace === "string" &&
+      typeof candidate.owner === "string" &&
+      (typeof candidate.createdAt === "string" || candidate.createdAt instanceof Date) &&
+      (typeof candidate.updatedAt === "string" || candidate.updatedAt instanceof Date)
+    );
   }
 
   // Simple persistence methods
@@ -449,13 +468,20 @@ export class AdvancedMemoryManager extends EventEmitter {
       
       if (exists) {
         const data = await fs.readFile(dataFile, "utf-8");
-        const entries = JSON.parse(data);
+        const parsed = JSON.parse(data) as unknown;
         
-        for (const entry of entries) {
-          // Convert dates back from strings
-          entry.createdAt = new Date(entry.createdAt);
-          entry.updatedAt = new Date(entry.updatedAt);
-          this.storage.set(entry.id, entry);
+        if (Array.isArray(parsed)) {
+          for (const rawEntry of parsed) {
+            if (this.isValidMemoryEntry(rawEntry)) {
+              // Convert dates back from strings
+              const entry: MemoryEntry = {
+                ...rawEntry,
+                createdAt: new Date(rawEntry.createdAt),
+                updatedAt: new Date(rawEntry.updatedAt),
+              };
+              this.storage.set(entry.id, entry);
+            }
+          }
         }
       }
     } catch (error) {

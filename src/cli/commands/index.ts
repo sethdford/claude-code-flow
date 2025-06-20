@@ -1076,9 +1076,9 @@ You are running within the Claude-Flow orchestration system, which provides powe
 
 ## Configuration
 - Instance ID: ${instanceId}
-- Mode: ${ctx.flags.mode || "full"}
-- Coverage Target: ${ctx.flags.coverage || 80}%
-- Commit Strategy: ${ctx.flags.commit || "phase"}
+- Mode: ${String(ctx.flags.mode || "full")}
+- Coverage Target: ${String(ctx.flags.coverage || 80)}%
+- Commit Strategy: ${String(ctx.flags.commit || "phase")}
 
 ## Example Commands
 
@@ -1123,9 +1123,9 @@ Now, please proceed with the task: ${task}`;
               console.log(`Instance ID: ${instanceId}`);
               console.log(`Original Task: ${task}`);
               console.log(`Tools: ${tools}`);
-              console.log(`Mode: ${ctx.flags.mode || "full"}`);
-              console.log(`Coverage: ${ctx.flags.coverage || 80}%`);
-              console.log(`Commit: ${ctx.flags.commit || "phase"}`);
+              console.log(`Mode: ${String(ctx.flags.mode || "full")}`);
+              console.log(`Coverage: ${String(ctx.flags.coverage || 80)}%`);
+              console.log(`Commit: ${String(ctx.flags.commit || "phase")}`);
               console.log("\nEnhanced Features:");
               console.log("  - Memory Bank enabled via: npx claude-flow memory commands");
               console.log(`  - Coordination ${ctx.flags.parallel ? "enabled" : "disabled"}`);
@@ -1136,9 +1136,9 @@ Now, please proceed with the task: ${task}`;
             success(`Spawning Claude instance: ${instanceId}`);
             console.log(`📝 Original Task: ${task}`);
             console.log(`🔧 Tools: ${tools}`);
-            console.log(`⚙️  Mode: ${ctx.flags.mode || "full"}`);
-            console.log(`📊 Coverage: ${ctx.flags.coverage || 80}%`);
-            console.log(`💾 Commit: ${ctx.flags.commit || "phase"}`);
+            console.log(`⚙️  Mode: ${String(ctx.flags.mode || "full")}`);
+            console.log(`📊 Coverage: ${String(ctx.flags.coverage || 80)}%`);
+            console.log(`💾 Commit: ${String(ctx.flags.commit || "phase")}`);
             console.log("✨ Enhanced with Claude-Flow guidance for memory and coordination");
             console.log("");
             console.log("📋 Task will be enhanced with:");
@@ -1154,7 +1154,7 @@ Now, please proceed with the task: ${task}`;
                 ...process.env,
                 CLAUDE_INSTANCE_ID: instanceId,
                 CLAUDE_FLOW_MODE: ctx.flags.mode as string || "full",
-                CLAUDE_FLOW_COVERAGE: (ctx.flags.coverage || 80).toString(),
+                CLAUDE_FLOW_COVERAGE: String(ctx.flags.coverage || 80),
                 CLAUDE_FLOW_COMMIT: ctx.flags.commit as string || "phase",
                 // Add Claude-Flow specific features
                 CLAUDE_FLOW_MEMORY_ENABLED: "true",
@@ -1355,7 +1355,7 @@ Now, please proceed with the task: ${task}`;
             console.log(`Update #${++cycles} • ${new Date().toLocaleTimeString()} • Interval: ${options.interval}s`);
             
             if (options.focus) {
-              console.log(`🎯 Focus: ${options.focus}`);
+              console.log(`🎯 Focus: ${String(options.focus)}`);
             }
             
             if (options.alerts) {
@@ -1393,7 +1393,7 @@ Now, please proceed with the task: ${task}`;
             
             // Active components (if focused)
             if (options.focus && !options.compact) {
-              console.log(`\n🎯 ${options.focus} Component Details:`);
+              console.log(`\n🎯 ${String(options.focus)} Component Details:`);
               console.log("   Status: Healthy");
               console.log(`   Load: ${(Math.random() * 100).toFixed(1)}%`);
               console.log(`   Uptime: ${Math.floor(Math.random() * 3600)}s`);
@@ -1410,13 +1410,13 @@ Now, please proceed with the task: ${task}`;
             // Export status
             if (options.export) {
               console.log("\n💾 Export Status:");
-              console.log(`   Exporting to: ${options.export}`);
+              console.log(`   Exporting to: ${String(options.export)}`);
               console.log(`   Data points: ${cycles}`);
             }
             
             // Footer
             console.log(`\n${  "─".repeat(60)}`);
-            console.log(`Log Level: ${options.logLevel} • Threshold: ${options.threshold}% • Press Ctrl+C to exit`);
+            console.log(`Log Level: ${String(options.logLevel)} • Threshold: ${String(options.threshold)}% • Press Ctrl+C to exit`);
             
             await new Promise(resolve => setTimeout(resolve, interval));
           } catch (err) {

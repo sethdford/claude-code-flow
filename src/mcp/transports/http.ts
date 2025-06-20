@@ -150,7 +150,7 @@ export class HttpTransport implements ITransport {
 
     // CORS middleware
     if (this.config?.corsEnabled) {
-      const origins = this.config.corsOrigins || ["*"];
+      const origins = this.config.corsOrigins ?? ["*"];
       this.app.use(cors({
         origin: origins,
         credentials: true,
@@ -234,7 +234,7 @@ export class HttpTransport implements ITransport {
 
       ws.on("message", async (data) => {
         try {
-          const message = JSON.parse(data.toString());
+          const message = JSON.parse(String(data));
           
           if (message.id === undefined) {
             // Notification from client
@@ -249,7 +249,7 @@ export class HttpTransport implements ITransport {
           
           // Send error response if it was a request
           try {
-            const parsed = JSON.parse(data.toString());
+            const parsed = JSON.parse(String(data));
             if (parsed.id !== undefined) {
               ws.send(JSON.stringify({
                 jsonrpc: "2.0",

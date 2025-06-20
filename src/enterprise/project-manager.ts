@@ -226,13 +226,13 @@ export class ProjectManager extends EventEmitter {
 
   async createProject(projectData: Partial<Project>): Promise<Project> {
     const project: Project = {
-      id: projectData.id || `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: projectData.name || "Unnamed Project",
-      description: projectData.description || "",
-      type: projectData.type || "custom",
+      id: projectData.id ?? `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: projectData.name ?? "Unnamed Project",
+      description: projectData.description ?? "",
+      type: projectData.type ?? "custom",
       status: "planning",
-      priority: projectData.priority || "medium",
-      owner: projectData.owner || "system",
+      priority: projectData.priority ?? "medium",
+      owner: projectData.owner ?? "system",
       stakeholders: projectData.stakeholders || [],
       phases: projectData.phases || [],
       budget: projectData.budget || {

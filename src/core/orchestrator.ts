@@ -1065,7 +1065,7 @@ export class Orchestrator implements IOrchestrator {
     this.logger.error("Handling agent error", { agentId, error });
 
     // Check if agent should be restarted
-    const errorCount = (profile.metadata?.errorCount as number) || 0;
+    const errorCount = (profile.metadata?.errorCount as number) ?? 0;
     profile.metadata = { ...profile.metadata, errorCount: errorCount + 1 };
 
     if (errorCount < 3) {
@@ -1091,7 +1091,7 @@ export class Orchestrator implements IOrchestrator {
       return;
     }
 
-    const retryCount = (task.metadata?.retryCount as number) || 0;
+    const retryCount = (task.metadata?.retryCount as number) ?? 0;
     const maxRetries = this.config.orchestrator.taskMaxRetries || 3;
 
     if (retryCount < maxRetries) {

@@ -293,7 +293,7 @@ export interface ResourceFilter {
 export interface FilterCondition {
   field: string;
   operator: "eq" | "ne" | "gt" | "lt" | "contains" | "matches";
-  value: any;
+  value: unknown;
 }
 
 export type ResourceType = "compute" | "storage" | "network" | "memory" | "gpu" | "custom";
@@ -377,39 +377,39 @@ export class ResourceManager extends EventEmitter {
   }
 
   private setupEventHandlers(): void {
-    this.eventBus.on("agent:resource-request", (data: any) => {
+    this.eventBus.on("agent:resource-request", (data: unknown) => {
       this.handleResourceRequest(data);
     });
 
-    this.eventBus.on("agent:resource-release", (data: any) => {
+    this.eventBus.on("agent:resource-release", (data: unknown) => {
       this.handleResourceRelease(data);
     });
 
-    this.eventBus.on("resource:usage-updated", (data: any) => {
+    this.eventBus.on("resource:usage-updated", (data: unknown) => {
       this.updateResourceUsage(data.resourceId, data.usage);
     });
 
-    this.eventBus.on("resource:failure", (data: any) => {
+    this.eventBus.on("resource:failure", (data: unknown) => {
       this.handleResourceFailure(data);
     });
 
-    this.eventBus.on("scaling:trigger", (data: any) => {
+    this.eventBus.on("scaling:trigger", (data: unknown) => {
       this.handleScalingTrigger(data);
     });
 
-    this.eventBus.on("agent:status-changed", (data: any) => {
+    this.eventBus.on("agent:status-changed", (data: unknown) => {
       this.handleAgentStatusChange(data.agentId, data.from, data.to);
     });
 
-    this.eventBus.on("task:started", (data: any) => {
+    this.eventBus.on("task:started", (data: unknown) => {
       this.allocateResourcesForTask(data.taskId, data.requirements);
     });
 
-    this.eventBus.on("task:completed", (data: any) => {
+    this.eventBus.on("task:completed", (data: unknown) => {
       this.releaseResourcesForTask(data.taskId);
     });
 
-    this.eventBus.on("system:resource-alert", (data: any) => {
+    this.eventBus.on("system:resource-alert", (data: unknown) => {
       this.handleResourceAlert(data.type, data.threshold, data.current);
     });
   }
@@ -971,13 +971,13 @@ export class ResourceManager extends EventEmitter {
   private checkConstraints(resource: Resource, constraints: ResourceConstraints): boolean {
     // Location constraints
     if (constraints.location && constraints.location.length > 0) {
-      if (!constraints.location.includes(resource.location || "")) {
+      if (!constraints.location.includes(resource.location ?? "")) {
         return false;
       }
     }
 
     if (constraints.excludeLocation && constraints.excludeLocation.length > 0) {
-      if (constraints.excludeLocation.includes(resource.location || "")) {
+      if (constraints.excludeLocation.includes(resource.location ?? "")) {
         return false;
       }
     }
@@ -1597,17 +1597,17 @@ export class ResourceManager extends EventEmitter {
     }
   }
 
-  private handleResourceRequest(data: any): void {
+  private handleResourceRequest(data: unknown): void {
     // Handle resource requests from agents
     this.emit("resource:request-received", data);
   }
 
-  private handleResourceRelease(data: any): void {
+  private handleResourceRelease(data: unknown): void {
     // Handle resource releases from agents
     this.emit("resource:release-received", data);
   }
 
-  private handleResourceFailure(data: any): void {
+  private handleResourceFailure(data: unknown): void {
     const resource = this.resources.get(data.resourceId);
     if (resource) {
       resource.status = "failed";
@@ -1630,7 +1630,7 @@ export class ResourceManager extends EventEmitter {
     }
   }
 
-  private handleScalingTrigger(data: any): void {
+  private handleScalingTrigger(data: unknown): void {
     // Handle scaling triggers from monitoring system
     this.emit("scaling:triggered", data);
   }
@@ -1888,7 +1888,7 @@ class ResourceManagerMetrics {
     this.qosViolations++;
   }
 
-  getMetrics(): any {
+  getMetrics(): Record<string, unknown> {
     return {
       allocationsCreated: this.allocationsCreated,
       allocationsReleased: this.allocationsReleased,

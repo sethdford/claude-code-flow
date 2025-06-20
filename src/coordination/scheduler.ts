@@ -254,7 +254,7 @@ export class TaskScheduler {
   }
 
   getAgentTaskCount(agentId: string): number {
-    return this.agentTasks.get(agentId)?.size || 0;
+    return this.agentTasks.get(agentId)?.size ?? 0;
   }
 
   async getHealthStatus(): Promise<{ 

@@ -119,15 +119,72 @@ Claude Flow uses JSON configuration files to define workflows and agent behavior
 ### Environment Variables
 
 ```bash
-# API Keys
+# API Keys (Direct Anthropic API)
 ANTHROPIC_API_KEY=your-api-key
 OPENAI_API_KEY=your-api-key
+
+# AWS Bedrock Integration (Alternative to direct API)
+CLAUDE_CODE_USE_BEDROCK=true
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+ANTHROPIC_MODEL=anthropic.claude-opus-4-20250514-v1:0
 
 # Configuration
 CLAUDE_FLOW_CONFIG=./config.json
 CLAUDE_FLOW_LOG_LEVEL=info
 CLAUDE_FLOW_OUTPUT_DIR=./output
 ```
+
+### AWS Bedrock Integration with Auto-Detection 🔍
+
+Claude Flow automatically detects existing AWS credentials and enables Claude 4 through AWS Bedrock. No manual configuration needed if you already have AWS set up!
+
+#### Automatic Detection
+
+```bash
+# Simply start Claude Flow - it will auto-detect and configure AWS
+claude-flow start
+
+# Test auto-detection
+node test-aws-auto-detection.js
+```
+
+**Supported AWS credential sources:**
+- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
+- AWS profiles (`AWS_PROFILE` or `~/.aws/credentials`)
+- IAM roles (EC2 Instance Profile, ECS Task Role)
+- AWS SSO and other standard AWS credential sources
+
+#### Manual Setup
+
+```bash
+# Run the automated setup script with auto-detection
+./scripts/setup-bedrock.sh
+```
+
+#### Manual Setup
+
+1. **Configure AWS credentials**:
+   ```bash
+   aws configure
+   ```
+
+2. **Request access to Claude models** in the AWS Bedrock console
+
+3. **Set environment variables**:
+   ```bash
+   export CLAUDE_CODE_USE_BEDROCK=true
+   export AWS_REGION=us-east-1
+   export ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
+   ```
+
+4. **Test the integration**:
+   ```bash
+   claude-flow claude spawn "Hello, please confirm you're running via AWS Bedrock"
+   ```
+
+For detailed configuration options, see [Configuration Guide](docs/03-configuration-guide.md).
 
 ## 🏗️ Architecture
 

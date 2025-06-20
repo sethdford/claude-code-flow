@@ -133,7 +133,7 @@ export class MCPProtocolManager {
   /**
    * Negotiate protocol version and capabilities with client
    */
-  async negotiateProtocol(clientParams: MCPInitializeParams): Promise<NegotiationResult> {
+  negotiateProtocol(clientParams: MCPInitializeParams): NegotiationResult {
     this.logger.debug("Starting protocol negotiation", {
       clientVersion: this.versionToString(clientParams.protocolVersion),
       clientCapabilities: clientParams.capabilities,
@@ -311,7 +311,7 @@ export class MCPProtocolManager {
       .filter(v => !v.deprecated)
       .sort((a, b) => this.compareVersions(b.version, a.version));
     
-    return versions[0]?.version || { major: 2024, minor: 11, patch: 5 };
+    return versions[0]?.version ?? { major: 2024, minor: 11, patch: 5 };
   }
 
   /**
@@ -341,7 +341,7 @@ export class MCPProtocolManager {
    */
   isFeatureSupported(version: MCPProtocolVersion, feature: string): boolean {
     const versionInfo = this.getVersionInfo(version);
-    return versionInfo?.supportedFeatures.includes(feature) || false;
+    return versionInfo?.supportedFeatures.includes(feature) ?? false;
   }
 
   private versionToString(version: MCPProtocolVersion): string {

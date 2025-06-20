@@ -165,7 +165,7 @@ export class TerminalSession {
     // Set working directory if specified
     if (this.profile.metadata?.workingDirectory) {
       await this.terminal.executeCommand(
-        `cd "${this.profile.metadata.workingDirectory}"`,
+        `cd "${String(this.profile.metadata.workingDirectory)}"`,
       );
     }
   }

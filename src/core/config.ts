@@ -389,31 +389,37 @@ export class ConfigManager {
   }
 
   /**
-   * Loads configuration from various sources
+   * Loads configuration from file and environment
    */
-  async load(configPath?: string): Promise<Config> {
-    if (configPath !== undefined) {
-      this.configPath = configPath;
+  async load(configPath?: string): Promise<void> {
+    try {
+      let config: Partial<Config> = {};
+
+      // Load from file if provided
+      if (configPath) {
+        const fileConfig = await this.loadFromFile(configPath);
+        config = this.mergeConfigs(config, fileConfig);
+      }
+
+      // Load from environment variables
+      const envConfig = await this.loadFromEnv();
+      config = this.mergeConfigs(config, envConfig);
+
+      // Merge with default configuration
+      this.config = deepMergeConfig(DEFAULT_CONFIG, config);
+
+      // Validate the final configuration
+      this.validate(this.config);
+    } catch (error) {
+      throw new ConfigError(`Failed to load configuration: ${(error as Error).message}`);
     }
+  }
 
-    // Start with defaults
-    let config = deepClone(DEFAULT_CONFIG);
-
-    // Load from file if specified
-    if (configPath) {
-      const fileConfig = await this.loadFromFile(configPath);
-      config = deepMergeConfig(config, fileConfig);
-    }
-
-    // Load from environment variables
-    const envConfig = this.loadFromEnv();
-    config = deepMergeConfig(config, envConfig);
-
-    // Validate the final configuration
-    this.validate(config);
-
-    this.config = config;
-    return config;
+  /**
+   * Helper method to safely merge partial configs
+   */
+  private mergeConfigs(target: Partial<Config>, source: Partial<Config>): Partial<Config> {
+    return deepMerge(target, source);
   }
 
   /**
@@ -897,7 +903,7 @@ export class ConfigManager {
   /**
    * Loads configuration from environment variables
    */
-  private loadFromEnv(): Partial<Config> {
+  private async loadFromEnv(): Promise<Partial<Config>> {
     const config: Partial<Config> = {};
 
     // Orchestrator settings
@@ -962,7 +968,139 @@ export class ConfigManager {
       };
     }
 
+    // AWS Bedrock settings for Claude Code integration
+    // Auto-detect AWS credentials and enable Bedrock if available
+    await this.detectAndConfigureAWS();
+
+    // These environment variables are passed through to spawned Claude processes
+    if (process.env.CLAUDE_CODE_USE_BEDROCK) {
+      console.log("AWS Bedrock integration enabled for Claude Code", {
+        region: process.env.AWS_REGION,
+        model: process.env.ANTHROPIC_MODEL,
+        smallFastModel: process.env.ANTHROPIC_SMALL_FAST_MODEL,
+      });
+    }
+
     return config;
+  }
+
+  /**
+   * Auto-detect AWS credentials and configure Bedrock integration
+   */
+  private async detectAndConfigureAWS(): Promise<void> {
+    // Skip if Bedrock is explicitly disabled
+    if (process.env.CLAUDE_CODE_USE_BEDROCK === "false") {
+      return;
+    }
+
+    // Skip if already explicitly configured
+    if (process.env.CLAUDE_CODE_USE_BEDROCK === "true") {
+      return;
+    }
+
+    try {
+      // Check for AWS credentials in various sources
+      const hasCredentials = await this.checkAWSCredentials();
+      
+      if (hasCredentials) {
+        console.log("🔍 AWS credentials detected - enabling Bedrock integration");
+        
+        // Auto-configure Bedrock settings
+        process.env.CLAUDE_CODE_USE_BEDROCK = "true";
+        
+        // Set default region if not specified
+        if (!process.env.AWS_REGION && !process.env.AWS_DEFAULT_REGION) {
+          process.env.AWS_REGION = "us-east-1";
+        }
+        
+        // Set default Claude 4 models if not specified
+        if (!process.env.ANTHROPIC_MODEL) {
+          process.env.ANTHROPIC_MODEL = "anthropic.claude-opus-4-20250514-v1:0";
+        }
+        
+        if (!process.env.ANTHROPIC_SMALL_FAST_MODEL) {
+          process.env.ANTHROPIC_SMALL_FAST_MODEL = "anthropic.claude-sonnet-4-20250514-v1:0";
+        }
+        
+        console.log("✅ Auto-configured AWS Bedrock with Claude 4 models");
+      }
+    } catch (error) {
+      // Silently fail - don't break the application if AWS detection fails
+      console.debug("AWS credential detection failed:", error);
+    }
+  }
+
+  /**
+   * Check if AWS credentials are available from various sources
+   */
+  private async checkAWSCredentials(): Promise<boolean> {
+    // Check environment variables
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      return true;
+    }
+
+    // Check AWS profile
+    if (process.env.AWS_PROFILE) {
+      return true;
+    }
+
+    // Check for AWS config/credentials files
+    try {
+      const os = await import("node:os");
+      const path = await import("node:path");
+      const fs = await import("node:fs");
+      
+      const homeDir = os.homedir();
+      const awsConfigPath = path.join(homeDir, ".aws", "config");
+      const awsCredentialsPath = path.join(homeDir, ".aws", "credentials");
+      
+      if (fs.existsSync(awsConfigPath) || fs.existsSync(awsCredentialsPath)) {
+        return true;
+      }
+    } catch {
+      // Ignore file system errors
+    }
+
+    // Check for IAM role (EC2 instance profile or ECS task role)
+    try {
+      const response = await fetch("http://169.254.169.254/latest/meta-data/iam/security-credentials/", {
+        method: "GET",
+        signal: AbortSignal.timeout(2000), // 2 second timeout
+      });
+      
+      if (response.ok) {
+        return true;
+      }
+    } catch {
+      // Ignore metadata service errors (not running on AWS or no role)
+    }
+
+    // Check if AWS CLI is configured and working
+    try {
+      const { spawn } = await import("node:child_process");
+      
+      return new Promise<boolean>((resolve) => {
+        const child = spawn("aws", ["sts", "get-caller-identity", "--no-cli-pager"], {
+          stdio: "ignore",
+        });
+        
+        child.on("exit", (code) => {
+          resolve(code === 0);
+        });
+        
+        child.on("error", () => {
+          resolve(false);
+        });
+        
+        // Timeout after 3 seconds
+        setTimeout(() => {
+          child.kill();
+          resolve(false);
+        }, 3000);
+      });
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -1374,7 +1512,8 @@ export const configManager = ConfigManager.getInstance();
 
 // Helper function to load configuration
 export async function loadConfig(path?: string): Promise<Config> {
-  return await configManager.load(path);
+  await configManager.load(path);
+  return configManager.get();
 }
 
 function deepClone<T>(obj: T): T {

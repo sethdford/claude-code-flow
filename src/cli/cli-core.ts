@@ -8,6 +8,18 @@ import fs from "fs-extra";
 
 export const VERSION = "1.0.43";
 
+interface ParsedFlags {
+  _: string[];
+  help?: boolean;
+  h?: boolean;
+  version?: boolean;
+  v?: boolean;
+  config?: string;
+  verbose?: boolean;
+  "log-level"?: string;
+  [key: string]: unknown;
+}
+
 interface CommandContext {
   args: string[];
   flags: Record<string, unknown>;
@@ -82,14 +94,14 @@ class CLI {
     // Parse arguments manually since we're using Node.js argument parsing
     const flags = this.parseArgs(args);
 
-    if (flags.version || flags.v) {
+    if (flags.version ?? flags.v) {
       console.log(`${this.name} v${VERSION}`);
       return;
     }
 
-    const commandName = flags._[0]?.toString() || "";
+    const commandName = flags._[0] ?? "";
     
-    if (!commandName || flags.help || flags.h) {
+    if (!commandName || (flags.help ?? flags.h)) {
       this.showHelp();
       return;
     }
@@ -102,9 +114,9 @@ class CLI {
     }
 
     const ctx: CommandContext = {
-      args: flags._.slice(1).map(String),
-      flags: flags as Record<string, unknown>,
-      config: await this.loadConfig(flags.config as string),
+      args: flags._.slice(1),
+      flags,
+      config: await this.loadConfig(flags.config),
     };
 
     try {
@@ -122,8 +134,8 @@ class CLI {
     }
   }
 
-  private parseArgs(args: string[]): Record<string, any> {
-    const result: Record<string, any> = { _: [] };
+  private parseArgs(args: string[]): ParsedFlags {
+    const result: ParsedFlags = { _: [] };
     let i = 0;
 
     while (i < args.length) {
@@ -157,10 +169,10 @@ class CLI {
   }
 
   private async loadConfig(configPath?: string): Promise<Record<string, unknown> | undefined> {
-    const configFile = configPath || "claude-flow.config.json";
+    const configFile = configPath ?? "claude-flow.config.json";
     try {
       const content = await fs.readFile(configFile, "utf8");
-      return JSON.parse(content);
+      return JSON.parse(content) as Record<string, unknown>;
     } catch {
       return undefined;
     }

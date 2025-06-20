@@ -18,7 +18,7 @@ export { OptimizedExecutor } from "./optimized-executor.js";
 export type { ExecutorConfig, ExecutionMetrics } from "./optimized-executor.js";
 
 // Re-export commonly used together
-export const createOptimizedSwarmStack = (config?: {
+export const createOptimizedSwarmStack = (_config?: {
   connectionPool?: any;
   executor?: any;
   fileManager?: any;

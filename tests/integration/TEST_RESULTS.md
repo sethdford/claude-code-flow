@@ -112,16 +112,16 @@ The tests validate the following architectural components:
 
 ```bash
 # Run mock batch test (no dependencies required)
-deno run --allow-all tests/integration/batch-task-mock-test.ts
+npm test tests/integration/batch-task-mock-test.ts
 
 # Run coordination features test
-deno run --allow-all scripts/test-coordination-features.ts
+npm test scripts/test-coordination-features.ts
 
 # Run simple demo
-deno run --allow-all scripts/demo-task-system.ts
+npm test scripts/demo-task-system.ts
 
 # Run full integration test (requires all components)
-deno run --allow-all scripts/test-batch-tasks.ts
+npm test scripts/test-batch-tasks.ts
 ```
 
 ## Conclusion

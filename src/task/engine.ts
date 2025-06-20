@@ -157,7 +157,7 @@ export class TaskEngine extends EventEmitter {
     const task: WorkflowTask = {
       id: taskData.id || generateId("task"),
       type: taskData.type || "general",
-      description: taskData.description || "",
+      description: taskData.description ?? "",
       priority: taskData.priority || 0,
       status: "pending",
       input: taskData.input || {},
@@ -208,7 +208,7 @@ export class TaskEngine extends EventEmitter {
     if (filter) {
       filteredTasks = filteredTasks.filter(task => {
         if (filter.status && !filter.status.includes(task.status)) return false;
-        if (filter.assignedAgent && !filter.assignedAgent.includes(task.assignedAgent || "")) return false;
+        if (filter.assignedAgent && !filter.assignedAgent.includes(task.assignedAgent ?? "")) return false;
         if (filter.priority) {
           if (filter.priority.min !== undefined && task.priority < filter.priority.min) return false;
           if (filter.priority.max !== undefined && task.priority > filter.priority.max) return false;
@@ -381,7 +381,7 @@ export class TaskEngine extends EventEmitter {
     const workflow: Workflow = {
       id: workflowData.id || generateId("workflow"),
       name: workflowData.name || "Unnamed Workflow",
-      description: workflowData.description || "",
+      description: workflowData.description ?? "",
       version: workflowData.version || "1.0.0",
       tasks: workflowData.tasks || [],
       variables: workflowData.variables || {},
@@ -579,7 +579,7 @@ export class TaskEngine extends EventEmitter {
       id: generateId("checkpoint"),
       timestamp: new Date(),
       description,
-      state: { ...this.taskState.get(task.id) || {} },
+      state: { ...this.taskState.get(task.id) ?? {} },
       artifacts: [],
     };
 
