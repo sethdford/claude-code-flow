@@ -8,7 +8,19 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { configManager } from "../../core/config.js";
 import { deepMerge } from "../../utils/helpers.js";
-import type { ConfigShowOptions, ConfigSetOptions } from "./types.js";
+
+// Local type definitions
+interface ConfigShowOptions {
+  format?: string;
+  diff?: boolean;
+  profile?: boolean;
+}
+
+interface ConfigSetOptions {
+  type?: string;
+  reason?: string;
+  force?: boolean;
+}
 
 // Generic options interface for commands with file arguments
 interface FileCommandOptions {

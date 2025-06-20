@@ -35,6 +35,12 @@ export interface AgentSpawnOptions extends BaseCommandOptions {
   detached?: boolean;
   interactive?: boolean;
   autoScale?: boolean;
+  config?: string;
+  autonomy?: string;
+  maxTasks?: string;
+  timeout?: string;
+  maxMemory?: string;
+  start?: boolean;
   resources?: {
     cpu?: number;
     memory?: string;

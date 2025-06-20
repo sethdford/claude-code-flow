@@ -101,6 +101,7 @@ export class StdioTransport implements ITransport {
 
   private async processMessage(line: string): Promise<void> {
     let message: unknown;
+    let rpcMessage: { method?: string; id?: string | number };
 
     try {
       message = JSON.parse(line);
@@ -109,7 +110,7 @@ export class StdioTransport implements ITransport {
         throw new Error("Invalid JSON-RPC version");
       }
 
-      const rpcMessage = message as { method?: string; id?: string | number };
+      rpcMessage = message as { method?: string; id?: string | number };
       if (!rpcMessage.method) {
         throw new Error("Missing method");
       }

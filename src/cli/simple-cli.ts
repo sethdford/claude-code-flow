@@ -8,13 +8,14 @@ import { Command } from "commander";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { configManager, ConfigError } from "../config/config-manager.js";
+import { getVersion } from "../utils/version.js";
 
 import chalk from "chalk";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const VERSION = "1.0.73";
+const VERSION = getVersion();
 
 // Simple in-memory storage for the session
 const memoryStore: Map<string, any> = new Map();
@@ -1474,7 +1475,7 @@ async function createProgram() {
         
         // Create base configuration
         const claudeConfig = {
-          version: "1.0.73",
+          version: VERSION,
           project: {
             name: path.basename(process.cwd()),
             type: "claude-flow",

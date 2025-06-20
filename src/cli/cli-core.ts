@@ -5,37 +5,10 @@
 
 import chalk from "chalk";
 import fs from "fs-extra";
+import { getVersion } from "../utils/version.js";
 
-// Get version from package.json - SEA compatible approach
-let VERSION = "1.0.72"; // fallback version
-
-// Function to get version synchronously
-function getVersion(): string {
-  try {
-    // Only try to read package.json if we're not in a SEA bundle
-    // In SEA, import.meta.url is undefined even if import.meta exists
-    if (typeof import.meta !== 'undefined' && import.meta.url && typeof import.meta.url === 'string') {
-      // We're in a regular Node.js environment with valid import.meta.url
-      const { fileURLToPath } = require("node:url");
-      const { dirname, join } = require("node:path");
-      
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = dirname(__filename);
-      const packageJsonPath = join(__dirname, "../../package.json");
-      
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-      return packageJson.version;
-    }
-  } catch (error) {
-    // Use fallback version if package.json can't be read or in SEA environment
-    // Don't log warning to avoid noise
-  }
-  
-  return VERSION;
-}
-
-// Set the version
-VERSION = getVersion();
+// Get version dynamically
+const VERSION = getVersion();
 
 export { VERSION };
 

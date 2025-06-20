@@ -8,13 +8,41 @@ import { AgentProfile, Task, OrchestratorMetrics, MemoryQuery } from "../utils/t
 export interface IOrchestrator {
   getStatus(): Promise<OrchestratorStatus>;
   listTasks(params: TaskListParams): Promise<Task[]>;
-  createTask(task: Omit<Task, "id" | "createdAt">): Promise<Task>;
+  createTask(task: Omit<Task, "id" | "createdAt">): Promise<string>;
   cancelTask(taskId: string): Promise<void>;
+  getTask(taskId: string): Promise<Task | undefined>;
   getTaskStatus(taskId: string): Promise<Task | undefined>;
-  getMetrics(): Promise<OrchestratorMetrics>;
+  assignTask(taskId: string, agentId: string): Promise<void>;
+  assignTaskToType(taskId: string, agentType: string): Promise<void>;
+  getMetrics(timeRange?: string): Promise<OrchestratorMetrics>;
   registerAgent(profile: AgentProfile): Promise<string>;
   executeObjective(objective: string, options?: ObjectiveOptions): Promise<ObjectiveResult>;
   getObjectiveStatus(objectiveId: string): Promise<ObjectiveStatus>;
+  // Agent management
+  spawnAgent(profile: AgentProfile): Promise<string>;
+  listAgents(): Promise<AgentInfo[]>;
+  terminateAgent(agentId: string, options?: { reason?: string; graceful?: boolean }): Promise<void>;
+  getAgentInfo(agentId: string): Promise<AgentInfo | undefined>;
+  // Memory management
+  queryMemory(query: MemoryQuery): Promise<MemoryQueryResult>;
+  storeMemory(entry: MemoryStoreParams): Promise<string>;
+  deleteMemory(entryId: string): Promise<void>;
+  exportMemory(options: MemoryExportOptions): Promise<MemoryExportResult>;
+  importMemory(options: MemoryImportOptions): Promise<MemoryImportResult>;
+  // System management
+  getSystemStatus(): Promise<SystemStatus>;
+  performHealthCheck(deep?: boolean): Promise<HealthCheckResult>;
+  getConfig(section?: string): Promise<Record<string, unknown>>;
+  updateConfig(section: string, config: Record<string, unknown>, restart?: boolean): Promise<ConfigUpdateResult>;
+  validateConfig(config: Record<string, unknown>): Promise<ConfigValidationResult>;
+  // Workflow management
+  executeWorkflow(options: WorkflowExecuteOptions): Promise<WorkflowExecuteResult>;
+  createWorkflow(workflow: WorkflowDefinition, savePath?: string): Promise<WorkflowCreateResult>;
+  listWorkflows(directory?: string): Promise<WorkflowListResult>;
+  // Terminal management
+  executeCommand(options: ExecuteCommandOptions): Promise<ExecutionResult>;
+  listTerminals(includeIdle?: boolean): Promise<TerminalSession[]>;
+  createTerminal(options: CreateTerminalOptions): Promise<TerminalSession>;
 }
 
 export interface ISwarmCoordinator {
@@ -242,11 +270,15 @@ export interface SpawnAgentInput {
   systemPrompt?: string;
   maxConcurrentTasks?: number;
   priority?: number;
+  environment?: Record<string, unknown>;
+  workingDirectory?: string;
+  config?: Record<string, unknown>;
 }
 
 export interface ListAgentsInput {
   status?: string;
   filterByType?: string;
+  includeTerminated?: boolean;
 }
 
 export interface CreateTaskInput {
@@ -256,6 +288,8 @@ export interface CreateTaskInput {
   assignedAgent?: string;
   input?: Record<string, unknown>;
   dependencies?: string[];
+  assignToAgent?: string;
+  assignToAgentType?: string;
 }
 
 export interface ListTasksInput {
@@ -263,19 +297,34 @@ export interface ListTasksInput {
   agentId?: string;
   limit?: number;
   offset?: number;
+  type?: string;
 }
 
 export interface MemoryQueryInput {
-  query: string;
+  query?: string;
   namespace?: string;
   limit?: number;
+  agentId?: string;
+  sessionId?: string;
+  type?: string;
+  tags?: string[];
+  search?: string;
+  startTime?: string;
+  endTime?: string;
+  offset?: number;
 }
 
 export interface MemoryStoreInput {
-  key: string;
-  value: unknown;
+  key?: string;
+  value?: unknown;
   namespace?: string;
   tags?: string[];
+  agentId?: string;
+  sessionId?: string;
+  type?: string;
+  content?: unknown;
+  context?: Record<string, unknown>;
+  parentId?: string;
 }
 
 export interface ExecuteCommandInput {
@@ -303,4 +352,111 @@ export interface SystemMonitorInput {
   component?: string;
   metrics?: string[];
   interval?: number;
+}
+
+// Additional missing type definitions
+export interface MemoryExportOptions {
+  namespace?: string;
+  format?: "json" | "csv";
+  includeMetadata?: boolean;
+  dateRange?: { start: Date; end: Date };
+}
+
+export interface MemoryExportResult {
+  data: unknown;
+  format: string;
+  size: number;
+  entries: number;
+}
+
+export interface MemoryImportOptions {
+  data: unknown;
+  namespace?: string;
+  overwrite?: boolean;
+  validateSchema?: boolean;
+}
+
+export interface MemoryImportResult {
+  imported: number;
+  skipped: number;
+  errors: string[];
+}
+
+export interface SystemStatus {
+  uptime: number;
+  version: string;
+  environment: string;
+  components: Record<string, { status: string; message?: string }>;
+  resources: {
+    cpu: number;
+    memory: number;
+    disk: number;
+  };
+}
+
+export interface ConfigUpdateResult {
+  success: boolean;
+  changes: string[];
+  restartRequired: boolean;
+  errors?: string[];
+}
+
+export interface ConfigValidationResult {
+  valid: boolean;
+  errors?: string[];
+  warnings?: string[];
+}
+
+export interface WorkflowExecuteOptions {
+  file: string;
+  params?: Record<string, unknown>;
+  timeout?: number;
+  parallel?: boolean;
+}
+
+export interface WorkflowExecuteResult {
+  success: boolean;
+  result?: unknown;
+  duration: number;
+  steps: Array<{ name: string; status: string; duration: number }>;
+  error?: string;
+}
+
+export interface WorkflowDefinition {
+  name: string;
+  description?: string;
+  steps: Array<{
+    name: string;
+    type: string;
+    config: Record<string, unknown>;
+  }>;
+  metadata?: Record<string, unknown>;
+}
+
+export interface WorkflowCreateResult {
+  success: boolean;
+  path?: string;
+  error?: string;
+}
+
+export interface WorkflowListResult {
+  workflows: Array<{
+    name: string;
+    path: string;
+    description?: string;
+  }>;
+}
+
+export interface ExecuteCommandOptions {
+  command: string;
+  sessionId?: string;
+  cwd?: string;
+  env?: Record<string, string>;
+  timeout?: number;
+}
+
+export interface CreateTerminalOptions {
+  name?: string;
+  cwd?: string;
+  env?: Record<string, string>;
 }

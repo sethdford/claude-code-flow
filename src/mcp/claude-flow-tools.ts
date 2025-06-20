@@ -13,7 +13,8 @@ import {
   MemoryQueryInput,
   MemoryStoreInput,
   WorkflowExecuteInput,
-  CreateObjectiveInput
+  CreateObjectiveInput,
+  TaskListParams
 } from "./types.js";
 
 export interface ClaudeFlowToolContext extends MCPContext {
@@ -24,6 +25,7 @@ export interface ClaudeFlowToolContext extends MCPContext {
 interface TerminateAgentInput {
   agentId: string;
   reason?: string;
+  graceful?: boolean;
 }
 
 interface GetAgentInfoInput {
@@ -50,16 +52,19 @@ interface DeleteMemoryInput {
 interface ExportMemoryInput {
   filename: string;
   format?: string;
+  namespace?: string;
 }
 
 interface ImportMemoryInput {
   filename: string;
+  data?: Record<string, unknown>;
+  namespace?: string;
 }
 
 interface UpdateConfigInput {
   section: string;
-  key: string;
-  value: unknown;
+  config: Record<string, unknown>;
+  restart?: boolean;
 }
 
 interface GetConfigInput {
@@ -71,20 +76,44 @@ interface ValidateConfigInput {
   config: Record<string, unknown>;
 }
 
+interface GetMetricsInput {
+  timeRange?: string;
+}
+
+interface HealthCheckInput {
+  deep?: boolean;
+}
+
+interface ExecuteWorkflowInput {
+  filePath: string;
+  params?: Record<string, unknown>;
+}
+
 interface CreateWorkflowInput {
   name: string;
+  description?: string;
   steps: Array<{
+    name: string;
     type: string;
     config: Record<string, unknown>;
   }>;
+  savePath?: string;
 }
 
 interface ListWorkflowsInput {
-  status?: string;
+  directory?: string;
 }
 
 interface GetObjectiveStatusInput {
   objectiveId: string;
+}
+
+interface ExecuteCommandInput {
+  command: string;
+  sessionId?: string;
+  cwd?: string;
+  env?: Record<string, string>;
+  timeout?: number;
 }
 
 /**
@@ -196,7 +225,10 @@ function createSpawnAgentTool(logger: ILogger): MCPTool {
         systemPrompt: spawnInput.systemPrompt || getDefaultSystemPrompt(spawnInput.type),
         maxConcurrentTasks: spawnInput.maxConcurrentTasks || 3,
         priority: spawnInput.priority || 5,
-        environment: spawnInput.environment,
+        environment: spawnInput.environment ? 
+          Object.fromEntries(
+            Object.entries(spawnInput.environment).map(([k, v]) => [k, String(v)])
+          ) : undefined,
         workingDirectory: spawnInput.workingDirectory,
       };
 
@@ -291,15 +323,16 @@ function createTerminateAgentTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      await context.orchestrator.terminateAgent(input.agentId, {
-        reason: input.reason || "Manual termination",
-        graceful: input.graceful !== false,
+      const terminateInput = input as TerminateAgentInput;
+      await context.orchestrator.terminateAgent(terminateInput.agentId, {
+        reason: terminateInput.reason || "Manual termination",
+        graceful: terminateInput.graceful !== false,
       });
 
       return {
-        agentId: input.agentId,
+        agentId: terminateInput.agentId,
         status: "terminated",
-        reason: input.reason || "Manual termination",
+        reason: terminateInput.reason || "Manual termination",
         timestamp: new Date().toISOString(),
       };
     },
@@ -327,10 +360,11 @@ function createGetAgentInfoTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const agentInfo = await context.orchestrator.getAgentInfo(input.agentId);
+      const agentInput = input as GetAgentInfoInput;
+      const agentInfo = await context.orchestrator.getAgentInfo(agentInput.agentId);
 
       if (!agentInfo) {
-        throw new Error(`Agent not found: ${input.agentId}`);
+        throw new Error(`Agent not found: ${agentInput.agentId}`);
       }
 
       return {
@@ -393,23 +427,21 @@ function createCreateTaskTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
+      const createInput = input as CreateTaskInput;
       const task: Partial<Task> = {
-        type: input.type,
-        description: input.description,
-        priority: input.priority || 5,
-        dependencies: input.dependencies || [],
-        input: input.input || {},
-        status: "pending",
-        createdAt: new Date(),
+        type: createInput.type!,
+        description: createInput.description!,
+        priority: createInput.priority || 5,
+        dependencies: createInput.dependencies || [],
+        input: createInput.input || {},
       };
 
-      const taskId = await context.orchestrator.createTask(task);
+      const taskId = await context.orchestrator.createTask(task as Omit<Task, "id" | "createdAt">);
 
-      // Handle assignment
-      if (input.assignToAgent) {
-        await context.orchestrator.assignTask(taskId, input.assignToAgent);
-      } else if (input.assignToAgentType) {
-        await context.orchestrator.assignTaskToType(taskId, input.assignToAgentType);
+      if (createInput.assignToAgent) {
+        await context.orchestrator.assignTask(taskId, createInput.assignToAgent);
+      } else if (createInput.assignToAgentType) {
+        await context.orchestrator.assignTaskToType(taskId, createInput.assignToAgentType);
       }
 
       return {
@@ -460,12 +492,12 @@ function createListTasksTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
+      const listInput = input as ListTasksInput;
       const tasks = await context.orchestrator.listTasks({
-        status: input.status,
-        agentId: input.agentId,
-        type: input.type,
-        limit: input.limit || 50,
-        offset: input.offset || 0,
+        status: listInput.status as TaskListParams["status"],
+        agentId: listInput.agentId,
+        limit: listInput.limit,
+        offset: listInput.offset,
       });
 
       return {
@@ -498,10 +530,11 @@ function createGetTaskStatusTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const task = await context.orchestrator.getTask(input.taskId);
+      const statusInput = input as GetTaskStatusInput;
+      const task = await context.orchestrator.getTask(statusInput.taskId);
 
       if (!task) {
-        throw new Error(`Task not found: ${input.taskId}`);
+        throw new Error(`Task not found: ${statusInput.taskId}`);
       }
 
       return {
@@ -537,12 +570,12 @@ function createCancelTaskTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      await context.orchestrator.cancelTask(input.taskId, input.reason || "Manual cancellation");
+      const cancelInput = input as CancelTaskInput;
+      await context.orchestrator.cancelTask(cancelInput.taskId);
 
       return {
-        taskId: input.taskId,
+        taskId: cancelInput.taskId,
         status: "cancelled",
-        reason: input.reason || "Manual cancellation",
         timestamp: new Date().toISOString(),
       };
     },
@@ -574,11 +607,12 @@ function createAssignTaskTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      await context.orchestrator.assignTask(input.taskId, input.agentId);
+      const assignInput = input as AssignTaskInput;
+      await context.orchestrator.assignTask(assignInput.taskId, assignInput.agentId);
 
       return {
-        taskId: input.taskId,
-        agentId: input.agentId,
+        taskId: assignInput.taskId,
+        agentId: assignInput.agentId,
         status: "assigned",
         timestamp: new Date().toISOString(),
       };
@@ -644,24 +678,26 @@ function createQueryMemoryTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
+      const queryInput = input as MemoryQueryInput;
       const query = {
-        agentId: input.agentId,
-        sessionId: input.sessionId,
-        type: input.type,
-        tags: input.tags,
-        search: input.search,
-        startTime: input.startTime ? new Date(input.startTime) : undefined,
-        endTime: input.endTime ? new Date(input.endTime) : undefined,
-        limit: input.limit || 50,
-        offset: input.offset || 0,
+        agentId: queryInput.agentId,
+        sessionId: queryInput.sessionId,
+        type: queryInput.type as any,
+        tags: queryInput.tags,
+        search: queryInput.search,
+        startTime: queryInput.startTime ? new Date(queryInput.startTime) : undefined,
+        endTime: queryInput.endTime ? new Date(queryInput.endTime) : undefined,
+        limit: queryInput.limit || 50,
+        offset: queryInput.offset || 0,
       };
 
-      const entries = await context.orchestrator.queryMemory(query);
+      const result = await context.orchestrator.queryMemory(query);
 
       return {
-        entries,
-        count: entries.length,
-        query,
+        entries: result.entries,
+        total: result.total,
+        offset: result.offset,
+        limit: result.limit,
         timestamp: new Date().toISOString(),
       };
     },
@@ -715,23 +751,27 @@ function createStoreMemoryTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const entry: Partial<MemoryEntry> = {
-        agentId: input.agentId,
-        sessionId: input.sessionId,
-        type: input.type,
-        content: input.content,
-        context: input.context || {},
-        tags: input.tags || [],
-        parentId: input.parentId,
-        timestamp: new Date(),
-        version: 1,
+      const storeInput = input as MemoryStoreInput;
+      const entryData = {
+        data: {
+          agentId: storeInput.agentId,
+          sessionId: storeInput.sessionId,
+          type: storeInput.type,
+          content: storeInput.content,
+          context: storeInput.context || {},
+          tags: storeInput.tags || [],
+          parentId: storeInput.parentId,
+        },
+        namespace: storeInput.namespace,
+        tags: storeInput.tags,
+        metadata: {},
       };
 
-      const entryId = await context.orchestrator.storeMemory(entry);
+      const entryId = await context.orchestrator.storeMemory(entryData);
 
       return {
         entryId,
-        entry: { ...entry, id: entryId },
+        entry: { ...entryData.data, id: entryId },
         timestamp: new Date().toISOString(),
       };
     },
@@ -759,10 +799,11 @@ function createDeleteMemoryTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      await context.orchestrator.deleteMemory(input.entryId);
+      const deleteInput = input as DeleteMemoryInput;
+      await context.orchestrator.deleteMemory(deleteInput.entryId);
 
       return {
-        entryId: input.entryId,
+        entryId: deleteInput.entryId,
         status: "deleted",
         timestamp: new Date().toISOString(),
       };
@@ -810,16 +851,21 @@ function createExportMemoryTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const exportResult = await context.orchestrator.exportMemory({
-        format: input.format || "json",
-        agentId: input.agentId,
-        sessionId: input.sessionId,
-        startTime: input.startTime ? new Date(input.startTime) : undefined,
-        endTime: input.endTime ? new Date(input.endTime) : undefined,
-      });
+      const exportInput = input as ExportMemoryInput;
+      const options = {
+        format: exportInput.format as "json" | "csv" | undefined,
+        namespace: exportInput.namespace,
+        includeMetadata: true,
+      };
+
+      const result = await context.orchestrator.exportMemory(options);
 
       return {
-        ...exportResult,
+        filename: exportInput.filename,
+        format: exportInput.format || "json",
+        data: result.data,
+        size: result.size,
+        entries: result.entries,
         timestamp: new Date().toISOString(),
       };
     },
@@ -859,14 +905,21 @@ function createImportMemoryTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const importResult = await context.orchestrator.importMemory({
-        filePath: input.filePath,
-        format: input.format || "json",
-        mergeStrategy: input.mergeStrategy || "skip",
-      });
+      const importInput = input as ImportMemoryInput;
+      const options = {
+        data: importInput.data || {},
+        namespace: importInput.namespace,
+        overwrite: false,
+        validateSchema: true,
+      };
+
+      const result = await context.orchestrator.importMemory(options);
 
       return {
-        ...importResult,
+        filename: importInput.filename,
+        imported: result.imported,
+        skipped: result.skipped,
+        errors: result.errors,
         timestamp: new Date().toISOString(),
       };
     },
@@ -914,17 +967,18 @@ function createGetMetricsTool(logger: ILogger): MCPTool {
       },
     },
     handler: async (input: unknown, context?: ClaudeFlowToolContext) => {
-      logger.info("Getting system metrics", { input, sessionId: context?.sessionId });
+      logger.info("Getting metrics", { input, sessionId: context?.sessionId });
 
       if (!context?.orchestrator) {
         throw new Error("Orchestrator not available");
       }
 
-      const metrics = await context.orchestrator.getMetrics(input.timeRange || "1h");
+      const metricsInput = input as GetMetricsInput;
+      const metrics = await context.orchestrator.getMetrics(metricsInput.timeRange);
 
       return {
         metrics,
-        timeRange: input.timeRange || "1h",
+        timeRange: metricsInput.timeRange || "1h",
         timestamp: new Date().toISOString(),
       };
     },
@@ -952,10 +1006,11 @@ function createHealthCheckTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const healthCheck = await context.orchestrator.performHealthCheck(input.deep || false);
+      const healthInput = input as HealthCheckInput;
+      const healthResult = await context.orchestrator.performHealthCheck(healthInput.deep);
 
       return {
-        ...healthCheck,
+        ...healthResult,
         timestamp: new Date().toISOString(),
       };
     },
@@ -977,17 +1032,18 @@ function createGetConfigTool(logger: ILogger): MCPTool {
       },
     },
     handler: async (input: unknown, context?: ClaudeFlowToolContext) => {
-      logger.info("Getting configuration", { input, sessionId: context?.sessionId });
+      logger.info("Getting config", { input, sessionId: context?.sessionId });
 
       if (!context?.orchestrator) {
         throw new Error("Orchestrator not available");
       }
 
-      const config = await context.orchestrator.getConfig(input.section);
+      const configInput = input as GetConfigInput;
+      const config = await context.orchestrator.getConfig(configInput.section);
 
       return {
         config,
-        section: input.section,
+        section: configInput.section,
         timestamp: new Date().toISOString(),
       };
     },
@@ -1019,16 +1075,17 @@ function createUpdateConfigTool(logger: ILogger): MCPTool {
       required: ["section", "config"],
     },
     handler: async (input: unknown, context?: ClaudeFlowToolContext) => {
-      logger.info("Updating configuration", { input, sessionId: context?.sessionId });
+      logger.info("Updating config", { input, sessionId: context?.sessionId });
 
       if (!context?.orchestrator) {
         throw new Error("Orchestrator not available");
       }
 
+      const updateInput = input as UpdateConfigInput;
       const result = await context.orchestrator.updateConfig(
-        input.section,
-        input.config,
-        input.restart || false,
+        updateInput.section,
+        updateInput.config,
+        updateInput.restart
       );
 
       return {
@@ -1054,16 +1111,17 @@ function createValidateConfigTool(logger: ILogger): MCPTool {
       required: ["config"],
     },
     handler: async (input: unknown, context?: ClaudeFlowToolContext) => {
-      logger.info("Validating configuration", { input, sessionId: context?.sessionId });
+      logger.info("Validating config", { input, sessionId: context?.sessionId });
 
       if (!context?.orchestrator) {
         throw new Error("Orchestrator not available");
       }
 
-      const validation = await context.orchestrator.validateConfig(input.config);
+      const validateInput = input as ValidateConfigInput;
+      const result = await context.orchestrator.validateConfig(validateInput.config);
 
       return {
-        ...validation,
+        ...result,
         timestamp: new Date().toISOString(),
       };
     },
@@ -1098,15 +1156,13 @@ function createExecuteWorkflowTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      if (!input.filePath && !input.workflow) {
-        throw new Error("Either filePath or workflow must be provided");
-      }
+      const workflowInput = input as ExecuteWorkflowInput;
+      const options = {
+        file: workflowInput.filePath,
+        params: workflowInput.params,
+      };
 
-      const result = await context.orchestrator.executeWorkflow({
-        filePath: input.filePath,
-        workflow: input.workflow,
-        parameters: input.parameters || {},
-      });
+      const result = await context.orchestrator.executeWorkflow(options);
 
       return {
         ...result,
@@ -1163,18 +1219,18 @@ function createCreateWorkflowTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
+      const createInput = input as CreateWorkflowInput;
       const workflow = {
-        name: input.name,
-        description: input.description,
-        tasks: input.tasks,
-        created: new Date().toISOString(),
+        name: createInput.name,
+        description: createInput.description || "",
+        steps: createInput.steps,
+        metadata: {},
       };
 
-      const result = await context.orchestrator.createWorkflow(workflow, input.savePath);
+      const result = await context.orchestrator.createWorkflow(workflow, createInput.savePath);
 
       return {
         ...result,
-        workflow,
         timestamp: new Date().toISOString(),
       };
     },
@@ -1201,11 +1257,12 @@ function createListWorkflowsTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const workflows = await context.orchestrator.listWorkflows(input.directory);
+      const listInput = input as ListWorkflowsInput;
+      const result = await context.orchestrator.listWorkflows(listInput.directory);
 
       return {
-        workflows,
-        count: workflows.length,
+        workflows: result.workflows,
+        count: result.workflows.length,
         timestamp: new Date().toISOString(),
       };
     },
@@ -1255,14 +1312,16 @@ function createExecuteCommandTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const result = await context.orchestrator.executeCommand({
-        command: input.command,
-        args: input.args,
-        cwd: input.cwd,
-        env: input.env,
-        timeout: input.timeout || 30000,
-        terminalId: input.terminalId,
-      });
+      const commandInput = input as ExecuteCommandInput;
+      const options = {
+        command: commandInput.command,
+        sessionId: commandInput.sessionId,
+        cwd: commandInput.cwd,
+        env: commandInput.env,
+        timeout: commandInput.timeout,
+      };
+
+      const result = await context.orchestrator.executeCommand(options);
 
       return {
         ...result,
@@ -1293,7 +1352,8 @@ function createListTerminalsTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const terminals = await context.orchestrator.listTerminals(input.includeIdle !== false);
+      const listInput = input as { includeIdle?: boolean };
+      const terminals = await context.orchestrator.listTerminals(listInput.includeIdle);
 
       return {
         terminals,
@@ -1332,11 +1392,14 @@ function createCreateTerminalTool(logger: ILogger): MCPTool {
         throw new Error("Orchestrator not available");
       }
 
-      const terminal = await context.orchestrator.createTerminal({
-        cwd: input.cwd,
-        env: input.env,
-        shell: input.shell,
-      });
+      const terminalInput = input as { cwd?: string; env?: Record<string, string>; name?: string };
+      const options = {
+        cwd: terminalInput.cwd,
+        env: terminalInput.env,
+        name: terminalInput.name,
+      };
+
+      const terminal = await context.orchestrator.createTerminal(options);
 
       return {
         terminal,

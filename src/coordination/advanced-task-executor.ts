@@ -213,15 +213,15 @@ export class AdvancedTaskExecutor extends EventEmitter {
           taskId: typeof task.id === "string" ? task.id : task.id.id,
           attempt: retryCount,
           maxRetries,
-          error: error instanceof Error ? error.message : String(error),
+          error: _error instanceof Error ? _error.message : String(_error),
         });
 
         // Check if we should retry
         if (retryCount > maxRetries) {
           const taskError: TaskError = {
             type: "execution_failed",
-            message: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
+            message: _error instanceof Error ? _error.message : String(_error),
+            stack: _error instanceof Error ? _error.stack : undefined,
             context: {
               retryCount,
               maxRetries,

@@ -120,7 +120,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
       this.agentLoads.set(scheduledTask.agentId, Math.max(0, load - 1));
     }
 
-    await super.completeTask(taskId, result);
+    await super.completeTask(taskId, _result);
   }
 
   /**

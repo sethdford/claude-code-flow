@@ -10,13 +10,12 @@ import { logger } from "../core/logger.js";
 import { configManager } from "../core/config.js";
 import { Command } from "./cliffy-compat.js";
 import { startCommand } from "./commands/start.js";
-// import { agentCommand } from "./commands/agent.js"; // Temporarily disabled due to TypeScript errors
+import { agentCommand } from "./commands/agent.js";
 import { taskCommand } from "./commands/task.js";
 // Import placeholder commands (actual implementations are in simple-cli)
 const memoryCommand = { description: "Memory commands", showHelp: () => console.log("Use simple-cli") };
 const configCommand = { description: "Config commands", showHelp: () => console.log("Use simple-cli") };
 const statusCommand = { description: "Status commands", showHelp: () => console.log("Use simple-cli") };
-const agentCommand = { description: "Agent commands (temporarily disabled)", showHelp: () => console.log("Use simple-cli") };
 import { monitorCommand } from "./commands/monitor.js";
 import { sessionCommand } from "./commands/session.js";
 import { workflowCommand } from "./commands/workflow.js";
@@ -25,6 +24,7 @@ import { mcpCommand } from "./commands/mcp.js";
 import { formatError, displayBanner, displayVersion } from "./formatter.js";
 import { startNodeREPL as startREPL } from "./node-repl.js";
 import { CompletionGenerator } from "./completion.js";
+import { getVersion, getBuildDate } from "../utils/version.js";
 
 import chalk from "chalk";
 
@@ -39,9 +39,9 @@ const colors = {
   bold: chalk.bold,
 };
 
-// Version information
-const VERSION = "1.0.73";
-const BUILD_DATE = new Date().toISOString().split("T")[0];
+// Version information - now dynamic
+const VERSION = getVersion();
+const BUILD_DATE = getBuildDate();
 
 // Main CLI command
 const cli = new Command()
@@ -70,7 +70,7 @@ const cli = new Command()
 // Add subcommands
 cli
   .addCommand(startCommand)
-  // .addCommand(agentCommand) // Temporarily disabled
+  .addCommand(agentCommand)
   .addCommand(taskCommand)
   .addCommand(monitorCommand)
   .addCommand(sessionCommand)

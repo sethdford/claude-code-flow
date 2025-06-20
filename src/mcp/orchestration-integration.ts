@@ -5,7 +5,7 @@
 
 import { EventEmitter } from "node:events";
 import { ILogger } from "../core/logger.js";
-import { MCPConfig, MCPSession, MCPTool, SystemEvents, IEventBus } from "../utils/types.js";
+import { MCPConfig, MCPSession, MCPTool, SystemEvents, IEventBus, AgentProfile } from "../utils/types.js";
 import { MCPError } from "../utils/errors.js";
 import { MCPServer, IMCPServer } from "./server.js";
 import { MCPLifecycleManager, LifecycleState } from "./lifecycle-manager.js";
@@ -561,7 +561,7 @@ export class MCPOrchestrationIntegration extends EventEmitter {
           const params = input as { profile: Record<string, unknown>; config?: Record<string, unknown> };
           if (typeof this.components.agentManager?.spawnAgent === "function") {
             return await this.components.agentManager.spawnAgent(
-              params.profile as AgentProfile,
+              params.profile as unknown as AgentProfile,
               params.config as SpawnAgentInput["config"]
             );
           }
@@ -629,7 +629,14 @@ export class MCPOrchestrationIntegration extends EventEmitter {
         handler: async (input: unknown) => {
           const params = input as MemoryQueryInput;
           if (typeof this.components.memoryManager?.query === "function") {
-            return await this.components.memoryManager.query(params);
+            // Convert to expected type
+            const queryParams = {
+              ...params,
+              type: params.type as "error" | "observation" | "insight" | "decision" | "artifact",
+              startTime: params.startTime ? new Date(params.startTime) : undefined,
+              endTime: params.endTime ? new Date(params.endTime) : undefined,
+            };
+            return await this.components.memoryManager.query(queryParams);
           }
           throw new MCPError("Memory query not available");
         },
@@ -649,7 +656,22 @@ export class MCPOrchestrationIntegration extends EventEmitter {
         handler: async (input: unknown) => {
           const params = input as MemoryStoreInput;
           if (typeof this.components.memoryManager?.store === "function") {
-            return await this.components.memoryManager.store(params);
+            // Convert to expected type with required data field
+            const storeParams = {
+              data: {
+                key: params.key,
+                value: params.value,
+                content: params.content,
+                context: params.context,
+                type: params.type,
+                agentId: params.agentId,
+                sessionId: params.sessionId,
+                parentId: params.parentId,
+              },
+              namespace: params.namespace,
+              tags: params.tags,
+            };
+            return await this.components.memoryManager.store(storeParams);
           }
           throw new MCPError("Memory storage not available");
         },
@@ -865,17 +887,22 @@ export class MCPOrchestrationIntegration extends EventEmitter {
   }
 
   private async checkComponentHealth(component: string): Promise<boolean> {
-    const componentInstance = this.getComponentInstance(component);
-    if (!componentInstance) return false;
+    try {
+      const instance = this.getComponentInstance(component);
+      if (!instance) return false;
 
-    // Check if component has health check method
-    if (typeof componentInstance.healthCheck === "function") {
-      const result = await componentInstance.healthCheck();
-      return result === true || (typeof result === "object" && result.healthy === true);
+      // Check if the component has a healthCheck method
+      if ('healthCheck' in instance && typeof instance.healthCheck === 'function') {
+        const result = await instance.healthCheck();
+        return result?.healthy !== false;
+      }
+
+      // Default to true if no health check method
+      return true;
+    } catch (error) {
+      this.logger.warn(`Health check failed for ${component}`, error);
+      return false;
     }
-
-    // Basic check - component exists and is not null
-    return true;
   }
 
   private getComponentInstance(component: string): IOrchestrator | ISwarmCoordinator | IAgentManager | IResourceManager | IMemoryManager | IMonitor | ITerminalManager | null {
