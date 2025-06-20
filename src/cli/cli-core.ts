@@ -5,23 +5,37 @@
 
 import chalk from "chalk";
 import fs from "fs-extra";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 
-// Get version from package.json
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const packageJsonPath = join(__dirname, "../../package.json");
-
+// Get version from package.json - SEA compatible approach
 let VERSION = "1.0.72"; // fallback version
 
-try {
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-  VERSION = packageJson.version;
-} catch (error) {
-  // Use fallback version if package.json can't be read
-  console.warn("Could not read version from package.json, using fallback");
+// Function to get version synchronously
+function getVersion(): string {
+  try {
+    // Only try to read package.json if we're not in a SEA bundle
+    // In SEA, import.meta is not available or behaves differently
+    if (typeof import.meta !== 'undefined' && import.meta.url) {
+      // We're in a regular Node.js environment
+      const { fileURLToPath } = require("node:url");
+      const { dirname, join } = require("node:path");
+      
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+      const packageJsonPath = join(__dirname, "../../package.json");
+      
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+      return packageJson.version;
+    }
+  } catch (error) {
+    // Use fallback version if package.json can't be read or in SEA environment
+    // Don't log warning to avoid noise
+  }
+  
+  return VERSION;
 }
+
+// Set the version
+VERSION = getVersion();
 
 export { VERSION };
 
