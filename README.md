@@ -3,7 +3,7 @@
 > **Enterprise AI Agent Orchestration via AWS Bedrock**  
 > Connect to Claude 4 through your AWS infrastructure with automatic credential detection
 
-[![npm version](https://badge.fury.io/js/@sethdford/claude-flow.svg)](https://badge.fury.io/js/@sethdford/claude-flow)
+[![npm version](https://badge.fury.io/js/%40sethdouglasford%2Fclaude-flow.svg)](https://badge.fury.io/js/%40sethdouglasford%2Fclaude-flow)
 [![Build Status](https://github.com/sethdford/vibex-claude-code-flow/workflows/CI/badge.svg)](https://github.com/sethdford/vibex-claude-code-flow/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -30,7 +30,7 @@ If you already have AWS configured, Claude Flow will automatically detect your c
 
 ```bash
 # Install globally
-npm install -g @sethdford/claude-flow
+npm install -g @sethdouglasford/claude-flow
 
 # Start with automatic AWS detection
 claude-flow start
@@ -55,10 +55,10 @@ claude-flow start
 - AWS profiles (`AWS_PROFILE` or `~/.aws/credentials`)
 - IAM roles (EC2 Instance Profile, ECS Task Role)
 # Show version
-@sethdford/claude-flow --version
+@sethdouglasford/claude-flow --version
 
 # Get help
-@sethdford/claude-flow help
+@sethdouglasford/claude-flow help
 
 # Start a new workflow
 claude-flow start --config my-workflow.json
