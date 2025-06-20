@@ -14,7 +14,7 @@ import chalk from "chalk";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const VERSION = "1.0.71";
+const VERSION = "1.0.73";
 
 // Simple in-memory storage for the session
 const memoryStore: Map<string, any> = new Map();
@@ -1474,7 +1474,7 @@ async function createProgram() {
         
         // Create base configuration
         const claudeConfig = {
-          version: "1.0.70",
+          version: "1.0.73",
           project: {
             name: path.basename(process.cwd()),
             type: "claude-flow",

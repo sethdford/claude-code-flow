@@ -40,7 +40,7 @@ const colors = {
 };
 
 // Version information
-const VERSION = "1.0.71";
+const VERSION = "1.0.73";
 const BUILD_DATE = new Date().toISOString().split("T")[0];
 
 // Main CLI command

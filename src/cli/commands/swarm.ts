@@ -37,6 +37,25 @@ interface SwarmOptions {
   simulate?: boolean;
 }
 
+interface SwarmCoordinator {
+  createObjective: (objective: string, strategy: string) => Promise<string>;
+  registerAgent: (name: string, type: string, capabilities: unknown) => Promise<string>;
+  executeObjective: (objectiveId: string) => Promise<void>;
+  start: () => Promise<void>;
+  stop: () => Promise<void>;
+  shutdown: () => Promise<void>;
+  getStatus: () => Promise<{ phase: string; activeAgents: any[]; completedTasks: any[]; errors: any[] }>;
+  getSwarmStatus: () => { objectives: number; tasks: { completed: number; failed: number }; agents: { total: number } };
+  getObjectiveStatus: (objectiveId: string) => { 
+    id: string;
+    status: string;
+    progress: number;
+    startTime: Date;
+    completedTasks: number;
+    totalTasks: number;
+  };
+}
+
 export async function swarmAction(ctx: CommandContext) {
   // First check if help is requested
   if (ctx.flags.help || ctx.flags.h) {
@@ -120,7 +139,7 @@ export async function swarmAction(ctx: CommandContext) {
   try {
     // Initialize swarm coordination system
     // TODO: Import and use SwarmCoordinator when available
-    const coordinator = {
+    const coordinator: SwarmCoordinator = {
       createObjective: async (_obj: string, _strat: string) => `obj-${  Date.now()}`,
       registerAgent: async (name: string, _type: string, _capabilities: unknown) => `agent-${name}-${Date.now()}`,
       executeObjective: async (objectiveId: string) => {
@@ -146,7 +165,7 @@ export async function swarmAction(ctx: CommandContext) {
         completedTasks: 1,
         totalTasks: 1, 
       }),
-    } as any; // Placeholder
+    };
     /* const coordinator = new SwarmCoordinator({
       maxAgents: options.maxAgents,
       maxConcurrentTasks: options.parallel ? options.maxAgents : 1,
@@ -184,7 +203,7 @@ export async function swarmAction(ctx: CommandContext) {
     await mkdir(swarmDir, { recursive: true });
 
     // Create objective in coordinator
-    const objectiveId = await coordinator.createObjective(objective, options.strategy);
+    const objectiveId: string = await coordinator.createObjective(objective, options.strategy);
     
     console.log(`\n📝 Objective created with ID: ${objectiveId}`);
 
@@ -194,7 +213,7 @@ export async function swarmAction(ctx: CommandContext) {
     
     for (let i = 0; i < Math.min(options.maxAgents, agentTypes.length); i++) {
       const agentType = agentTypes[i % agentTypes.length];
-      const agentId = await coordinator.registerAgent(
+      const agentId: string = await coordinator.registerAgent(
         `${agentType}-${i + 1}`,
         agentType,
         getCapabilitiesForType(agentType),

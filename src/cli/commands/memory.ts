@@ -18,7 +18,7 @@ export class SimpleMemoryManager {
 
   async load(): Promise<void> {
     const content = await fs.readFile(this.filePath, "utf-8");
-    this.data = JSON.parse(content);
+    this.data = JSON.parse(content) as Record<string, MemoryEntry[]>;
   }
 
   async save(): Promise<void> {
@@ -92,7 +92,7 @@ export class SimpleMemoryManager {
 
   async importData(filePath: string) {
     const content = await fs.readFile(filePath, "utf-8");
-    this.data = JSON.parse(content);
+    this.data = JSON.parse(content) as Record<string, MemoryEntry[]>;
     await this.save();
   }
 
