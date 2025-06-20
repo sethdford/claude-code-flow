@@ -486,10 +486,14 @@ export class MCPPerformanceMonitor extends EventEmitter {
 
   private getMetricValue(metrics: PerformanceMetrics, path: string): number {
     const parts = path.split(".");
-    let value: any = metrics;
+    let value: unknown = metrics;
     
     for (const part of parts) {
-      value = value?.[part];
+      if (typeof value === "object" && value !== null) {
+        value = (value as Record<string, unknown>)?.[part];
+      } else {
+        value = undefined;
+      }
       if (value === undefined) break;
     }
     

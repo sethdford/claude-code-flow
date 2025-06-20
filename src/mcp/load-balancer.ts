@@ -406,7 +406,7 @@ export class RequestQueue {
   private queue: Array<{
     session: MCPSession;
     request: MCPRequest;
-    resolve: (result: any) => void;
+    resolve: (result: unknown) => void;
     reject: (error: Error) => void;
     timestamp: number;
   }> = [];

@@ -65,7 +65,7 @@ export class MCPLifecycleManager extends EventEmitter {
   private restartAttempts = 0;
   private shutdownPromise?: Promise<void>;
   private history: LifecycleEvent[] = [];
-  private processListeners = new Map<string, (...args: any[]) => void>();
+  private processListeners = new Map<string, (...args: unknown[]) => void>();
 
   private readonly config: LifecycleManagerConfig = {
     healthCheckInterval: 30000, // 30 seconds
@@ -390,7 +390,7 @@ export class MCPLifecycleManager extends EventEmitter {
     this.processListeners.set("uncaughtException", uncaughtHandler);
     process.on("uncaughtException", uncaughtHandler);
 
-    const unhandledHandler = (reason: any) => {
+    const unhandledHandler = (reason: unknown) => {
       this.logger.error("Unhandled rejection", reason);
       this.handleServerError(reason instanceof Error ? reason : new Error(String(reason)));
     };

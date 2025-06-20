@@ -202,11 +202,12 @@ export class HttpTransport implements ITransport {
     });
 
     // Error handler
-    this.app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    this.app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
       this.logger.error("Express error", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
       res.status(500).json({ 
         error: "Internal server error",
-        message: err.message, 
+        message: errorMessage, 
       });
     });
   }

@@ -161,7 +161,8 @@ export class MCPServer implements IMCPServer {
 
       // Clean up session manager
       if (this.sessionManager && "destroy" in this.sessionManager) {
-        (this.sessionManager as any).destroy();
+        const destroyableManager = this.sessionManager as ISessionManager & { destroy(): void };
+        destroyableManager.destroy();
       }
 
       // Clean up all sessions
@@ -334,7 +335,7 @@ export class MCPServer implements IMCPServer {
         }
         throw error;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error("Error handling MCP request", { 
         id: request.id,
         method: request.method,
@@ -390,7 +391,7 @@ export class MCPServer implements IMCPServer {
         id: request.id,
         result,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error("Error during initialization", error);
       return {
         jsonrpc: "2.0",

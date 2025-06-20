@@ -5,23 +5,38 @@
 
 import { EventEmitter } from "node:events";
 import { ILogger } from "../core/logger.js";
-import { MCPConfig, MCPSession, MCPTool, SystemEvents } from "../utils/types.js";
+import { MCPConfig, MCPSession, MCPTool, SystemEvents, IEventBus } from "../utils/types.js";
 import { MCPError } from "../utils/errors.js";
 import { MCPServer, IMCPServer } from "./server.js";
 import { MCPLifecycleManager, LifecycleState } from "./lifecycle-manager.js";
 import { MCPPerformanceMonitor } from "./performance-monitor.js";
 import { MCPProtocolManager } from "./protocol-manager.js";
+import { 
+  IOrchestrator, 
+  ISwarmCoordinator, 
+  IAgentManager, 
+  IResourceManager, 
+  IMemoryManager, 
+  IMonitor, 
+  ITerminalManager,
+  TaskListParams,
+  ListAgentsInput,
+  SpawnAgentInput,
+  MemoryQueryInput,
+  MemoryStoreInput,
+  ExecuteCommandInput
+} from "./types.js";
 
 export interface OrchestrationComponents {
-  orchestrator?: any;
-  swarmCoordinator?: any;
-  agentManager?: any;
-  resourceManager?: any;
-  memoryManager?: any;
-  messageBus?: any;
-  monitor?: any;
-  eventBus?: any;
-  terminalManager?: any;
+  orchestrator?: IOrchestrator;
+  swarmCoordinator?: ISwarmCoordinator;
+  agentManager?: IAgentManager;
+  resourceManager?: IResourceManager;
+  memoryManager?: IMemoryManager;
+  messageBus?: IEventBus;
+  monitor?: IMonitor;
+  eventBus?: IEventBus;
+  terminalManager?: ITerminalManager;
 }
 
 export interface MCPOrchestrationConfig {
@@ -466,9 +481,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
             limit: { type: "number", minimum: 1, maximum: 100 },
           },
         },
-        handler: async (input: any) => {
+        handler: async (input: unknown) => {
+          const params = input as TaskListParams;
           if (typeof this.components.orchestrator?.listTasks === "function") {
-            return await this.components.orchestrator.listTasks(input);
+            return await this.components.orchestrator.listTasks(params);
           }
           throw new MCPError("Orchestrator task listing not available");
         },
@@ -541,9 +557,13 @@ export class MCPOrchestrationIntegration extends EventEmitter {
           },
           required: ["profile"],
         },
-        handler: async (input: any) => {
+        handler: async (input: unknown) => {
+          const params = input as { profile: Record<string, unknown>; config?: Record<string, unknown> };
           if (typeof this.components.agentManager?.spawnAgent === "function") {
-            return await this.components.agentManager.spawnAgent(input.profile, input.config);
+            return await this.components.agentManager.spawnAgent(
+              params.profile as AgentProfile,
+              params.config as SpawnAgentInput["config"]
+            );
           }
           throw new MCPError("Agent spawning not available");
         },
@@ -606,9 +626,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
           },
           required: ["query"],
         },
-        handler: async (input: any) => {
+        handler: async (input: unknown) => {
+          const params = input as MemoryQueryInput;
           if (typeof this.components.memoryManager?.query === "function") {
-            return await this.components.memoryManager.query(input);
+            return await this.components.memoryManager.query(params);
           }
           throw new MCPError("Memory query not available");
         },
@@ -625,9 +646,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
           },
           required: ["data"],
         },
-        handler: async (input: any) => {
+        handler: async (input: unknown) => {
+          const params = input as MemoryStoreInput;
           if (typeof this.components.memoryManager?.store === "function") {
-            return await this.components.memoryManager.store(input);
+            return await this.components.memoryManager.store(params);
           }
           throw new MCPError("Memory storage not available");
         },
@@ -700,9 +722,10 @@ export class MCPOrchestrationIntegration extends EventEmitter {
           },
           required: ["command"],
         },
-        handler: async (input: any) => {
+        handler: async (input: unknown) => {
+          const params = input as ExecuteCommandInput;
           if (typeof this.components.terminalManager?.execute === "function") {
-            return await this.components.terminalManager.execute(input.command, input.sessionId);
+            return await this.components.terminalManager.execute(params.command, params.sessionId);
           }
           throw new MCPError("Terminal execution not available");
         },
@@ -855,15 +878,15 @@ export class MCPOrchestrationIntegration extends EventEmitter {
     return true;
   }
 
-  private getComponentInstance(component: string): any {
+  private getComponentInstance(component: string): IOrchestrator | ISwarmCoordinator | IAgentManager | IResourceManager | IMemoryManager | IMonitor | ITerminalManager | null {
     switch (component) {
-      case "orchestrator": return this.components.orchestrator;
-      case "swarm": return this.components.swarmCoordinator;
-      case "agents": return this.components.agentManager;
-      case "resources": return this.components.resourceManager;
-      case "memory": return this.components.memoryManager;
-      case "monitoring": return this.components.monitor;
-      case "terminals": return this.components.terminalManager;
+      case "orchestrator": return this.components.orchestrator || null;
+      case "swarm": return this.components.swarmCoordinator || null;
+      case "agents": return this.components.agentManager || null;
+      case "resources": return this.components.resourceManager || null;
+      case "memory": return this.components.memoryManager || null;
+      case "monitoring": return this.components.monitor || null;
+      case "terminals": return this.components.terminalManager || null;
       default: return null;
     }
   }

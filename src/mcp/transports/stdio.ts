@@ -100,16 +100,17 @@ export class StdioTransport implements ITransport {
 
 
   private async processMessage(line: string): Promise<void> {
-    let message: any;
+    let message: unknown;
 
     try {
       message = JSON.parse(line);
       
-      if (!message.jsonrpc || message.jsonrpc !== "2.0") {
+      if (!message || typeof message !== "object" || !("jsonrpc" in message) || (message as { jsonrpc: unknown }).jsonrpc !== "2.0") {
         throw new Error("Invalid JSON-RPC version");
       }
 
-      if (!message.method) {
+      const rpcMessage = message as { method?: string; id?: string | number };
+      if (!rpcMessage.method) {
         throw new Error("Missing method");
       }
     } catch (error) {
@@ -140,7 +141,7 @@ export class StdioTransport implements ITransport {
     this.messageCount++;
 
     // Check if this is a notification (no id field) or a request
-    if (message.id === undefined) {
+    if (rpcMessage.id === undefined) {
       // This is a notification
       await this.handleNotification(message as MCPNotification);
     } else {

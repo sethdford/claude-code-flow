@@ -2,7 +2,7 @@
  * Enhanced Tool registry for MCP with capability negotiation and discovery
  */
 
-import { MCPTool, MCPCapabilities, MCPProtocolVersion } from "../utils/types.js";
+import { MCPTool, MCPCapabilities, MCPProtocolVersion, MCPContext } from "../utils/types.js";
 import { ILogger } from "../core/logger.js";
 import { MCPError } from "../utils/errors.js";
 import { EventEmitter } from "node:events";
@@ -136,7 +136,7 @@ export class ToolRegistry extends EventEmitter {
   /**
    * Executes a tool with metrics tracking
    */
-  async executeTool(name: string, input: unknown, context?: any): Promise<unknown> {
+  async executeTool(name: string, input: unknown, context?: MCPContext): Promise<unknown> {
     const tool = this.tools.get(name);
     if (!tool) {
       throw new MCPError(`Tool not found: ${name}`);
@@ -219,7 +219,7 @@ export class ToolRegistry extends EventEmitter {
    */
   private validateInput(tool: MCPTool, input: unknown): void {
     // Simple validation - in production, use a JSON Schema validator
-    const schema = tool.inputSchema as any;
+    const schema = tool.inputSchema as Record<string, unknown>;
 
     if (schema.type === "object" && schema.properties) {
       if (typeof input !== "object" || input === null) {
@@ -241,7 +241,8 @@ export class ToolRegistry extends EventEmitter {
       for (const [prop, propSchema] of Object.entries(schema.properties)) {
         if (prop in inputObj) {
           const value = inputObj[prop];
-          const expectedType = (propSchema as any).type;
+          const propSchemaTyped = propSchema as Record<string, unknown>;
+          const expectedType = propSchemaTyped.type as string | undefined;
 
           if (expectedType && !this.checkType(value, expectedType)) {
             throw new MCPError(
@@ -311,7 +312,7 @@ export class ToolRegistry extends EventEmitter {
   /**
    * Check tool capabilities and permissions
    */
-  private async checkToolCapabilities(toolName: string, context?: any): Promise<void> {
+  private async checkToolCapabilities(toolName: string, context?: MCPContext & { permissions?: string[]; protocolVersion?: MCPProtocolVersion }): Promise<void> {
     const capability = this.capabilities.get(toolName);
     if (!capability) {
       return; // No capability checks needed

@@ -402,13 +402,13 @@ export class SessionManager implements ISessionManager {
     return {};
   }
 
-  private extractAuthData(credentials: unknown): any {
+  private extractAuthData(credentials: unknown): MCPSession["authData"] {
     if (typeof credentials === "object" && credentials !== null) {
       const creds = credentials as Record<string, unknown>;
       return {
-        token: this.extractToken(credentials),
-        user: creds.username || creds.user,
-        permissions: creds.permissions || [],
+        token: this.extractToken(credentials) || undefined,
+        user: (creds.username || creds.user) as string | undefined,
+        permissions: (creds.permissions || []) as string[],
       };
     }
     return {};
