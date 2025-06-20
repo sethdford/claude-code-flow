@@ -1,4 +1,153 @@
 /**
+ * Swarm orchestration commands
+ */
+
+import { Command } from "../cliffy-compat.js";
+import chalk from "chalk";
+
+// Color compatibility
+const colors = {
+  gray: chalk.gray,
+  yellow: chalk.yellow,
+  red: chalk.red,
+  green: chalk.green,
+  cyan: chalk.cyan,
+  blue: chalk.blue,
+  bold: chalk.bold,
+};
+
+export const swarmCommand = new Command()
+  .name("swarm")
+  .description("Multi-agent swarm orchestration for complex objectives")
+  .action(() => {
+    swarmCommand.outputHelp();
+  });
+
+// Add subcommands properly
+swarmCommand
+  .command("run")
+  .description("Execute a swarm objective")
+  .arguments("<objective>")
+  .option("--strategy <type>", "Strategy: auto, research, development, analysis", "auto")
+  .option("--max-agents <n>", "Maximum number of agents", "5")
+  .option("--timeout <minutes>", "Timeout in minutes", "60")
+  .option("--research", "Enable research capabilities")
+  .option("--parallel", "Enable parallel execution")
+  .option("--review", "Enable peer review between agents")
+  .option("--monitor", "Enable real-time monitoring")
+  .option("--background", "Run swarm in background mode")
+  .option("--distributed", "Enable distributed coordination")
+  .option("--memory-namespace <ns>", "Memory namespace for swarm", "swarm")
+  .option("--persistence", "Enable task persistence", true)
+  .option("--dry-run", "Show configuration without executing")
+  .option("-v, --verbose", "Enable verbose logging")
+  .action(async (objective: string, options: any) => {
+    const swarmOptions = {
+      strategy: options.strategy,
+      maxAgents: parseInt(options.maxAgents) || 5,
+      maxDepth: 3,
+      research: options.research || false,
+      parallel: options.parallel || false,
+      memoryNamespace: options.memoryNamespace || "swarm",
+      timeout: parseInt(options.timeout) || 60,
+      review: options.review || false,
+      coordinator: false,
+      verbose: options.verbose || false,
+      dryRun: options.dryRun || false,
+      monitor: options.monitor || false,
+      ui: false,
+      background: options.background || false,
+      persistence: options.persistence !== false,
+      distributed: options.distributed || false,
+    };
+
+    await executeSwarm(objective, swarmOptions);
+  });
+
+swarmCommand
+  .command("status")
+  .description("Show status of running swarms")
+  .arguments("[swarm-id]")
+  .action(async (swarmId?: string, options: any = {}) => {
+    await showSwarmStatus(swarmId);
+  });
+
+swarmCommand
+  .command("stop")
+  .description("Stop a running swarm")
+  .arguments("<swarm-id>")
+  .action(async (swarmId: string, options: any = {}) => {
+    await stopSwarm(swarmId);
+  });
+
+swarmCommand
+  .command("list")
+  .description("List all swarms")
+  .option("--active", "Show only active swarms")
+  .action(async (options: any) => {
+    await listSwarms(options.active);
+  });
+
+async function executeSwarm(objective: string, options: any): Promise<void> {
+  const { generateId } = await import("../../utils/helpers.js");
+  const swarmId = generateId("swarm");
+  
+  if (options.dryRun) {
+    console.log(colors.yellow("DRY RUN - Swarm Configuration:"));
+    console.log(`Swarm ID: ${swarmId}`);
+    console.log(`Objective: ${objective}`);
+    console.log(`Strategy: ${options.strategy}`);
+    console.log(`Max Agents: ${options.maxAgents}`);
+    console.log(`Research: ${options.research}`);
+    console.log(`Parallel: ${options.parallel}`);
+    console.log(`Review Mode: ${options.review}`);
+    console.log(`Memory Namespace: ${options.memoryNamespace}`);
+    console.log(`Timeout: ${options.timeout} minutes`);
+    return;
+  }
+  
+  console.log(colors.green(`🐝 Initializing Claude Swarm: ${swarmId}`));
+  console.log(`📋 Objective: ${objective}`);
+  console.log(`🎯 Strategy: ${options.strategy}`);
+  
+  try {
+    // Call the original swarmAction function
+    const ctx = {
+      args: [objective],
+      flags: options as Record<string, unknown>,
+      config: undefined,
+    };
+    
+    await swarmAction(ctx);
+    
+  } catch (err) {
+    console.error(colors.red(`Failed to execute swarm: ${err instanceof Error ? err.message : String(err)}`));
+  }
+}
+
+async function showSwarmStatus(swarmId?: string): Promise<void> {
+  console.log(colors.blue("Swarm Status"));
+  // Implementation for showing swarm status
+  if (swarmId) {
+    console.log(`Status for swarm: ${swarmId}`);
+    // Show specific swarm status
+  } else {
+    console.log("All active swarms:");
+    // Show all swarm statuses
+  }
+}
+
+async function stopSwarm(swarmId: string): Promise<void> {
+  console.log(colors.yellow(`Stopping swarm: ${swarmId}`));
+  // Implementation for stopping a swarm
+}
+
+async function listSwarms(activeOnly: boolean = false): Promise<void> {
+  console.log(colors.blue(activeOnly ? "Active Swarms:" : "All Swarms:"));
+  // Implementation for listing swarms
+}
+
+/**
  * Claude Swarm Mode - Self-orchestrating agent swarms using claude-flow
  */
 

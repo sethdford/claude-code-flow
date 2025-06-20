@@ -643,7 +643,7 @@ async function connectToOrchestrator(context: REPLContext, target?: string): Pro
 
 async function executeCliCommand(args: string[]): Promise<{ success: boolean; output: string }> {
   return new Promise((resolve) => {
-    const child = spawn("npx", ["tsx", "src/cli/simple-cli.ts", ...args], {
+    const child = spawn("node", ["dist/cli/index.js", ...args], {
       stdio: "pipe",
       cwd: process.cwd(),
     });

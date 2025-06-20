@@ -22,6 +22,7 @@ const colors = {
 };
 
 export const monitorCommand = new Command()
+  .name("monitor")
   .description("Start live monitoring dashboard")
   .option("-i, --interval <seconds>", "Update interval in seconds", "2")
   .option("-c, --compact", "Compact view mode")

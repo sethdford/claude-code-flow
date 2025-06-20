@@ -24,6 +24,7 @@ const colors = {
 let mcpServer: MCPServer | null = null;
 
 export const mcpCommand = new Command()
+  .name("mcp")
   .description("Manage MCP server and tools")
   .action(() => {
     console.log(colors.yellow("Please specify a subcommand:"));

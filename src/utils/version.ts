@@ -3,11 +3,12 @@
  * This eliminates hardcoded version references throughout the codebase
  */
 
-import { readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 let cachedVersion: string | null = null;
+let cachedBuildDate: string | null = null;
 
 /**
  * Get the current version from package.json
@@ -19,20 +20,78 @@ export function getVersion(): string {
   }
 
   try {
-    // Get the root directory of the project
-    const currentDir = dirname(fileURLToPath(import.meta.url));
-    const rootDir = join(currentDir, "..", "..");
-    const packageJsonPath = join(rootDir, "package.json");
+    // Check if we're in a SEA (Single Executable Application) environment
+    // In SEA, import.meta.url might be undefined or not work properly
+    let packageJsonContent: string;
     
-    // Read and parse package.json
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+    try {
+      // First try to read from SEA assets (if available)
+      const seaAssetPath = "package.json";
+      if (existsSync(seaAssetPath)) {
+        packageJsonContent = readFileSync(seaAssetPath, "utf-8");
+      } else {
+        throw new Error("SEA asset not found");
+      }
+    } catch {
+      // Fallback to normal file system lookup
+      if (!import.meta.url || import.meta.url === 'undefined') {
+        // If import.meta.url is not available, use hardcoded fallback
+        cachedVersion = "1.0.81";
+        return cachedVersion;
+      }
+
+      // Try multiple strategies to find package.json
+      const currentDir = dirname(fileURLToPath(import.meta.url));
+      
+      // Strategy 1: Go up two levels from src/utils
+      let packageJsonPath = resolve(currentDir, "..", "..", "package.json");
+      
+      if (!existsSync(packageJsonPath)) {
+        // Strategy 2: Go up three levels (in case we're in dist)
+        packageJsonPath = resolve(currentDir, "..", "..", "..", "package.json");
+      }
+      
+      if (!existsSync(packageJsonPath)) {
+        // Strategy 3: Search upwards from current directory
+        let searchDir = currentDir;
+        let found = false;
+        
+        for (let i = 0; i < 10; i++) { // Limit search depth
+          const testPath = join(searchDir, "package.json");
+          if (existsSync(testPath)) {
+            packageJsonPath = testPath;
+            found = true;
+            break;
+          }
+          const parentDir = dirname(searchDir);
+          if (parentDir === searchDir) break; // Reached root
+          searchDir = parentDir;
+        }
+        
+        if (!found) {
+          throw new Error("package.json not found in any parent directory");
+        }
+      }
+      
+      packageJsonContent = readFileSync(packageJsonPath, "utf-8");
+    }
+    
+    // Parse package.json
+    const packageJson = JSON.parse(packageJsonContent);
+    
+    if (!packageJson.version) {
+      throw new Error("No version field found in package.json");
+    }
+    
     cachedVersion = packageJson.version;
-    
     return cachedVersion;
+    
   } catch (error) {
     // Fallback version if package.json can't be read
-    console.warn("Warning: Could not read version from package.json, using fallback");
-    return "1.0.0";
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(`Warning: Could not read version from package.json (${errorMessage}), using fallback`);
+    cachedVersion = "1.0.0-fallback";
+    return cachedVersion;
   }
 }
 
@@ -40,7 +99,12 @@ export function getVersion(): string {
  * Get build date as ISO string
  */
 export function getBuildDate(): string {
-  return new Date().toISOString().split("T")[0];
+  if (cachedBuildDate) {
+    return cachedBuildDate;
+  }
+  
+  cachedBuildDate = new Date().toISOString().split("T")[0];
+  return cachedBuildDate;
 }
 
 /**
@@ -48,4 +112,5 @@ export function getBuildDate(): string {
  */
 export function clearVersionCache(): void {
   cachedVersion = null;
+  cachedBuildDate = null;
 } 

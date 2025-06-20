@@ -9,6 +9,7 @@ import { generateId } from "../../utils/helpers.js";
 import * as fs from "node:fs/promises";
 
 export const taskCommand = new Command()
+  .name("task")
   .description("Manage tasks")
   .action(() => {
     console.log("Usage: claude-flow task <command> [options]");

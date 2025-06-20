@@ -20,6 +20,7 @@ const colors = {
 };
 
 export const claudeCommand = new Command()
+  .name("claude")
   .description("Manage Claude instances")
   .action(() => {
     claudeCommand.outputHelp();

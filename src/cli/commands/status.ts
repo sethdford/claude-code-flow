@@ -4,6 +4,7 @@
 
 import chalk from "chalk";
 import Table from "cli-table3";
+import { Command } from "../cliffy-compat.js";
 import { formatDuration, formatStatusIndicator } from "../formatter.js";
 import { existsSync } from "node:fs";
 import { promises as fs } from "node:fs";
@@ -20,18 +21,11 @@ const colors = {
   white: chalk.white,
 };
 
-// Cliffy command not supported in Node.js build
 // Export functions for use by other modules
 export { showStatus, getSystemStatus };
 
-// Export a placeholder command for Node.js compatibility
-export const statusCommand = {
-  description: "Show Claude-Flow system status (use simple-cli for Node.js)",
-  showHelp: () => console.log("Use claude-flow simple status commands instead"),
-};
-
-/*
 export const statusCommand = new Command()
+  .name("status")
   .description('Show Claude-Flow system status')
   .option('-w, --watch', 'Watch mode - continuously update status')
   .option('-i, --interval <seconds>', 'Update interval in seconds', '5')
@@ -39,12 +33,12 @@ export const statusCommand = new Command()
   .option('--json', 'Output in JSON format')
   .action(async (options: any) => {
     if (options.watch) {
-      await watchStatus(options);
+      console.log(colors.yellow("Watch mode not yet implemented"));
+      await showStatus(options);
     } else {
       await showStatus(options);
     }
   });
-*/
 
 async function showStatus(options: any): Promise<void> {
   try {

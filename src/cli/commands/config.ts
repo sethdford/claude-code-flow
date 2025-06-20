@@ -30,6 +30,7 @@ interface FileCommandOptions {
 }
 
 export const configCommand = new Command()
+  .name("config")
   .description("Manage Claude-Flow configuration")
   .action(() => {
     configCommand.help();

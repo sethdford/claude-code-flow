@@ -40,6 +40,7 @@ const Confirm = async (message: string): Promise<boolean> => {
 };
 
 export const startCommand = new Command()
+  .name("start")
   .description("Start the Claude-Flow orchestration system")
   .option("-d, --daemon", "Run as daemon in background")
   .option("-p, --port <port>", "MCP server port", "3000")

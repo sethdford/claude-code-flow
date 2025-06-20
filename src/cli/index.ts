@@ -1,26 +1,28 @@
 #!/usr/bin/env node
 /**
  * Claude-Flow CLI entry point
- * This redirects to simple-cli.ts for remote execution compatibility
+ * Main command-line interface using Commander.js with proper subcommands
  */
 
-// Note: simple-cli.js has been removed as it was a legacy implementation
-// Spinner import removed - not available in current cliffy version
+// Note: simple-cli.ts is a legacy implementation that should be phased out
+// This file (index.ts) is the current main CLI entry point
 import { logger } from "../core/logger.js";
 import { configManager } from "../core/config.js";
 import { Command } from "./cliffy-compat.js";
 import { startCommand } from "./commands/start.js";
 import { agentCommand } from "./commands/agent.js";
 import { taskCommand } from "./commands/task.js";
-// Import placeholder commands (actual implementations are in simple-cli)
-const memoryCommand = { description: "Memory commands", showHelp: () => console.log("Use simple-cli") };
-const configCommand = { description: "Config commands", showHelp: () => console.log("Use simple-cli") };
-const statusCommand = { description: "Status commands", showHelp: () => console.log("Use simple-cli") };
+import { memoryCommand } from "./commands/memory.js";
+import { configCommand } from "./commands/config.js";
+import { statusCommand } from "./commands/status.js";
 import { monitorCommand } from "./commands/monitor.js";
 import { sessionCommand } from "./commands/session.js";
 import { workflowCommand } from "./commands/workflow.js";
 import { helpCommand } from "./commands/help.js";
 import { mcpCommand } from "./commands/mcp.js";
+import { claudeCommand } from "./commands/claude.js";
+import { sparcCommand } from "./commands/sparc.js";
+import { swarmCommand } from "./commands/swarm.js";
 import { formatError, displayBanner, displayVersion } from "./formatter.js";
 import { startNodeREPL as startREPL } from "./node-repl.js";
 import { CompletionGenerator } from "./completion.js";
@@ -53,9 +55,18 @@ const cli = new Command()
   .option("-q, --quiet", "Suppress non-essential output")
   .option("--log-level <level>", "Set log level (debug, info, warn, error)", "info")
   .option("--no-color", "Disable colored output")
-  .option("--json", "Output in JSON format where applicable")
   .option("--profile <profile>", "Use named configuration profile")
   .action(async (options: any) => {
+    // Only start REPL if no subcommand was provided and help wasn't requested
+    const args = process.argv.slice(2);
+    const hasSubcommand = args.some(arg => !arg.startsWith('-'));
+    const helpRequested = args.includes('--help') || args.includes('-h');
+    
+    if (hasSubcommand || helpRequested) {
+      // Let the subcommand or help handler handle execution
+      return;
+    }
+    
     // If no subcommand, show banner and start REPL
     await setupLogging(options);
     
@@ -72,10 +83,16 @@ cli
   .addCommand(startCommand)
   .addCommand(agentCommand)
   .addCommand(taskCommand)
+  .addCommand(memoryCommand)
+  .addCommand(configCommand)
+  .addCommand(statusCommand)
   .addCommand(monitorCommand)
   .addCommand(sessionCommand)
   .addCommand(workflowCommand)
   .addCommand(mcpCommand)
+  .addCommand(claudeCommand)
+  .addCommand(sparcCommand)
+  .addCommand(swarmCommand)
   .addCommand(helpCommand)
   .command("repl")
   .description("Start interactive REPL mode with command completion")
@@ -215,7 +232,7 @@ if (isMainModule) {
       process.env.NO_COLOR = "1";
     }
     
-    await cli.parse(args);
+    await cli.parse(process.argv);
   } catch (error) {
     await handleError(error, globalOptions);
   }

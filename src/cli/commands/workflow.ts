@@ -36,6 +36,7 @@ const colors = {
 };
 
 export const workflowCommand = new Command()
+  .name("workflow")
   .description("Execute and manage workflows")
   .action(() => {
     workflowCommand.outputHelp();

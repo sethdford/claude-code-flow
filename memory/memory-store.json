@@ -97,5 +97,13 @@
       "namespace": "default",
       "timestamp": 1750412211176
     }
+  ],
+  "test": [
+    {
+      "key": "test-key",
+      "value": "test-value",
+      "namespace": "test",
+      "timestamp": 1750428242755
+    }
   ]
 }

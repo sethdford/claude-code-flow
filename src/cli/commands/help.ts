@@ -35,13 +35,14 @@ const Select = {
 };
 
 export const helpCommand = new Command()
+  .name("help")
   .description("Comprehensive help system with examples and tutorials")
   .arguments("[topic:string]")
   .option("-i, --interactive", "Start interactive help mode")
   .option("-e, --examples", "Show examples for the topic")
   .option("--tutorial", "Show tutorial for the topic")
   .option("--all", "Show all available help topics")
-  .action(async (options: any, topic: string | undefined) => {
+  .action(async (topic: string | undefined, options: any) => {
     if (options.interactive) {
       await startInteractiveHelp();
     } else if (options.all) {
