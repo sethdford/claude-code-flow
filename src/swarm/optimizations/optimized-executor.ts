@@ -320,7 +320,7 @@ export class OptimizedExecutor extends EventEmitter {
     
     // Add context if available
     if (task.context) {
-      if (task.context.previousResults?.length) {
+      if (task.context.previousResults && Array.isArray(task.context.previousResults) && task.context.previousResults.length) {
         messages.push({
           role: "assistant",
           content: `Previous results:\n${  
@@ -328,7 +328,7 @@ export class OptimizedExecutor extends EventEmitter {
         });
       }
       
-      if (task.context.relatedTasks?.length) {
+      if (task.context.relatedTasks && Array.isArray(task.context.relatedTasks) && task.context.relatedTasks.length) {
         messages.push({
           role: "user",
           content: `Related context:\n${  

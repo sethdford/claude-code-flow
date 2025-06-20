@@ -443,7 +443,7 @@ export class RealTimeMonitor extends EventEmitter {
     // Check for alert resolution
     for (const [alertId, alert] of this.activeAlerts) {
       if (!alert.resolved) {
-        const rule = this.alertRules.get(alert.context.ruleId);
+        const rule = this.alertRules.get((alert.context as any).ruleId);
         if (rule && this.isAlertResolved(rule, alert)) {
           this.resolveAlert(alertId, "condition_resolved");
         }
@@ -656,7 +656,7 @@ export class RealTimeMonitor extends EventEmitter {
         type: panel.type,
         data: this.getPanelData(panel, dashboard.timeRange),
       };
-      data.panels.push(panelData);
+      (data as any).panels.push(panelData);
     }
 
     return data;
@@ -740,7 +740,7 @@ export class RealTimeMonitor extends EventEmitter {
         type: "system",
         message: `Critical error: ${(error instanceof Error) ? error.message : "Unknown error"}`,
         source: "unknown",
-        context: error instanceof Error ? error : { message: String(error) },
+        context: error instanceof Error ? { message: error.message, stack: error.stack } : { message: String(error) },
         acknowledged: false,
         resolved: false,
         escalationLevel: 0,

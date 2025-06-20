@@ -192,12 +192,13 @@ export class SystemError extends ClaudeFlowError {
 export class InitializationError extends SystemError {
   override readonly code = "INITIALIZATION_ERROR";
   
-  constructor(componentOrMessage: string, details?: unknown) {
-    // If the message already contains the word "initialize", use it as-is
-    const message = componentOrMessage.includes("initialize") 
-      ? componentOrMessage 
-      : `Failed to initialize ${componentOrMessage}`;
-    super(message, details ? { component: componentOrMessage, ...details } : { component: componentOrMessage });
+  constructor(message: string, details?: Record<string, unknown> | string) {
+    const componentOrMessage = typeof details === "string" ? details : message;
+    if (typeof details === "object" && details !== null) {
+      super(message, { component: componentOrMessage, ...details });
+    } else {
+      super(message, { component: componentOrMessage });
+    }
   }
 }
 

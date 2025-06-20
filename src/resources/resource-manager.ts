@@ -385,8 +385,21 @@ export class ResourceManager extends EventEmitter {
       this.handleResourceRelease(data);
     });
 
-    this.eventBus.on("resource:usage-updated", (data: unknown) => {
-      this.updateResourceUsage(data.resourceId, data.usage);
+    this.eventBus.on("resource.usage.updated", (data: unknown) => {
+      const resourceData = data as { resourceId: string; usage: number | ResourceUsage };
+      // Convert number to ResourceUsage interface if needed
+      const resourceUsage: ResourceUsage = typeof resourceData.usage === 'number' 
+        ? { 
+            cpu: resourceData.usage, 
+            memory: 0, 
+            disk: 0, 
+            network: 0,
+            custom: {},
+            timestamp: new Date(),
+            duration: 0
+          }
+        : resourceData.usage as ResourceUsage;
+      this.updateResourceUsage(resourceData.resourceId, resourceUsage);
     });
 
     this.eventBus.on("resource:failure", (data: unknown) => {
@@ -397,20 +410,24 @@ export class ResourceManager extends EventEmitter {
       this.handleScalingTrigger(data);
     });
 
-    this.eventBus.on("agent:status-changed", (data: unknown) => {
-      this.handleAgentStatusChange(data.agentId, data.from, data.to);
+    this.eventBus.on("agent.status.changed", (data: unknown) => {
+      const agentData = data as { agentId: string; from: string; to: string };
+      this.handleAgentStatusChange(agentData.agentId as unknown as AgentId, agentData.from as unknown as ResourceStatus, agentData.to as unknown as ResourceStatus);
     });
 
-    this.eventBus.on("task:started", (data: unknown) => {
-      this.allocateResourcesForTask(data.taskId, data.requirements);
+    this.eventBus.on("task.resource.request", (data: unknown) => {
+      const taskData = data as { taskId: string; requirements: ResourceRequirements };
+      this.allocateResourcesForTask(taskData.taskId as unknown as TaskId, taskData.requirements);
     });
 
-    this.eventBus.on("task:completed", (data: unknown) => {
-      this.releaseResourcesForTask(data.taskId);
+    this.eventBus.on("task.resource.release", (data: unknown) => {
+      const taskData = data as { taskId: string };
+      this.releaseResourcesForTask(taskData.taskId as unknown as TaskId);
     });
 
-    this.eventBus.on("system:resource-alert", (data: unknown) => {
-      this.handleResourceAlert(data.type, data.threshold, data.current);
+    this.eventBus.on("resource.alert", (data: unknown) => {
+      const alertData = data as { type: string; threshold: number; current: number };
+      this.handleResourceAlert(alertData.type, alertData.threshold, alertData.current);
     });
   }
 
@@ -1608,25 +1625,26 @@ export class ResourceManager extends EventEmitter {
   }
 
   private handleResourceFailure(data: unknown): void {
-    const resource = this.resources.get(data.resourceId);
+    const failureData = data as { resourceId: string; type?: string; duration?: number; impact?: "low" | "medium" | "high" | "critical" };
+    const resource = this.resources.get(failureData.resourceId);
     if (resource) {
       resource.status = "failed";
       
       // Record failure
       resource.metadata.reliability.failureHistory.push({
         timestamp: new Date(),
-        type: data.type || "unknown",
-        duration: data.duration || 0,
-        impact: data.impact || "medium",
+        type: failureData.type || "unknown",
+        duration: failureData.duration || 0,
+        impact: failureData.impact || "medium",
         resolved: false,
       });
 
       this.logger.error("Resource failure detected", {
-        resourceId: data.resourceId,
-        type: data.type,
+        resourceId: failureData.resourceId,
+        type: failureData.type,
       });
 
-      this.emit("resource:failed", { resource, failure: data });
+      this.emit("resource:failed", { resource, failure: failureData });
     }
   }
 

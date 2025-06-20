@@ -1,6 +1,7 @@
 # Claude Flow
 
-> Advanced AI agent orchestration system for multi-agent coordination
+> **Enterprise AI Agent Orchestration via AWS Bedrock**  
+> Connect to Claude 4 through your AWS infrastructure with automatic credential detection
 
 [![npm version](https://badge.fury.io/js/@sethdford/claude-flow.svg)](https://badge.fury.io/js/@sethdford/claude-flow)
 [![Build Status](https://github.com/sethdford/vibex-claude-code-flow/workflows/CI/badge.svg)](https://github.com/sethdford/vibex-claude-code-flow/actions)
@@ -8,37 +9,51 @@
 
 **Originally created by [@ruvnet](https://github.com/ruvnet) - this fork is a complete rebuild to modernize the architecture and ensure full functionality.**
 
-Claude Flow is a powerful command-line tool and framework for orchestrating AI agents, managing complex workflows, and coordinating multi-agent systems. Built with TypeScript and Node.js, it provides a comprehensive platform for AI-driven automation and coordination.
+## 🏢 Enterprise-Ready Claude 4 Access
 
-## ✨ Features
+**Claude Flow is specifically designed for enterprises wanting to leverage Claude 4 through AWS Bedrock**, providing:
 
-- **🤖 Multi-Agent Orchestration**: Coordinate multiple AI agents working together
-- **🔄 Workflow Management**: Define and execute complex AI workflows
-- **📡 MCP Integration**: Built-in Model Context Protocol support
-- **🎯 SPARC Framework**: Structured approach to AI-driven development
-- **📊 Real-time Monitoring**: Track agent performance and system metrics
-- **🛠️ Extensible Architecture**: Plugin system for custom functionality
-- **🔐 Security First**: Built-in security measures and access controls
-- **📦 Standalone Binaries**: Self-contained executables for easy deployment
+- ✅ **Enterprise Security & Compliance** - Use Claude through your AWS infrastructure
+- ✅ **AWS Credits & Billing Integration** - Leverage existing AWS accounts and billing
+- ✅ **Automatic Credential Detection** - Works with existing AWS configurations  
+- ✅ **Latest Claude 4 Models** - Access to Claude 4 Opus and Sonnet via Bedrock
+- ✅ **Multi-Agent Orchestration** - Coordinate multiple Claude instances for complex workflows
+- ✅ **Zero External API Dependencies** - Everything runs through your AWS account
 
-## 🚀 Quick Start
+Claude Flow is a powerful command-line tool and framework for orchestrating AI agents, managing complex workflows, and coordinating multi-agent systems. Built with TypeScript and Node.js, it provides a comprehensive platform for enterprise AI-driven automation.
 
-### Installation
+## 🚀 Enterprise Quick Start
+
+### For Existing AWS Users
+
+If you already have AWS configured, Claude Flow will automatically detect your credentials:
 
 ```bash
-# Install globally via npm
+# Install globally
 npm install -g @sethdford/claude-flow
 
-# Or run directly with npx
-npx @sethdford/claude-flow --help
+# Start with automatic AWS detection
+claude-flow start
+# ✅ Automatically detects AWS credentials
+# ✅ Configures Claude 4 via Bedrock
+# ✅ Ready for enterprise use
 ```
 
-### Basic Usage
+### AWS Bedrock Setup
 
 ```bash
-# Start interactive mode
-claude-flow
+# Run automated enterprise setup
+./scripts/setup-bedrock.sh
+# ✅ Detects existing AWS credentials
+# ✅ Verifies Bedrock model access
+# ✅ Configures Claude 4 models
+# ✅ Tests enterprise integration
+```
 
+**Supported AWS credential sources:**
+- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
+- AWS profiles (`AWS_PROFILE` or `~/.aws/credentials`)
+- IAM roles (EC2 Instance Profile, ECS Task Role)
 # Show version
 @sethdford/claude-flow --version
 

@@ -1191,23 +1191,28 @@ export interface ValidationWarning {
 // ===== TYPE GUARDS =====
 
 export function isAgentId(obj: unknown): obj is AgentId {
-  return obj && typeof obj.id === "string" && typeof obj.swarmId === "string";
+  const agentObj = obj as { id?: unknown; swarmId?: unknown };
+  return obj && typeof agentObj.id === "string" && typeof agentObj.swarmId === "string";
 }
 
 export function isTaskId(obj: unknown): obj is TaskId {
-  return obj && typeof obj.id === "string" && typeof obj.swarmId === "string";
+  const taskObj = obj as { id?: unknown; swarmId?: unknown };
+  return obj && typeof taskObj.id === "string" && typeof taskObj.swarmId === "string";
 }
 
 export function isSwarmEvent(obj: unknown): obj is SwarmEvent {
-  return obj && typeof obj.id === "string" && typeof obj.type === "string";
+  const eventObj = obj as { id?: unknown; type?: unknown };
+  return obj && typeof eventObj.id === "string" && typeof eventObj.type === "string";
 }
 
 export function isTaskDefinition(obj: unknown): obj is TaskDefinition {
-  return obj && isTaskId(obj.id) && typeof obj.type === "string";
+  const taskObj = obj as { id?: unknown; type?: unknown };
+  return obj && isTaskId(taskObj.id) && typeof taskObj.type === "string";
 }
 
 export function isAgentState(obj: unknown): obj is AgentState {
-  return obj && isAgentId(obj.id) && typeof obj.status === "string";
+  const agentObj = obj as { id?: unknown; status?: unknown };
+  return obj && isAgentId(agentObj.id) && typeof agentObj.status === "string";
 }
 
 // Enhanced type guards for new interfaces
@@ -1217,107 +1222,141 @@ export function isTaskMetadata(obj: unknown): obj is TaskMetadata {
 }
 
 export function isQualityRequirements(obj: unknown): obj is QualityRequirements {
-  return obj && typeof obj === "object" && 
-    (obj.minQualityScore === undefined || typeof obj.minQualityScore === "number") &&
-    (obj.codeQualityRules === undefined || Array.isArray(obj.codeQualityRules)) &&
-    (obj.documentationRequired === undefined || typeof obj.documentationRequired === "boolean") &&
-    (obj.peerReviewRequired === undefined || typeof obj.peerReviewRequired === "boolean");
+  if (!obj || typeof obj !== "object") return false;
+  const qualityObj = obj as {
+    minQualityScore?: unknown;
+    codeQualityRules?: unknown;
+    documentationRequired?: unknown;
+    peerReviewRequired?: unknown;
+  };
+  return (
+    (qualityObj.minQualityScore === undefined || typeof qualityObj.minQualityScore === "number") &&
+    (qualityObj.codeQualityRules === undefined || Array.isArray(qualityObj.codeQualityRules)) &&
+    (qualityObj.documentationRequired === undefined || typeof qualityObj.documentationRequired === "boolean") &&
+    (qualityObj.peerReviewRequired === undefined || typeof qualityObj.peerReviewRequired === "boolean")
+  );
 }
 
 export function isTestingRequirements(obj: unknown): obj is TestingRequirements {
-  return obj && typeof obj === "object" &&
-    (obj.unitTestsRequired === undefined || typeof obj.unitTestsRequired === "boolean") &&
-    (obj.integrationTestsRequired === undefined || typeof obj.integrationTestsRequired === "boolean") &&
-    (obj.performanceTestsRequired === undefined || typeof obj.performanceTestsRequired === "boolean") &&
-    (obj.securityTestsRequired === undefined || typeof obj.securityTestsRequired === "boolean") &&
-    (obj.coverageThreshold === undefined || typeof obj.coverageThreshold === "number");
+  if (!obj || typeof obj !== "object") return false;
+  const testingObj = obj as {
+    unitTestsRequired?: unknown;
+    integrationTestsRequired?: unknown;
+    performanceTestsRequired?: unknown;
+    securityTestsRequired?: unknown;
+    coverageThreshold?: unknown;
+  };
+  return (
+    (testingObj.unitTestsRequired === undefined || typeof testingObj.unitTestsRequired === "boolean") &&
+    (testingObj.integrationTestsRequired === undefined || typeof testingObj.integrationTestsRequired === "boolean") &&
+    (testingObj.performanceTestsRequired === undefined || typeof testingObj.performanceTestsRequired === "boolean") &&
+    (testingObj.securityTestsRequired === undefined || typeof testingObj.securityTestsRequired === "boolean") &&
+    (testingObj.coverageThreshold === undefined || typeof testingObj.coverageThreshold === "number")
+  );
 }
 
 export function isResourceHints(obj: unknown): obj is ResourceHints {
-  return obj && typeof obj === "object" &&
-    (obj.preferredAgentTypes === undefined || Array.isArray(obj.preferredAgentTypes)) &&
-    (obj.memoryIntensive === undefined || typeof obj.memoryIntensive === "boolean") &&
-    (obj.computeIntensive === undefined || typeof obj.computeIntensive === "boolean") &&
-    (obj.networkIntensive === undefined || typeof obj.networkIntensive === "boolean") &&
-    (obj.storageIntensive === undefined || typeof obj.storageIntensive === "boolean");
+  if (!obj || typeof obj !== "object") return false;
+  const resourceObj = obj as {
+    preferredAgentTypes?: unknown;
+    memoryIntensive?: unknown;
+    computeIntensive?: unknown;
+    networkIntensive?: unknown;
+    storageIntensive?: unknown;
+  };
+  return (
+    (resourceObj.preferredAgentTypes === undefined || Array.isArray(resourceObj.preferredAgentTypes)) &&
+    (resourceObj.memoryIntensive === undefined || typeof resourceObj.memoryIntensive === "boolean") &&
+    (resourceObj.computeIntensive === undefined || typeof resourceObj.computeIntensive === "boolean") &&
+    (resourceObj.networkIntensive === undefined || typeof resourceObj.networkIntensive === "boolean") &&
+    (resourceObj.storageIntensive === undefined || typeof resourceObj.storageIntensive === "boolean")
+  );
 }
 
 export function isPerformanceTargets(obj: unknown): obj is PerformanceTargets {
+  const perfObj = obj as Record<string, unknown>;
   return obj && typeof obj === "object" &&
-    (obj.maxExecutionTime === undefined || typeof obj.maxExecutionTime === "number") &&
-    (obj.maxMemoryUsage === undefined || typeof obj.maxMemoryUsage === "number") &&
-    (obj.maxCpuUsage === undefined || typeof obj.maxCpuUsage === "number") &&
-    (obj.throughputTarget === undefined || typeof obj.throughputTarget === "number");
+    (perfObj.maxExecutionTime === undefined || typeof perfObj.maxExecutionTime === "number") &&
+    (perfObj.maxMemoryUsage === undefined || typeof perfObj.maxMemoryUsage === "number") &&
+    (perfObj.maxCpuUsage === undefined || typeof perfObj.maxCpuUsage === "number") &&
+    (perfObj.throughputTarget === undefined || typeof perfObj.throughputTarget === "number");
 }
 
 export function isAgentEnvironment(obj: unknown): obj is AgentEnvironment {
+  const envObj = obj as Record<string, unknown>;
   return obj && typeof obj === "object" &&
-    typeof obj.runtime === "string" &&
-    typeof obj.version === "string" &&
-    typeof obj.workingDirectory === "string" &&
-    typeof obj.tempDirectory === "string" &&
-    typeof obj.logDirectory === "string" &&
-    typeof obj.apiEndpoints === "object" &&
-    typeof obj.credentials === "object" &&
-    Array.isArray(obj.availableTools) &&
-    typeof obj.toolConfigs === "object";
+    typeof envObj.runtime === "string" &&
+    typeof envObj.version === "string" &&
+    typeof envObj.workingDirectory === "string" &&
+    typeof envObj.tempDirectory === "string" &&
+    typeof envObj.logDirectory === "string" &&
+    typeof envObj.apiEndpoints === "object" &&
+    typeof envObj.credentials === "object" &&
+    Array.isArray(envObj.availableTools) &&
+    typeof envObj.toolConfigs === "object";
 }
 
 export function isNetworkConfig(obj: unknown): obj is NetworkConfig {
+  const netObj = obj as Record<string, unknown>;
   return obj && typeof obj === "object" &&
-    (obj.maxConnections === undefined || typeof obj.maxConnections === "number") &&
-    (obj.timeout === undefined || typeof obj.timeout === "number") &&
-    (obj.rateLimits === undefined || typeof obj.rateLimits === "object");
+    (netObj.maxConnections === undefined || typeof netObj.maxConnections === "number") &&
+    (netObj.timeout === undefined || typeof netObj.timeout === "number") &&
+    (netObj.rateLimits === undefined || typeof netObj.rateLimits === "object");
 }
 
 export function isSystemInfo(obj: unknown): obj is SystemInfo {
+  const sysObj = obj as Record<string, unknown>;
   return obj && typeof obj === "object" &&
-    typeof obj.platform === "string" &&
-    typeof obj.architecture === "string" &&
-    typeof obj.cpuCores === "number" &&
-    typeof obj.totalMemory === "number" &&
-    typeof obj.availableMemory === "number" &&
-    typeof obj.diskSpace === "number";
+    typeof sysObj.platform === "string" &&
+    typeof sysObj.architecture === "string" &&
+    typeof sysObj.cpuCores === "number" &&
+    typeof sysObj.totalMemory === "number" &&
+    typeof sysObj.availableMemory === "number" &&
+    typeof sysObj.diskSpace === "number";
 }
 
 export function isResourceLimits(obj: unknown): obj is ResourceLimits {
+  const resObj = obj as Record<string, unknown>;
   return obj && typeof obj === "object" &&
-    (obj.maxMemoryUsage === undefined || typeof obj.maxMemoryUsage === "number") &&
-    (obj.maxCpuUsage === undefined || typeof obj.maxCpuUsage === "number") &&
-    (obj.maxDiskUsage === undefined || typeof obj.maxDiskUsage === "number") &&
-    (obj.maxNetworkBandwidth === undefined || typeof obj.maxNetworkBandwidth === "number") &&
-    (obj.maxFileDescriptors === undefined || typeof obj.maxFileDescriptors === "number") &&
-    (obj.maxProcesses === undefined || typeof obj.maxProcesses === "number");
+    (resObj.maxMemoryUsage === undefined || typeof resObj.maxMemoryUsage === "number") &&
+    (resObj.maxCpuUsage === undefined || typeof resObj.maxCpuUsage === "number") &&
+    (resObj.maxDiskUsage === undefined || typeof resObj.maxDiskUsage === "number") &&
+    (resObj.maxNetworkBandwidth === undefined || typeof resObj.maxNetworkBandwidth === "number") &&
+    (resObj.maxFileDescriptors === undefined || typeof resObj.maxFileDescriptors === "number") &&
+    (resObj.maxProcesses === undefined || typeof resObj.maxProcesses === "number");
 }
 
 export function isSecurityConfig(obj: unknown): obj is SecurityConfig {
+  const secObj = obj as Record<string, unknown>;
   return obj && typeof obj === "object" &&
-    (obj.allowedDomains === undefined || Array.isArray(obj.allowedDomains)) &&
-    (obj.blockedDomains === undefined || Array.isArray(obj.blockedDomains)) &&
-    (obj.allowFileSystem === undefined || typeof obj.allowFileSystem === "boolean") &&
-    (obj.allowNetworkAccess === undefined || typeof obj.allowNetworkAccess === "boolean") &&
-    (obj.allowProcessExecution === undefined || typeof obj.allowProcessExecution === "boolean") &&
-    (obj.sandboxed === undefined || typeof obj.sandboxed === "boolean") &&
-    (obj.permissions === undefined || Array.isArray(obj.permissions));
+    (secObj.allowedDomains === undefined || Array.isArray(secObj.allowedDomains)) &&
+    (secObj.blockedDomains === undefined || Array.isArray(secObj.blockedDomains)) &&
+    (secObj.allowFileSystem === undefined || typeof secObj.allowFileSystem === "boolean") &&
+    (secObj.allowNetworkAccess === undefined || typeof secObj.allowNetworkAccess === "boolean") &&
+    (secObj.allowProcessExecution === undefined || typeof secObj.allowProcessExecution === "boolean") &&
+    (secObj.sandboxed === undefined || typeof secObj.sandboxed === "boolean") &&
+    (secObj.permissions === undefined || Array.isArray(secObj.permissions));
 }
 
 export function isContainerConfig(obj: unknown): obj is ContainerConfig {
+  const contObj = obj as Record<string, unknown>;
   return obj && typeof obj === "object" &&
-    typeof obj.isContainerized === "boolean" &&
-    (obj.containerRuntime === undefined || typeof obj.containerRuntime === "string") &&
-    (obj.imageName === undefined || typeof obj.imageName === "string") &&
-    (obj.volumes === undefined || Array.isArray(obj.volumes)) &&
-    (obj.networkMode === undefined || typeof obj.networkMode === "string");
+    typeof contObj.isContainerized === "boolean" &&
+    (contObj.containerRuntime === undefined || typeof contObj.containerRuntime === "string") &&
+    (contObj.imageName === undefined || typeof contObj.imageName === "string") &&
+    (contObj.volumes === undefined || Array.isArray(contObj.volumes)) &&
+    (contObj.networkMode === undefined || typeof contObj.networkMode === "string");
 }
 
 export function isMonitoringConfig(obj: unknown): obj is MonitoringConfig {
+  const monObj = obj as Record<string, unknown>;
   return obj && typeof obj === "object" &&
-    typeof obj.metricsEnabled === "boolean" &&
-    typeof obj.logLevel === "string" &&
-    ["debug", "info", "warn", "error"].includes(obj.logLevel) &&
-    (obj.healthCheckInterval === undefined || typeof obj.healthCheckInterval === "number") &&
-    (obj.performanceTracking === undefined || typeof obj.performanceTracking === "boolean") &&
-    (obj.alertThresholds === undefined || typeof obj.alertThresholds === "object");
+    typeof monObj.metricsEnabled === "boolean" &&
+    typeof monObj.logLevel === "string" &&
+    ["debug", "info", "warn", "error"].includes(monObj.logLevel as string) &&
+    (monObj.healthCheckInterval === undefined || typeof monObj.healthCheckInterval === "number") &&
+    (monObj.performanceTracking === undefined || typeof monObj.performanceTracking === "boolean") &&
+    (monObj.alertThresholds === undefined || typeof monObj.alertThresholds === "object");
 }
 
 // Validation helpers for enhanced interfaces

@@ -811,7 +811,13 @@ export class AgentManager extends EventEmitter {
     const agent = this.agents.get(agentId);
     if (!agent) return;
 
-    const health = this.healthChecks.get(agentId)!;
+    const health = this.healthChecks.get(agentId);
+    if (!health) {
+      // Initialize health check if missing
+      this.healthChecks.set(agentId, this.createDefaultHealth(agentId));
+      return;
+    }
+    
     const now = new Date();
 
     try {

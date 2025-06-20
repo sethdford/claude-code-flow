@@ -113,7 +113,8 @@ export async function retry<T>(
     }
   }
 
-  throw lastError!;
+  // lastError is guaranteed to be defined here
+  throw lastError;
 }
 
 /**
@@ -258,7 +259,10 @@ export class TypedEventEmitter<T extends Record<string, unknown>> {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(handler as (data: unknown) => void);
+    const handlers = this.listeners.get(event);
+    if (handlers) {
+      handlers.add(handler as (data: unknown) => void);
+    }
   }
 
   off<K extends keyof T>(event: K, handler: (data: T[K]) => void): void {
@@ -372,15 +376,20 @@ export function createDeferred<T>(): {
   resolve: (value: T) => void;
   reject: (reason?: unknown) => void;
   } {
-  let resolve: (value: T) => void;
-  let reject: (reason?: unknown) => void;
+  let resolve: ((value: T) => void) | undefined;
+  let reject: ((reason?: unknown) => void) | undefined;
 
   const promise = new Promise<T>((res, rej) => {
     resolve = res;
     reject = rej;
   });
 
-  return { promise, resolve: resolve!, reject: reject! };
+  // Type assertion is safe here because the Promise constructor runs synchronously
+  return { 
+    promise, 
+    resolve: resolve as (value: T) => void, 
+    reject: reject as (reason?: unknown) => void 
+  };
 }
 
 /**

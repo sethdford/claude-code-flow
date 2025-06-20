@@ -6,10 +6,13 @@
 import { promises as fs } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-import { randomBytes, createCipher, createDecipher } from "crypto";
+import { randomBytes, createCipher, createDecipher, scrypt } from "crypto";
 import { Config } from "../utils/types.js";
 import { deepMerge, safeParseJSON } from "../utils/helpers.js";
 import { ConfigError, ValidationError } from "../utils/errors.js";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
 
 // Format parsers
 interface FormatParser {
@@ -1469,7 +1472,7 @@ export class ConfigManager {
     }
     
     try {
-      const cipher = createCipher("aes-256-cbc", this.encryptionKey);
+      const cipher = createCipher("aes-256-gcm", this.encryptionKey);
       let encrypted = cipher.update(value, "utf8", "hex");
       encrypted += cipher.final("hex");
       return `enc:${encrypted}`;
@@ -1496,7 +1499,7 @@ export class ConfigManager {
     
     try {
       const encryptedValue = value.substring(4); // Remove 'enc:' prefix
-      const decipher = createDecipher("aes-256-cbc", this.encryptionKey);
+      const decipher = createDecipher("aes-256-gcm", this.encryptionKey);
       let decrypted = decipher.update(encryptedValue, "hex", "utf8");
       decrypted += decipher.final("utf8");
       return decrypted;

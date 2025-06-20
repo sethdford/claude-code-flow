@@ -75,7 +75,12 @@ export class TerminalPool {
   async acquire(): Promise<Terminal> {
     // Try to get an available terminal
     while (this.availableQueue.length > 0) {
-      const terminalId = this.availableQueue.shift()!;
+      const terminalId = this.availableQueue.shift();
+      if (!terminalId) {
+        // This should not happen, but handle defensively
+        break;
+      }
+      
       const pooled = this.terminals.get(terminalId);
 
       if (pooled && pooled.terminal.isAlive()) {

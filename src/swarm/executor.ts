@@ -367,7 +367,7 @@ export class TaskExecutor extends EventEmitter {
         }
 
         // Handle process completion
-        process.on("close", (code: number | null, signal: string | null) => {
+        process.on("close", async (code: number | null, signal: string | null) => {
           clearTimeout(timeoutHandle);
           
           const duration = Date.now() - startTime;

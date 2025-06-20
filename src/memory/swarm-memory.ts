@@ -244,16 +244,16 @@ export class SwarmMemoryManager extends EventEmitter {
     if (query.tags && query.tags.length > 0) {
       results = results.filter(e => 
         e.metadata.tags && 
-        query.tags!.some(tag => e.metadata.tags?.includes(tag)),
+        query.tags.some(tag => e.metadata.tags?.includes(tag)),
       );
     }
 
     if (query.since) {
-      results = results.filter(e => e.timestamp >= query.since!);
+      results = results.filter(e => e.timestamp >= query.since);
     }
 
     if (query.before) {
-      results = results.filter(e => e.timestamp <= query.before!);
+      results = results.filter(e => e.timestamp <= query.before);
     }
 
     if (query.shareLevel) {
