@@ -2,8 +2,8 @@
  * Task management commands
  */
 
-import { Command } from "@cliffy/command";
-import { colors } from "@cliffy/ansi/colors";
+import { Command } from "../cliffy-compat.js";
+import chalk from "chalk";
 import { Task } from "../../utils/types.js";
 import { generateId } from "../../utils/helpers.js";
 import * as fs from "node:fs/promises";
@@ -40,29 +40,29 @@ export const taskCommand = new Command()
       createdAt: new Date(),
     };
 
-    console.log(colors.green("Task created:"));
+    console.log(chalk.green("Task created:"));
     console.log(JSON.stringify(task, null, 2));
-    console.log(colors.yellow("\nTo submit this task, ensure Claude-Flow is running"));
+    console.log(chalk.yellow("\nTo submit this task, ensure Claude-Flow is running"));
   })
   .command("list")
   .description("List all tasks")
   .option("-s, --status <status>", "Filter by status")
   .option("-a, --agent <agent>", "Filter by assigned agent")
   .action(async (_options: any) => {
-    console.log(colors.yellow("Task listing requires a running Claude-Flow instance"));
+    console.log(chalk.yellow("Task listing requires a running Claude-Flow instance"));
   })
   .command("status")
   .description("Get task status")
   .arguments("<task-id>")
   .action(async (_options: any, _taskId: string) => {
-    console.log(colors.yellow("Task status requires a running Claude-Flow instance"));
+    console.log(chalk.yellow("Task status requires a running Claude-Flow instance"));
   })
   .command("cancel")
   .description("Cancel a task")
   .arguments("<task-id>")
   .option("-r, --reason <reason>", "Cancellation reason")
   .action(async (options: any, taskId: string) => {
-    console.log(colors.yellow(`Cancelling task ${taskId} requires a running Claude-Flow instance`));
+    console.log(chalk.yellow(`Cancelling task ${taskId} requires a running Claude-Flow instance`));
   })
   .command("workflow")
   .description("Execute a workflow from file")
@@ -72,11 +72,11 @@ export const taskCommand = new Command()
       const content = await fs.readFile(workflowFile, "utf-8");
       const workflow = JSON.parse(content);
         
-      console.log(colors.green("Workflow loaded:"));
+      console.log(chalk.green("Workflow loaded:"));
       console.log(`- Name: ${workflow.name || "Unnamed"}`);
       console.log(`- Tasks: ${workflow.tasks?.length || 0}`);
-      console.log(colors.yellow("\nTo execute this workflow, ensure Claude-Flow is running"));
+      console.log(chalk.yellow("\nTo execute this workflow, ensure Claude-Flow is running"));
     } catch (error) {
-      console.error(colors.red("Failed to load workflow:"), (error as Error).message);
+      console.error(chalk.red("Failed to load workflow:"), (error as Error).message);
     }
   });
