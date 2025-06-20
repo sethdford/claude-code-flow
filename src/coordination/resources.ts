@@ -30,11 +30,13 @@ export class ResourceManager {
     private logger: ILogger,
   ) {}
 
-  async initialize(): Promise<void> {
+  initialize(): Promise<void> {
     this.logger.info("Initializing resource manager");
     
     // Set up periodic cleanup
     setInterval(() => this.cleanup(), 30000); // Every 30 seconds
+    
+    return Promise.resolve();
   }
 
   async shutdown(): Promise<void> {
@@ -204,7 +206,7 @@ export class ResourceManager {
     return waiting;
   }
 
-  async getHealthStatus(): Promise<{ 
+  getHealthStatus(): Promise<{ 
     healthy: boolean; 
     error?: string; 
     metrics?: Record<string, number>;
@@ -219,7 +221,7 @@ export class ResourceManager {
       queue.forEach(req => waitingAgents.add(req.agentId));
     }
 
-    return {
+    return Promise.resolve({
       healthy: true,
       metrics: {
         totalResources,
@@ -228,10 +230,10 @@ export class ResourceManager {
         waitingAgents: waitingAgents.size,
         totalWaitingRequests: totalWaiting,
       },
-    };
+    });
   }
 
-  private async lockResource(resourceId: string, agentId: string): Promise<void> {
+  private lockResource(resourceId: string, agentId: string): Promise<void> {
     const resource = this.resources.get(resourceId)!;
     
     resource.locked = true;
@@ -247,6 +249,8 @@ export class ResourceManager {
     this.agentResources.get(agentId)!.add(resourceId);
 
     this.logger.info("Resource locked", { resourceId, agentId });
+    
+    return Promise.resolve();
 
     // Emit event
     this.eventBus.emit(SystemEvents.RESOURCE_ACQUIRED, { resourceId, agentId });
@@ -273,9 +277,10 @@ export class ResourceManager {
     this.eventBus.emit(SystemEvents.RESOURCE_RELEASED, { resourceId, agentId });
   }
 
-  async performMaintenance(): Promise<void> {
+  performMaintenance(): Promise<void> {
     this.logger.debug("Performing resource manager maintenance");
     this.cleanup();
+    return Promise.resolve();
   }
 
   private cleanup(): void {

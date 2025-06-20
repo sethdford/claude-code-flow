@@ -123,7 +123,7 @@ export class MemoryManager implements IMemoryManager {
     }
   }
 
-  async createBank(agentId: string): Promise<string> {
+  createBank(agentId: string): Promise<string> {
     if (!this.initialized) {
       throw new MemoryError("Memory manager not initialized");
     }
@@ -140,7 +140,7 @@ export class MemoryManager implements IMemoryManager {
     
     this.logger.info("Memory bank created", { bankId: bank.id, agentId });
     
-    return bank.id;
+    return Promise.resolve(bank.id);
   }
 
   async closeBank(bankId: string): Promise<void> {
@@ -160,7 +160,7 @@ export class MemoryManager implements IMemoryManager {
     this.logger.info("Memory bank closed", { bankId });
   }
 
-  async store(entry: MemoryEntry): Promise<void> {
+  store(entry: MemoryEntry): Promise<void> {
     if (!this.initialized) {
       throw new MemoryError("Memory manager not initialized");
     }
@@ -179,7 +179,7 @@ export class MemoryManager implements IMemoryManager {
       this.indexer.addEntry(entry);
 
       // Store in backend (async, don't wait)
-      this.backend.store(entry).catch((error: unknown) => {
+      void this.backend.store(entry).catch((error: unknown) => {
         this.logger.error("Failed to store entry in backend", { 
           id: entry.id,
           error,
@@ -195,6 +195,8 @@ export class MemoryManager implements IMemoryManager {
 
       // Emit event
       this.eventBus.emit("memory:created", { entry });
+      
+      return Promise.resolve();
     } catch (error) {
       this.logger.error("Failed to store memory entry", error);
       throw new MemoryError("Failed to store memory entry", { error });
@@ -222,7 +224,7 @@ export class MemoryManager implements IMemoryManager {
     return entry;
   }
 
-  async query(query: MemoryQuery): Promise<MemoryEntry[]> {
+  query(query: MemoryQuery): Promise<MemoryEntry[]> {
     if (!this.initialized) {
       throw new MemoryError("Memory manager not initialized");
     }
@@ -261,7 +263,7 @@ export class MemoryManager implements IMemoryManager {
       const limit = query.limit ?? 100;
       results = results.slice(start, start + limit);
 
-      return results;
+      return Promise.resolve(results);
     } catch (error) {
       this.logger.error("Failed to query memory", error);
       throw new MemoryError("Failed to query memory", { error });

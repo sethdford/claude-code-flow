@@ -239,7 +239,7 @@ export class TaskExecutor extends EventEmitter {
           timeout: session.config.timeoutMs,
         });
         
-        session.stop("Timeout").then(() => {
+        void session.stop("Timeout").then(() => {
           reject(new Error(`Execution timed out after ${session.config.timeoutMs}ms`));
         });
       }, session.config.timeoutMs);
@@ -367,7 +367,7 @@ export class TaskExecutor extends EventEmitter {
         }
 
         // Handle process completion
-        process.on("close", async (code: number | null, signal: string | null) => {
+        process.on("close", (code: number | null, signal: string | null) => {
           clearTimeout(timeoutHandle);
           
           const duration = Date.now() - startTime;
@@ -657,8 +657,8 @@ export class TaskExecutor extends EventEmitter {
     }
   }
 
-  private async collectResourceUsage(sessionId: string): Promise<ResourceUsage> {
-    return this.resourceMonitor.getUsage(sessionId);
+  private collectResourceUsage(sessionId: string): Promise<ResourceUsage> {
+    return Promise.resolve(this.resourceMonitor.getUsage(sessionId));
   }
 
   private async collectArtifacts(context: ExecutionContext): Promise<Record<string, any>> {
@@ -785,11 +785,12 @@ export class TaskExecutor extends EventEmitter {
     this.resourceMonitor.on("limit-violation", (data: unknown) => {
       this.logger.warn("Resource limit violation", data);
       
-      const session = this.activeExecutions.get(data.sessionId);
+      const violationData = data as { sessionId: string };
+      const session = this.activeExecutions.get(violationData.sessionId);
       if (session) {
         session.stop("Resource limit violation").catch(error => {
           this.logger.error("Error stopping session due to resource violation", {
-            sessionId: data.sessionId,
+            sessionId: violationData.sessionId,
             error: (error as Error).message,
           });
         });
@@ -863,7 +864,7 @@ class ExecutionSession {
     };
   }
 
-  async stop(reason: string): Promise<void> {
+  stop(reason: string): Promise<void> {
     this.logger.info("Stopping execution session", { sessionId: this.id, reason });
     
     if (this.process) {
@@ -876,6 +877,8 @@ class ExecutionSession {
         }
       }, 5000);
     }
+    
+    return Promise.resolve();
   }
 
   async cleanup(): Promise<void> {
@@ -896,12 +899,14 @@ class ResourceMonitor extends EventEmitter {
     // Initialize resource monitoring
   }
 
-  async shutdown(): Promise<void> {
+  shutdown(): Promise<void> {
     // Stop all monitors
     for (const [sessionId, timer] of this.activeMonitors) {
       clearInterval(timer);
     }
     this.activeMonitors.clear();
+    
+    return Promise.resolve();
   }
 
   startMonitoring(sessionId: string, limits: ExecutionResources): void {

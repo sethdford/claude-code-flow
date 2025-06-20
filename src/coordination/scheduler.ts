@@ -31,11 +31,13 @@ export class TaskScheduler {
     protected logger: ILogger,
   ) {}
 
-  async initialize(): Promise<void> {
+  initialize(): Promise<void> {
     this.logger.info("Initializing task scheduler");
     
     // Set up periodic cleanup
     setInterval(() => this.cleanup(), 60000); // Every minute
+    
+    return Promise.resolve();
   }
 
   async shutdown(): Promise<void> {
@@ -51,7 +53,7 @@ export class TaskScheduler {
     this.completedTasks.clear();
   }
 
-  async assignTask(task: Task, agentId: string): Promise<void> {
+  assignTask(task: Task, agentId: string): Promise<void> {
     this.logger.info("Assigning task", { taskId: task.id, agentId });
 
     // Check dependencies
@@ -91,9 +93,11 @@ export class TaskScheduler {
 
     // Start task execution
     this.startTask(task.id);
+    
+    return Promise.resolve();
   }
 
-  async completeTask(taskId: string, result: Record<string, unknown>): Promise<void> {
+  completeTask(taskId: string, result: Record<string, unknown>): Promise<void> {
     const scheduled = this.tasks.get(taskId);
     if (!scheduled) {
       throw new TaskError(`Task not found: ${taskId}`);
@@ -128,6 +132,8 @@ export class TaskScheduler {
         }
       }
     }
+    
+    return Promise.resolve();
   }
 
   async failTask(taskId: string, error: Error): Promise<void> {
@@ -227,10 +233,10 @@ export class TaskScheduler {
     this.agentTasks.delete(agentId);
   }
 
-  async rescheduleAgentTasks(agentId: string): Promise<void> {
+  rescheduleAgentTasks(agentId: string): Promise<void> {
     const taskIds = this.agentTasks.get(agentId);
     if (!taskIds || taskIds.size === 0) {
-      return;
+      return Promise.resolve();
     }
 
     this.logger.info("Rescheduling tasks for agent", { 
@@ -251,13 +257,15 @@ export class TaskScheduler {
         });
       }
     }
+    
+    return Promise.resolve();
   }
 
   getAgentTaskCount(agentId: string): number {
     return this.agentTasks.get(agentId)?.size ?? 0;
   }
 
-  async getHealthStatus(): Promise<{ 
+  getHealthStatus(): Promise<{ 
     healthy: boolean; 
     error?: string; 
     metrics?: Record<string, number>;
@@ -280,7 +288,7 @@ export class TaskScheduler {
       tasksByStatus[scheduled.task.status]++;
     }
 
-    return {
+    return Promise.resolve({
       healthy: true,
       metrics: {
         activeTasks,
@@ -288,13 +296,13 @@ export class TaskScheduler {
         agentsWithTasks,
         ...tasksByStatus,
       },
-    };
+    });
   }
 
-  async getAgentTasks(agentId: string): Promise<Task[]> {
+  getAgentTasks(agentId: string): Promise<Task[]> {
     const taskIds = this.agentTasks.get(agentId);
     if (!taskIds) {
-      return [];
+      return Promise.resolve([]);
     }
 
     const tasks: Task[] = [];
@@ -305,7 +313,7 @@ export class TaskScheduler {
       }
     }
 
-    return tasks;
+    return Promise.resolve(tasks);
   }
 
   async performMaintenance(): Promise<void> {

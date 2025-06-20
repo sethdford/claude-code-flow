@@ -168,7 +168,7 @@ export class LoadBalancer extends EventEmitter {
 
     this.eventBus.on("workstealing:request", (data) => {
       const payload = data as { sourceAgent: string; targetAgent: string; taskCount: number };
-      this.executeWorkStealing(payload.sourceAgent, payload.targetAgent, payload.taskCount);
+      void this.executeWorkStealing(payload.sourceAgent, payload.targetAgent, payload.taskCount);
     });
 
     this.eventBus.on("agent:performance-update", (data) => {
@@ -185,7 +185,7 @@ export class LoadBalancer extends EventEmitter {
     });
 
     // Initialize work stealer
-    await this.workStealer.initialize();
+    this.workStealer.initialize();
 
     // Start monitoring
     this.startLoadSampling();
@@ -302,7 +302,7 @@ export class LoadBalancer extends EventEmitter {
     });
   }
 
-  private async applySelectionStrategy(
+  private applySelectionStrategy(
     task: TaskDefinition,
     candidates: AgentState[],
   ): Promise<LoadBalancingDecision> {
@@ -394,7 +394,7 @@ export class LoadBalancer extends EventEmitter {
     const secondBestScore = alternatives.length > 0 ? alternatives[0].score : 0;
     const confidence = Math.min(1, (selectedScore - secondBestScore) + 0.5);
 
-    return {
+    return Promise.resolve({
       selectedAgent: selectedAgent.id,
       reason: selectedReason,
       confidence,
@@ -402,7 +402,7 @@ export class LoadBalancer extends EventEmitter {
       loadBefore,
       predictedLoadAfter,
       timestamp: new Date(),
-    };
+    });
   }
 
   // === SCORING ALGORITHMS ===
@@ -501,7 +501,7 @@ export class LoadBalancer extends EventEmitter {
 
   // === WORK STEALING ===
 
-  private async executeWorkStealing(
+  private executeWorkStealing(
     sourceAgentId: string,
     targetAgentId: string,
     taskCount: number,
@@ -575,13 +575,15 @@ export class LoadBalancer extends EventEmitter {
 
       this.emit("workstealing:failed", { operation, error });
     }
+    
+    return Promise.resolve();
   }
 
   // === LOAD MONITORING ===
 
   private startLoadSampling(): void {
     this.loadSamplingInterval = setInterval(() => {
-      this.sampleAgentLoads();
+      void this.sampleAgentLoads();
     }, this.config.loadSamplingInterval);
 
     this.logger.info("Started load sampling", { 
@@ -591,7 +593,7 @@ export class LoadBalancer extends EventEmitter {
 
   private startRebalancing(): void {
     this.rebalanceInterval = setInterval(() => {
-      this.performRebalancing();
+      void this.performRebalancing();
     }, this.config.rebalanceInterval);
 
     this.logger.info("Started rebalancing", { 
@@ -599,7 +601,7 @@ export class LoadBalancer extends EventEmitter {
     });
   }
 
-  private async sampleAgentLoads(): Promise<void> {
+  private sampleAgentLoads(): Promise<void> {
     // Sample current loads from all agents
     for (const [agentId, load] of this.agentLoads) {
       // Update load history
@@ -618,6 +620,8 @@ export class LoadBalancer extends EventEmitter {
         this.updateLoadPredictor(agentId, load);
       }
     }
+    
+    return Promise.resolve();
   }
 
   private async performRebalancing(): Promise<void> {

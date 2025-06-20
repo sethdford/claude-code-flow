@@ -196,7 +196,7 @@ export class TaskEngine extends EventEmitter {
   /**
    * List tasks with filtering and sorting
    */
-  async listTasks(
+  listTasks(
     filter?: TaskFilter,
     sort?: TaskSort,
     limit?: number,
@@ -248,11 +248,11 @@ export class TaskEngine extends EventEmitter {
     const endIndex = limit ? startIndex + limit : filteredTasks.length;
     const tasks = filteredTasks.slice(startIndex, endIndex);
 
-    return {
+    return Promise.resolve({
       tasks,
       total,
       hasMore: endIndex < total,
-    };
+    });
   }
 
   /**
@@ -272,7 +272,7 @@ export class TaskEngine extends EventEmitter {
     
     // Get dependency status
     const dependencies = await Promise.all(
-      task.dependencies.map(async dep => {
+      task.dependencies.map(dep => {
         const depTask = this.tasks.get(dep.taskId);
         if (!depTask) throw new Error(`Dependency task ${dep.taskId} not found`);
         const satisfied = this.isDependencySatisfied(dep, depTask);
@@ -454,7 +454,7 @@ export class TaskEngine extends EventEmitter {
   private scheduleTask(task: WorkflowTask): void {
     if (this.areTaskDependenciesSatisfied(task)) {
       this.readyQueue.push(task.id);
-      this.processReadyQueue();
+      void this.processReadyQueue();
     }
   }
 
@@ -590,8 +590,8 @@ export class TaskEngine extends EventEmitter {
     }
   }
 
-  private async rollbackTask(task: WorkflowTask): Promise<void> {
-    if (task.checkpoints.length === 0) return;
+  private rollbackTask(task: WorkflowTask): Promise<void> {
+    if (task.checkpoints.length === 0) return Promise.resolve();
 
     const targetCheckpoint = task.rollbackStrategy === "initial-state" 
       ? task.checkpoints[0] 
@@ -605,23 +605,25 @@ export class TaskEngine extends EventEmitter {
     task.checkpoints = task.checkpoints.slice(0, targetIndex + 1);
 
     task.progressPercentage = Math.max(0, task.progressPercentage - 25);
+    
+    return Promise.resolve();
   }
 
-  private async acquireTaskResources(task: WorkflowTask): Promise<boolean> {
+  private acquireTaskResources(task: WorkflowTask): Promise<boolean> {
     for (const requirement of task.resourceRequirements) {
       const resource = this.resources.get(requirement.resourceId);
-      if (!resource) return false;
+      if (!resource) return Promise.resolve(false);
       
-      if (resource.locked && requirement.exclusive) return false;
+      if (resource.locked && requirement.exclusive) return Promise.resolve(false);
       
       resource.locked = true;
       resource.lockedBy = task.id;
       resource.lockedAt = new Date();
     }
-    return true;
+    return Promise.resolve(true);
   }
 
-  private async releaseTaskResources(taskId: string): Promise<void> {
+  private releaseTaskResources(taskId: string): Promise<void> {
     for (const resource of this.resources.values()) {
       if (resource.lockedBy === taskId) {
         resource.locked = false;
@@ -629,6 +631,7 @@ export class TaskEngine extends EventEmitter {
         resource.lockedAt = undefined;
       }
     }
+    return Promise.resolve();
   }
 
   private matchesSearch(task: WorkflowTask, search: string): boolean {
@@ -641,12 +644,13 @@ export class TaskEngine extends EventEmitter {
     );
   }
 
-  private async processWorkflow(workflow: Workflow): Promise<void> {
+  private processWorkflow(workflow: Workflow): Promise<void> {
     // Implementation would manage workflow execution based on parallelism settings
     // This is a simplified version
     for (const task of workflow.tasks) {
       this.scheduleTask(task);
     }
+    return Promise.resolve();
   }
 
   private handleTaskCreated(data: { task: WorkflowTask }): void {
@@ -665,7 +669,7 @@ export class TaskEngine extends EventEmitter {
       }
     }
 
-    this.processReadyQueue();
+    void this.processReadyQueue();
   }
 
   private handleTaskFailed(data: { taskId: string; error: Error }): void {

@@ -126,7 +126,7 @@ export class CoordinationManager implements ICoordinationManager {
     await this.scheduler.assignTask(task, agentId);
   }
 
-  async getAgentTaskCount(agentId: string): Promise<number> {
+  getAgentTaskCount(agentId: string): Promise<number> {
     if (!this.initialized) {
       throw new CoordinationError("Coordination manager not initialized");
     }
@@ -204,56 +204,53 @@ export class CoordinationManager implements ICoordinationManager {
 
   private setupEventHandlers(): void {
     // Handle task events
-    this.eventBus.on(SystemEvents.TASK_COMPLETED, async (data: unknown) => {
+    this.eventBus.on(SystemEvents.TASK_COMPLETED, (data: unknown) => {
       const { taskId, result } = data as { taskId: string; result: unknown };
-      try {
-        await this.scheduler.completeTask(taskId, result as Record<string, unknown>);
-      } catch (error) {
-        this.logger.error("Error handling task completion", { taskId, error });
-      }
+      this.scheduler.completeTask(taskId, result as Record<string, unknown>)
+        .catch((error) => {
+          this.logger.error("Error handling task completion", { taskId, error });
+        });
     });
 
-    this.eventBus.on(SystemEvents.TASK_FAILED, async (data: unknown) => {
+    this.eventBus.on(SystemEvents.TASK_FAILED, (data: unknown) => {
       const { taskId, error } = data as { taskId: string; error: Error };
-      try {
-        await this.scheduler.failTask(taskId, error);
-      } catch (err) {
-        this.logger.error("Error handling task failure", { taskId, error: err });
-      }
+      this.scheduler.failTask(taskId, error)
+        .catch((err) => {
+          this.logger.error("Error handling task failure", { taskId, error: err });
+        });
     });
 
     // Handle agent termination
-    this.eventBus.on(SystemEvents.AGENT_TERMINATED, async (data: unknown) => {
+    this.eventBus.on(SystemEvents.AGENT_TERMINATED, (data: unknown) => {
       const { agentId } = data as { agentId: string };
-      try {
+      Promise.all([
         // Release all resources held by the agent
-        await this.resourceManager.releaseAllForAgent(agentId);
-        
+        this.resourceManager.releaseAllForAgent(agentId),
         // Cancel all tasks assigned to the agent
-        await this.scheduler.cancelAgentTasks(agentId);
-      } catch (error) {
+        this.scheduler.cancelAgentTasks(agentId)
+      ]).catch((error) => {
         this.logger.error("Error handling agent termination", { agentId, error });
-      }
+      });
     });
   }
 
   private startDeadlockDetection(): void {
-    this.deadlockCheckInterval = setInterval(async () => {
-      try {
-        const deadlock = await this.detectDeadlock();
-        
-        if (deadlock) {
-          this.logger.error("Deadlock detected", deadlock);
-          
-          // Emit deadlock event
-          this.eventBus.emit(SystemEvents.DEADLOCK_DETECTED, deadlock);
-          
-          // Attempt to resolve deadlock
-          await this.resolveDeadlock(deadlock);
-        }
-      } catch (error) {
-        this.logger.error("Error during deadlock detection", error);
-      }
+    this.deadlockCheckInterval = setInterval(() => {
+      this.detectDeadlock()
+        .then((deadlock) => {
+          if (deadlock) {
+            this.logger.error("Deadlock detected", deadlock);
+            
+            // Emit deadlock event
+            this.eventBus.emit(SystemEvents.DEADLOCK_DETECTED, deadlock);
+            
+            // Attempt to resolve deadlock
+            return this.resolveDeadlock(deadlock);
+          }
+        })
+        .catch((error) => {
+          this.logger.error("Error during deadlock detection", error);
+        });
     }, 10000); // Check every 10 seconds
   }
 
@@ -262,8 +259,8 @@ export class CoordinationManager implements ICoordinationManager {
     resources: string[];
   } | null> {
     // Get resource allocation graph
-    const allocations = await this.resourceManager.getAllocations();
-    const waitingFor = await this.resourceManager.getWaitingRequests();
+    const allocations = this.resourceManager.getAllocations();
+    const waitingFor = this.resourceManager.getWaitingRequests();
 
     // Build dependency graph
     const graph = new Map<string, Set<string>>();
