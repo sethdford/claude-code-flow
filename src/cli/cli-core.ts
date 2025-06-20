@@ -13,9 +13,9 @@ let VERSION = "1.0.72"; // fallback version
 function getVersion(): string {
   try {
     // Only try to read package.json if we're not in a SEA bundle
-    // In SEA, import.meta is not available or behaves differently
-    if (typeof import.meta !== 'undefined' && import.meta.url) {
-      // We're in a regular Node.js environment
+    // In SEA, import.meta.url is undefined even if import.meta exists
+    if (typeof import.meta !== 'undefined' && import.meta.url && typeof import.meta.url === 'string') {
+      // We're in a regular Node.js environment with valid import.meta.url
       const { fileURLToPath } = require("node:url");
       const { dirname, join } = require("node:path");
       
