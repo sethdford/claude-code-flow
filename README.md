@@ -1,7 +1,7 @@
-# Claude Flow
+# Claude Flow 🌊
 
-> **Enterprise AI Agent Orchestration via AWS Bedrock**  
-> Connect to Claude 4 through your AWS infrastructure with automatic credential detection
+> **Next-Generation AI Agent Orchestration Platform**  
+> Transform your development workflow with intelligent multi-agent coordination, SPARC methodology, and seamless CLI integration
 
 [![npm version](https://badge.fury.io/js/%40sethdouglasford%2Fclaude-flow.svg)](https://badge.fury.io/js/%40sethdouglasford%2Fclaude-flow)
 [![Build Status](https://github.com/sethdford/vibex-claude-code-flow/workflows/CI/badge.svg)](https://github.com/sethdford/vibex-claude-code-flow/actions)
@@ -9,339 +9,498 @@
 
 **Originally created by [@ruvnet](https://github.com/ruvnet) - this fork is a complete rebuild to modernize the architecture and ensure full functionality.**
 
-## 🏢 Enterprise-Ready Claude 4 Access
+---
 
-**Claude Flow is specifically designed for enterprises wanting to leverage Claude 4 through AWS Bedrock**, providing:
+## 🚀 What is Claude Flow?
 
-- ✅ **Enterprise Security & Compliance** - Use Claude through your AWS infrastructure
-- ✅ **AWS Credits & Billing Integration** - Leverage existing AWS accounts and billing
-- ✅ **Automatic Credential Detection** - Works with existing AWS configurations  
-- ✅ **Latest Claude 4 Models** - Access to Claude 4 Opus and Sonnet via Bedrock
-- ✅ **Multi-Agent Orchestration** - Coordinate multiple Claude instances for complex workflows
-- ✅ **Zero External API Dependencies** - Everything runs through your AWS account
+Claude Flow is a revolutionary AI agent orchestration platform that transforms how you build, test, and deploy software. It combines the power of **multi-agent swarms** with the **SPARC methodology** (Specification → Pseudocode → Architecture → Refinement → Completion) to create a seamless development experience.
 
-Claude Flow is a powerful command-line tool and framework for orchestrating AI agents, managing complex workflows, and coordinating multi-agent systems. Built with TypeScript and Node.js, it provides a comprehensive platform for enterprise AI-driven automation.
+### ⚡ Key Capabilities
 
-## 🚀 Enterprise Quick Start
+🤖 **Multi-Agent Swarms** - Coordinate specialized AI agents for complex tasks  
+🏗️ **SPARC Methodology** - Systematic approach to software development  
+⚙️ **CLI Integration** - Works with your existing workflow and tools  
+🔄 **Background Processing** - Run as a daemon or integrate into CI/CD  
+🧠 **Persistent Memory** - Agents learn and remember across sessions  
+📊 **Real-time Monitoring** - Track progress and performance  
+🛡️ **Enterprise Ready** - Security, audit trails, and compliance  
 
-### For Existing AWS Users
+---
 
-If you already have AWS configured, Claude Flow will automatically detect your credentials:
+## 🎯 Perfect For
+
+- **Individual Developers** - Accelerate coding, testing, and documentation
+- **Development Teams** - Coordinate complex projects with AI assistance  
+- **DevOps Engineers** - Automate deployments and infrastructure management
+- **Product Managers** - Rapid prototyping and requirement validation
+- **Enterprises** - Scalable AI integration with security and compliance
+
+---
+
+## 🏃‍♂️ Quick Start
+
+### Installation
 
 ```bash
 # Install globally
 npm install -g @sethdouglasford/claude-flow
 
-# Start with automatic AWS detection
-claude-flow start
-# ✅ Automatically detects AWS credentials
-# ✅ Configures Claude 4 via Bedrock
-# ✅ Ready for enterprise use
+# Or use npx (no installation required)
+npx @sethdouglasford/claude-flow --help
 ```
 
-### AWS Bedrock Setup
+### Your First Swarm
 
 ```bash
-# Run automated enterprise setup
-./scripts/setup-bedrock.sh
-# ✅ Detects existing AWS credentials
-# ✅ Verifies Bedrock model access
-# ✅ Configures Claude 4 models
-# ✅ Tests enterprise integration
+# Create a complete web API in minutes
+claude-flow swarm create "Build a REST API for task management with authentication"
+
+# Use SPARC methodology for systematic development  
+claude-flow sparc run tdd "Create user authentication system"
+
+# Start interactive mode
+claude-flow
 ```
 
-**Supported AWS credential sources:**
-- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-- AWS profiles (`AWS_PROFILE` or `~/.aws/credentials`)
-- IAM roles (EC2 Instance Profile, ECS Task Role)
-# Show version
-@sethdouglasford/claude-flow --version
-
-# Get help
-@sethdouglasford/claude-flow help
-
-# Start a new workflow
-claude-flow start --config my-workflow.json
-
-# Monitor running agents
-claude-flow monitor
-
-# Check system status
-claude-flow status
-```
-
-## 📖 Documentation
-
-### Core Commands
-
-#### `start` - Start Agent Orchestration
-```bash
-claude-flow start [options]
-  --config <path>     Configuration file path
-  --agents <number>   Number of agents to spawn
-  --mode <mode>       Execution mode (sequential, parallel, swarm)
-  --output <path>     Output directory
-```
-
-#### `monitor` - Real-time Monitoring
-```bash
-claude-flow monitor [options]
-  --refresh <seconds> Refresh interval
-  --format <format>   Output format (table, json, dashboard)
-  --filter <filter>   Filter agents by status
-```
-
-#### `sparc` - SPARC Framework
-```bash
-claude-flow sparc [options]
-  --mode <mode>       SPARC mode (specification, architecture, etc.)
-  --input <path>      Input file or prompt
-  --output <path>     Output directory
-```
-
-### Configuration
-
-Claude Flow uses JSON configuration files to define workflows and agent behavior:
-
-```json
-{
-  "name": "my-workflow",
-  "version": "1.0.0",
-  "agents": [
-    {
-      "id": "agent-1",
-      "type": "claude",
-      "role": "coordinator",
-      "config": {
-        "model": "claude-3-sonnet",
-        "maxTokens": 4000
-      }
-    }
-  ],
-  "workflow": {
-    "type": "sequential",
-    "steps": [
-      {
-        "agent": "agent-1",
-        "task": "analyze-requirements",
-        "input": "requirements.txt"
-      }
-    ]
-  }
-}
-```
-
-### Environment Variables
+### Enterprise Setup (AWS Bedrock)
 
 ```bash
-# API Keys (Direct Anthropic API)
-ANTHROPIC_API_KEY=your-api-key
-OPENAI_API_KEY=your-api-key
+# Auto-detect AWS credentials and configure
+claude-flow init --aws-bedrock
 
-# AWS Bedrock Integration (Alternative to direct API)
-CLAUDE_CODE_USE_BEDROCK=true
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-ANTHROPIC_MODEL=anthropic.claude-opus-4-20250514-v1:0
-
-# Configuration
-CLAUDE_FLOW_CONFIG=./config.json
-CLAUDE_FLOW_LOG_LEVEL=info
-CLAUDE_FLOW_OUTPUT_DIR=./output
+# Or manually configure
+claude-flow config set provider bedrock
+claude-flow config set model claude-3-5-sonnet-20241022
 ```
-
-### AWS Bedrock Integration with Auto-Detection 🔍
-
-Claude Flow automatically detects existing AWS credentials and enables Claude 4 through AWS Bedrock. No manual configuration needed if you already have AWS set up!
-
-#### Automatic Detection
-
-```bash
-# Simply start Claude Flow - it will auto-detect and configure AWS
-claude-flow start
-
-# Test auto-detection
-node test-aws-auto-detection.js
-```
-
-**Supported AWS credential sources:**
-- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-- AWS profiles (`AWS_PROFILE` or `~/.aws/credentials`)
-- IAM roles (EC2 Instance Profile, ECS Task Role)
-- AWS SSO and other standard AWS credential sources
-
-#### Manual Setup
-
-```bash
-# Run the automated setup script with auto-detection
-./scripts/setup-bedrock.sh
-```
-
-#### Manual Setup
-
-1. **Configure AWS credentials**:
-   ```bash
-   aws configure
-   ```
-
-2. **Request access to Claude models** in the AWS Bedrock console
-
-3. **Set environment variables**:
-   ```bash
-   export CLAUDE_CODE_USE_BEDROCK=true
-   export AWS_REGION=us-east-1
-   export ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
-   ```
-
-4. **Test the integration**:
-   ```bash
-   claude-flow claude spawn "Hello, please confirm you're running via AWS Bedrock"
-   ```
-
-For detailed configuration options, see [Configuration Guide](docs/03-configuration-guide.md).
-
-## 🏗️ Architecture
-
-Claude Flow is built on a modular architecture:
-
-```
-┌─────────────────┐
-│   CLI Interface │
-├─────────────────┤
-│ Agent Manager   │
-├─────────────────┤
-│ Workflow Engine │
-├─────────────────┤
-│ MCP Integration │
-├─────────────────┤
-│ Core Services   │
-└─────────────────┘
-```
-
-### Key Components
-
-- **Agent Manager**: Handles agent lifecycle and coordination
-- **Workflow Engine**: Executes complex multi-step workflows
-- **MCP Integration**: Model Context Protocol support
-- **Communication Layer**: Inter-agent messaging and coordination
-- **Memory System**: Persistent storage and context management
-
-## 🧠 Memory Module
-
-The SPARC Memory Bank system is now maintained as a separate git submodule for better modularity and independent versioning.
-
-### Repository Structure
-- **Main Project**: [vibex-claude-code-flow](https://github.com/sethdford/vibex-claude-code-flow) - Core Claude Flow application
-- **Memory Module**: [vibex-claude-code-flow-memory](https://github.com/sethdford/vibex-claude-code-flow-memory) - SPARC Memory Bank system
-
-### Working with the Memory Submodule
-
-#### Initial Setup (for new clones)
-```bash
-git clone --recurse-submodules https://github.com/sethdford/vibex-claude-code-flow.git
-cd claude-code-flow
-```
-
-#### If you already have the repo cloned
-```bash
-git submodule update --init --recursive
-```
-
-#### Updating the Memory Module
-```bash
-# Update to latest memory module version
-git submodule update --remote memory
-
-# Build the memory module
-cd memory && npm install && npm run build && cd ..
-
-# Commit the submodule update
-git add memory
-git commit -m "Update memory submodule to latest version"
-```
-
-#### Memory Module Features
-- **CRDT-based conflict resolution** for distributed memory
-- **Vector search capabilities** with semantic similarity
-- **Multiple backends**: SQLite and Markdown
-- **Namespace management** with permissions
-- **Replication and synchronization**
-- **Advanced caching** with LRU/LFU/FIFO strategies
-- **Import/export** with multiple formats
-- **Comprehensive test suite** with Vitest
-
-## 🔧 Development
-
-### Prerequisites
-
-- Node.js 18+ 
-- npm or yarn
-- TypeScript
-
-### Building from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/sethdford/vibex-claude-code-flow.git
-cd claude-code-flow
-
-# Install dependencies
-npm install
-
-# Build TypeScript
-npm run build:ts
-
-# Build standalone binary
-npm run build:sea
-
-# Run tests
-npm test
-```
-
-### Project Structure
-
-```
-src/
-├── cli/           # CLI interface and commands
-├── agents/        # Agent management system
-├── coordination/  # Multi-agent coordination
-├── core/          # Core services and utilities
-├── mcp/           # Model Context Protocol integration
-├── swarm/         # Swarm intelligence features
-└── types/         # TypeScript type definitions
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [TypeScript](https://www.typescriptlang.org/)
-- Powered by [Node.js](https://nodejs.org/)
-- Inspired by swarm intelligence and multi-agent systems
-- Thanks to the open-source community
-
-## 📞 Support
-
-- 📖 [Documentation](https://github.com/sethdford/vibex-claude-code-flow/docs)
-- 🐛 [Issue Tracker](https://github.com/sethdford/vibex-claude-code-flow/issues)
-- 💬 [Discussions](https://github.com/sethdford/vibex-claude-code-flow/discussions)
-- 🔗 [Original Project](https://github.com/ruvnet/claude-code-flow) by [@ruvnet](https://github.com/ruvnet)
 
 ---
 
-**Made with ❤️ by the Claude Flow team** 
+## 🌟 Core Features
+
+### 🤖 Multi-Agent Swarm Coordination
+
+Claude Flow orchestrates specialized AI agents that work together like a development team:
+
+```bash
+# Parallel agent coordination
+claude-flow swarm create "E-commerce platform" \
+  --agents researcher,architect,developer,tester,reviewer \
+  --strategy parallel \
+  --max-agents 5
+
+# Sequential workflow with dependencies
+claude-flow swarm create "Microservices architecture" \
+  --strategy sequential \
+  --review-enabled \
+  --quality-threshold 0.85
+```
+
+**Agent Specializations:**
+- **Researcher** - Requirements analysis and best practices
+- **Architect** - System design and technical specifications  
+- **Developer** - Code implementation and optimization
+- **Tester** - Unit tests, integration tests, and QA
+- **Reviewer** - Code review and security analysis
+- **DevOps** - Deployment and infrastructure automation
+
+### 🏗️ SPARC Methodology
+
+Systematic software development with AI assistance:
+
+```bash
+# Complete SPARC workflow
+claude-flow sparc run all "Payment processing system"
+
+# Individual phases
+claude-flow sparc run spec-pseudocode "User authentication"
+claude-flow sparc run architect "Database schema design"  
+claude-flow sparc run tdd "API endpoint implementation"
+claude-flow sparc run security-review "Security audit"
+```
+
+**SPARC Phases:**
+- **Specification** - Clear requirements and acceptance criteria
+- **Pseudocode** - Algorithm design and logic planning
+- **Architecture** - System design and component relationships
+- **Refinement** - TDD implementation with continuous improvement
+- **Completion** - Integration, testing, and deployment
+
+### ⚙️ Seamless CLI Integration
+
+Claude Flow integrates naturally into your existing workflow:
+
+```bash
+# Background daemon mode
+claude-flow start --daemon --port 3000
+
+# CI/CD integration
+claude-flow swarm create "$(cat requirements.md)" \
+  --config ./ci/claude-flow.json \
+  --output ./generated/ \
+  --format json
+
+# Git hook integration
+claude-flow sparc run code-review "$(git diff HEAD~1)" \
+  --hook pre-commit
+```
+
+### 🧠 Intelligent Memory System
+
+Agents learn and remember across sessions:
+
+```bash
+# Store project knowledge
+claude-flow memory store project_patterns "$(cat coding-standards.md)"
+
+# Query knowledge base
+claude-flow memory search "authentication patterns"
+
+# Cross-agent knowledge sharing
+claude-flow memory share-knowledge --from agent-1 --to team
+```
+
+### 📊 Real-time Monitoring
+
+Track progress and performance:
+
+```bash
+# Start monitoring dashboard
+claude-flow monitor --ui --port 8080
+
+# Get system status
+claude-flow status --detailed
+
+# Performance metrics
+claude-flow metrics --export prometheus
+```
+
+---
+
+## 🎨 Examples & Use Cases
+
+### 🚀 Application Development
+
+**Complete REST API** (5 minutes):
+```bash
+claude-flow swarm create "REST API for blog platform with:
+- User authentication (JWT)
+- CRUD operations for posts
+- Comment system
+- Rate limiting
+- Comprehensive tests
+- API documentation"
+```
+
+**Microservices Architecture**:
+```bash
+claude-flow sparc run architect "Design microservices for e-commerce:
+- User service
+- Product catalog  
+- Order processing
+- Payment gateway
+- Notification service"
+```
+
+### 🧪 Test-Driven Development
+
+**TDD with SPARC**:
+```bash
+claude-flow sparc run tdd "Shopping cart functionality" \
+  --test-first \
+  --coverage-threshold 95 \
+  --test-framework jest
+```
+
+### 🔧 DevOps Automation
+
+**Infrastructure as Code**:
+```bash
+claude-flow swarm create "Kubernetes deployment for Node.js app:
+- Docker containerization
+- K8s manifests
+- Helm charts
+- CI/CD pipeline
+- Monitoring setup"
+```
+
+### 📚 Documentation Generation
+
+**Comprehensive Docs**:
+```bash
+claude-flow sparc run docs-writer "Generate documentation for:
+- API reference
+- User guides  
+- Developer setup
+- Architecture diagrams
+- Deployment instructions"
+```
+
+### 🛡️ Security & Compliance
+
+**Security Review**:
+```bash
+claude-flow sparc run security-review "$(cat src/)" \
+  --standards "OWASP,PCI-DSS" \
+  --output security-report.md
+```
+
+---
+
+## 📁 Rich Example Library
+
+Explore our comprehensive examples:
+
+```
+examples/
+├── 01-configurations/     # Setup examples for different scenarios
+├── 02-workflows/          # Multi-agent workflow definitions  
+├── 03-demos/             # Live demonstration scripts
+├── 04-testing/           # Testing and validation examples
+├── 05-swarm-apps/        # Complete applications created by swarms
+└── 06-tutorials/         # Step-by-step learning guides
+```
+
+**Featured Examples:**
+- **Task Manager CLI** - Complete CRUD app with tests (400+ lines)
+- **REST API Advanced** - Production-ready API with Docker
+- **Data Pipeline** - ETL processing with error handling
+- **Flask API with SPARC** - Python web service
+- **Chat Application** - Real-time messaging system
+
+### 🎯 Run Examples
+
+```bash
+# Quick demo
+cd examples/03-demos && ./quick-demo.sh
+
+# Try a complete app
+cd examples/05-swarm-apps/rest-api-advanced
+npm install && npm start
+
+# Follow tutorials
+cd examples/06-tutorials/getting-started
+cat 01-first-swarm.md
+```
+
+---
+
+## 🔧 Integration Patterns
+
+### 🔄 CI/CD Integration
+
+**GitHub Actions**:
+```yaml
+- name: AI Code Review
+  run: |
+    npx @sethdouglasford/claude-flow sparc run code-review \
+      "$(git diff origin/main)" \
+      --format github-comment
+```
+
+**Jenkins Pipeline**:
+```groovy
+stage('AI Testing') {
+    steps {
+        sh 'claude-flow sparc run tdd "${CHANGE_TARGET}" --ci-mode'
+    }
+}
+```
+
+### 🛠️ IDE Integration
+
+**VS Code Integration**:
+```bash
+# Install as workspace tool
+claude-flow init --vscode-integration
+
+# Use in terminal
+claude-flow sparc run code "Implement user service"
+```
+
+### 🐳 Docker & Kubernetes
+
+**Containerized Development**:
+```bash
+# Run in Docker
+docker run -v $(pwd):/workspace sethdford/claude-flow \
+  swarm create "Containerized microservice"
+
+# Kubernetes job
+kubectl apply -f examples/k8s/claude-flow-job.yaml
+```
+
+---
+
+## 🎛️ Advanced Configuration
+
+### 🌐 Multi-Provider Support
+
+```bash
+# AWS Bedrock (Recommended for Enterprise)
+claude-flow config set provider bedrock
+claude-flow config set model claude-3-5-sonnet-20241022
+
+# OpenAI
+claude-flow config set provider openai  
+claude-flow config set model gpt-4
+
+# Anthropic Direct
+claude-flow config set provider anthropic
+claude-flow config set model claude-3-5-sonnet-20241022
+```
+
+### ⚡ Performance Tuning
+
+```bash
+# High-performance mode
+claude-flow config set performance.parallel-agents 10
+claude-flow config set performance.memory-cache true
+claude-flow config set performance.async-processing true
+
+# Resource limits
+claude-flow config set limits.max-memory "4GB"
+claude-flow config set limits.timeout 300
+```
+
+### 🔒 Enterprise Security
+
+```bash
+# Enable audit logging
+claude-flow config set security.audit-log true
+claude-flow config set security.log-level detailed
+
+# Network restrictions
+claude-flow config set security.allowed-hosts "internal.company.com"
+claude-flow config set security.require-auth true
+```
+
+---
+
+## 🏢 Enterprise Features
+
+### 📊 Analytics & Reporting
+
+- **Usage Analytics** - Track agent performance and resource utilization
+- **Quality Metrics** - Code quality scores and improvement trends  
+- **Cost Management** - Monitor API usage and optimize spend
+- **Custom Dashboards** - Real-time visibility into development metrics
+
+### 🛡️ Security & Compliance
+
+- **Audit Trails** - Complete logging of all agent activities
+- **Access Control** - Role-based permissions and authentication
+- **Data Encryption** - End-to-end encryption for sensitive data
+- **Compliance Reports** - SOC2, GDPR, HIPAA compliance support
+
+### 🌐 Scalability
+
+- **Distributed Processing** - Scale across multiple machines
+- **Load Balancing** - Intelligent workload distribution
+- **Resource Management** - Automatic scaling based on demand
+- **High Availability** - Fault tolerance and disaster recovery
+
+---
+
+## 🛠️ Background Agent Mode
+
+Run Claude Flow as a background service:
+
+```bash
+# Start as daemon
+claude-flow start --daemon --port 3000
+
+# API integration
+curl -X POST http://localhost:3000/api/swarm \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Create user service", "strategy": "parallel"}'
+
+# Webhook integration
+claude-flow config set webhooks.github true
+claude-flow config set webhooks.slack true
+```
+
+**Use Cases:**
+- **Code Review Bot** - Automatic PR reviews
+- **CI/CD Integration** - Automated testing and deployment
+- **Monitoring Agent** - Continuous system health checks
+- **Documentation Bot** - Auto-generate docs on code changes
+
+---
+
+## 📚 Learning Resources
+
+### 🎓 Tutorials
+
+1. **[Getting Started](examples/06-tutorials/getting-started/)** - Your first swarm
+2. **[SPARC Methodology](examples/06-tutorials/sparc/)** - Systematic development
+3. **[Multi-Agent Coordination](examples/06-tutorials/workflows/)** - Advanced patterns
+4. **[Enterprise Integration](docs/enterprise/)** - Production deployment
+
+### 📖 Documentation
+
+- **[API Reference](docs/api/)** - Complete API documentation
+- **[Configuration Guide](docs/configuration/)** - Setup and customization
+- **[Best Practices](docs/best-practices/)** - Proven patterns and techniques
+- **[Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
+
+### 🎬 Video Tutorials
+
+- **Quick Start Guide** - 5-minute introduction
+- **SPARC in Action** - Complete development workflow
+- **Enterprise Setup** - Production deployment guide
+- **Advanced Patterns** - Expert tips and tricks
+
+---
+
+## 🤝 Community & Support
+
+### 💬 Get Help
+
+- **[GitHub Issues](https://github.com/sethdford/vibex-claude-code-flow/issues)** - Bug reports and feature requests
+- **[Discussions](https://github.com/sethdford/vibex-claude-code-flow/discussions)** - Community Q&A
+- **[Discord Server](https://discord.gg/claude-flow)** - Real-time chat support
+- **[Documentation](https://claude-flow.dev)** - Comprehensive guides
+
+### 🎯 Contributing
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for:
+- Code contributions
+- Documentation improvements  
+- Example submissions
+- Bug reports and feature requests
+
+### 📈 Roadmap
+
+**Coming Soon:**
+- Visual workflow designer
+- More AI provider integrations
+- Advanced debugging tools
+- Mobile app for monitoring
+- Plugin ecosystem
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **[@ruvnet](https://github.com/ruvnet)** - Original creator and visionary
+- **Anthropic** - Claude AI models that power the intelligence
+- **Open Source Community** - Contributors and supporters
+- **Early Adopters** - Feedback and real-world testing
+
+---
+
+<div align="center">
+
+**Transform Your Development Workflow Today**
+
+[Get Started](https://claude-flow.dev/docs/getting-started) • [Examples](examples/) • [API Docs](docs/api/) • [Community](https://discord.gg/claude-flow)
+
+Made with ❤️ by the Claude Flow community
+
+</div> 
