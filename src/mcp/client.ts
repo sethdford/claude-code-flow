@@ -4,7 +4,7 @@
 
 import { ITransport } from "./transports/base.js";
 import { logger } from "../core/logger.js";
-import { MCPRequest, MCPResponse, MCPNotification } from "../utils/types.js";
+import { MCPRequest, MCPNotification } from "../utils/types.js";
 
 export interface MCPClientConfig {
   transport: ITransport;

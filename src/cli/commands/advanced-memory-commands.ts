@@ -11,6 +11,7 @@ import { AdvancedMemoryManager, QueryOptions, ExportOptions, ImportOptions, Clea
 import { Logger } from "../../core/logger.js";
 
 // Command option interfaces
+// Extended command options with all possible fields
 export interface CommandOptions {
   namespace?: string;
   type?: string;
@@ -22,7 +23,48 @@ export interface CommandOptions {
   format?: string;
   debug?: boolean;
   filterQuery?: string;
-  [key: string]: unknown;
+  accessLevel?: string;
+  valueSearch?: string;
+  fullText?: string;
+  createdAfter?: string;
+  createdBefore?: string;
+  updatedAfter?: string;
+  updatedBefore?: string;
+  sizeGt?: number;
+  sizeLt?: number;
+  includeExpired?: boolean;
+  sortBy?: string;
+  sortOrder?: string;
+  aggregateBy?: string;
+  includeMetadata?: boolean;
+  export?: string;
+  conflictResolution?: string;
+  validation?: boolean;
+  keyMapping?: string;
+  valueTransform?: string;
+  metadataExtract?: string;
+  dryRun?: boolean;
+  detailed?: boolean;
+  compression?: boolean;
+  encrypt?: boolean;
+  encryptKey?: string;
+  removeExpired?: boolean;
+  removeOlderThan?: number;
+  removeUnaccessed?: number;
+  removeOrphaned?: boolean;
+  removeDuplicates?: boolean;
+  compressEligible?: boolean;
+  archiveOld?: boolean;
+  archiveOlderThan?: number;
+  archivePath?: string;
+  retentionPolicies?: string;
+  aggressive?: boolean;
+  confirm?: boolean;
+  set?: string;
+  show?: boolean;
+  metadata?: string;
+  ttl?: number;
+  compress?: boolean;
 }
 
 export interface StatsData {
@@ -145,25 +187,25 @@ export function createAdvancedMemoryCommand(): Command {
     .option("--aggregate-by <field>", "Generate aggregations (namespace|type|owner|tags)")
     .option("--include-metadata", "Include full metadata in results")
     .option("--format <format>", "Output format (table|json|csv)", "table")
-    .action(async (search, options) => {
+    .action(async (search: string, options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
         const startTime = Date.now();
 
         // Build query options
-        const opts = options as CommandOptions;
+        // Options are already typed, no need to cast
         const queryOptions: QueryOptions = {
           fullTextSearch: search,
-          namespace: opts.namespace,
-          type: opts.type,
-          tags: typeof opts.tags === "string" ? opts.tags.split(",").map((t: string) => t.trim()) : undefined,
-          owner: opts.owner,
-          keyPattern: opts.keyPattern,
-          limit: opts.limit,
-          offset: opts.offset,
+          namespace: options.namespace,
+          type: options.type,
+          tags: typeof options.tags === "string" ? options.tags.split(",").map((t: string) => t.trim()) : undefined,
+          owner: options.owner,
+          keyPattern: options.keyPattern,
+          limit: options.limit,
+          offset: options.offset,
         };
 
-        const entries = await manager.query(queryOptions);
+        const entries = manager.query(queryOptions);
         const duration = Date.now() - startTime;
         const total = entries.length;
 
@@ -221,7 +263,7 @@ export function createAdvancedMemoryCommand(): Command {
 
         // Show pagination info
         if (total > entries.length) {
-          const showing = (opts.offset ?? 0) + entries.length;
+          const showing = (options.offset ?? 0) + entries.length;
           console.log(chalk.gray(`Showing ${showing} of ${total} entries`));
         }
 
@@ -246,7 +288,7 @@ export function createAdvancedMemoryCommand(): Command {
     .option("--encrypt", "Enable encryption")
     .option("--encrypt-key <key>", "Encryption key")
     .option("--filter-query <json>", "Advanced filtering (JSON query options)")
-    .action(async (file, options) => {
+    .action(async (file: string, options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
         
@@ -265,10 +307,12 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Parse filter query if provided
-        let _filtering: QueryOptions | undefined;
+        // Note: _filtering is created but not used in simplified version
         if (typeof options.filterQuery === "string") {
           try {
-            _filtering = JSON.parse(options.filterQuery) as QueryOptions;
+            const _filtering = JSON.parse(options.filterQuery) as QueryOptions;
+            // Filtering options are not implemented in simplified version
+            void _filtering; // Acknowledge unused variable
           } catch (error) {
             printError("Invalid filter query JSON format");
             return;
@@ -284,7 +328,7 @@ export function createAdvancedMemoryCommand(): Command {
         printInfo(`Starting export to ${file} (format: ${format})`);
         const startTime = Date.now();
 
-        const data = await manager.export(exportOptions);
+        const data = manager.export(exportOptions);
         
         // Write to file
         await fs.writeFile(file, data);
@@ -317,7 +361,7 @@ export function createAdvancedMemoryCommand(): Command {
     .option("--value-transform <js>", "Value transformation JavaScript function")
     .option("--metadata-extract <js>", "Metadata extraction JavaScript function")
     .option("--dry-run", "Show what would be imported without making changes")
-    .action(async (file, options) => {
+    .action(async (file: string, options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
 
@@ -362,7 +406,7 @@ export function createAdvancedMemoryCommand(): Command {
 
         // Read file and import data
         const fileData = await fs.readFile(file, "utf-8");
-        const result = await manager.import(fileData, importOptions);
+        const result: {imported: number; skipped: number; conflicts: Array<{ entry: any; reason: string }>} = await manager.import(fileData, importOptions);
         const duration = Date.now() - startTime;
 
         printSuccess(`Import completed in ${formatDuration(duration)}`);
@@ -373,15 +417,21 @@ export function createAdvancedMemoryCommand(): Command {
         if (result.skipped > 0) {
           console.log(chalk.yellow(`⏭️  Skipped: ${result.skipped} entries`));
         }
-        if (result.conflicts.length > 0) {
+        if (result.conflicts && result.conflicts.length > 0) {
           console.log(chalk.red(`⚠️  Conflicts: ${result.conflicts.length}`));
           if (result.conflicts.length <= 10) {
             result.conflicts.forEach(conflict => {
-              console.log(chalk.red(`   • ${conflict.reason}: ${conflict.entry.key || "unknown"}`));
+              const key = conflict.entry && typeof conflict.entry === "object" && "key" in conflict.entry 
+                ? String(conflict.entry.key) 
+                : "unknown";
+              console.log(chalk.red(`   • ${conflict.reason}: ${key}`));
             });
           } else {
             result.conflicts.slice(0, 10).forEach(conflict => {
-              console.log(chalk.red(`   • ${conflict.reason}: ${conflict.entry.key || "unknown"}`));
+              const key = conflict.entry && typeof conflict.entry === "object" && "key" in conflict.entry 
+                ? String(conflict.entry.key) 
+                : "unknown";
+              console.log(chalk.red(`   • ${conflict.reason}: ${key}`));
             });
             console.log(chalk.red(`   ... and ${result.conflicts.length - 10} more`));
           }
@@ -402,7 +452,7 @@ export function createAdvancedMemoryCommand(): Command {
     .option("--detailed", "Show detailed statistics")
     .option("--format <format>", "Output format (table|json)", "table")
     .option("--export <file>", "Export statistics to file")
-    .action(async (options) => {
+    .action(async (options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
         const startTime = Date.now();
@@ -412,7 +462,9 @@ export function createAdvancedMemoryCommand(): Command {
           getStats?: () => Promise<StatsData>;
           getStatistics?: () => StatsData;
         };
-        const rawStats = await managerWithStats.getStats?.() ?? managerWithStats.getStatistics?.() ?? {};
+        const rawStats = managerWithStats.getStats 
+          ? await managerWithStats.getStats() 
+          : (managerWithStats.getStatistics?.() ?? {});
         
         // Transform simple stats to expected format if needed
         const stats = {
@@ -583,7 +635,7 @@ export function createAdvancedMemoryCommand(): Command {
     .option("--archive-path <path>", "Archive directory path", "./memory/archive")
     .option("--retention-policies <json>", "Custom retention policies (JSON)")
     .option("--aggressive", "Use aggressive cleanup settings")
-    .action(async (options) => {
+    .action(async (options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
 
@@ -592,20 +644,11 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Parse retention policies
-        const opts = options as CommandOptions & { 
-          retentionPolicies?: string;
-          dryRun?: boolean;
-          removeOlderThan?: number;
-          removeUnaccessed?: number;
-          removeDuplicates?: boolean;
-          archiveOld?: boolean;
-          archiveOlderThan?: number;
-          aggressive?: boolean;
-        };
-        let _retentionPolicies: Record<string, unknown> | undefined;
-        if (typeof opts.retentionPolicies === "string") {
+        if (typeof options.retentionPolicies === "string") {
           try {
-            _retentionPolicies = JSON.parse(opts.retentionPolicies) as Record<string, unknown>;
+            const _retentionPolicies = JSON.parse(options.retentionPolicies) as Record<string, unknown>;
+            // Retention policies are not implemented in simplified version
+            void _retentionPolicies; // Acknowledge unused variable
           } catch (error) {
             printError("Invalid retention policies JSON format");
             return;
@@ -613,18 +656,18 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Apply aggressive settings if requested
-        if (opts.aggressive) {
-          opts.removeOlderThan = opts.removeOlderThan ?? 30;
-          opts.removeUnaccessed = opts.removeUnaccessed ?? 7;
-          opts.removeDuplicates = true;
-          opts.archiveOld = true;
-          opts.archiveOlderThan = opts.archiveOlderThan ?? 90;
+        if (options.aggressive) {
+          options.removeOlderThan = options.removeOlderThan ?? 30;
+          options.removeUnaccessed = options.removeUnaccessed ?? 7;
+          options.removeDuplicates = true;
+          options.archiveOld = true;
+          options.archiveOlderThan = options.archiveOlderThan ?? 90;
         }
 
         // Build cleanup options
         const cleanupOptions: CleanupOptions = {
-          dry: opts.dryRun,
-          maxAge: opts.removeOlderThan ? opts.removeOlderThan * 24 * 60 * 60 * 1000 : undefined,
+          dry: options.dryRun,
+          maxAge: options.removeOlderThan ? options.removeOlderThan * 24 * 60 * 60 * 1000 : undefined,
           namespace: undefined,
         };
 
@@ -675,12 +718,12 @@ export function createAdvancedMemoryCommand(): Command {
     .option("--access-level <level>", "Access level (private|shared|public)", "shared")
     .option("--ttl <ms>", "Time-to-live in milliseconds", parseInt)
     .option("--compress", "Force compression")
-    .action(async (key, value, options) => {
+    .action(async (key: string, value: string, options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
 
         // Parse value as JSON if possible
-        let parsedValue;
+        let parsedValue: unknown;
         try {
           parsedValue = JSON.parse(value);
         } catch {
@@ -688,18 +731,11 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Parse metadata if provided
-        const opts = options as CommandOptions & {
-          namespace?: string;
-          type?: string;
-          owner?: string;
-          tags?: string;
-          ttl?: number;
-          metadata?: string;
-        };
-        let _metadata: Record<string, unknown> | undefined;
-        if (typeof opts.metadata === "string") {
+        if (typeof options.metadata === "string") {
           try {
-            _metadata = JSON.parse(opts.metadata) as Record<string, unknown>;
+            const _metadata = JSON.parse(options.metadata) as Record<string, unknown>;
+            // Metadata is not used in simplified version
+            void _metadata; // Acknowledge unused variable
           } catch (error) {
             printError("Invalid metadata JSON format");
             return;
@@ -707,16 +743,16 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         const entryId = await manager.store(key, parsedValue, {
-          namespace: opts.namespace,
-          type: opts.type,
-          owner: opts.owner,
+          namespace: options.namespace,
+          type: options.type,
+          owner: options.owner,
         });
 
         printSuccess("Entry stored successfully");
         console.log(`📝 Entry ID: ${entryId}`);
         console.log(`🔑 Key: ${key}`);
-        console.log(`📦 Namespace: ${opts.namespace}`);
-        console.log(`🏷️  Type: ${opts.type ?? "auto-detected"}`);
+        console.log(`📦 Namespace: ${options.namespace ?? "default"}`);
+        console.log(`🏷️  Type: ${options.type ?? "auto-detected"}`);
         
         if (options.tags) {
           console.log(`🏷️  Tags: [${options.tags}]`);
@@ -738,7 +774,7 @@ export function createAdvancedMemoryCommand(): Command {
     .argument("<key>", "Entry key")
     .option("-n, --namespace <namespace>", "Target namespace")
     .option("--format <format>", "Output format (json|pretty)", "pretty")
-    .action(async (key, options) => {
+    .action(async (key: string, options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
 
@@ -782,7 +818,7 @@ export function createAdvancedMemoryCommand(): Command {
     .argument("<key>", "Entry key")
     .option("-n, --namespace <namespace>", "Target namespace")
     .option("--confirm", "Skip confirmation prompt")
-    .action(async (key, options) => {
+    .action(async (key: string, options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
 
@@ -823,11 +859,11 @@ export function createAdvancedMemoryCommand(): Command {
     .option("--offset <num>", "Offset for pagination", parseInt, 0)
     .option("--sort-by <field>", "Sort by field", "updatedAt")
     .option("--sort-order <order>", "Sort order (asc|desc)", "desc")
-    .action(async (options) => {
+    .action(async (options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
 
-        const entries = await manager.query({
+        const entries = manager.query({
           namespace: options.namespace,
           type: options.type,
           limit: options.limit,
@@ -851,7 +887,7 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         if (total > entries.length) {
-          const showing = options.offset + entries.length;
+          const showing = (options.offset ?? 0) + entries.length;
           console.log(chalk.gray(`Showing ${showing} of ${total} entries`));
         }
 
@@ -936,7 +972,7 @@ export function createAdvancedMemoryCommand(): Command {
     .description("View/update memory system configuration")
     .option("--show", "Show current configuration")
     .option("--set <json>", "Update configuration (JSON)")
-    .action(async (options) => {
+    .action(async (options: CommandOptions) => {
       try {
         const manager = await ensureMemoryManager();
 

@@ -10,7 +10,6 @@ import {
   Task,
   HealthStatus,
   ComponentHealth,
-  TaskStatus,
   OrchestratorMetrics,
 } from "../utils/types.js";
 import { IEventBus } from "./event-bus.js";
@@ -128,8 +127,8 @@ class SessionManager implements ISessionManager {
       
       return session;
     } catch (error) {
-      this.logger.error("Failed to create session", { agentId: profile.id, error });
-      throw new SystemError(`Failed to create session for agent ${profile.id}`, { error });
+      this.logger.error("Failed to create session", { agentId: profile.id, error: error instanceof Error ? error.message : String(error) });
+      throw new SystemError(`Failed to create session for agent ${profile.id}`, { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -161,7 +160,7 @@ class SessionManager implements ISessionManager {
           throw new Error("Terminal termination timeout");
         }),
       ]).catch(error => {
-        this.logger.error("Error terminating terminal", { sessionId, error });
+        this.logger.error("Error terminating terminal", { sessionId, error: error instanceof Error ? error.message : String(error) });
       });
 
       // Close memory bank with timeout
@@ -171,7 +170,7 @@ class SessionManager implements ISessionManager {
           throw new Error("Memory bank close timeout");
         }),
       ]).catch(error => {
-        this.logger.error("Error closing memory bank", { sessionId, error });
+        this.logger.error("Error closing memory bank", { sessionId, error: error instanceof Error ? error.message : String(error) });
       });
 
       // Clean up
@@ -184,7 +183,7 @@ class SessionManager implements ISessionManager {
         this.logger.error("Failed to persist sessions", error),
       );
     } catch (error) {
-      this.logger.error("Error during session termination", { sessionId, error });
+      this.logger.error("Error during session termination", { sessionId, error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
