@@ -15,6 +15,68 @@
 
 Claude Flow is a revolutionary AI agent orchestration platform that transforms how you build, test, and deploy software. It combines the power of **multi-agent swarms** with the **SPARC methodology** (Specification → Pseudocode → Architecture → Refinement → Completion) to create a seamless development experience.
 
+### 🎬 See Claude Code in Action
+
+Claude Flow builds upon the powerful foundation of **Claude Code** - Anthropic's AI-powered coding assistant. Here's what the core Claude Code experience looks like:
+
+![Claude Code Demo](demo.gif)
+
+**What you're seeing:**
+- 🤖 **Interactive AI Coding** - Claude Code provides intelligent code assistance
+- 💬 **Natural Language Interface** - Describe what you want in plain English
+- ⚡ **Real-time Code Generation** - Watch as Claude writes and edits code live
+- 🔄 **Iterative Development** - Continuous refinement and improvement
+
+### 🌟 How Claude Flow Amplifies This
+
+While Claude Code provides excellent **individual AI assistance**, Claude Flow takes it to the next level with:
+
+```mermaid
+graph LR
+    A[Claude Code] --> B[Single AI Assistant]
+    C[Claude Flow] --> D[Multi-Agent Swarms]
+    C --> E[SPARC Methodology]
+    C --> F[Orchestration Platform]
+    C --> G[Enterprise Features]
+    
+    B --> H[One-on-One Coding]
+    D --> I[Team of Specialists]
+    E --> J[Systematic Development]
+    F --> K[Workflow Automation]
+    G --> L[Production Ready]
+```
+
+**Claude Code** (Foundation):
+- ✅ Single AI assistant for coding tasks
+- ✅ Interactive development experience
+- ✅ Natural language code generation
+- ✅ Real-time assistance and debugging
+
+**Claude Flow** (Evolution):
+- 🚀 **Multi-Agent Coordination** - Multiple specialized AI agents working together
+- 🏗️ **SPARC Methodology** - Systematic development process
+- ⚙️ **CLI Integration** - Seamless workflow integration
+- 🔄 **Background Processing** - Autonomous task execution
+- 🧠 **Persistent Memory** - Knowledge retention across projects
+- 📊 **Enterprise Features** - Monitoring, security, and compliance
+
+### 🎯 The Power of Orchestration
+
+Think of it this way:
+- **Claude Code** = Having a brilliant AI pair programmer
+- **Claude Flow** = Having an entire AI development team with specialized roles
+
+```bash
+# Claude Code approach (single assistant)
+claude "Create a REST API for user management"
+
+# Claude Flow approach (orchestrated team)
+claude-flow swarm create "REST API for user management" \
+  --agents researcher,architect,developer,tester,reviewer \
+  --strategy parallel \
+  --sparc-methodology
+```
+
 ### ⚡ Key Capabilities
 
 🤖 **Multi-Agent Swarms** - Coordinate specialized AI agents for complex tasks  
