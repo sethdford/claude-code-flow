@@ -49,10 +49,11 @@ export class SessionManager implements ISessionManager {
     this.sessionTimeout = config.sessionTimeout ?? 3600000; // 1 hour default
     this.maxSessions = config.maxSessions ?? 100;
 
-    // Start cleanup timer
+    // Start cleanup timer - use shorter interval in test environment
+    const cleanupInterval = process.env.NODE_ENV === 'test' ? 1000 : 60000; // 1 second in tests, 1 minute in production
     this.cleanupInterval = setInterval(() => {
       this.cleanupExpiredSessions();
-    }, 60000); // Clean up every minute
+    }, cleanupInterval);
   }
 
   createSession(transport: "stdio" | "http" | "websocket"): MCPSession {
@@ -255,6 +256,7 @@ export class SessionManager implements ISessionManager {
   destroy(): void {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
     }
     this.sessions.clear();
   }

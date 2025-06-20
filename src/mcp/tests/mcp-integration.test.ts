@@ -492,6 +492,7 @@ describe('MCP Orchestration Integration', () => {
   afterEach(async () => {
     if (integration) {
       await integration.stop();
+      integration.destroy();
       integration = null;
     }
     // Clear any remaining timers
@@ -507,6 +508,10 @@ describe('MCP Orchestration Integration', () => {
       
       const orchestratorStatus = status.find(s => s.component === 'orchestrator');
       expect(orchestratorStatus?.enabled).toBe(true);
+      
+      // Manual cleanup for this test
+      await integration.stop();
+      integration.destroy();
     });
 
     it('should register orchestrator tools when enabled', async () => {
@@ -519,6 +524,10 @@ describe('MCP Orchestration Integration', () => {
       const tools = (server as any).toolRegistry.listTools();
       const orchestratorTools = tools.filter((t: any) => t.name.startsWith('orchestrator/'));
       expect(orchestratorTools.length).toBeGreaterThan(0);
+      
+      // Manual cleanup for this test
+      await integration.stop();
+      integration.destroy();
     });
 
   });
@@ -536,6 +545,10 @@ describe('MCP Orchestration Integration', () => {
       for (const component of enabledComponents) {
         expect(component.lastCheck).toBeInstanceOf(Date);
       }
+      
+      // Manual cleanup for this test
+      await integration.stop();
+      integration.destroy();
     });
   });
 });

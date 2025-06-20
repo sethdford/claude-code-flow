@@ -6,7 +6,7 @@ Welcome to the comprehensive documentation for Claude-Flow v1.0.71!
 
 **Claude-Flow is specifically designed for enterprises wanting to leverage Claude 4 through AWS Bedrock:**
 
-- **[AWS Bedrock Integration](./AWS_BEDROCK_INTEGRATION.md)** - Complete enterprise setup guide
+- **[AWS Bedrock Integration](./aws-bedrock-integration.md)** - Complete enterprise setup guide
 - **[Enterprise Configuration](./03-configuration-guide.md#aws-bedrock-enterprise-setup)** - Enterprise-specific configurations
 - **Automatic AWS credential detection** - Works with existing AWS infrastructure
 - **Claude 4 Opus & Sonnet access** - Latest models via your AWS account
@@ -33,7 +33,7 @@ Welcome to the comprehensive documentation for Claude-Flow v1.0.71!
 ### Integration & Advanced Features
 - **[MCP Integration](./07-mcp-integration.md)** - Model Context Protocol setup
 - **[Terminal Management](./08-terminal-management.md)** - Terminal pool management
-- **[Swarm Documentation](./SWARM_DOCUMENTATION.md)** - Advanced swarm coordination
+- **[Swarm Documentation](./swarm-documentation.md)** - Advanced swarm coordination
 - **[Advanced Usage](./10-advanced-usage.md)** - Power user features
 
 ## 🛠️ Specialized Guides

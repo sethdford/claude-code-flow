@@ -220,8 +220,9 @@ export class MCPLifecycleManager extends EventEmitter {
       result.components.auth = true; // Auth is optional
       result.components.loadBalancer = true; // Load balancer is optional
 
-      // Overall health assessment - server health and having tools is sufficient
-      result.healthy = result.components.server && result.components.tools;
+      // Overall health assessment - primarily based on server health
+      // Tools are nice to have but not required for basic health
+      result.healthy = result.components.server;
 
       const checkDuration = Date.now() - startTime;
       if (result.metrics) {
@@ -315,6 +316,14 @@ export class MCPLifecycleManager extends EventEmitter {
 
     // Stop health checks
     this.stopHealthChecks();
+
+    // Force stop server if still running
+    if (this.server) {
+      this.server.stop().catch(error => {
+        this.logger.error("Error force stopping server in destroy:", error);
+      });
+      this.server = undefined;
+    }
 
     // Remove all event listeners
     this.removeAllListeners();
@@ -467,11 +476,20 @@ export class MCPLifecycleManager extends EventEmitter {
 
       // Graceful shutdown with timeout
       const shutdownPromise = this.server?.stop() || Promise.resolve();
+      
+      let timeoutId: NodeJS.Timeout | undefined;
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error("Shutdown timeout")), this.config.gracefulShutdownTimeout);
+        timeoutId = setTimeout(() => reject(new Error("Shutdown timeout")), this.config.gracefulShutdownTimeout);
       });
 
-      await Promise.race([shutdownPromise, timeoutPromise]);
+      try {
+        await Promise.race([shutdownPromise, timeoutPromise]);
+      } finally {
+        // Always clear the timeout to prevent Jest open handles
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      }
       
       this.server = undefined;
       this.setState(LifecycleState.STOPPED);

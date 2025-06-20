@@ -197,6 +197,40 @@ export class MCPOrchestrationIntegration extends EventEmitter {
   }
 
   /**
+   * Destroy the integration and clean up all resources
+   */
+  destroy(): void {
+    this.logger.info("Destroying MCP orchestration integration");
+
+    // Stop health monitoring
+    this.stopHealthMonitoring();
+
+    // Destroy lifecycle manager
+    if (this.lifecycleManager) {
+      this.lifecycleManager.destroy();
+    }
+
+    // Stop performance monitor
+    if (this.performanceMonitor) {
+      this.performanceMonitor.stop();
+    }
+
+    // Clear reconnect timers
+    for (const timer of this.reconnectTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.reconnectTimers.clear();
+
+    // Clear integration status
+    this.integrationStatus.clear();
+
+    // Remove all event listeners
+    this.removeAllListeners();
+
+    this.logger.info("MCP orchestration integration destroyed");
+  }
+
+  /**
    * Get integration status for all components
    */
   getIntegrationStatus(): IntegrationStatus[] {
