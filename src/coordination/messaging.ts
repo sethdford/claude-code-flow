@@ -5,8 +5,7 @@
 import { Message, CoordinationConfig, SystemEvents } from "../utils/types.js";
 import { IEventBus } from "../core/event-bus.js";
 import { ILogger } from "../core/logger.js";
-import { CoordinationError } from "../utils/errors.js";
-import { generateId, timeout as timeoutHelper } from "../utils/helpers.js";
+import { generateId } from "../utils/helpers.js";
 
 interface MessageQueue {
   messages: Message[];
@@ -44,7 +43,7 @@ export class MessageRouter {
     this.logger.info("Shutting down message router");
     
     // Reject all pending responses
-    for (const [id, pending] of this.pendingResponses) {
+    for (const [_id, pending] of this.pendingResponses) {
       pending.reject(new Error("Message router shutdown"));
       clearTimeout(pending.timeout);
     }
@@ -280,7 +279,7 @@ export class MessageRouter {
     }
 
     // Clean up timed out responses
-    for (const [id, pending] of this.pendingResponses) {
+    for (const [_id, pending] of this.pendingResponses) {
       // This is handled by the timeout, but double-check
       clearTimeout(pending.timeout);
       pending.reject(new Error("Response timeout during cleanup"));

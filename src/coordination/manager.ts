@@ -353,7 +353,7 @@ export class CoordinationManager implements ICoordinationManager {
       this.logger.info("Deadlock resolved by preempting agent", { 
         agentId: agentToPreempt,
       });
-    } catch (error) {
+    } catch (_error) {
       throw new DeadlockError(
         "Failed to resolve deadlock",
         deadlock.agents,

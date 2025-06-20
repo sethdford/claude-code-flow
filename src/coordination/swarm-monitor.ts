@@ -3,7 +3,6 @@ import * as os from "node:os";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { Logger } from "../core/logger.js";
-import { performance } from "node:perf_hooks";
 
 interface AgentMetrics {
   id: string;
@@ -236,7 +235,7 @@ export class SwarmMonitor extends EventEmitter {
       let durationCount = 0;
       
       // Check for stalled agents
-      for (const [agentId, metrics] of this.agentMetrics) {
+      for (const [_agentId, metrics] of this.agentMetrics) {
         if (metrics.status === "running") {
           activeAgents++;
           

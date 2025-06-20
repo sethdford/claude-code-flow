@@ -6,7 +6,6 @@ import { Task, TaskStatus, CoordinationConfig, SystemEvents } from "../utils/typ
 import { IEventBus } from "../core/event-bus.js";
 import { ILogger } from "../core/logger.js";
 import { TaskError, TaskTimeoutError, TaskDependencyError } from "../utils/errors.js";
-import { delay } from "../utils/helpers.js";
 
 export interface ScheduledTask {
   task: Task;

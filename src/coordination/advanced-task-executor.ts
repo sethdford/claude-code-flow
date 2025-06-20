@@ -4,11 +4,10 @@
 
 import { EventEmitter } from "node:events";
 import { spawn, ChildProcess } from "node:child_process";
-import { TaskDefinition, TaskResult, TaskStatus, AgentState, TaskError } from "../swarm/types.js";
+import { TaskDefinition, TaskResult, AgentState, TaskError } from "../swarm/types.js";
 import { ILogger } from "../core/logger.js";
 import { IEventBus } from "../core/event-bus.js";
 import { CircuitBreaker, CircuitBreakerManager } from "./circuit-breaker.js";
-import { generateId } from "../utils/helpers.js";
 
 export interface TaskExecutorConfig {
   maxConcurrentTasks: number;
@@ -207,7 +206,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
           retryCount,
         };
 
-      } catch (error) {
+      } catch (_error) {
         retryCount++;
         
         this.logger.warn("Task attempt failed", {
@@ -403,7 +402,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
           },
           validated: false,
         };
-      } catch (error) {
+      } catch (_error) {
         taskResult = {
           output: stdout,
           artifacts: {},
@@ -520,7 +519,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
     }
   }
 
-  private async getProcessResourceUsage(pid: number): Promise<ResourceUsage> {
+  private async getProcessResourceUsage(_pid: number): Promise<ResourceUsage> {
     // In a real implementation, this would use system APIs
     // For now, return mock data
     return {

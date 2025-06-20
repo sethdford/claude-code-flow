@@ -6,7 +6,7 @@ import { Resource, CoordinationConfig, SystemEvents } from "../utils/types.js";
 import { IEventBus } from "../core/event-bus.js";
 import { ILogger } from "../core/logger.js";
 import { ResourceLockError } from "../utils/errors.js";
-import { delay, timeout } from "../utils/helpers.js";
+import { delay } from "../utils/helpers.js";
 
 interface LockRequest {
   agentId: string;

@@ -3,7 +3,7 @@
  * Basic agent selection without complex strategies
  */
 
-import { Task, TaskStatus, CoordinationConfig, SystemEvents, AgentProfile } from "../utils/types.js";
+import { Task, CoordinationConfig, AgentProfile } from "../utils/types.js";
 import { IEventBus } from "../core/event-bus.js";
 import { ILogger } from "../core/logger.js";
 import { TaskScheduler, ScheduledTask } from "./scheduler.js";
@@ -113,7 +113,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
   /**
    * Complete a task and update agent load
    */
-  override async completeTask(taskId: string, result: any): Promise<void> {
+  override async completeTask(taskId: string, _result: any): Promise<void> {
     const scheduledTask = this.tasks.get(taskId);
     if (scheduledTask) {
       const load = this.agentLoads.get(scheduledTask.agentId) || 0;
