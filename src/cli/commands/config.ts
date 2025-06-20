@@ -8,6 +8,14 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { configManager } from "../../core/config.js";
 import { deepMerge } from "../../utils/helpers.js";
+import type { ConfigShowOptions, ConfigSetOptions } from "./types.js";
+
+// Generic options interface for commands with file arguments
+interface FileCommandOptions {
+  force?: boolean;
+  format?: string;
+  [key: string]: any;
+}
 
 export const configCommand = new Command()
   .description("Manage Claude-Flow configuration")
@@ -19,7 +27,7 @@ export const configCommand = new Command()
   .option("--format <format>", "Output format (json, yaml)", "json")
   .option("--diff", "Show only differences from defaults")
   .option("--profile", "Include profile information")
-  .action(async (options: any) => {
+  .action(async (options: ConfigShowOptions) => {
     if (options.diff) {
       const diff = configManager.getDiff();
       console.log(JSON.stringify(diff, null, 2));
@@ -40,7 +48,7 @@ export const configCommand = new Command()
   .command("get")
   .description("Get a specific configuration value")
   .arguments("<path>")
-  .action(async (options: any, path: string) => {
+  .action(async (path: string) => {
     try {
       const value = configManager.getValue(path);
         
@@ -61,7 +69,7 @@ export const configCommand = new Command()
   .option("--type <type>", "Value type (string, number, boolean, json)", "auto")
   .option("--reason <reason>", "Reason for the change (for audit trail)")
   .option("--force", "Skip validation warnings")
-  .action(async (options: any, path: string, value: string) => {
+  .action(async (path: string, value: string, options: ConfigSetOptions) => {
     try {
       let parsedValue: any;
         
@@ -108,9 +116,9 @@ export const configCommand = new Command()
   .command("reset")
   .description("Reset configuration to defaults")
   .option("--confirm", "Skip confirmation prompt")
-  .action(async (options: any) => {
+  .action(async (options: { confirm?: boolean }) => {
     if (!options.confirm) {
-      const answers = await inquirer.prompt([{
+      const answers = await inquirer.prompt<{ confirmed: boolean }>([{
         type: "confirm",
         name: "confirmed",
         message: "Reset configuration to defaults?",
@@ -250,7 +258,7 @@ export const configCommand = new Command()
   .description("Save current configuration as a profile")
   .arguments("<profile-name>")
   .option("--force", "Overwrite existing profile")
-  .action(async (options: any, profileName: string) => {
+  .action(async (profileName: string, options: FileCommandOptions) => {
     try {
       const existing = await configManager.getProfile(profileName);
       if (existing && !options.force) {
@@ -268,7 +276,7 @@ export const configCommand = new Command()
   .command("load")
   .description("Load a configuration profile")
   .arguments("<profile-name>")
-  .action(async (options: any, profileName: string) => {
+  .action(async (profileName: string, options: FileCommandOptions) => {
     try {
       await configManager.applyProfile(profileName);
       console.log(chalk.green("✓"), `Profile '${profileName}' loaded`);
@@ -280,7 +288,7 @@ export const configCommand = new Command()
   .description("Delete a configuration profile")
   .arguments("<profile-name>")
   .option("--force", "Skip confirmation prompt")
-  .action(async (options: any, profileName: string) => {
+  .action(async (profileName: string, options: FileCommandOptions) => {
     try {
       if (!options.force) {
         const answers = await inquirer.prompt([{
@@ -306,7 +314,7 @@ export const configCommand = new Command()
   .command("show")
   .description("Show profile configuration")
   .arguments("<profile-name>")
-  .action(async (options: any, profileName: string) => {
+  .action(async (profileName: string, options: FileCommandOptions) => {
     try {
       const profile = await configManager.getProfile(profileName);
       if (!profile) {
@@ -323,7 +331,7 @@ export const configCommand = new Command()
   .description("Export configuration")
   .arguments("<output-file>")
   .option("--include-defaults", "Include default values")
-  .action(async (options: any, outputFile: string) => {
+  .action(async (outputFile: string, options: FileCommandOptions) => {
     try {
       let data;
       if (options.includeDefaults) {
@@ -347,7 +355,7 @@ export const configCommand = new Command()
   .description("Import configuration")
   .arguments("<input-file>")
   .option("--merge", "Merge with current configuration")
-  .action(async (options: any, inputFile: string) => {
+  .action(async (inputFile: string, options: FileCommandOptions) => {
     try {
       const content = await import("fs").then(fs => fs.promises.readFile(inputFile, "utf-8"));
       const data = JSON.parse(content);
@@ -370,7 +378,7 @@ export const configCommand = new Command()
   .command("schema")
   .description("Show configuration schema")
   .option("--path <path>", "Show schema for specific path")
-  .action(async (options: any) => {
+  .action(async (options: Record<string, any>) => {
     const schema = configManager.getSchema();
       
     if (options.path) {
@@ -389,7 +397,7 @@ export const configCommand = new Command()
   .option("--path <path>", "Show history for specific configuration path")
   .option("--limit <limit:number>", "Maximum number of changes to show", "20")
   .option("--format <format>", "Output format (json, table)", "table")
-  .action(async (options: any) => {
+  .action(async (options: Record<string, any>) => {
     try {
       const changes = options.path 
         ? configManager.getPathHistory()
@@ -436,7 +444,7 @@ export const configCommand = new Command()
   .description("Backup current configuration")
   .arguments("[backup-path:string]")
   .option("--auto-name", "Generate automatic backup filename")
-  .action(async (options: any, backupPath?: string) => {
+  .action(async (backupPath: string | undefined, options: FileCommandOptions) => {
     try {
       const finalPath = backupPath || (options.autoName ? undefined : "config-backup.json");
       const savedPath = await configManager.backup(finalPath);
@@ -452,7 +460,7 @@ export const configCommand = new Command()
   .description("Restore configuration from backup")
   .arguments("<backup-path>")
   .option("--force", "Skip confirmation prompt")
-  .action(async (options: any, backupPath: string) => {
+  .action(async (backupPath: string, options: FileCommandOptions) => {
     try {
       if (!options.force) {
         const answers = await inquirer.prompt([{
@@ -480,7 +488,7 @@ export const configCommand = new Command()
   .command("templates")
   .description("List available configuration templates")
   .option("--detailed", "Show detailed template information")
-  .action(async (options: any) => {
+  .action(async (options: Record<string, any>) => {
     try {
       const templates = configManager.getAvailableTemplates();
         
