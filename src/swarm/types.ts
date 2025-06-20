@@ -163,10 +163,9 @@ export interface AgentConfig {
 
 export interface AgentEnvironment {
   // Runtime environment
-  runtime: "deno" | "node" | "claude" | "browser" | "docker" | "kubernetes";
+  runtime: "node" | "claude" | "browser" | "docker" | "kubernetes";
   version: string;
   nodeVersion?: string;
-  denoVersion?: string;
   
   // Available resources
   workingDirectory: string;

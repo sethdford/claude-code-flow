@@ -206,8 +206,8 @@ Execute the test demonstrations:
 # Run simple demonstration
 node examples/04-testing/test-incremental-demo.js
 
-# Run unit tests (requires Deno)
-deno test tests/unit/incremental-updates.test.ts
+# Run unit tests (requires Node.js)
+npm test tests/unit/incremental-updates.test.ts
 
 # Run integration tests
 npm test -- incremental

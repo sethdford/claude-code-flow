@@ -1,7 +1,7 @@
 # Claude Code Configuration
 
 ## Build Commands
-- `npm run build`: Build the project using Deno compile
+- `npm run build`: Build the project using TypeScript compilation and SEA binaries
 - `npm run test`: Run the full test suite
 - `npm run lint`: Run ESLint and format checks
 - `npm run typecheck`: Run TypeScript type checking

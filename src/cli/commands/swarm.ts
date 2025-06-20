@@ -111,7 +111,7 @@ export async function swarmAction(ctx: CommandContext) {
       getSwarmStatus: () => ({ 
         objectives: 1, 
         tasks: { completed: 1, failed: 0 }, 
-        agents: { total: 1 } 
+        agents: { total: 1 }, 
       }),
       getObjectiveStatus: (objectiveId: string) => ({ 
         id: objectiveId,
@@ -119,7 +119,7 @@ export async function swarmAction(ctx: CommandContext) {
         progress: 100,
         startTime: new Date(),
         completedTasks: 1,
-        totalTasks: 1 
+        totalTasks: 1, 
       }),
     } as any; // Placeholder
     /* const coordinator = new SwarmCoordinator({

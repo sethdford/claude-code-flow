@@ -6,7 +6,7 @@
 import { promises as fs } from "fs";
 import { join } from "path";
 import { homedir } from "os";
-import { createHash, randomBytes, createCipher, createDecipher } from "crypto";
+import { randomBytes, createCipher, createDecipher } from "crypto";
 import { Config } from "../utils/types.js";
 import { deepMerge, safeParseJSON } from "../utils/helpers.js";
 import { ConfigError, ValidationError } from "../utils/errors.js";

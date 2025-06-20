@@ -607,9 +607,9 @@ function getAgentCapabilities(agentType: AgentType) {
         fileSystem: true,
         terminalAccess: true,
         languages: ["typescript", "javascript"],
-        frameworks: ["deno", "node"],
-        domains: ["coordination", "management"],
-        tools: ["git", "npm", "deno"],
+        frameworks: ["node"],
+        domains: ["automation", "orchestration"],
+        tools: ["git", "npm"],
         reliability: 0.95,
       };
       
@@ -627,9 +627,9 @@ function getAgentCapabilities(agentType: AgentType) {
         fileSystem: true,
         terminalAccess: true,
         languages: ["typescript", "javascript", "python", "rust"],
-        frameworks: ["deno", "node", "react", "express"],
-        domains: ["software-development", "web-development"],
-        tools: ["git", "npm", "deno", "docker"],
+        frameworks: ["node", "react", "express"],
+        domains: ["web-development", "api-development"],
+        tools: ["git", "npm", "docker"],
         quality: 0.9,
       };
       
@@ -870,7 +870,7 @@ Agents: ${status.agents.active}/${status.agents.total} active
   // Set up the interval
   globalStatusInterval = setInterval(updateFunction, updateInterval);
   
-  // Also set up more aggressive cleanup to ensure intervals persist
+  // Enhanced signal handling for process cleanup
   const cleanup = () => {
     if (globalStatusInterval) {
       clearInterval(globalStatusInterval);
@@ -878,14 +878,10 @@ Agents: ${status.agents.active}/${status.agents.total} active
     }
   };
   
-  // Use both Deno and process event handlers for maximum compatibility
-  if (typeof process !== "undefined") {
-    process.on("SIGINT", cleanup);
-    process.on("SIGTERM", cleanup);
-    process.on("exit", cleanup);
-  }
-  
-  // Only use process signal handlers
+  process.on("SIGINT", cleanup);
+  process.on("SIGTERM", cleanup);
+  process.on("SIGHUP", cleanup);
+  process.on("exit", cleanup);
 }
 
 function setupSwarmMonitoring(

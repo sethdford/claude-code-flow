@@ -15,7 +15,7 @@ export async function createClaudeConfig(options: InitOptions): Promise<void> {
     },
     features: {
       swarm: true,
-      sparc: options.sparc || false,
+      sparc: options.sparc ?? false,
       memory: true,
       terminal: true,
       mcp: true,

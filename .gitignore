@@ -1,6 +1,5 @@
-# Dependencies
+# Node.js dependencies
 node_modules/
-.deno/
 
 # Build outputs
 dist/

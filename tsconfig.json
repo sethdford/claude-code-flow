@@ -52,7 +52,6 @@
     "**/*.test.ts",
     "**/*.spec.ts",
     "tests/**/*",
-    "deno_modules",
     "bin"
   ],
   "ts-node": {

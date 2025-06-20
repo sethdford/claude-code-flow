@@ -8,7 +8,6 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { configManager } from "../../core/config.js";
 import { deepMerge } from "../../utils/helpers.js";
-import { join } from "path";
 
 export const configCommand = new Command()
   .description("Manage Claude-Flow configuration")

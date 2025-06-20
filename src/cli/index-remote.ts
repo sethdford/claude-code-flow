@@ -108,23 +108,16 @@ async function main() {
       console.log(colors.gray("  # Using npm (recommended)"));
       console.log("  npm install -g claude-flow");
       console.log("");
-      console.log(colors.gray("  # Or using Deno"));
-      console.log("  deno install --allow-all --name claude-flow \\");
-      console.log("    https://raw.githubusercontent.com/sethdford/vibex-claude-code-flow/main/src/cli/index.ts");
-      console.log("");
       console.log(colors.gray("  # Or clone and build from source"));
       console.log("  git clone https://github.com/sethdford/vibex-claude-code-flow.git");
       console.log("  cd claude-code-flow");
-      console.log("  deno task build");
+      console.log("  npm install && npm run build");
       break;
       
     default:
       printWarning(`Command '${command}' requires local installation.`);
       console.log("\n📥 To use all features, install Claude-Flow:");
       console.log("   npm install -g claude-flow");
-      console.log("\n🌐 Or run directly with Deno:");
-      console.log("   deno install --allow-all --name claude-flow \\");
-      console.log("     https://raw.githubusercontent.com/sethdford/vibex-claude-code-flow/main/src/cli/index.ts");
       console.log("\n📚 Documentation: https://github.com/sethdford/vibex-claude-code-flow");
       console.log("💬 Issues: https://github.com/sethdford/vibex-claude-code-flow/issues");
       console.log("🔗 Original by @ruvnet: https://github.com/ruvnet/claude-code-flow");

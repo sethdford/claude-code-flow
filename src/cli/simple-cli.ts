@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Simple CLI wrapper for Claude-Flow (Node.js version)
- * Converted from Deno to Node.js with commander.js
+ * Claude-Flow CLI - Simple Command Interface
+ * Built with Node.js and commander.js for enhanced functionality
  */
 
 import { Command } from "commander";
@@ -514,7 +514,7 @@ async function createProgram() {
       output += "  --config <path>                      Use custom config file\n\n";
       
       output += `Documentation: ${chalk.blue("https://github.com/sethdford/vibex-claude-code-flow")}\n`;
-    output += `Original by @ruvnet: ${chalk.blue("https://github.com/ruvnet/claude-code-flow")}\n\n`;
+      output += `Original by @ruvnet: ${chalk.blue("https://github.com/ruvnet/claude-code-flow")}\n\n`;
       output += `Created by ${chalk.magenta("rUv")} - Built with ${chalk.red("❤️")} for the Claude community\n\n`;
       
       // List registered commands
@@ -1307,7 +1307,7 @@ async function createProgram() {
       console.log("   • Check compatibility: ./claude-flow ui check");
       console.log();
       console.log("📚 For more help: https://github.com/sethdford/vibex-claude-code-flow");
-    console.log("🔗 Original by @ruvnet: https://github.com/ruvnet/claude-code-flow");
+      console.log("🔗 Original by @ruvnet: https://github.com/ruvnet/claude-code-flow");
     });
 
   // MCP command

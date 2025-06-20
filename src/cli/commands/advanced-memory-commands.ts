@@ -5,7 +5,7 @@
 
 import { Command } from "../cliffy-compat.js";
 import { promises as fs } from "node:fs";
-import { join, extname, basename } from "node:path";
+import { extname } from "node:path";
 import chalk from "chalk";
 import { AdvancedMemoryManager, QueryOptions, ExportOptions, ImportOptions, CleanupOptions } from "../../memory/advanced-memory-manager.js";
 import { Logger } from "../../core/logger.js";
@@ -242,10 +242,10 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Parse filter query if provided
-        let filtering: QueryOptions | undefined;
+        let _filtering: QueryOptions | undefined;
         if (options.filterQuery) {
           try {
-            filtering = JSON.parse(options.filterQuery);
+            _filtering = JSON.parse(options.filterQuery);
           } catch (error) {
             printError("Invalid filter query JSON format");
             return;
@@ -565,10 +565,10 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Parse retention policies
-        let retentionPolicies;
+        let _retentionPolicies;
         if (options.retentionPolicies) {
           try {
-            retentionPolicies = JSON.parse(options.retentionPolicies);
+            _retentionPolicies = JSON.parse(options.retentionPolicies);
           } catch (error) {
             printError("Invalid retention policies JSON format");
             return;
@@ -651,10 +651,10 @@ export function createAdvancedMemoryCommand(): Command {
         }
 
         // Parse metadata if provided
-        let metadata;
+        let _metadata;
         if (options.metadata) {
           try {
-            metadata = JSON.parse(options.metadata);
+            _metadata = JSON.parse(options.metadata);
           } catch (error) {
             printError("Invalid metadata JSON format");
             return;

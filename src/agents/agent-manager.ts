@@ -16,8 +16,6 @@ import {
   AgentEnvironment, 
   AgentMetrics,
   AgentError,
-  TaskId,
-  TaskDefinition,
 } from "../swarm/types.js";
 import { DistributedMemorySystem } from "../memory/distributed-memory.js";
 import { generateId } from "../utils/helpers.js";
@@ -39,7 +37,7 @@ export interface AgentManagerConfig {
     adaptationEnabled: boolean;
   };
   environmentDefaults: {
-    runtime: "deno" | "node" | "claude" | "browser";
+    runtime: "node" | "claude" | "browser";
     workingDirectory: string;
     tempDirectory: string;
     logDirectory: string;
@@ -178,7 +176,7 @@ export class AgentManager extends EventEmitter {
         adaptationEnabled: true,
       },
       environmentDefaults: {
-        runtime: "deno",
+        runtime: "node",
         workingDirectory: "./agents",
         tempDirectory: "./tmp",
         logDirectory: "./logs",
@@ -265,8 +263,8 @@ export class AgentManager extends EventEmitter {
         preferences: { verbose: true, detailed: true },
       },
       environment: {
-        runtime: "deno",
-        version: "1.40.0",
+        runtime: "node",
+        version: "20.0.0",
         workingDirectory: "./agents/researcher",
         tempDirectory: "./tmp/researcher",
         logDirectory: "./logs/researcher",
@@ -294,7 +292,7 @@ export class AgentManager extends EventEmitter {
         fileSystem: true,
         terminalAccess: true,
         languages: ["typescript", "javascript", "python", "rust"],
-        frameworks: ["deno", "node", "react", "svelte"],
+        frameworks: ["node", "react", "svelte"],
         domains: ["web-development", "backend", "api-design"],
         tools: ["git", "editor", "debugger", "linter", "formatter"],
         maxConcurrentTasks: 3,
@@ -316,17 +314,17 @@ export class AgentManager extends EventEmitter {
         permissions: ["file-read", "file-write", "terminal-access", "git-access"],
         trustedAgents: [],
         expertise: { coding: 0.95, testing: 0.8, debugging: 0.9 },
-        preferences: { codeStyle: "functional", testFramework: "deno-test" },
+        preferences: { codeStyle: "functional", testFramework: "jest" },
       },
       environment: {
-        runtime: "deno",
-        version: "1.40.0",
+        runtime: "node",
+        version: "20.0.0",
         workingDirectory: "./agents/developer",
         tempDirectory: "./tmp/developer",
         logDirectory: "./logs/developer",
         apiEndpoints: {},
         credentials: {},
-        availableTools: ["git", "deno", "editor", "debugger"],
+        availableTools: ["git", "npm", "editor", "debugger"],
         toolConfigs: {},
       },
       startupScript: "./scripts/start-developer.ts",
@@ -378,8 +376,8 @@ export class AgentManager extends EventEmitter {
         preferences: { outputFormat: "detailed", includeCharts: true },
       },
       environment: {
-        runtime: "deno",
-        version: "1.40.0",
+        runtime: "node",
+        version: "20.0.0",
         workingDirectory: "./agents/analyzer",
         tempDirectory: "./tmp/analyzer",
         logDirectory: "./logs/analyzer",
@@ -470,7 +468,7 @@ export class AgentManager extends EventEmitter {
     // Create complete environment by merging template, defaults, and overrides
     const environment: AgentEnvironment = {
       runtime: this.config.environmentDefaults.runtime,
-      version: "1.40.0",
+      version: "20.0.0",
       workingDirectory: this.config.environmentDefaults.workingDirectory,
       tempDirectory: this.config.environmentDefaults.tempDirectory,
       logDirectory: this.config.environmentDefaults.logDirectory,

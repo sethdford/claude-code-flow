@@ -2,8 +2,7 @@
  * Memory management commands
  */
 
-import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import colors from "chalk";
 import { promises as fs } from "node:fs";
 

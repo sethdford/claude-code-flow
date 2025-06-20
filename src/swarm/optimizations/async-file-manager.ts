@@ -11,7 +11,7 @@ import { ILogger, Logger as LoggerClass } from "../../core/logger";
 // import PQueue from 'p-queue'; // Disabled - using simplified queue
 
 // Use Logger conditionally
-const Logger = process.env.NODE_ENV === 'test' ? null : LoggerClass;
+const Logger = process.env.NODE_ENV === "test" ? null : LoggerClass;
 
 export interface FileOperationResult {
   path: string;
@@ -69,7 +69,7 @@ export class AsyncFileManager {
     };
     
     // Only create logger if not in test environment
-    if (process.env.NODE_ENV === 'test' || !Logger) {
+    if (process.env.NODE_ENV === "test" || !Logger) {
       this.logger = null;
     } else {
       this.logger = new Logger(
@@ -91,7 +91,7 @@ export class AsyncFileManager {
             await this.ensureDirectory(dirname(path));
           } catch (dirError) {
             // In test environment, directory creation might fail - that's OK
-            if (process.env.NODE_ENV !== 'test') {
+            if (process.env.NODE_ENV !== "test") {
               throw dirError;
             }
           }
@@ -99,7 +99,7 @@ export class AsyncFileManager {
           dataSize = data.length;
           
           // Use streaming for large files (but not in tests)
-          if (process.env.NODE_ENV !== 'test' && data.length > 1024 * 1024) { // > 1MB
+          if (process.env.NODE_ENV !== "test" && data.length > 1024 * 1024) { // > 1MB
             await this.streamWrite(path, data);
           } else {
             await writeFile(path, data, options);
@@ -110,7 +110,7 @@ export class AsyncFileManager {
             await this.ensureDirectory(dirname(path));
           } catch (dirError) {
             // In test environment, directory creation might fail - that's OK
-            if (process.env.NODE_ENV !== 'test') {
+            if (process.env.NODE_ENV !== "test") {
               throw dirError;
             }
           }
@@ -132,7 +132,7 @@ export class AsyncFileManager {
           size = stats.size;
         } catch (statError) {
           // In test environment, stat might fail, so use the data size
-          if (process.env.NODE_ENV === 'test') {
+          if (process.env.NODE_ENV === "test") {
             size = dataSize || 100; // Default size for tests
           } else if (this.logger) {
             this.logger.debug("Failed to stat file after write, using data size", { path, error: statError });
@@ -248,7 +248,7 @@ export class AsyncFileManager {
       return { path, operation: "mkdir", success: true, duration };
     } catch (error: any) {
       // In test environment, directory creation might fail but we should continue
-      if (process.env.NODE_ENV === 'test' && error.code === 'EEXIST') {
+      if (process.env.NODE_ENV === "test" && error.code === "EEXIST") {
         const duration = Date.now() - startTime;
         return { path, operation: "mkdir", success: true, duration };
       }

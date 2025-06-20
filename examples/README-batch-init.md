@@ -72,7 +72,11 @@ Interactive demonstration of all batch initialization features.
 
 **Usage:**
 ```bash
-deno run --allow-all examples/batch-init-demo.js
+# Initialize batch projects
+node examples/batch-init-demo.js
+
+# Run tests
+npm test
 ```
 
 **Shows:**
@@ -83,11 +87,6 @@ deno run --allow-all examples/batch-init-demo.js
 
 #### `../tests/batch-init.test.js`
 Comprehensive test suite for batch initialization functionality.
-
-**Usage:**
-```bash
-deno run --allow-all tests/batch-init.test.js
-```
 
 **Tests:**
 - Options validation
@@ -439,3 +438,11 @@ jobs:
 5. **Integrate with SPARC**: Enable SPARC for advanced development workflows
 
 For more information, see the [Batch Initialization Documentation](../docs/batch-initialization.md).
+
+## Testing
+
+Run the comprehensive test suite:
+
+```bash
+npm run test:batch-init
+```

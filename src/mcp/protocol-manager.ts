@@ -119,10 +119,10 @@ export class MCPProtocolManager {
     }
 
     // Set current version (latest supported or preferred)
-    this.currentVersion = preferredVersion || this.getLatestSupportedVersion();
+    this.currentVersion = preferredVersion ?? this.getLatestSupportedVersion();
     
     // Set server capabilities
-    this.serverCapabilities = serverCapabilities || this.getDefaultCapabilities();
+    this.serverCapabilities = serverCapabilities ?? this.getDefaultCapabilities();
 
     this.logger.info("Protocol manager initialized", {
       currentVersion: this.versionToString(this.currentVersion),
@@ -265,7 +265,7 @@ export class MCPProtocolManager {
     }
 
     // Check for missing features
-    const serverFeatures = serverVersionInfo?.supportedFeatures || [];
+    const serverFeatures = serverVersionInfo?.supportedFeatures ?? [];
     const clientFeatures = clientVersionInfo.supportedFeatures;
     const missingFeatures = serverFeatures.filter(feature => !clientFeatures.includes(feature));
     
@@ -484,6 +484,6 @@ export class MCPProtocolManager {
 
   private getDeprecatedFeatures(version: MCPProtocolVersion): string[] {
     const versionInfo = this.getVersionInfo(version);
-    return versionInfo?.breakingChanges || [];
+    return versionInfo?.breakingChanges ?? [];
   }
 }

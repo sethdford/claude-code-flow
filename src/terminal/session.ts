@@ -30,7 +30,7 @@ export class TerminalSession {
   }
 
   get lastActivity(): Date {
-    return this.lastCommandTime || this.startTime;
+    return this.lastCommandTime ?? this.startTime;
   }
 
   async initialize(): Promise<void> {

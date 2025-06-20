@@ -378,14 +378,14 @@ export class MCPLifecycleManager extends EventEmitter {
       this.logger.error("Uncaught exception", error);
       this.handleServerError(error);
     };
-    this.processListeners.set('uncaughtException', uncaughtHandler);
+    this.processListeners.set("uncaughtException", uncaughtHandler);
     process.on("uncaughtException", uncaughtHandler);
 
     const unhandledHandler = (reason: any) => {
       this.logger.error("Unhandled rejection", reason);
       this.handleServerError(reason instanceof Error ? reason : new Error(String(reason)));
     };
-    this.processListeners.set('unhandledRejection', unhandledHandler);
+    this.processListeners.set("unhandledRejection", unhandledHandler);
     process.on("unhandledRejection", unhandledHandler);
 
     // Handle process signals
@@ -396,7 +396,7 @@ export class MCPLifecycleManager extends EventEmitter {
         process.exit(1);
       });
     };
-    this.processListeners.set('SIGINT', sigintHandler);
+    this.processListeners.set("SIGINT", sigintHandler);
     process.on("SIGINT", sigintHandler);
 
     const sigtermHandler = () => {
@@ -406,7 +406,7 @@ export class MCPLifecycleManager extends EventEmitter {
         process.exit(1);
       });
     };
-    this.processListeners.set('SIGTERM', sigtermHandler);
+    this.processListeners.set("SIGTERM", sigtermHandler);
     process.on("SIGTERM", sigtermHandler);
   }
 

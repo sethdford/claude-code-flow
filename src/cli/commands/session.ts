@@ -279,7 +279,7 @@ export const sessionCommand = new Command()
       const content = await fs.readFile(inputFile, "utf-8");
       const importData: SessionExportData = JSON.parse(content);
 
-      let session = importData.session;
+      const { session } = importData;
       
       if (options.name) {
         session.name = options.name;
@@ -329,7 +329,7 @@ export const sessionCommand = new Command()
         return;
       }
 
-      console.log(`\n📊 Session Information\n`);
+      console.log("\n📊 Session Information\n");
       console.log(`ID: ${session.id}`);
       console.log(`Name: ${session.name}`);
       if (session.description) {
@@ -338,13 +338,13 @@ export const sessionCommand = new Command()
       console.log(`Created: ${session.createdAt.toISOString()}`);
       console.log(`Updated: ${session.updatedAt.toISOString()}`);
       
-      console.log(`\n🔧 Metadata:`);
+      console.log("\n🔧 Metadata:");
       console.log(`  Version: ${session.metadata.version}`);
       console.log(`  Platform: ${session.metadata.platform}`);
       console.log(`  Node Version: ${session.metadata.nodeVersion}`);
       console.log(`  Working Directory: ${session.metadata.workingDirectory}`);
       
-      console.log(`\n📈 State:`);
+      console.log("\n📈 State:");
       console.log(`  Agents: ${session.state.agents.length}`);
       console.log(`  Tasks: ${session.state.tasks.length}`);
       console.log(`  Memory Entries: ${session.state.memory.length}`);
@@ -354,7 +354,7 @@ export const sessionCommand = new Command()
       }
       
       if (session.archived) {
-        console.log(`\n📦 Status: Archived`);
+        console.log("\n📦 Status: Archived");
       }
 
       // Show file size
@@ -365,7 +365,7 @@ export const sessionCommand = new Command()
         console.log(`   Size: ${fileInfo.size} bytes`);
         console.log(`   Modified: ${fileInfo.mtime.toISOString()}`);
       } catch {
-        console.log(`\n📄 File: Not found`);
+        console.log("\n📄 File: Not found");
       }
     } catch (error) {
       logger.error("Failed to show session info:", error);
@@ -383,7 +383,7 @@ export const sessionCommand = new Command()
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - parseInt(options.days));
 
-      let sessionsToDelete = sessions.filter(session => {
+      const sessionsToDelete = sessions.filter(session => {
         const isOld = session.createdAt < cutoffDate;
         const shouldDelete = options.archivedOnly ? session.archived && isOld : isOld;
         return shouldDelete;

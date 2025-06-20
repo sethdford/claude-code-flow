@@ -57,7 +57,7 @@ Welcome to Claude-Flow v1.0.71 - Advanced AI Agent Orchestration System
 ## 🎯 What's New in v1.0.71
 
 - **Node.js SEA Support**: 70MB standalone executables
-- **Removed Legacy Dependencies**: No more pkg or Deno dependencies
+- **Removed Legacy Dependencies**: No more pkg dependencies - fully Node.js native
 - **Memory Module**: Git submodule architecture
 - **NPM Publishing**: Automated GitHub Actions pipeline
 - **Clean Architecture**: Streamlined TypeScript-only codebase

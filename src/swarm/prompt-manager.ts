@@ -108,7 +108,7 @@ export class PromptManager extends EventEmitter {
         errors: [{
           file: "source",
           error: "No valid source directories found",
-          phase: "read"
+          phase: "read",
         }],
         duration: 0,
       };
@@ -310,7 +310,7 @@ export class PromptManager extends EventEmitter {
       conflictResolution: "overwrite",
       verify: options.compareHashes,
       // Disable parallel in test environment to avoid worker thread issues
-      parallel: process.env.NODE_ENV === 'test' ? false : true,
+      parallel: process.env.NODE_ENV === "test" ? false : true,
     });
   }
 

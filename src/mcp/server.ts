@@ -109,7 +109,7 @@ export class MCPServer implements IMCPServer {
     this.sessionManager = new SessionManager(config, logger);
     
     // Initialize auth manager
-    this.authManager = new AuthManager(config.auth || { enabled: false, method: "token" }, logger);
+    this.authManager = new AuthManager(config.auth ?? { enabled: false, method: "token" }, logger);
     
     // Initialize load balancer if enabled
     if (config.loadBalancer?.enabled) {
@@ -240,11 +240,11 @@ export class MCPServer implements IMCPServer {
       totalRequests: routerMetrics.totalRequests,
       successfulRequests: routerMetrics.successfulRequests,
       failedRequests: routerMetrics.failedRequests,
-      averageResponseTime: lbMetrics?.averageResponseTime || 0,
+      averageResponseTime: lbMetrics?.averageResponseTime ?? 0,
       activeSessions: sessionMetrics.active,
       toolInvocations: {}, // TODO: Implement tool-specific metrics
       errors: {}, // TODO: Implement error categorization
-      lastReset: lbMetrics?.lastReset || new Date(),
+      lastReset: lbMetrics?.lastReset ?? new Date(),
     };
   }
 
@@ -420,7 +420,7 @@ export class MCPServer implements IMCPServer {
         return new HttpTransport(
           this.config.host || "localhost",
           this.config.port || 3000,
-          this.config.tlsEnabled || false,
+          this.config.tlsEnabled ?? false,
           this.logger,
         );
       

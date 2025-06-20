@@ -32,7 +32,18 @@ export interface Logger {
 
 // Export for use across the codebase
 declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      ANTHROPIC_API_KEY?: string;
+      OPENAI_API_KEY?: string;
+      CLAUDE_FLOW_DEBUG?: string;
+      CLAUDE_FLOW_LOG_LEVEL?: string;
+      CLAUDE_FLOW_CONFIG?: string;
+      NODE_ENV?: "development" | "production" | "test";
+    }
+  }
+
   interface Window {
-    Deno?: any;
+    claudeFlow?: any;
   }
 }

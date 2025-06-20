@@ -440,7 +440,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
     // This would be customized based on task type and agent capabilities
     // For now, return a default Claude execution command
     
-    const cmd = "deno";
+    const cmd = "node";
     const args = [
       "run",
       "--allow-all",

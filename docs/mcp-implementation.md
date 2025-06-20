@@ -400,30 +400,20 @@ The server provides comprehensive metrics:
 
 ### Run Tests
 
-```bash
-# All tests
-deno run --allow-all scripts/test-mcp.ts --all --coverage
+# Run all tests
+npm run test:mcp
 
-# Unit tests only
-deno run --allow-all scripts/test-mcp.ts --unit
+# Run unit tests only
+npm run test:mcp:unit
 
-# Integration tests only
-deno run --allow-all scripts/test-mcp.ts --integration
+# Run integration tests only
+npm run test:mcp:integration
 
-# Watch mode
-deno run --allow-all scripts/test-mcp.ts --watch
+# Run tests with watch mode
+npm run test:mcp:watch
 
-# Filter specific tests
-deno run --allow-all scripts/test-mcp.ts --filter server
-```
-
-### Test Coverage
-
-The test suite includes:
-- **Unit Tests**: Individual component testing
-- **Integration Tests**: End-to-end workflow testing
-- **Performance Tests**: Load and stress testing
-- **Security Tests**: Authentication and authorization testing
+# Run specific test pattern
+npm run test:mcp -- --grep "server"
 
 ## Deployment
 
@@ -450,16 +440,16 @@ curl -X POST http://localhost:3000/rpc -H "Content-Type: application/json" -d '{
 ### Docker Deployment
 
 ```dockerfile
-FROM denoland/deno:alpine
+FROM node:20-alpine
 
 WORKDIR /app
-COPY . .
 
-RUN deno cache src/cli/index.ts
+COPY package*.json ./
+RUN npm ci --only=production
 
-EXPOSE 3000
+COPY dist/ ./dist/
 
-CMD ["deno", "run", "--allow-all", "src/cli/index.ts", "start", "--mcp-transport", "http"]
+CMD ["node", "dist/cli/index.js", "start", "--mcp-transport", "http"]
 ```
 
 ## Best Practices

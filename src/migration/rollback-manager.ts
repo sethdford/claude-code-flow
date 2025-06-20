@@ -125,7 +125,7 @@ export class RollbackManager {
       
       if (await fs.pathExists(manifestPath)) {
         try {
-          const manifestContent = await readFile(manifestPath, 'utf-8');
+          const manifestContent = await readFile(manifestPath, "utf-8");
           const backup = JSON.parse(manifestContent);
           // Convert timestamp string back to Date
           backup.timestamp = new Date(backup.timestamp);
@@ -338,7 +338,7 @@ export class RollbackManager {
       throw new Error("Invalid backup: missing manifest");
     }
 
-    const manifestContent = await readFile(manifestPath, 'utf-8');
+    const manifestContent = await readFile(manifestPath, "utf-8");
     const backup = JSON.parse(manifestContent);
     // Convert timestamp string back to Date
     backup.timestamp = new Date(backup.timestamp);
@@ -356,7 +356,7 @@ export class RollbackManager {
     
     let index: Record<string, any> = {};
     if (await fs.pathExists(indexPath)) {
-      const indexContent = await readFile(indexPath, 'utf-8');
+      const indexContent = await readFile(indexPath, "utf-8");
       index = JSON.parse(indexContent);
     }
 

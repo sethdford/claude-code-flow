@@ -11,11 +11,11 @@ Claude-Flow provides a rich TypeScript/JavaScript API for programmatic control o
 ### Package Installation
 
 ```bash
-# Install Claude-Flow as a dependency
-npm install claude-flow
+# Install via npm
+npm install @sethdford/claude-flow
 
-# Or for Deno
-import { ClaudeFlow } from 'https://deno.land/x/claude_flow@latest/mod.ts';
+# Or use globally
+npm install -g @sethdford/claude-flow
 ```
 
 ### Basic Initialization

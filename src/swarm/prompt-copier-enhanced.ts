@@ -36,15 +36,15 @@ export class EnhancedPromptCopier extends PromptCopier {
       await Promise.race([
         this.processWithWorkerPool(),
         new Promise<void>((_, reject) => 
-          setTimeout(() => reject(new Error("Worker pool processing timeout")), timeout)
-        )
+          setTimeout(() => reject(new Error("Worker pool processing timeout")), timeout),
+        ),
       ]);
     } catch (error) {
       logger.error("Error in parallel file copy:", error);
       
       // If workers failed, fall back to sequential copy
-      if (error instanceof Error && (error.message?.includes('Worker file not found') || 
-          error.message?.includes('worker_threads'))) {
+      if (error instanceof Error && (error.message?.includes("Worker file not found") || 
+          error.message?.includes("worker_threads"))) {
         logger.warn("Worker threads not available, falling back to sequential copy");
         // Implement simple sequential fallback
         await this.fallbackSequentialCopy();
@@ -75,7 +75,7 @@ export class EnhancedPromptCopier extends PromptCopier {
         path.join(__dirname, "workers", "copy-worker.js"),
         path.join(__dirname, "..", "..", "dist", "swarm", "workers", "copy-worker.js"),
         path.join(process.cwd(), "dist", "swarm", "workers", "copy-worker.js"),
-        path.join(process.cwd(), "src", "swarm", "workers", "copy-worker.js")
+        path.join(process.cwd(), "src", "swarm", "workers", "copy-worker.js"),
       ];
       
       // Find the first existing worker file
@@ -94,8 +94,8 @@ export class EnhancedPromptCopier extends PromptCopier {
       }
       
       // Additional check to see if we can actually create workers
-      if (typeof Worker === 'undefined') {
-        throw new Error('Worker threads not available in this environment');
+      if (typeof Worker === "undefined") {
+        throw new Error("Worker threads not available in this environment");
       }
       
       const worker = new Worker(
@@ -103,7 +103,7 @@ export class EnhancedPromptCopier extends PromptCopier {
         {
           workerData: { workerId: i },
           // Use eval to handle both .js and .ts files in development
-          eval: __filename.endsWith('.ts'),
+          eval: __filename.endsWith(".ts"),
         },
       );
       

@@ -94,9 +94,9 @@ export class AdvancedMemoryManager extends EventEmitter {
       id: generateId("mem"),
       key,
       value,
-      type: options.type || "generic",
-      namespace: options.namespace || "default",
-      owner: options.owner || "system",
+      type: options.type ?? "generic",
+      namespace: options.namespace ?? "default",
+      owner: options.owner ?? "system",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -155,8 +155,8 @@ export class AdvancedMemoryManager extends EventEmitter {
 
     // Handle pagination
     const total = results.length;
-    const offset = options.offset || 0;
-    const limit = options.limit || results.length;
+    const offset = options.offset ?? 0;
+    const limit = options.limit ?? results.length;
     
     results = results.slice(offset, offset + limit);
 

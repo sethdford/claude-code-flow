@@ -242,7 +242,7 @@ export class CoordinationMetricsCollector {
    * Get metric history for a specific metric
    */
   getMetricHistory(metric: string, since?: Date): MetricsSample[] {
-    const cutoff = since || new Date(Date.now() - 3600000); // 1 hour ago
+    const cutoff = since ?? new Date(Date.now() - 3600000); // 1 hour ago
     
     return this.samples.filter(s => 
       s.metric === metric && s.timestamp >= cutoff,
@@ -261,7 +261,7 @@ export class CoordinationMetricsCollector {
     const timestamps = new Map<string, Date>();
     
     for (const sample of recent) {
-      byMetric.set(sample.metric, (byMetric.get(sample.metric) || 0) + sample.value);
+      byMetric.set(sample.metric, (byMetric.get(sample.metric) ?? 0) + sample.value);
       timestamps.set(sample.metric, sample.timestamp);
     }
     

@@ -208,7 +208,7 @@ export function createTaskTable(tasks: Task[]) {
       task.type,
       task.description.substring(0, 40) + (task.description.length > 40 ? "..." : ""),
       statusCell,
-      task.assignedAgent || "-",
+      task.assignedAgent ?? "-",
     ]);
   }
 

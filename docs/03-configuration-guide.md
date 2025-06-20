@@ -152,8 +152,7 @@ Manages terminal sessions and command execution.
       "npm.*",
       "git.*",
       "python.*",
-      "node.*",
-      "deno.*"
+      "node.*"
     ],
     "blockedCommands": [
       "rm -rf /",

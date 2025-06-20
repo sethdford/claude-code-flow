@@ -23,7 +23,7 @@ export class DirectTaskExecutor {
       { level: "info", format: "text", destination: "console" },
       { component: "DirectTaskExecutor" },
     );
-    this.timeout = config.timeout || 300000; // 5 minutes default
+    this.timeout = config.timeout ?? 300000; // 5 minutes default
   }
 
   async executeTask(

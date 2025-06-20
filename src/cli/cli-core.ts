@@ -5,7 +5,6 @@
 
 import chalk from "chalk";
 import fs from "fs-extra";
-import path from "path";
 
 export const VERSION = "1.0.43";
 
@@ -80,7 +79,7 @@ class CLI {
   }
 
   async run(args = process.argv.slice(2)): Promise<void> {
-    // Parse arguments manually since we're replacing the Deno parse function
+    // Parse arguments manually since we're using Node.js argument parsing
     const flags = this.parseArgs(args);
 
     if (flags.version || flags.v) {

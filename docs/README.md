@@ -51,7 +51,7 @@ Welcome to the comprehensive documentation for Claude-Flow v1.0.71!
 
 ### v1.0.71 Highlights
 - **Node.js SEA Support**: Single executable applications with 70MB binaries
-- **Removed Legacy Code**: Cleaned up deprecated pkg and Deno implementations
+- **Removed Legacy Code**: Cleaned up deprecated pkg implementations
 - **Memory Module**: Git submodule architecture for better modularity
 - **NPM Publishing**: Automated GitHub Actions CI/CD pipeline
 - **TypeScript Optimization**: Full ES modules support with better compatibility

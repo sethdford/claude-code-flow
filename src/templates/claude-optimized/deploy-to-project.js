@@ -32,7 +32,7 @@ if (!fs.existsSync(TARGET_PROJECT)) {
 }
 
 // Check if it's a valid project (has package.json or similar)
-const projectFiles = ['package.json', 'tsconfig.json', 'deno.json', 'go.mod', 'Cargo.toml', 'setup.py'];
+const projectFiles = ['package.json', 'tsconfig.json', 'go.mod', 'Cargo.toml', 'setup.py'];
 const hasProjectFile = projectFiles.some(file => fs.existsSync(path.join(TARGET_PROJECT, file)));
 
 if (!hasProjectFile) {

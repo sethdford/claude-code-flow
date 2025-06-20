@@ -34,7 +34,7 @@ class TypedEventBus extends TypedEventEmitter<EventMap> {
     }
     
     // Track event metrics
-    const count = this.eventCounts.get(event) || 0;
+    const count = this.eventCounts.get(event) ?? 0;
     this.eventCounts.set(event, count + 1);
     this.lastEventTimes.set(event, Date.now());
     

@@ -1,24 +1,18 @@
-import { CLI, success, error, warning, info, VERSION } from "../cli-core.js";
-import type { Command, CommandContext } from "../cli-core.js";
+import { CLI, success, error, warning, info } from "../cli-core.js";
+import type { CommandContext } from "../cli-core.js";
 import colors from "chalk";
 const { bold, blue, yellow } = colors;
 import { Orchestrator } from "../../core/orchestrator-fixed.js";
 import { ConfigManager } from "../../core/config.js";
-import { MemoryManager } from "../../memory/manager.js";
 import { EventBus } from "../../core/event-bus.js";
 import { Logger } from "../../core/logger.js";
 import { JsonPersistenceManager } from "../../core/json-persistence.js";
 import { swarmAction } from "./swarm.js";
 import { SimpleMemoryManager } from "./memory.js";
 import { sparcAction } from "./sparc.js";
-import { createMigrateCommand } from "./migrate.js";
 import { enterpriseCommands } from "./enterprise.js";
 
 // Import enhanced orchestration commands
-import { startCommand } from "./start.js";
-import { statusCommand } from "./status.js";
-import { monitorCommand } from "./monitor.js";
-import { sessionCommand } from "./session.js";
 
 let orchestrator: Orchestrator | null = null;
 let configManager: ConfigManager | null = null;
@@ -1980,7 +1974,7 @@ Now, please proceed with the task: ${task}`;
         console.log();
         console.log("For more information, see:");
         console.log("  - https://github.com/sethdford/vibex-claude-code-flow/docs/12-swarm.md");
-          console.log("  - https://github.com/sethdford/vibex-claude-code-flow/SWARM_TTY_SOLUTION.md");
+        console.log("  - https://github.com/sethdford/vibex-claude-code-flow/SWARM_TTY_SOLUTION.md");
       } else if (command === "sparc") {
         console.log(bold(blue("SPARC Development Mode")));
         console.log();
@@ -2207,7 +2201,7 @@ function createFullClaudeMd(): string {
   return `# Claude Code Configuration
 
 ## Build Commands
-- \`npm run build\`: Build the project using Deno compile
+- \`npm run build\`: Build the project using TypeScript compilation and SEA
 - \`npm run test\`: Run the full test suite
 - \`npm run lint\`: Run ESLint and format checks
 - \`npm run typecheck\`: Run TypeScript type checking

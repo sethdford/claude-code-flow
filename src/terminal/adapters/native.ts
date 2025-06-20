@@ -19,7 +19,7 @@ interface ShellConfig {
 }
 
 /**
- * Native terminal implementation using Deno subprocess
+ * Native terminal implementation using Node.js subprocess
  */
 class NativeTerminal implements Terminal {
   id: string;

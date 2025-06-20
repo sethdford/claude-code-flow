@@ -326,14 +326,14 @@ eventBus.on('circuitbreaker:state-change', ({ name, from, to }) => {
 The coordination system includes comprehensive unit tests:
 
 ```bash
-# Run coordination tests
-deno test tests/unit/coordination/
+# Run all coordination tests
+npm test tests/unit/coordination/
 
 # Run specific test file
-deno test tests/unit/coordination/coordination.test.ts
+npm test tests/unit/coordination/coordination.test.ts
 
 # Run with coverage
-deno test --coverage=coverage tests/unit/coordination/
+npm run test:coverage tests/unit/coordination/
 ```
 
 ## Performance Characteristics

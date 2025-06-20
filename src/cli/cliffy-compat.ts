@@ -18,12 +18,12 @@ export class Command extends CommanderCommand {
     // Compatibility method, does nothing
   }
   
-  header(headers: string[]) {
+  header(_headers: string[]) {
     // For table compatibility, this is handled in the Table wrapper
     return this;
   }
   
-  border(enable: boolean) {
+  border(_enable: boolean) {
     // For table compatibility, this is handled in the Table wrapper  
     return this;
   }

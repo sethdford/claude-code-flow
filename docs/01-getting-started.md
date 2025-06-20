@@ -240,9 +240,6 @@ If you encounter permission issues:
 # For NPM
 npm config set prefix ~/.npm-global
 export PATH=~/.npm-global/bin:$PATH
-
-# For Deno
-export PATH="$HOME/.deno/bin:$PATH"
 ```
 
 ### Configuration Issues
@@ -268,5 +265,8 @@ claude-flow config set orchestrator.maxConcurrentAgents 5
 # Check logs
 claude-flow logs --level debug
 ```
+
+# Add Node.js to PATH if needed
+export PATH="/usr/local/bin:$PATH"
 
 You're now ready to start using Claude-Flow! Continue to the next sections for more advanced features and configuration options.
