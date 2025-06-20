@@ -1,10 +1,13 @@
 {
-  "name": "@sethdford/claude-flow",
-  "version": "1.0.71",
-  "description": "Advanced AI agent orchestration system for multi-agent coordination",
+  "name": "@sethdouglasford/claude-flow",
+  "version": "1.0.72",
+  "description": "Enterprise AI agent orchestration via AWS Bedrock - Connect to Claude 4 through your AWS infrastructure",
   "main": "dist/cli/main.js",
   "bin": {
     "claude-flow": "dist/cli/main.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "dev": "tsx src/cli/main.ts",
@@ -19,28 +22,32 @@
     "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
     "prepare": "npm run build:ts",
     "lint": "eslint src --ext .ts,.js",
-    "format": "prettier --write src",
-    "postinstall": "node scripts/install.js",
-    "prepublishOnly": "node scripts/prepare-publish.js"
+    "format": "prettier --write src"
   },
   "keywords": [
     "ai",
     "agent",
     "orchestration",
     "claude",
+    "claude-4",
+    "aws-bedrock",
+    "enterprise",
     "automation",
     "swarm",
     "multi-agent",
     "coordination",
     "cli",
     "mcp",
-    "workflow"
+    "workflow",
+    "bedrock",
+    "aws",
+    "enterprise-ai"
   ],
   "author": "rUv",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sethdford/vibex-claude-code-flow.git"
+    "url": "git+https://github.com/sethdford/vibex-claude-code-flow.git"
   },
   "bugs": {
     "url": "https://github.com/sethdford/vibex-claude-code-flow/issues"
@@ -65,7 +72,7 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "fs-extra": "^11.2.0",
-    "glob": "^8.1.0",
+    "glob": "^10.3.10",
     "helmet": "^7.1.0",
     "inquirer": "^9.2.12",
     "nanoid": "^5.0.4",
@@ -86,10 +93,10 @@
     "@types/jest": "^29.5.8",
     "@types/node": "^20.10.5",
     "@types/ws": "^8.5.10",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
     "esbuild": "^0.25.5",
-    "eslint": "^8.56.0",
+    "eslint": "^9.15.0",
     "jest": "^29.7.0",
     "postject": "^1.0.0-alpha.6",
     "prettier": "^3.1.1",
