@@ -1,15 +1,46 @@
 {
-  "version": "1.0.72",
+  "version": "1.2.8",
   "project": {
     "name": "claude-code-flow",
     "type": "claude-flow",
-    "created": "2025-06-19T15:20:13.748Z"
+    "created": "2025-06-21T14:25:29.575Z"
   },
   "features": {
     "swarm": true,
     "sparc": true,
     "memory": true,
     "terminal": true,
-    "mcp": true
+    "mcp": true,
+    "batchTools": true,
+    "orchestration": true
+  },
+  "batchTools": {
+    "enabled": true,
+    "maxConcurrentTasks": 10,
+    "memoryCoordination": true,
+    "taskOrchestration": true,
+    "parallelExecution": true
+  },
+  "swarmConfig": {
+    "defaultStrategy": "auto",
+    "defaultMode": "centralized",
+    "defaultMaxAgents": 5,
+    "defaultTimeout": 60,
+    "enableMonitoring": true,
+    "enableParallel": true,
+    "outputFormats": [
+      "json",
+      "sqlite",
+      "csv",
+      "html"
+    ],
+    "defaultOutputDir": "./reports"
+  },
+  "coordination": {
+    "todoIntegration": true,
+    "memorySharing": true,
+    "crossAgentCommunication": true,
+    "taskDependencyTracking": true,
+    "progressMonitoring": true
   }
 }

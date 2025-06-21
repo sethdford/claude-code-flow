@@ -177,22 +177,21 @@ function createWrapperScript(): string {
  */
 
 // Try to use local installation first, then global, then npx
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+import { spawn, execSync } from 'child_process';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 async function findClaudeFlow() {
   // Method 1: Check for local node_modules installation
-  const localPath = path.join(process.cwd(), 'node_modules', '.bin', 'claude-flow');
-  if (fs.existsSync(localPath)) {
+  const localPath = join(process.cwd(), 'node_modules', '.bin', 'claude-flow');
+  if (existsSync(localPath)) {
     return localPath;
   }
   
   // Method 2: Check for global installation
   try {
-    const { execSync } = require('child_process');
     const globalPath = execSync('which claude-flow', { encoding: 'utf8' }).trim();
-    if (globalPath && fs.existsSync(globalPath)) {
+    if (globalPath && existsSync(globalPath)) {
       return 'claude-flow';
     }
   } catch (error) {

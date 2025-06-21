@@ -1,5 +1,7 @@
 {
   "agents": [],
   "tasks": [],
-  "lastUpdated": 1750378038698
+  "swarms": [],
+  "lastUpdated": 1750515929575,
+  "version": "1.2.8"
 }

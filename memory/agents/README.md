@@ -1,31 +1,19 @@
-# Agent Memory Storage
+# Agents Directory
 
-## Purpose
-This directory stores agent-specific memory data, configurations, and persistent state information for individual Claude agents in the orchestration system.
+This directory stores persistent information about AI agents created and managed by Claude-Flow.
 
 ## Structure
-Each agent gets its own subdirectory for isolated memory storage:
+- Each agent gets its own JSON file named by agent ID
+- Agent files contain configuration, state, and memory
+- Shared agent data is stored in agent-registry.json
 
-```
-memory/agents/
-├── agent_001/
-│   ├── state.json           # Agent state and configuration
-│   ├── knowledge.md         # Agent-specific knowledge base
-│   ├── tasks.json          # Completed and active tasks
-│   └── calibration.json    # Agent-specific calibrations
-├── agent_002/
-│   └── ...
-└── shared/
-    ├── common_knowledge.md  # Shared knowledge across agents
-    └── global_config.json  # Global agent configurations
-```
+## Usage
+Agents are automatically managed by the Claude-Flow orchestration system. You can:
+- View agent status with `claude-flow agent list`
+- Create new agents with `claude-flow agent spawn <type>`
+- Configure agents with `claude-flow agent configure <id>`
 
-## Usage Guidelines
-1. **Agent Isolation**: Each agent should only read/write to its own directory
-2. **Shared Resources**: Use the `shared/` directory for cross-agent information
-3. **State Persistence**: Update state.json whenever agent status changes
-4. **Knowledge Sharing**: Document discoveries in knowledge.md files
-5. **Cleanup**: Remove directories for terminated agents periodically
-
-## Last Updated
-2025-06-20T00:07:18.697Z
+## Files
+- `agent-registry.json`: Central agent registry
+- `agent-<id>.json`: Individual agent data files
+- `templates/`: Agent configuration templates
