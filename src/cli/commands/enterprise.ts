@@ -7,7 +7,7 @@ import chalk from "chalk";
 import Table from "cli-table3";
 import { ProjectManager, DeploymentManager, CloudManager, SecurityManager, AnalyticsManager, AuditManager } from "../../enterprise/index.js";
 import { Logger } from "../../core/logger.js";
-import { ConfigManager } from "../../core/config.js";
+import { ConfigManager } from "../../config/config-manager.js";
 import { generateId } from "../../utils/helpers.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
@@ -35,26 +35,26 @@ async function initializeEnterpriseManagers(): Promise<void> {
       { component: "EnterpriseCommand" }
     );
 
-    const config = ConfigManager.getInstance();
-    await config.load("./enterprise-config.json");
+    // Don't pass config manager - let enterprise managers use their own defaults
+    // This avoids the circular reference issue with the enterprise ConfigManager
 
     // Initialize all enterprise managers
-    projectManager = new ProjectManager("./enterprise/projects", logger, config);
+    projectManager = new ProjectManager("./enterprise/projects", logger);
     await projectManager.initialize();
 
-    deploymentManager = new DeploymentManager("./enterprise/deployments", logger, config);
+    deploymentManager = new DeploymentManager("./enterprise/deployments", logger);
     await deploymentManager.initialize();
 
-    cloudManager = new CloudManager("./enterprise/cloud", logger, config);
+    cloudManager = new CloudManager("./enterprise/cloud", logger);
     await cloudManager.initialize();
 
-    securityManager = new SecurityManager("./enterprise/security", logger, config);
+    securityManager = new SecurityManager("./enterprise/security", logger);
     await securityManager.initialize();
 
-    analyticsManager = new AnalyticsManager("./enterprise/analytics", logger, config);
+    analyticsManager = new AnalyticsManager("./enterprise/analytics", logger);
     await analyticsManager.initialize();
 
-    auditManager = new AuditManager("./enterprise/audit", logger, config);
+    auditManager = new AuditManager("./enterprise/audit", logger);
     await auditManager.initialize();
 
     console.log(chalk.green("✓ Enterprise managers initialized successfully"));
