@@ -270,7 +270,7 @@ export function getModelDefinition(modelIdOrAlias: string): ModelDefinition | un
  */
 export function getAvailableModels(includeDeprecated = false): ModelDefinition[] {
   return Object.values(CLAUDE_MODELS).filter(model => 
-    includeDeprecated || !model.deprecated
+    includeDeprecated || !model.deprecated,
   );
 }
 
@@ -279,7 +279,7 @@ export function getAvailableModels(includeDeprecated = false): ModelDefinition[]
  */
 export function getModelsForUseCase(useCase: string): ModelDefinition[] {
   return Object.values(CLAUDE_MODELS).filter(model =>
-    model.useCases.includes(useCase) && !model.deprecated
+    model.useCases.includes(useCase) && !model.deprecated,
   );
 }
 
@@ -311,11 +311,11 @@ export function isModelAlias(modelIdOrAlias: string): boolean {
  */
 export function getBestModelForCapability(
   capability: keyof ModelDefinition["capabilities"],
-  preferredLevel: "high" | "medium" | "low" = "high"
+  preferredLevel: "high" | "medium" | "low" = "high",
 ): ModelDefinition | undefined {
   const availableModels = getAvailableModels();
   return availableModels.find(model => 
-    model.capabilities[capability] === preferredLevel
+    model.capabilities[capability] === preferredLevel,
   ) || availableModels[0]; // fallback to first available
 }
 

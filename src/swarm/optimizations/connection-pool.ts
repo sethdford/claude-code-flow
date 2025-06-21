@@ -356,7 +356,7 @@ export class ClaudeConnectionPool extends EventEmitter {
         this.logger.debug("Connection acquired", { 
           id: conn.id, 
           useCount: conn.useCount,
-          acquireTime 
+          acquireTime, 
         });
         
         return conn;
@@ -376,7 +376,7 @@ export class ClaudeConnectionPool extends EventEmitter {
         const acquireTime = Date.now() - startTime;
         this.logger.debug("New connection acquired", { 
           id: conn.id,
-          acquireTime 
+          acquireTime, 
         });
         
         return conn;
@@ -397,7 +397,7 @@ export class ClaudeConnectionPool extends EventEmitter {
         const waitTime = Date.now() - startTime;
         this.logger.warn("Connection acquire timeout", { 
           waitTime,
-          queueLength: this.waitingQueue.length 
+          queueLength: this.waitingQueue.length, 
         });
         
         reject(new Error(`Connection acquire timeout after ${this.config.acquireTimeoutMillis}ms`));
@@ -407,11 +407,11 @@ export class ClaudeConnectionPool extends EventEmitter {
         resolve, 
         reject, 
         timeout,
-        requestedAt: new Date()
+        requestedAt: new Date(),
       });
       
       this.logger.debug("Added to waiting queue", { 
-        queueLength: this.waitingQueue.length 
+        queueLength: this.waitingQueue.length, 
       });
     });
   }
@@ -430,7 +430,7 @@ export class ClaudeConnectionPool extends EventEmitter {
     this.emit("connection:released", conn);
     this.logger.debug("Connection released", { 
       id: conn.id,
-      useCount: conn.useCount 
+      useCount: conn.useCount, 
     });
     
     // Process waiting queue
@@ -447,7 +447,7 @@ export class ClaudeConnectionPool extends EventEmitter {
         const waitTime = Date.now() - waiter.requestedAt.getTime();
         this.logger.debug("Connection assigned from queue", { 
           id: conn.id,
-          waitTime 
+          waitTime, 
         });
         
         waiter.resolve(conn);
@@ -474,7 +474,7 @@ export class ClaudeConnectionPool extends EventEmitter {
       this.logger.debug("Request executed successfully", {
         connectionId: connection.id,
         responseTime,
-        totalRequests: connection.totalRequests
+        totalRequests: connection.totalRequests,
       });
       
       return result;
@@ -485,7 +485,7 @@ export class ClaudeConnectionPool extends EventEmitter {
       this.logger.error("Request execution failed", {
         connectionId: connection.id,
         error: (error as Error).message,
-        totalErrors: connection.totalErrors
+        totalErrors: connection.totalErrors,
       });
       
       throw error;
@@ -506,7 +506,7 @@ export class ClaudeConnectionPool extends EventEmitter {
     } catch (error) {
       this.logger.error("Connection test failed", { 
         id: conn.id, 
-        error: (error as Error).message 
+        error: (error as Error).message, 
       });
       return false;
     }
@@ -518,7 +518,7 @@ export class ClaudeConnectionPool extends EventEmitter {
     } catch (error) {
       this.logger.warn("Error disconnecting connection", { 
         id: conn.id, 
-        error: (error as Error).message 
+        error: (error as Error).message, 
       });
     }
     
@@ -528,7 +528,7 @@ export class ClaudeConnectionPool extends EventEmitter {
     this.emit("connection:destroyed", conn);
     this.logger.debug("Connection destroyed", { 
       id: conn.id,
-      total: this.connections.size 
+      total: this.connections.size, 
     });
   }
   
@@ -550,7 +550,7 @@ export class ClaudeConnectionPool extends EventEmitter {
     if (evicted > 0) {
       this.logger.info("Evicted idle connections", { 
         evicted,
-        remaining: this.connections.size 
+        remaining: this.connections.size, 
       });
     }
   }
@@ -585,7 +585,7 @@ export class ClaudeConnectionPool extends EventEmitter {
     if (unhealthyConnections.length > 0) {
       this.logger.info("Health check completed", {
         removed: unhealthyConnections.length,
-        total: this.connections.size
+        total: this.connections.size,
       });
     }
   }
@@ -595,7 +595,7 @@ export class ClaudeConnectionPool extends EventEmitter {
     
     this.logger.info("Draining connection pool", { 
       total: this.connections.size,
-      waiting: this.waitingQueue.length 
+      waiting: this.waitingQueue.length, 
     });
     
     // Clear timers
@@ -623,14 +623,14 @@ export class ClaudeConnectionPool extends EventEmitter {
     
     // Force close all connections
     const destroyPromises = Array.from(this.connections.values()).map(conn => 
-      this.destroyConnection(conn)
+      this.destroyConnection(conn),
     );
     
     await Promise.allSettled(destroyPromises);
     
     this.emit("pool:drained");
     this.logger.info("Connection pool drained", { 
-      finalStats: this.getStats() 
+      finalStats: this.getStats(), 
     });
   }
   
@@ -695,7 +695,7 @@ export class ClaudeConnectionPool extends EventEmitter {
     try {
       await Promise.all(promises);
       this.logger.info("Connection pool warmed up", { 
-        total: this.connections.size 
+        total: this.connections.size, 
       });
     } catch (error) {
       this.logger.error("Failed to warm up connection pool", { error });

@@ -62,8 +62,8 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
   console.log(`🤖 Max Agents: ${options.maxAgents}`);
 
   try {
-          // Initialize comprehensive swarm system with enhanced coordinator
-    const modelHierarchy = getModelHierarchy(options.strategy as any);
+    // Initialize comprehensive swarm system with enhanced coordinator
+    const modelHierarchy = getModelHierarchy(options.strategy);
     const coordinator = new EnhancedSwarmCoordinator({
       modelConfig: {
         primary: modelHierarchy.primary,
@@ -71,7 +71,7 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
         review: modelHierarchy.review,
         threshold: 50,
       },
-      strategy: options.strategy as any,
+      strategy: options.strategy,
       maxAgents: options.maxAgents,
     });
 
@@ -130,8 +130,8 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
       consistencyLevel: "eventual",
     });
 
-    console.log(`✅ Swarm initialized successfully`);
-    console.log(`🚀 Starting execution...`);
+    console.log("✅ Swarm initialized successfully");
+    console.log("🚀 Starting execution...");
 
     // Add progress monitoring
     let lastStatus = { tasks: 0, agents: 0 };
@@ -156,7 +156,7 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
       
       if (status.activeTasks === 0 && status.totalTasks > 0) {
         clearInterval(statusInterval);
-        console.log(`🎉 All tasks completed!`);
+        console.log("🎉 All tasks completed!");
         break;
       }
       
@@ -178,7 +178,7 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
     }
 
   } catch (error) {
-    console.error(`❌ Swarm execution failed:`, (error as Error).message);
+    console.error("❌ Swarm execution failed:", (error as Error).message);
     if (options.verbose) {
       console.error(error);
     }
@@ -216,7 +216,7 @@ async function launchSwarmUI(objective: string, options: any): Promise<void> {
 }
 
 function showDryRunConfiguration(swarmId: string, objective: string, options: any): void {
-  console.log(`🔍 DRY RUN - Swarm Configuration Preview`);
+  console.log("🔍 DRY RUN - Swarm Configuration Preview");
   console.log(`Swarm ID: ${swarmId}`);
   console.log(`Objective: ${objective}`);
   console.log(`Strategy: ${options.strategy}`);
@@ -228,22 +228,22 @@ function showDryRunConfiguration(swarmId: string, objective: string, options: an
 }
 
 async function showSwarmResults(coordinator: EnhancedSwarmCoordinator, executor: TaskExecutor, memory: SwarmMemoryManager, swarmDir: string): Promise<void> {
-  console.log(`\n📊 Swarm Execution Results`);
+  console.log("\n📊 Swarm Execution Results");
   
   const status = coordinator.getStatus();
   
   // Determine actual status based on task completion
-  let actualStatus = 'unknown';
+  let actualStatus = "unknown";
   if (status.totalTasks === 0) {
-    actualStatus = 'no-tasks';
+    actualStatus = "no-tasks";
   } else if (status.activeTasks === 0) {
     if (status.failedTasks > 0) {
-      actualStatus = 'completed-with-failures';
+      actualStatus = "completed-with-failures";
     } else {
-      actualStatus = 'completed';
+      actualStatus = "completed";
     }
   } else {
-    actualStatus = 'executing';
+    actualStatus = "executing";
   }
   
   console.log(`Status: ${actualStatus}`);
@@ -260,19 +260,19 @@ async function showSwarmResults(coordinator: EnhancedSwarmCoordinator, executor:
 }
 
 async function startSwarmREPL(coordinator: EnhancedSwarmCoordinator, executor: TaskExecutor, memory: SwarmMemoryManager, swarmDir: string, objective: string): Promise<void> {
-  console.log(`\n🔧 Starting Swarm Interactive Session`);
-  console.log(`Type 'help' for available commands or 'exit' to quit.\n`);
+  console.log("\n🔧 Starting Swarm Interactive Session");
+  console.log("Type 'help' for available commands or 'exit' to quit.\n");
 
-  const readline = await import('readline');
+  const readline = await import("readline");
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: '🐝 swarm> '
+    prompt: "🐝 swarm> ",
   });
 
   rl.prompt();
 
-  rl.on('line', async (line) => {
+  rl.on("line", async (line) => {
     const input = line.trim();
     
     if (!input) {
@@ -280,11 +280,11 @@ async function startSwarmREPL(coordinator: EnhancedSwarmCoordinator, executor: T
       return;
     }
 
-    const [command, ...args] = input.split(' ');
+    const [command, ...args] = input.split(" ");
 
     try {
       switch (command.toLowerCase()) {
-        case 'help':
+        case "help":
           console.log(`
 Available commands:
   status              Show current swarm status
@@ -300,87 +300,87 @@ Available commands:
 `);
           break;
 
-        case 'status':
+        case "status":
           const status = coordinator.getStatus();
-          console.log(`📊 Swarm Status:`);
-          console.log(`  Status: ${status.status || 'completed'}`);
+          console.log("📊 Swarm Status:");
+          console.log(`  Status: ${status.status || "completed"}`);
           console.log(`  Active Tasks: ${status.activeTasks || 0}`);
           console.log(`  Active Agents: ${status.activeAgents || 0}`);
           console.log(`  Total Tasks: ${status.totalTasks || 0}`);
           break;
 
-        case 'results':
+        case "results":
           await showSwarmResults(coordinator, executor, memory, swarmDir);
           break;
 
-        case 'logs':
-          console.log(`📋 Recent Task Logs:`);
-          console.log(`(Log viewing not yet implemented)`);
+        case "logs":
+          console.log("📋 Recent Task Logs:");
+          console.log("(Log viewing not yet implemented)");
           break;
 
-        case 'memory':
-          console.log(`🧠 Memory Contents:`);
+        case "memory":
+          console.log("🧠 Memory Contents:");
           const memoryStats = memory.getStatistics();
           console.log(`  Entries: ${memoryStats.totalEntries || 0}`);
           console.log(`  Size: ${((memoryStats.totalSize || 0) / 1024).toFixed(1)} KB`);
           break;
 
-        case 'agents':
+        case "agents":
           const agentStatus = coordinator.getStatus();
-          console.log(`🤖 Agent Information:`);
+          console.log("🤖 Agent Information:");
           console.log(`  Active Agents: ${agentStatus.activeAgents || 0}`);
           console.log(`  Total Agents: ${agentStatus.totalAgents || 0}`);
           break;
 
-        case 'tasks':
+        case "tasks":
           const taskStatus = coordinator.getStatus();
-          console.log(`📋 Task Information:`);
+          console.log("📋 Task Information:");
           console.log(`  Total: ${taskStatus.totalTasks || 0}`);
           console.log(`  Completed: ${taskStatus.completedTasks || 0}`);
           console.log(`  Failed: ${taskStatus.failedTasks || 0}`);
           break;
 
-        case 'follow':
+        case "follow":
           if (args.length === 0) {
-            console.log(`❌ Please specify a follow-up task: follow "<task description>"`);
+            console.log("❌ Please specify a follow-up task: follow \"<task description>\"");
             break;
           }
-          const followUpTask = args.join(' ').replace(/"/g, '');
+          const followUpTask = args.join(" ").replace(/"/g, "");
           console.log(`🚀 Executing follow-up task: ${followUpTask}`);
           
           try {
             const followUpObjectiveId = await coordinator.addObjective(followUpTask);
             console.log(`✅ Follow-up task created: ${followUpObjectiveId}`);
-            console.log(`   Use 'status' to monitor progress`);
+            console.log("   Use 'status' to monitor progress");
           } catch (error) {
             console.log(`❌ Failed to create follow-up task: ${(error as Error).message}`);
           }
           break;
 
-        case 'save':
+        case "save":
           if (args.length === 0) {
-            console.log(`❌ Please specify a filename: save <filename>`);
+            console.log("❌ Please specify a filename: save <filename>");
             break;
           }
           const filename = args[0];
           console.log(`💾 Saving results to ${filename}...`);
-          console.log(`(Save functionality not yet implemented)`);
+          console.log("(Save functionality not yet implemented)");
           break;
 
-        case 'clear':
+        case "clear":
           console.clear();
           console.log(`🐝 Swarm Interactive Session - ${objective}`);
           break;
 
-        case 'exit':
-        case 'quit':
-          console.log(`👋 Goodbye!`);
+        case "exit":
+        case "quit":
+          console.log("👋 Goodbye!");
           rl.close();
           return;
 
         default:
           console.log(`❌ Unknown command: ${command}`);
-          console.log(`Type 'help' for available commands.`);
+          console.log("Type 'help' for available commands.");
           break;
       }
     } catch (error) {
@@ -390,8 +390,8 @@ Available commands:
     rl.prompt();
   });
 
-  rl.on('close', () => {
-    console.log(`\n👋 Swarm session ended.`);
+  rl.on("close", () => {
+    console.log("\n👋 Swarm session ended.");
     process.exit(0);
   });
 }
@@ -450,6 +450,6 @@ export const swarmCommand = new Command()
   .action(async (objective: string[], options: any) => {
     await swarmAction({
       args: objective,
-      flags: options
+      flags: options,
     });
   });

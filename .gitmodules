@@ -1,0 +1,3 @@
+[submodule "ruvnet-claude-code-flow"]
+	path = ruvnet-claude-code-flow
+	url = https://github.com/ruvnet/claude-code-flow.git

@@ -37,7 +37,19 @@ async function loadSparcConfig(): Promise<SparcConfig> {
     const configPath = ".roomodes";
     const { readFile } = await import("fs/promises");
     const content = await readFile(configPath, "utf-8");
-    sparcConfig = JSON.parse(content);
+    const roomodes = JSON.parse(content);
+    
+    // Convert .roomodes format to SparcConfig format
+    const customModes: SparcMode[] = Object.entries(roomodes).map(([slug, config]: [string, any]) => ({
+      slug,
+      name: config.description || slug,
+      roleDefinition: config.prompt || `SPARC: ${slug}`,
+      customInstructions: config.prompt || `You are a ${slug} specialist.`,
+      groups: config.tools || [],
+      source: ".roomodes"
+    }));
+    
+    sparcConfig = { customModes };
     return sparcConfig!;
   } catch (error) {
     throw new Error(`Failed to load SPARC configuration: ${error.message}`);
@@ -167,7 +179,7 @@ async function runSparcMode(ctx: CommandContext): Promise<void> {
       console.log(`Task: ${taskDescription}`);
       console.log();
       console.log("Enhanced prompt preview:");
-      console.log(enhancedTask.substring(0, 300) + "...");
+      console.log(`${enhancedTask.substring(0, 300)  }...`);
       return;
     }
 
@@ -203,7 +215,7 @@ async function runTddFlow(ctx: CommandContext): Promise<void> {
       { mode: "tdd", phase: "Red", description: `Write failing tests for: ${taskDescription}` },
       { mode: "code", phase: "Green", description: `Implement minimal code to pass tests for: ${taskDescription}` },
       { mode: "refinement-optimization-mode", phase: "Refactor", description: `Refactor and optimize implementation for: ${taskDescription}` },
-      { mode: "integration", phase: "Integration", description: `Integrate and verify complete solution for: ${taskDescription}` }
+      { mode: "integration", phase: "Integration", description: `Integrate and verify complete solution for: ${taskDescription}` },
     ];
 
     if (ctx.flags.dryRun || ctx.flags["dry-run"]) {
@@ -235,7 +247,7 @@ async function runTddFlow(ctx: CommandContext): Promise<void> {
         ...ctx.flags,
         tddPhase: step.phase,
         workflowStep: i + 1,
-        totalSteps: workflow.length
+        totalSteps: workflow.length,
       });
 
       const tools = buildToolsFromGroups(mode.groups);
@@ -250,7 +262,7 @@ async function runTddFlow(ctx: CommandContext): Promise<void> {
           const readline = await import("readline");
           const rl = readline.createInterface({
             input: process.stdin,
-            output: process.stdout
+            output: process.stdout,
           });
           rl.question("", () => {
             rl.close();
@@ -318,7 +330,7 @@ async function runSparcWorkflow(ctx: CommandContext): Promise<void> {
         ...ctx.flags,
         workflowStep: i + 1,
         totalSteps: workflow.steps.length,
-        workflowName: workflow.name
+        workflowName: workflow.name,
       });
 
       const tools = buildToolsFromGroups(mode.groups);
@@ -332,7 +344,7 @@ async function runSparcWorkflow(ctx: CommandContext): Promise<void> {
           const readline = require("readline");
           const rl = readline.createInterface({
             input: process.stdin,
-            output: process.stdout
+            output: process.stdout,
           });
           rl.question("", () => {
             rl.close();
@@ -377,13 +389,13 @@ ${flags.tddPhase ? `
 **Current TDD Phase**: ${flags.tddPhase}
 - Follow the Red-Green-Refactor cycle
 - Store test results and refactoring notes in memory
-` : ''}
+` : ""}
 
 ${flags.workflowStep ? `
 **Workflow Progress**: Step ${flags.workflowStep} of ${flags.totalSteps}
 - Review previous steps: \`npx claude-flow memory query previous_steps\`
 - Store this step's output: \`npx claude-flow memory store step_${flags.workflowStep}_output "<results>"\`
-` : ''}
+` : ""}
 
 ### Best Practices
 1. **Modular Development**: Keep all files under 500 lines
@@ -400,7 +412,7 @@ npx claude-flow memory store ${memoryNamespace}_progress "Current status and fin
 npx claude-flow memory query ${memoryNamespace}
 
 # Store phase-specific results
-npx claude-flow memory store ${memoryNamespace}_${flags.tddPhase || 'results'} "Phase output and decisions"
+npx claude-flow memory store ${memoryNamespace}_${flags.tddPhase || "results"} "Phase output and decisions"
 \`\`\`
 
 ### Integration with Other SPARC Modes
@@ -419,7 +431,7 @@ function buildToolsFromGroups(groups: string[]): string {
     edit: ["Edit", "Replace", "MultiEdit", "Write"],
     browser: ["WebFetch"],
     mcp: ["mcp_tools"],
-    command: ["Bash", "Terminal"]
+    command: ["Bash", "Terminal"],
   };
 
   const tools = new Set<string>();
@@ -448,7 +460,7 @@ async function executeClaudeWithSparc(
   enhancedTask: string, 
   tools: string, 
   instanceId: string, 
-  flags: any
+  flags: any,
 ): Promise<void> {
   const claudeArgs = [enhancedTask];
   claudeArgs.push("--allowedTools", tools);
@@ -549,15 +561,46 @@ export const sparcCommand = new Command()
   .option("--verbose", "Enable verbose output")
   .option("--dry-run", "Preview what would be executed")
   .option("--sequential", "Wait between workflow steps (default: true)")
-  .arguments("[subcommand] [...args]")
-  .action(async (...args: any[]) => {
-    // Extract command context from arguments
-    const allArgs = args.slice(0, -1); // Remove options object
-    const options = args[args.length - 1]; // Options object is last
+  .allowUnknownOption()
+  .action(async (options: any) => {
+    // Parse arguments directly from process.argv
+    const argv = process.argv;
+    const sparcIndex = argv.findIndex(arg => arg === "sparc");
+    
+    if (sparcIndex === -1) {
+      await sparcAction({ args: [], flags: options });
+      return;
+    }
+    
+    // Get all arguments after "sparc", filtering out known options
+    const rawArgs = argv.slice(sparcIndex + 1);
+    const filteredArgs: string[] = [];
+    
+    for (let i = 0; i < rawArgs.length; i++) {
+      const arg = rawArgs[i];
+      
+      // Skip known options and their values
+      if (arg.startsWith("--")) {
+        const optionName = arg.substring(2);
+        // Skip the option and its value if it takes a value
+        if (["namespace", "config"].includes(optionName) && i + 1 < rawArgs.length && !rawArgs[i + 1].startsWith("--")) {
+          i++; // Skip the next argument (the option value)
+        }
+        continue;
+      }
+      
+      filteredArgs.push(arg);
+    }
+    
+    // For debugging: log the parsed arguments
+    if (options.verbose) {
+      console.log("Debug - Parsed args:", filteredArgs);
+      console.log("Debug - Options:", options);
+    }
     
     const ctx = {
-      args: allArgs,
-      flags: options
+      args: filteredArgs,
+      flags: options,
     };
     
     await sparcAction(ctx);

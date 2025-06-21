@@ -82,7 +82,7 @@ export class ProcessManager extends EventEmitter {
           await configManager.load("./claude-flow.config.json");
         } catch (error) {
           // If config file doesn't exist, create a default one
-          if (error.message && error.message.includes("not found")) {
+          if (error.message?.includes("not found")) {
             console.log("Creating default configuration file...");
             await configManager.createDefaultConfig("./claude-flow.config.json");
             await configManager.load("./claude-flow.config.json");

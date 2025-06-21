@@ -304,8 +304,8 @@ export class TerminalManager implements ITerminalManager {
     // VSCode extensions have access to the global 'vscode' object and specific APIs
     try {
       // Check if we have the VSCode extension API available
-      const hasVSCodeAPI = typeof (globalThis as any).vscode !== 'undefined' &&
-                          typeof (globalThis as any).vscode.window !== 'undefined';
+      const hasVSCodeAPI = typeof (globalThis as any).vscode !== "undefined" &&
+                          typeof (globalThis as any).vscode.window !== "undefined";
       
       // Check if we're in a VSCode extension host process
       const isExtensionHost = process.env.VSCODE_EXTHOST_WILL_SEND_SOCKET !== undefined ||

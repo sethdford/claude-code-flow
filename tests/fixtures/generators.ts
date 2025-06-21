@@ -2,7 +2,7 @@
  * Test data generators and fixtures for Claude-Flow tests
  */
 
-import { TestDataGenerator } from '../utils/test-utils.ts';
+import { TestDataGenerator } from "../utils/test-utils.ts";
 
 /**
  * Generate memory entries for testing
@@ -10,17 +10,17 @@ import { TestDataGenerator } from '../utils/test-utils.ts';
 export function generateMemoryEntries(count: number) {
   return Array.from({ length: count }, (_, i) => ({
     id: `memory-${i}`,
-    namespace: 'test',
+    namespace: "test",
     key: `test-key-${i}`,
     value: {
       content: TestDataGenerator.randomString(100),
       metadata: {
         timestamp: Date.now() - i * 1000,
-        source: 'test',
+        source: "test",
         tags: TestDataGenerator.randomArray(() => TestDataGenerator.randomString(5), 3),
       },
     },
-    tags: ['test', `group-${i % 5}`],
+    tags: ["test", `group-${i % 5}`],
     createdAt: new Date(Date.now() - i * 1000),
     updatedAt: new Date(Date.now() - i * 500),
   }));
@@ -30,12 +30,12 @@ export function generateMemoryEntries(count: number) {
  * Generate coordination tasks for testing
  */
 export function generateCoordinationTasks(count: number) {
-  const statuses = ['pending', 'running', 'completed', 'failed'];
-  const priorities = ['low', 'medium', 'high', 'critical'];
+  const statuses = ["pending", "running", "completed", "failed"];
+  const priorities = ["low", "medium", "high", "critical"];
   
   return Array.from({ length: count }, (_, i) => ({
     id: `task-${i}`,
-    type: 'test-task',
+    type: "test-task",
     status: statuses[i % statuses.length],
     priority: priorities[i % priorities.length],
     data: {
@@ -57,10 +57,10 @@ export function generateCoordinationTasks(count: number) {
  * Generate MCP messages for testing
  */
 export function generateMCPMessages(count: number) {
-  const methods = ['list_tools', 'call_tool', 'get_prompt', 'list_prompts'];
+  const methods = ["list_tools", "call_tool", "get_prompt", "list_prompts"];
   
   return Array.from({ length: count }, (_, i) => ({
-    jsonrpc: '2.0',
+    jsonrpc: "2.0",
     id: i,
     method: methods[i % methods.length],
     params: {
@@ -82,13 +82,13 @@ export function generateMCPMessages(count: number) {
 export function generateTerminalSessions(count: number) {
   return Array.from({ length: count }, (_, i) => ({
     id: `session-${i}`,
-    type: 'test',
-    status: i % 2 === 0 ? 'active' : 'idle',
+    type: "test",
+    status: i % 2 === 0 ? "active" : "idle",
     workingDirectory: `/tmp/test-${i}`,
     environment: {
-      PATH: '/usr/bin:/bin',
+      PATH: "/usr/bin:/bin",
       HOME: `/home/test-${i}`,
-      TERM: 'xterm-256color',
+      TERM: "xterm-256color",
     },
     history: Array.from({ length: 10 }, (_, j) => ({
       command: `echo "Command ${j} in session ${i}"`,
@@ -106,13 +106,13 @@ export function generateTerminalSessions(count: number) {
  */
 export function generateEventBusEvents(count: number) {
   const eventTypes = [
-    'task.created',
-    'task.started',
-    'task.completed',
-    'task.failed',
-    'memory.updated',
-    'terminal.session.created',
-    'mcp.message.received',
+    "task.created",
+    "task.started",
+    "task.completed",
+    "task.failed",
+    "memory.updated",
+    "terminal.session.created",
+    "mcp.message.received",
   ];
   
   return Array.from({ length: count }, (_, i) => ({
@@ -123,9 +123,9 @@ export function generateEventBusEvents(count: number) {
       sessionId: `session-${i % 3}`,
       message: TestDataGenerator.randomString(100),
       metadata: {
-        source: 'test',
+        source: "test",
         timestamp: Date.now() - i * 1000,
-        tags: ['test', `batch-${Math.floor(i / 10)}`],
+        tags: ["test", `batch-${Math.floor(i / 10)}`],
       },
     },
     timestamp: new Date(Date.now() - i * 1000),
@@ -139,33 +139,33 @@ export function generateEventBusEvents(count: number) {
 export function generateErrorScenarios() {
   return [
     {
-      name: 'Network timeout',
-      error: new Error('Connection timeout'),
-      code: 'TIMEOUT',
+      name: "Network timeout",
+      error: new Error("Connection timeout"),
+      code: "TIMEOUT",
       recoverable: true,
     },
     {
-      name: 'Memory limit exceeded',
-      error: new Error('Out of memory'),
-      code: 'MEMORY_ERROR',
+      name: "Memory limit exceeded",
+      error: new Error("Out of memory"),
+      code: "MEMORY_ERROR",
       recoverable: false,
     },
     {
-      name: 'Invalid configuration',
-      error: new Error('Configuration validation failed'),
-      code: 'CONFIG_ERROR',
+      name: "Invalid configuration",
+      error: new Error("Configuration validation failed"),
+      code: "CONFIG_ERROR",
       recoverable: false,
     },
     {
-      name: 'Resource conflict',
-      error: new Error('Resource already in use'),
-      code: 'CONFLICT',
+      name: "Resource conflict",
+      error: new Error("Resource already in use"),
+      code: "CONFLICT",
       recoverable: true,
     },
     {
-      name: 'Dependency not found',
-      error: new Error('Required dependency missing'),
-      code: 'DEPENDENCY_ERROR',
+      name: "Dependency not found",
+      error: new Error("Required dependency missing"),
+      code: "DEPENDENCY_ERROR",
       recoverable: false,
     },
   ];
@@ -229,38 +229,38 @@ export function generatePerformanceTestData() {
 export function generateCLITestScenarios() {
   return [
     {
-      command: ['start'],
-      expectedOutput: 'Claude-Flow orchestrator started',
+      command: ["start"],
+      expectedOutput: "Claude-Flow orchestrator started",
       expectedExitCode: 0,
     },
     {
-      command: ['agent', 'create', '--name', 'test-agent'],
+      command: ["agent", "create", "--name", "test-agent"],
       expectedOutput: 'Agent "test-agent" created successfully',
       expectedExitCode: 0,
     },
     {
-      command: ['task', 'run', '--command', 'echo "Hello World"'],
-      expectedOutput: 'Hello World',
+      command: ["task", "run", "--command", 'echo "Hello World"'],
+      expectedOutput: "Hello World",
       expectedExitCode: 0,
     },
     {
-      command: ['memory', 'set', '--key', 'test', '--value', 'test-value'],
-      expectedOutput: 'Memory entry stored',
+      command: ["memory", "set", "--key", "test", "--value", "test-value"],
+      expectedOutput: "Memory entry stored",
       expectedExitCode: 0,
     },
     {
-      command: ['memory', 'get', '--key', 'test'],
-      expectedOutput: 'test-value',
+      command: ["memory", "get", "--key", "test"],
+      expectedOutput: "test-value",
       expectedExitCode: 0,
     },
     {
-      command: ['invalid-command'],
-      expectedOutput: 'Unknown command',
+      command: ["invalid-command"],
+      expectedOutput: "Unknown command",
       expectedExitCode: 1,
     },
     {
-      command: ['task', 'run'],
-      expectedOutput: 'Missing required argument: command',
+      command: ["task", "run"],
+      expectedOutput: "Missing required argument: command",
       expectedExitCode: 1,
     },
   ];
@@ -273,7 +273,7 @@ export function generateEdgeCaseData() {
   return {
     // Empty/null/undefined values
     emptyValues: {
-      emptyString: '',
+      emptyString: "",
       nullValue: null,
       undefinedValue: undefined,
       emptyArray: [],
@@ -285,9 +285,9 @@ export function generateEdgeCaseData() {
       maxNumber: Number.MAX_SAFE_INTEGER,
       minNumber: Number.MIN_SAFE_INTEGER,
       maxArrayLength: new Array(1000000),
-      longString: 'x'.repeat(1000000),
+      longString: "x".repeat(1000000),
       deepObject: (() => {
-        let obj: any = {};
+        const obj: any = {};
         let current = obj;
         for (let i = 0; i < 1000; i++) {
           current.nested = {};
@@ -302,22 +302,22 @@ export function generateEdgeCaseData() {
       malformedJSON: '{"invalid": json}',
       invalidUTF8: new Uint8Array([0xFF, 0xFE, 0xFD]),
       circularReference: (() => {
-        const obj: any = { name: 'circular' };
+        const obj: any = { name: "circular" };
         obj.self = obj;
         return obj;
       })(),
-      invalidDate: new Date('invalid-date'),
-      invalidURL: 'not-a-url',
+      invalidDate: new Date("invalid-date"),
+      invalidURL: "not-a-url",
     },
     
     // Special characters
     specialCharacters: {
-      unicode: '🚀🔥💻🌟⚡️🎯🚀',
-      controlCharacters: '\x00\x01\x02\x03\x04\x05',
-      newlines: 'line1\nline2\r\nline3\rline4',
-      tabs: 'col1\tcol2\tcol3',
+      unicode: "🚀🔥💻🌟⚡️🎯🚀",
+      controlCharacters: "\x00\x01\x02\x03\x04\x05",
+      newlines: "line1\nline2\r\nline3\rline4",
+      tabs: "col1\tcol2\tcol3",
       quotes: '"double" \'single\' `backtick`',
-      backslashes: '\\path\\to\\file\\with\\backslashes',
+      backslashes: "\\path\\to\\file\\with\\backslashes",
     },
   };
 }

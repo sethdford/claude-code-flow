@@ -12,7 +12,7 @@ import {
   isModelAlias,
   resolveModelAlias,
   MODEL_HIERARCHIES,
-  CLAUDE_MODELS 
+  CLAUDE_MODELS, 
 } from "../../config/model-config.js";
 
 export interface CommandContext {
@@ -122,7 +122,7 @@ async function showModelHierarchy(ctx: CommandContext): Promise<void> {
   
   console.log(`🏗️  Model Hierarchy for "${useCase}" use case:\n`);
   
-  console.log(`Primary Model (Complex reasoning):`);
+  console.log("Primary Model (Complex reasoning):");
   console.log(`  ${hierarchy.primary}`);
   const primaryModel = getModelDefinition(hierarchy.primary);
   if (primaryModel) {
@@ -130,7 +130,7 @@ async function showModelHierarchy(ctx: CommandContext): Promise<void> {
   }
   console.log();
   
-  console.log(`Apply Model (Fast edits):`);
+  console.log("Apply Model (Fast edits):");
   console.log(`  ${hierarchy.apply}`);
   const applyModel = getModelDefinition(hierarchy.apply);
   if (applyModel) {
@@ -138,7 +138,7 @@ async function showModelHierarchy(ctx: CommandContext): Promise<void> {
   }
   console.log();
   
-  console.log(`Review Model (Quality assurance):`);
+  console.log("Review Model (Quality assurance):");
   console.log(`  ${hierarchy.review}`);
   const reviewModel = getModelDefinition(hierarchy.review);
   if (reviewModel) {
@@ -146,7 +146,7 @@ async function showModelHierarchy(ctx: CommandContext): Promise<void> {
   }
   console.log();
   
-  console.log(`Fallback Model (Error recovery):`);
+  console.log("Fallback Model (Error recovery):");
   console.log(`  ${hierarchy.fallback}`);
   const fallbackModel = getModelDefinition(hierarchy.fallback);
   if (fallbackModel) {
@@ -203,13 +203,13 @@ async function validateModel(ctx: CommandContext): Promise<void> {
   if (model.deprecated) {
     console.log(`⚠️  Model is deprecated: ${modelId}`);
     console.log(`   Name: ${model.name}`);
-    console.log(`   Consider upgrading to a newer version`);
+    console.log("   Consider upgrading to a newer version");
     return;
   }
   
   console.log(`✅ Valid model: ${modelId}`);
   console.log(`   Name: ${model.name}`);
-  console.log(`   Status: Active`);
+  console.log("   Status: Active");
   
   if (isModelAlias(modelId)) {
     console.log(`   Alias resolves to: ${resolveModelAlias(modelId)}`);

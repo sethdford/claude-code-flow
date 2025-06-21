@@ -60,26 +60,33 @@ export function createCLI(): Command {
     .option("--log-level <level>", "Set log level (debug, info, warn, error)", "info")
     .option("--no-color", "Disable colored output")
     .option("--profile <profile>", "Use named configuration profile")
+    .option("-d, --daemon", "Run as daemon in background")
+    .option("-p, --port <port>", "MCP server port", "3000")
+    .option("--mcp-transport <transport>", "MCP transport type (stdio, http)", "stdio")
+    .option("-u, --ui", "Launch interactive process management UI")
+    .option("--auto-start", "Automatically start all processes")
+    .option("--force", "Force start even if already running")
+    .option("--health-check", "Perform health checks before starting")
+    .option("--timeout <seconds>", "Startup timeout in seconds", "60")
+    .option("--background", "Start processes and exit")
     .action(async (options: any) => {
-      // Only start REPL if no subcommand was provided and help wasn't requested
       const args = process.argv.slice(2);
-      const hasSubcommand = args.some(arg => !arg.startsWith("-"));
+      const hasNonStartSubcommand = args.some(arg => 
+        !arg.startsWith("-") && 
+        arg !== "start" && 
+        ["init", "agent", "task", "memory", "config", "status", "monitor", "session", "workflow", "mcp", "claude", "swarm", "sparc", "enterprise", "models", "help", "batch", "repl", "version", "completion"].includes(arg),
+      );
       const helpRequested = args.includes("--help") || args.includes("-h");
       
-      if (hasSubcommand || helpRequested) {
-        // Let the subcommand or help handler handle execution
+      if (hasNonStartSubcommand || helpRequested) {
         return;
       }
       
-      // If no subcommand, show banner and start REPL
       await setupLogging(options);
       
-      if (!options.quiet) {
-        displayBanner(VERSION);
-        console.log(colors.gray("Type \"help\" for available commands or \"exit\" to quit.\n"));
-      }
-      
-      await startREPL(options);
+      // Import and execute the start action
+      const { startAction } = await import("./commands/start/start-command.js");
+      await startAction(options);
     });
 
   // Add all subcommands
@@ -109,7 +116,7 @@ export function createCLI(): Command {
       try {
         const fs = await import("fs/promises");
         const content = await fs.readFile(workflowFile, "utf-8");
-        const workflow = JSON.parse(content) as any;
+        const workflow = JSON.parse(content);
         
         console.log(colors.green("✓ Loading workflow:"), workflow.name ?? "Unnamed");
         
@@ -132,7 +139,7 @@ export function createCLI(): Command {
             type: task.type || "general",
             tools: task.tools || ["View", "Edit", "Replace", "GlobTool", "GrepTool", "LS", "Bash"],
             skipPermissions: task.skipPermissions || false,
-            config: task.config ? (typeof task.config === 'string' ? task.config : JSON.stringify(task.config)) : undefined
+            config: task.config ? (typeof task.config === "string" ? task.config : JSON.stringify(task.config)) : undefined,
           }));
         }
         

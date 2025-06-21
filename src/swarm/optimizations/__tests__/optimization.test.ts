@@ -4,14 +4,14 @@
  */
 
 // Set NODE_ENV for tests
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = "test";
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 
 // Mock the fs/promises module before importing anything that uses it
-jest.unstable_mockModule('node:fs/promises', () => ({
+jest.unstable_mockModule("node:fs/promises", () => ({
   writeFile: jest.fn().mockResolvedValue(undefined),
-  readFile: jest.fn().mockResolvedValue('{}'),
+  readFile: jest.fn().mockResolvedValue("{}"),
   stat: jest.fn().mockResolvedValue({ size: 100 }),
   mkdir: jest.fn().mockResolvedValue(undefined),
   unlink: jest.fn().mockResolvedValue(undefined),
@@ -21,10 +21,10 @@ jest.unstable_mockModule('node:fs/promises', () => ({
 }));
 
 // Mock the fs module for streams
-jest.unstable_mockModule('node:fs', () => {
+jest.unstable_mockModule("node:fs", () => {
   const mockWriteStream = {
     on: jest.fn((event, callback) => {
-      if (event === 'finish') {
+      if (event === "finish") {
         // Simulate immediate finish
         setTimeout(callback, 0);
       }
@@ -32,7 +32,7 @@ jest.unstable_mockModule('node:fs', () => {
     }),
     end: jest.fn((data) => {
       // Trigger finish event after end
-      const finishCallback = mockWriteStream.on.mock.calls.find(call => call[0] === 'finish')?.[1];
+      const finishCallback = mockWriteStream.on.mock.calls.find(call => call[0] === "finish")?.[1];
       if (finishCallback) {
         setTimeout(finishCallback, 0);
       }
@@ -83,7 +83,7 @@ beforeEach(() => {
   
   // Set up implementations
   fs.writeFile.mockResolvedValue(undefined);
-  fs.readFile.mockResolvedValue('{}');
+  fs.readFile.mockResolvedValue("{}");
   fs.stat.mockResolvedValue({ size: 100 });
   fs.mkdir.mockResolvedValue(undefined);
   fs.unlink.mockResolvedValue(undefined);
@@ -92,9 +92,9 @@ beforeEach(() => {
   fs.open.mockResolvedValue(undefined);
 });
 
-describe('Swarm Optimizations', () => {
-  describe('CircularBuffer', () => {
-    it('should maintain fixed size', () => {
+describe("Swarm Optimizations", () => {
+  describe("CircularBuffer", () => {
+    it("should maintain fixed size", () => {
       const buffer = new CircularBuffer<number>(5);
       
       // Add more items than capacity
@@ -106,18 +106,18 @@ describe('Swarm Optimizations', () => {
       expect(buffer.getAll()).toEqual([5, 6, 7, 8, 9]);
     });
     
-    it('should return recent items correctly', () => {
+    it("should return recent items correctly", () => {
       const buffer = new CircularBuffer<string>(3);
-      buffer.push('a');
-      buffer.push('b');
-      buffer.push('c');
-      buffer.push('d');
+      buffer.push("a");
+      buffer.push("b");
+      buffer.push("c");
+      buffer.push("d");
       
-      expect(buffer.getRecent(2)).toEqual(['c', 'd']);
-      expect(buffer.getRecent(5)).toEqual(['b', 'c', 'd']); // Only 3 items available
+      expect(buffer.getRecent(2)).toEqual(["c", "d"]);
+      expect(buffer.getRecent(5)).toEqual(["b", "c", "d"]); // Only 3 items available
     });
     
-    it('should track overwritten count', () => {
+    it("should track overwritten count", () => {
       const buffer = new CircularBuffer<number>(3);
       for (let i = 0; i < 5; i++) {
         buffer.push(i);
@@ -128,7 +128,7 @@ describe('Swarm Optimizations', () => {
     });
   });
   
-  describe('TTLMap', () => {
+  describe("TTLMap", () => {
     let map: TTLMap<string, string>;
     
     beforeEach(() => {
@@ -141,69 +141,69 @@ describe('Swarm Optimizations', () => {
       jest.useRealTimers();
     });
     
-    it('should expire items after TTL', () => {
-      map.set('key1', 'value1');
-      expect(map.get('key1')).toBe('value1');
+    it("should expire items after TTL", () => {
+      map.set("key1", "value1");
+      expect(map.get("key1")).toBe("value1");
       
       // Advance time past TTL
       jest.advanceTimersByTime(1100);
       
-      expect(map.get('key1')).toBeUndefined();
-      expect(map.has('key1')).toBe(false);
+      expect(map.get("key1")).toBeUndefined();
+      expect(map.has("key1")).toBe(false);
     });
     
-    it('should respect max size with LRU eviction', () => {
+    it("should respect max size with LRU eviction", () => {
       const lruMap = new TTLMap<string, number>({ maxSize: 3, defaultTTL: 60000 });
       
-      lruMap.set('a', 1);
+      lruMap.set("a", 1);
       // Small delay to ensure different timestamps
       jest.advanceTimersByTime(10);
-      lruMap.set('b', 2);
+      lruMap.set("b", 2);
       jest.advanceTimersByTime(10);
-      lruMap.set('c', 3);
+      lruMap.set("c", 3);
       jest.advanceTimersByTime(10);
       
       // Access 'a' and 'c' to make them recently used
-      lruMap.get('a');
+      lruMap.get("a");
       jest.advanceTimersByTime(10);
-      lruMap.get('c');
+      lruMap.get("c");
       jest.advanceTimersByTime(10);
       
       // Add new item, should evict 'b' (least recently used)
-      lruMap.set('d', 4);
+      lruMap.set("d", 4);
       
-      expect(lruMap.has('a')).toBe(true);
-      expect(lruMap.has('b')).toBe(false);
-      expect(lruMap.has('c')).toBe(true);
-      expect(lruMap.has('d')).toBe(true);
+      expect(lruMap.has("a")).toBe(true);
+      expect(lruMap.has("b")).toBe(false);
+      expect(lruMap.has("c")).toBe(true);
+      expect(lruMap.has("d")).toBe(true);
       
       lruMap.destroy();
     });
     
-    it('should update TTL on touch', () => {
+    it("should update TTL on touch", () => {
       const map = new TTLMap<string, string>({ defaultTTL: 1000 });
       
-      map.set('key1', 'value1');
+      map.set("key1", "value1");
       
       // Advance time but not past TTL
       jest.advanceTimersByTime(800);
       
       // Touch to reset TTL
-      map.touch('key1', 2000);
+      map.touch("key1", 2000);
       
       // Advance past original TTL
       jest.advanceTimersByTime(300);
       
       // Should still exist due to touch
-      expect(map.get('key1')).toBe('value1');
+      expect(map.get("key1")).toBe("value1");
       
       // Advance past new TTL
       jest.advanceTimersByTime(1800);
-      expect(map.get('key1')).toBeUndefined();
+      expect(map.get("key1")).toBeUndefined();
     });
   });
   
-  describe('AsyncFileManager', () => {
+  describe("AsyncFileManager", () => {
     const testDir = "/tmp/swarm-test";
     let AsyncFileManager: any;
     let fileManager: any;
@@ -219,7 +219,7 @@ describe('Swarm Optimizations', () => {
       jest.clearAllMocks();
     });
     
-    it.skip('should handle concurrent write operations', async () => {
+    it.skip("should handle concurrent write operations", async () => {
       // Ensure fs mocks are working
       expect(fs.writeFile).toBeDefined();
       expect(fs.mkdir).toBeDefined();
@@ -249,42 +249,42 @@ describe('Swarm Optimizations', () => {
         writes.push(
           manager.writeFile(
             `${testDir}/test-${i}.txt`,
-            `Content ${i}`
-          )
+            `Content ${i}`,
+          ),
         );
       }
       
       const results = await Promise.all(writes);
       
       // Debug: Check what actually happened
-      console.log('Write results:', results.map(r => ({ 
+      console.log("Write results:", results.map(r => ({ 
         success: r.success, 
-        error: r.error?.message 
+        error: r.error?.message, 
       })));
       
       // If any fail, log details for debugging
       const failed = results.filter(r => !r.success);
       if (failed.length > 0) {
-        console.error('Mock calls:', {
+        console.error("Mock calls:", {
           writeFile: fs.writeFile.mock.calls.length,
           mkdir: fs.mkdir.mock.calls.length,
-          stat: fs.stat.mock.calls.length
+          stat: fs.stat.mock.calls.length,
         });
-        console.error('Failed writes:', failed.map(f => ({
+        console.error("Failed writes:", failed.map(f => ({
           path: f.path,
           error: f.error?.message,
-          errorStack: f.error?.stack?.split('\n').slice(0, 3).join('\n')
+          errorStack: f.error?.stack?.split("\n").slice(0, 3).join("\n"),
         })));
       }
       
       expect(results).toHaveLength(5);
       expect(results.every(r => r.success)).toBe(true);
-      expect(results.every(r => r.operation === 'write')).toBe(true);
+      expect(results.every(r => r.operation === "write")).toBe(true);
       expect(results.every(r => r.duration >= 0)).toBe(true);
     });
     
-    it.skip('should write and read JSON files', async () => {
-      const testData = { id: 1, name: 'test', values: [1, 2, 3] };
+    it.skip("should write and read JSON files", async () => {
+      const testData = { id: 1, name: "test", values: [1, 2, 3] };
       const path = `${testDir}/test.json`;
       
       // Set up mocks for this test
@@ -317,7 +317,7 @@ describe('Swarm Optimizations', () => {
     });
   });
   
-  describe('ClaudeConnectionPool', () => {
+  describe("ClaudeConnectionPool", () => {
     let pool: ClaudeConnectionPool;
     
     beforeEach(() => {
@@ -328,7 +328,7 @@ describe('Swarm Optimizations', () => {
       await pool.drain();
     });
     
-    it('should reuse connections', async () => {
+    it("should reuse connections", async () => {
       const conn1 = await pool.acquire();
       const id1 = conn1.id;
       await pool.release(conn1);
@@ -340,7 +340,7 @@ describe('Swarm Optimizations', () => {
       await pool.release(conn2);
     });
     
-    it('should create new connections up to max', async () => {
+    it("should create new connections up to max", async () => {
       const connections = [];
       
       // Acquire max connections
@@ -358,15 +358,15 @@ describe('Swarm Optimizations', () => {
       }
     });
     
-    it('should execute with automatic acquire/release', async () => {
+    it("should execute with automatic acquire/release", async () => {
       let executionCount = 0;
       
       const result = await pool.execute(async (api) => {
         executionCount++;
-        return 'test-result';
+        return "test-result";
       });
       
-      expect(result).toBe('test-result');
+      expect(result).toBe("test-result");
       expect(executionCount).toBe(1);
       
       const stats = pool.getStats();
@@ -374,14 +374,14 @@ describe('Swarm Optimizations', () => {
     });
   });
   
-  describe('OptimizedExecutor', () => {
+  describe("OptimizedExecutor", () => {
     let executor: OptimizedExecutor;
     
     beforeEach(() => {
       executor = new OptimizedExecutor({
         connectionPool: { min: 1, max: 2 },
         concurrency: 2,
-        caching: { enabled: true, ttl: 60000 }
+        caching: { enabled: true, ttl: 60000 },
       });
       
       // Mock the connection pool's execute method directly
@@ -389,9 +389,9 @@ describe('Swarm Optimizations', () => {
       pool.execute = jest.fn().mockImplementation(async (callback: any) => {
         const mockApi = {
           complete: jest.fn().mockResolvedValue({
-            content: [{ text: 'Test response' }],
-            usage: { input_tokens: 10, output_tokens: 20 }
-          })
+            content: [{ text: "Test response" }],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
         };
         return callback(mockApi);
       });
@@ -400,7 +400,7 @@ describe('Swarm Optimizations', () => {
         total: 2,
         inUse: 0,
         available: 2,
-        waiting: 0
+        waiting: 0,
       });
     });
     
@@ -409,15 +409,15 @@ describe('Swarm Optimizations', () => {
       jest.clearAllMocks();
     });
     
-    it('should execute tasks successfully', async () => {
+    it("should execute tasks successfully", async () => {
       const task: TaskDefinition = {
-        id: generateId('task'),
-        parentId: generateId('swarm'),
-        type: 'analysis',
-        objective: 'Test task',
-        description: 'Test task description',
-        status: 'pending',
-        priority: 'normal',
+        id: generateId("task"),
+        parentId: generateId("swarm"),
+        type: "analysis",
+        objective: "Test task",
+        description: "Test task description",
+        status: "pending",
+        priority: "normal",
         assignedTo: undefined,
         dependencies: [],
         result: undefined,
@@ -429,17 +429,17 @@ describe('Swarm Optimizations', () => {
         constraints: {
           timeout: 30000,
           maxRetries: 3,
-          requiresApproval: false
+          requiresApproval: false,
         },
         metadata: {},
         context: undefined,
         statusHistory: [],
-        attempts: []
+        attempts: [],
       };
       
       const agentId: AgentId = {
-        id: generateId('agent'),
-        type: 'executor'
+        id: generateId("agent"),
+        type: "executor",
       };
       
       // Execute the task
@@ -447,20 +447,20 @@ describe('Swarm Optimizations', () => {
       
       // Check the result
       expect(result).toBeDefined();
-      expect(result.output).toBe('Test response');
+      expect(result.output).toBe("Test response");
       expect(result.metadata.success).toBe(true);
       expect(result.metadata.agentId).toBe(agentId.id);
     });
     
-    it('should cache results when enabled', async () => {
+    it("should cache results when enabled", async () => {
       const task: TaskDefinition = {
-        id: generateId('task'),
-        parentId: generateId('swarm'),
-        type: 'query',
-        objective: 'Cached task',
-        description: 'Test cached task description',
-        status: 'pending',
-        priority: 'normal',
+        id: generateId("task"),
+        parentId: generateId("swarm"),
+        type: "query",
+        objective: "Cached task",
+        description: "Test cached task description",
+        status: "pending",
+        priority: "normal",
         assignedTo: undefined,
         dependencies: [],
         result: undefined,
@@ -472,17 +472,17 @@ describe('Swarm Optimizations', () => {
         constraints: {
           timeout: 30000,
           maxRetries: 3,
-          requiresApproval: false
+          requiresApproval: false,
         },
         metadata: {},
         context: undefined,
         statusHistory: [],
-        attempts: []
+        attempts: [],
       };
       
       const agentId: AgentId = {
-        id: generateId('agent'),
-        type: 'analyzer'
+        id: generateId("agent"),
+        type: "analyzer",
       };
       
       // Mock the connection pool for this test
@@ -490,9 +490,9 @@ describe('Swarm Optimizations', () => {
       pool.execute = jest.fn().mockImplementation(async (callback: any) => {
         const mockApi = {
           complete: jest.fn().mockResolvedValue({
-            content: [{ text: 'Cached response' }],
-            usage: { input_tokens: 10, output_tokens: 20 }
-          })
+            content: [{ text: "Cached response" }],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
         };
         return callback(mockApi);
       });
@@ -511,19 +511,19 @@ describe('Swarm Optimizations', () => {
       expect(pool.execute).toHaveBeenCalledTimes(1); // Only called once due to caching
     });
     
-    it('should track metrics correctly', async () => {
+    it("should track metrics correctly", async () => {
       const initialMetrics = executor.getMetrics();
       expect(initialMetrics.totalExecuted).toBe(0);
       
       // Create a test task
       const task: TaskDefinition = {
-        id: generateId('task'),
-        parentId: generateId('swarm'),
-        type: 'test',
-        objective: 'Metrics test',
-        description: 'Test for metrics tracking',
-        status: 'pending',
-        priority: 'normal',
+        id: generateId("task"),
+        parentId: generateId("swarm"),
+        type: "test",
+        objective: "Metrics test",
+        description: "Test for metrics tracking",
+        status: "pending",
+        priority: "normal",
         assignedTo: undefined,
         dependencies: [],
         result: undefined,
@@ -535,17 +535,17 @@ describe('Swarm Optimizations', () => {
         constraints: {
           timeout: 30000,
           maxRetries: 3,
-          requiresApproval: false
+          requiresApproval: false,
         },
         metadata: {},
         context: undefined,
         statusHistory: [],
-        attempts: []
+        attempts: [],
       };
       
       const agentId: AgentId = {
-        id: generateId('agent'),
-        type: 'test'
+        id: generateId("agent"),
+        type: "test",
       };
       
       // Execute a task

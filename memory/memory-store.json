@@ -114,6 +114,24 @@
       "value": "{\n  'phase1': {\n    'description': 'TypeScript configuration and global issues',\n    'agents': 3,\n    'tasks': [\n      'Add strictNullChecks to tsconfig.json',\n      'Fix global declarations (NodeJS, console, etc)',\n      'Update import statements'\n    ]\n  },\n  'phase2': {\n    'description': 'Type safety improvements',\n    'agents': 5,\n    'tasks': [\n      'Fix unsafe any assignments',\n      'Fix unsafe member access',\n      'Fix unsafe function calls',\n      'Fix unsafe arguments',\n      'Remove unnecessary type assertions'\n    ]\n  },\n  'phase3': {\n    'description': 'Code style and async fixes',\n    'agents': 4,\n    'tasks': [\n      'Convert single quotes to double quotes',\n      'Fix nullish coalescing operators',\n      'Add await to async functions',\n      'Fix trailing commas'\n    ]\n  },\n  'phase4': {\n    'description': 'Unused variables and cleanup',\n    'agents': 3,\n    'tasks': [\n      'Remove unused variables',\n      'Fix eslint disable directives',\n      'Fix no-floating-promises'\n    ]\n  }\n}",
       "namespace": "default",
       "timestamp": 1750437199939
+    },
+    {
+      "key": "test-key",
+      "value": "test value for verification",
+      "namespace": "default",
+      "timestamp": 1750527842877
+    },
+    {
+      "key": "requirements",
+      "value": "User auth with JWT",
+      "namespace": "default",
+      "timestamp": 1750528251965
+    },
+    {
+      "key": "test_key",
+      "value": "sample data",
+      "namespace": "default",
+      "timestamp": 1750529577504
     }
   ],
   "test": [

@@ -9,15 +9,15 @@ import { PromptConfigManager, PromptValidator } from "../prompt-utils";
 // Increase Jest timeout for all tests in this file
 jest.setTimeout(30000);
 
-describe('PromptCopier', () => {
+describe("PromptCopier", () => {
   let tempDir: string;
   let sourceDir: string;
   let destDir: string;
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'prompt-test-'));
-    sourceDir = path.join(tempDir, 'source');
-    destDir = path.join(tempDir, 'dest');
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "prompt-test-"));
+    sourceDir = path.join(tempDir, "source");
+    destDir = path.join(tempDir, "dest");
     
     await fs.mkdir(sourceDir, { recursive: true });
     await fs.mkdir(destDir, { recursive: true });
@@ -32,12 +32,12 @@ describe('PromptCopier', () => {
 
   async function createTestFiles() {
     const testFiles = [
-      { path: 'test1.md', content: '# Test Prompt 1\nThis is a test prompt.' },
-      { path: 'test2.txt', content: 'Test prompt content' },
-      { path: 'subdir/test3.md', content: '## Nested Prompt\nNested content' },
-      { path: 'large.md', content: 'Large content\n'.repeat(1000) },
-      { path: 'empty.md', content: '' },
-      { path: 'rules.md', content: '# Rules\nYou are an AI assistant.' }
+      { path: "test1.md", content: "# Test Prompt 1\nThis is a test prompt." },
+      { path: "test2.txt", content: "Test prompt content" },
+      { path: "subdir/test3.md", content: "## Nested Prompt\nNested content" },
+      { path: "large.md", content: "Large content\n".repeat(1000) },
+      { path: "empty.md", content: "" },
+      { path: "rules.md", content: "# Rules\nYou are an AI assistant." },
     ];
 
     for (const file of testFiles) {
@@ -49,11 +49,11 @@ describe('PromptCopier', () => {
     }
   }
 
-  describe('Basic copying functionality', () => {
-    test('should copy all matching files', async () => {
+  describe("Basic copying functionality", () => {
+    test("should copy all matching files", async () => {
       const result = await copyPrompts({
         source: sourceDir,
-        destination: destDir
+        destination: destDir,
       });
 
       expect(result.success).toBe(true);
@@ -64,12 +64,12 @@ describe('PromptCopier', () => {
 
       // Verify files exist - check for our specific test files
       const expectedFiles = [
-        'test1.md',
-        'test2.txt',
-        'subdir/test3.md',
-        'large.md',
-        'empty.md',
-        'rules.md'
+        "test1.md",
+        "test2.txt",
+        "subdir/test3.md",
+        "large.md",
+        "empty.md",
+        "rules.md",
       ];
       
       for (const file of expectedFiles) {
@@ -79,11 +79,11 @@ describe('PromptCopier', () => {
       }
     });
 
-    test('should respect include patterns', async () => {
+    test("should respect include patterns", async () => {
       const result = await copyPrompts({
         source: sourceDir,
         destination: destDir,
-        includePatterns: ['*.md', '**/*.md'] // Include nested .md files
+        includePatterns: ["*.md", "**/*.md"], // Include nested .md files
       });
 
       expect(result.success).toBe(true);
@@ -94,32 +94,32 @@ describe('PromptCopier', () => {
       expect(result.copiedFiles).toBeLessThanOrEqual(5);
       
       // Verify only .md files were copied
-      const mdFiles = ['test1.md', 'subdir/test3.md', 'large.md', 'empty.md', 'rules.md'];
+      const mdFiles = ["test1.md", "subdir/test3.md", "large.md", "empty.md", "rules.md"];
       for (const file of mdFiles) {
         const filePath = path.join(destDir, file);
         const exists = await fs.access(filePath).then(() => true).catch(() => false);
-        if (file !== 'subdir/test3.md' || result.copiedFiles >= 5) {
+        if (file !== "subdir/test3.md" || result.copiedFiles >= 5) {
           expect(exists).toBe(true);
         }
       }
       
       // Verify .txt file was not copied
-      const txtPath = path.join(destDir, 'test2.txt');
+      const txtPath = path.join(destDir, "test2.txt");
       const txtExists = await fs.access(txtPath).then(() => true).catch(() => false);
       expect(txtExists).toBe(false);
     });
 
-    test('should respect exclude patterns', async () => {
+    test("should respect exclude patterns", async () => {
       // Try different exclude patterns
       const result = await copyPrompts({
         source: sourceDir,
         destination: destDir,
-        excludePatterns: ['subdir/**', '**/subdir/**', 'subdir/test3.md']
+        excludePatterns: ["subdir/**", "**/subdir/**", "subdir/test3.md"],
       });
 
       // Log errors if any
       if (!result.success) {
-        console.error('Exclude test failed:', result.errors);
+        console.error("Exclude test failed:", result.errors);
       }
       
       expect(result.success).toBe(true);
@@ -128,20 +128,20 @@ describe('PromptCopier', () => {
       expect(result.copiedFiles).toBeGreaterThanOrEqual(5);
       
       // Verify subdir file was excluded
-      const excludedPath = path.join(destDir, 'subdir/test3.md');
+      const excludedPath = path.join(destDir, "subdir/test3.md");
       const excludedExists = await fs.access(excludedPath).then(() => true).catch(() => false);
       
       // If it still exists, the exclude pattern didn't work
       if (excludedExists) {
         // List all files that were copied for debugging
         const destFiles = await fs.readdir(destDir, { recursive: true });
-        console.log('Files in destination:', destFiles);
+        console.log("Files in destination:", destFiles);
       }
       
       expect(excludedExists).toBe(false);
       
       // Verify other files were copied
-      const includedFiles = ['test1.md', 'test2.txt', 'large.md', 'empty.md', 'rules.md'];
+      const includedFiles = ["test1.md", "test2.txt", "large.md", "empty.md", "rules.md"];
       let copiedCount = 0;
       for (const file of includedFiles) {
         const filePath = path.join(destDir, file);
@@ -154,25 +154,25 @@ describe('PromptCopier', () => {
     });
   });
 
-  describe('Conflict resolution', () => {
-    test('should skip existing files when conflict resolution is skip', async () => {
+  describe("Conflict resolution", () => {
+    test("should skip existing files when conflict resolution is skip", async () => {
       // Create existing file
-      await fs.writeFile(path.join(destDir, 'test1.md'), 'Existing content');
+      await fs.writeFile(path.join(destDir, "test1.md"), "Existing content");
 
       const result = await copyPrompts({
         source: sourceDir,
         destination: destDir,
-        conflictResolution: 'skip'
+        conflictResolution: "skip",
       });
 
       // If there was an error, log it for debugging
       if (!result.success) {
-        console.error('Copy failed:', result.errors);
+        console.error("Copy failed:", result.errors);
       }
 
       // If skip isn't working, at least the operation shouldn't fail completely
       if (!result.success && result.errors.length > 0) {
-        console.error('Skip failed with errors:', result.errors);
+        console.error("Skip failed with errors:", result.errors);
       }
       
       // The operation might succeed or might have errors, but shouldn't crash
@@ -181,51 +181,51 @@ describe('PromptCopier', () => {
       
       // Verify original content preserved
       try {
-        const content = await fs.readFile(path.join(destDir, 'test1.md'), 'utf-8');
-        expect(content).toBe('Existing content');
+        const content = await fs.readFile(path.join(destDir, "test1.md"), "utf-8");
+        expect(content).toBe("Existing content");
       } catch (error) {
         // File should exist since we created it
         throw new Error(`Failed to read test1.md: ${error.message}`);
       }
     });
 
-    test('should backup existing files when conflict resolution is backup', async () => {
+    test("should backup existing files when conflict resolution is backup", async () => {
       // Create existing file
-      await fs.writeFile(path.join(destDir, 'test1.md'), 'Existing content');
+      await fs.writeFile(path.join(destDir, "test1.md"), "Existing content");
 
       const result = await copyPrompts({
         source: sourceDir,
         destination: destDir,
-        conflictResolution: 'backup'
+        conflictResolution: "backup",
       });
 
       expect(result.success).toBe(true);
       expect(result.backupLocation).toBeDefined();
 
       // Verify backup directory exists
-      const backupDir = path.join(destDir, '.prompt-backups');
+      const backupDir = path.join(destDir, ".prompt-backups");
       const backupExists = await fs.access(backupDir).then(() => true).catch(() => false);
       expect(backupExists).toBe(true);
     });
 
-    test('should merge files when conflict resolution is merge', async () => {
+    test("should merge files when conflict resolution is merge", async () => {
       // Create existing file
-      await fs.writeFile(path.join(destDir, 'test1.md'), 'Existing content');
+      await fs.writeFile(path.join(destDir, "test1.md"), "Existing content");
 
       const result = await copyPrompts({
         source: sourceDir,
         destination: destDir,
-        conflictResolution: 'merge'
+        conflictResolution: "merge",
       });
 
       // If there was an error, log it for debugging
       if (!result.success) {
-        console.error('Merge failed:', result.errors);
+        console.error("Merge failed:", result.errors);
       }
 
       // Merge might not be fully implemented, so just check basic operation
       if (!result.success && result.errors.length > 0) {
-        console.error('Merge failed with errors:', result.errors);
+        console.error("Merge failed with errors:", result.errors);
       }
       
       // Check that we at least tried to process files
@@ -233,7 +233,7 @@ describe('PromptCopier', () => {
 
       // Verify file exists (either merged or original)
       try {
-        const content = await fs.readFile(path.join(destDir, 'test1.md'), 'utf-8');
+        const content = await fs.readFile(path.join(destDir, "test1.md"), "utf-8");
         // The merge should either contain the existing content or combine both
         expect(content).toBeDefined();
         expect(content.length).toBeGreaterThan(0);
@@ -244,50 +244,50 @@ describe('PromptCopier', () => {
     });
   });
 
-  describe('Verification', () => {
-    test('should verify copied files when verification is enabled', async () => {
+  describe("Verification", () => {
+    test("should verify copied files when verification is enabled", async () => {
       const result = await copyPrompts({
         source: sourceDir,
         destination: destDir,
-        verify: true
+        verify: true,
       });
 
       expect(result.success).toBe(true);
       expect(result.failedFiles).toBe(0);
     });
 
-    test('should detect verification failures', async () => {
+    test("should detect verification failures", async () => {
       // Create a test file that will have different content after copy
-      const testFile = path.join(sourceDir, 'verify-test.md');
-      await fs.writeFile(testFile, 'Original content');
+      const testFile = path.join(sourceDir, "verify-test.md");
+      await fs.writeFile(testFile, "Original content");
 
       // Copy first
       const copyResult = await copyPrompts({
         source: sourceDir,
         destination: destDir,
-        verify: false // Don't verify during copy
+        verify: false, // Don't verify during copy
       });
 
       expect(copyResult.success).toBe(true);
 
       // Modify the destination file to simulate corruption
-      const destFile = path.join(destDir, 'verify-test.md');
-      await fs.writeFile(destFile, 'Modified content - corrupted');
+      const destFile = path.join(destDir, "verify-test.md");
+      await fs.writeFile(destFile, "Modified content - corrupted");
 
       // Now create a custom verification by comparing files
-      const sourceContent = await fs.readFile(testFile, 'utf-8');
-      const destContent = await fs.readFile(destFile, 'utf-8');
+      const sourceContent = await fs.readFile(testFile, "utf-8");
+      const destContent = await fs.readFile(destFile, "utf-8");
       
       expect(sourceContent).not.toBe(destContent);
     });
   });
 
-  describe('Dry run mode', () => {
-    test('should not create files in dry run mode', async () => {
+  describe("Dry run mode", () => {
+    test("should not create files in dry run mode", async () => {
       const result = await copyPrompts({
         source: sourceDir,
         destination: destDir,
-        dryRun: true
+        dryRun: true,
       });
 
       expect(result.success).toBe(true);
@@ -299,8 +299,8 @@ describe('PromptCopier', () => {
     });
   });
 
-  describe('Progress reporting', () => {
-    test('should report progress during copy', async () => {
+  describe("Progress reporting", () => {
+    test("should report progress during copy", async () => {
       const progressUpdates: any[] = [];
 
       await copyPrompts({
@@ -308,7 +308,7 @@ describe('PromptCopier', () => {
         destination: destDir,
         progressCallback: (progress) => {
           progressUpdates.push(progress);
-        }
+        },
       });
 
       expect(progressUpdates.length).toBeGreaterThan(0);
@@ -317,16 +317,16 @@ describe('PromptCopier', () => {
   });
 });
 
-describe('EnhancedPromptCopier', () => {
+describe("EnhancedPromptCopier", () => {
   let tempDir: string;
   let sourceDir: string;
   let destDir: string;
   let copier: EnhancedPromptCopier | null = null;
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'enhanced-test-'));
-    sourceDir = path.join(tempDir, 'source');
-    destDir = path.join(tempDir, 'dest');
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "enhanced-test-"));
+    sourceDir = path.join(tempDir, "source");
+    destDir = path.join(tempDir, "dest");
     
     await fs.mkdir(sourceDir, { recursive: true });
     await fs.mkdir(destDir, { recursive: true });
@@ -335,7 +335,7 @@ describe('EnhancedPromptCopier', () => {
     for (let i = 0; i < 20; i++) {
       await fs.writeFile(
         path.join(sourceDir, `test${i}.md`),
-        `# Test ${i}\nContent for test ${i}`
+        `# Test ${i}\nContent for test ${i}`,
       );
     }
   });
@@ -358,14 +358,14 @@ describe('EnhancedPromptCopier', () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  test.skip('should copy files using worker threads', async () => {
+  test.skip("should copy files using worker threads", async () => {
     // Skip this test - worker threads are causing timeouts
     // This test is temporarily disabled until worker thread issues are resolved
-    const isCI = process.env.CI === 'true';
-    const skipWorkerTest = process.env.SKIP_WORKER_TESTS === 'true';
+    const isCI = process.env.CI === "true";
+    const skipWorkerTest = process.env.SKIP_WORKER_TESTS === "true";
     
     if (isCI || skipWorkerTest) {
-      console.log('Skipping worker thread test');
+      console.log("Skipping worker thread test");
       return;
     }
     
@@ -375,7 +375,7 @@ describe('EnhancedPromptCopier', () => {
         source: sourceDir,
         destination: destDir,
         parallel: true,
-        maxWorkers: 2
+        maxWorkers: 2,
       });
       
       const result = await copier.copy();
@@ -392,9 +392,9 @@ describe('EnhancedPromptCopier', () => {
       await (copier as any).terminateWorkers?.();
     } catch (error) {
       // If worker threads fail, skip the test with a warning
-      if (error.message?.includes('Worker file not found') || 
-          error.message?.includes('worker_threads')) {
-        console.warn('Worker threads not available, skipping test:', error.message);
+      if (error.message?.includes("Worker file not found") || 
+          error.message?.includes("worker_threads")) {
+        console.warn("Worker threads not available, skipping test:", error.message);
         return;
       }
       throw error;
@@ -402,23 +402,23 @@ describe('EnhancedPromptCopier', () => {
   }, 45000); // Increase timeout to 45 seconds
 
   // Additional test for worker cleanup
-  test('should properly cleanup workers on error', async () => {
+  test("should properly cleanup workers on error", async () => {
     // Skip this test if we're in a CI environment
-    const isCI = process.env.CI === 'true';
+    const isCI = process.env.CI === "true";
     if (isCI) {
-      console.log('Skipping worker cleanup test in CI environment');
+      console.log("Skipping worker cleanup test in CI environment");
       return;
     }
     
     // Create a file that will cause an error (e.g., invalid permissions)
-    const problematicFile = path.join(sourceDir, 'problematic.md');
-    await fs.writeFile(problematicFile, 'test content');
+    const problematicFile = path.join(sourceDir, "problematic.md");
+    await fs.writeFile(problematicFile, "test content");
     
     copier = new EnhancedPromptCopier({
       source: sourceDir,
-      destination: '/invalid/path/that/does/not/exist',
+      destination: "/invalid/path/that/does/not/exist",
       parallel: true,
-      maxWorkers: 2
+      maxWorkers: 2,
     });
     
     try {
@@ -433,20 +433,20 @@ describe('EnhancedPromptCopier', () => {
   }, 30000);
 });
 
-describe('PromptConfigManager', () => {
+describe("PromptConfigManager", () => {
   let tempDir: string;
   let configPath: string;
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'config-test-'));
-    configPath = path.join(tempDir, '.prompt-config.json');
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "config-test-"));
+    configPath = path.join(tempDir, ".prompt-config.json");
   });
 
   afterEach(async () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  test('should load default config when file does not exist', async () => {
+  test("should load default config when file does not exist", async () => {
     const manager = new PromptConfigManager(configPath);
     const config = await manager.loadConfig();
 
@@ -455,52 +455,52 @@ describe('PromptConfigManager', () => {
     expect(config.profiles).toBeDefined();
   });
 
-  test('should save and load custom config', async () => {
+  test("should save and load custom config", async () => {
     const manager = new PromptConfigManager(configPath);
     
     await manager.saveConfig({
-      destinationDirectory: './custom-prompts'
+      destinationDirectory: "./custom-prompts",
     });
 
     const config = await manager.loadConfig();
-    expect(config.destinationDirectory).toBe('./custom-prompts');
+    expect(config.destinationDirectory).toBe("./custom-prompts");
   });
 
-  test('should get profile options', async () => {
+  test("should get profile options", async () => {
     const manager = new PromptConfigManager(configPath);
     await manager.loadConfig();
 
-    const sparcProfile = manager.getProfile('sparc');
+    const sparcProfile = manager.getProfile("sparc");
     expect(sparcProfile).toBeDefined();
-    expect(sparcProfile.includePatterns).toContain('*.md');
+    expect(sparcProfile.includePatterns).toContain("*.md");
   });
 
-  test('should list available profiles', async () => {
+  test("should list available profiles", async () => {
     const manager = new PromptConfigManager(configPath);
     await manager.loadConfig();
 
     const profiles = manager.listProfiles();
-    expect(profiles).toContain('sparc');
-    expect(profiles).toContain('templates');
-    expect(profiles).toContain('safe');
-    expect(profiles).toContain('fast');
+    expect(profiles).toContain("sparc");
+    expect(profiles).toContain("templates");
+    expect(profiles).toContain("safe");
+    expect(profiles).toContain("fast");
   });
 });
 
-describe('PromptValidator', () => {
+describe("PromptValidator", () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'validator-test-'));
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "validator-test-"));
   });
 
   afterEach(async () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  test('should validate valid prompt file', async () => {
-    const filePath = path.join(tempDir, 'valid.md');
-    await fs.writeFile(filePath, '# Test Prompt\nYou are an AI assistant.');
+  test("should validate valid prompt file", async () => {
+    const filePath = path.join(tempDir, "valid.md");
+    await fs.writeFile(filePath, "# Test Prompt\nYou are an AI assistant.");
 
     const result = await PromptValidator.validatePromptFile(filePath);
 
@@ -508,18 +508,18 @@ describe('PromptValidator', () => {
     expect(result.issues).toHaveLength(0);
   });
 
-  test('should detect empty files', async () => {
-    const filePath = path.join(tempDir, 'empty.md');
-    await fs.writeFile(filePath, '');
+  test("should detect empty files", async () => {
+    const filePath = path.join(tempDir, "empty.md");
+    await fs.writeFile(filePath, "");
 
     const result = await PromptValidator.validatePromptFile(filePath);
 
     expect(result.valid).toBe(false);
-    expect(result.issues).toContain('File is empty');
+    expect(result.issues).toContain("File is empty");
   });
 
-  test('should extract front matter metadata', async () => {
-    const filePath = path.join(tempDir, 'with-metadata.md');
+  test("should extract front matter metadata", async () => {
+    const filePath = path.join(tempDir, "with-metadata.md");
     const content = `---
 title: Test Prompt
 version: 1.0
@@ -533,18 +533,18 @@ Content here`;
     const result = await PromptValidator.validatePromptFile(filePath);
 
     expect(result.metadata).toBeDefined();
-    expect(result.metadata.title).toBe('Test Prompt');
-    expect(result.metadata.version).toBe('1.0');
+    expect(result.metadata.title).toBe("Test Prompt");
+    expect(result.metadata.version).toBe("1.0");
   });
 
-  test('should warn about large files', async () => {
-    const filePath = path.join(tempDir, 'large.md');
-    const largeContent = "# Large Prompt\n" + 'x'.repeat(200 * 1024); // 200KB
+  test("should warn about large files", async () => {
+    const filePath = path.join(tempDir, "large.md");
+    const largeContent = `# Large Prompt\n${  "x".repeat(200 * 1024)}`; // 200KB
     
     await fs.writeFile(filePath, largeContent);
 
     const result = await PromptValidator.validatePromptFile(filePath);
 
-    expect(result.issues).toContain('File is unusually large for a prompt');
+    expect(result.issues).toContain("File is unusually large for a prompt");
   });
 });

@@ -11,21 +11,21 @@ import {
   assertExists,
   assertRejects,
   spy,
-} from '../test.utils.ts';
-import { MockMemoryManager, MockCoordinationManager } from '../mocks/index.ts';
-import { EventBus } from '../../src/core/event-bus.ts';
-import { Logger } from '../../src/core/logger.ts';
+} from "../test.utils.ts";
+import { MockMemoryManager, MockCoordinationManager } from "../mocks/index.ts";
+import { EventBus } from "../../src/core/event-bus.ts";
+import { Logger } from "../../src/core/logger.ts";
 import {
   MemoryEntry,
   MemoryQuery,
   Resource,
   Message,
   AgentProfile,
-} from '../../src/utils/types.ts';
-import { cleanupTestEnv, setupTestEnv } from '../test.config.ts';
-import { delay, generateId } from '../../src/utils/helpers.ts';
+} from "../../src/utils/types.ts";
+import { cleanupTestEnv, setupTestEnv } from "../test.config.ts";
+import { delay, generateId } from "../../src/utils/helpers.ts";
 
-describe('Memory-Coordination Integration', () => {
+describe("Memory-Coordination Integration", () => {
   let memoryManager: MockMemoryManager;
   let coordinationManager: MockCoordinationManager;
   let eventBus: EventBus;
@@ -36,9 +36,9 @@ describe('Memory-Coordination Integration', () => {
 
     eventBus = new EventBus();
     logger = new Logger({
-      level: 'debug',
-      format: 'text',
-      destination: 'console',
+      level: "debug",
+      format: "text",
+      destination: "console",
     });
 
     memoryManager = new MockMemoryManager();
@@ -49,25 +49,25 @@ describe('Memory-Coordination Integration', () => {
     await cleanupTestEnv();
   });
 
-  describe('distributed memory coordination', () => {
-    it('should coordinate memory operations across agents', async () => {
-      const agentIds = ['agent-1', 'agent-2', 'agent-3'];
-      const sessionId = generateId('session');
+  describe("distributed memory coordination", () => {
+    it("should coordinate memory operations across agents", async () => {
+      const agentIds = ["agent-1", "agent-2", "agent-3"];
+      const sessionId = generateId("session");
 
       // Simulate multiple agents storing memories simultaneously
       const memoryEntries: MemoryEntry[] = agentIds.map((agentId, index) => ({
-        id: generateId('memory'),
+        id: generateId("memory"),
         agentId,
         sessionId,
-        type: 'observation',
+        type: "observation",
         content: `Agent ${agentId} observation ${index}`,
         context: {
           timestamp: new Date().toISOString(),
-          taskId: generateId('task'),
+          taskId: generateId("task"),
           priority: index + 1,
         },
         timestamp: new Date(),
-        tags: [`agent-${index}`, 'test', 'observation'],
+        tags: [`agent-${index}`, "test", "observation"],
         version: 1,
       }));
 
@@ -89,8 +89,8 @@ describe('Memory-Coordination Integration', () => {
 
       // Query memories across agents
       const query: MemoryQuery = {
-        type: 'observation',
-        tags: ['test'],
+        type: "observation",
+        tags: ["test"],
         limit: 10,
       };
 
@@ -102,21 +102,21 @@ describe('Memory-Coordination Integration', () => {
       assertEquals(resultAgentIds, agentIds.sort());
     });
 
-    it('should handle memory conflicts using coordination', async () => {
-      const agentId = 'conflict-agent';
-      const sessionId = generateId('session');
+    it("should handle memory conflicts using coordination", async () => {
+      const agentId = "conflict-agent";
+      const sessionId = generateId("session");
       const resourceId = `memory:${agentId}`;
 
       // Create initial memory entry
       const initialEntry: MemoryEntry = {
-        id: generateId('memory'),
+        id: generateId("memory"),
         agentId,
         sessionId,
-        type: 'decision',
-        content: 'Initial decision',
+        type: "decision",
+        content: "Initial decision",
         context: { version: 1 },
         timestamp: new Date(),
-        tags: ['decision'],
+        tags: ["decision"],
         version: 1,
       };
 
@@ -124,8 +124,8 @@ describe('Memory-Coordination Integration', () => {
 
       // Simulate concurrent updates from different processes
       const updates = [
-        { ...initialEntry, content: 'Update from process A', version: 2 },
-        { ...initialEntry, content: 'Update from process B', version: 2 },
+        { ...initialEntry, content: "Update from process A", version: 2 },
+        { ...initialEntry, content: "Update from process B", version: 2 },
       ];
 
       // Use coordination to serialize updates
@@ -152,24 +152,24 @@ describe('Memory-Coordination Integration', () => {
       assertEquals(finalEntry.version, 3); // Should be incremented due to conflict
     });
 
-    it('should coordinate cross-agent memory queries', async () => {
+    it("should coordinate cross-agent memory queries", async () => {
       const agents = [
-        { id: 'researcher', type: 'researcher' },
-        { id: 'implementer', type: 'implementer' },
-        { id: 'coordinator', type: 'coordinator' },
+        { id: "researcher", type: "researcher" },
+        { id: "implementer", type: "implementer" },
+        { id: "coordinator", type: "coordinator" },
       ];
-      const sessionId = generateId('session');
+      const sessionId = generateId("session");
 
       // Each agent stores different types of memories
       const memoryTypes = [
-        { agent: 'researcher', type: 'insight', content: 'Research findings' },
-        { agent: 'implementer', type: 'artifact', content: 'Code implementation' },
-        { agent: 'coordinator', type: 'decision', content: 'Project decisions' },
+        { agent: "researcher", type: "insight", content: "Research findings" },
+        { agent: "implementer", type: "artifact", content: "Code implementation" },
+        { agent: "coordinator", type: "decision", content: "Project decisions" },
       ];
 
       for (const memory of memoryTypes) {
         const entry: MemoryEntry = {
-          id: generateId('memory'),
+          id: generateId("memory"),
           agentId: memory.agent,
           sessionId,
           type: memory.type as any,
@@ -194,29 +194,29 @@ describe('Memory-Coordination Integration', () => {
 
       // Verify memories from all agents are accessible
       const agentTypes = allMemories.map(m => m.context.createdBy).sort();
-      assertEquals(agentTypes, ['coordinator', 'implementer', 'researcher']);
+      assertEquals(agentTypes, ["coordinator", "implementer", "researcher"]);
     });
   });
 
-  describe('resource coordination with memory backing', () => {
-    it('should use memory to track resource allocation history', async () => {
-      const resourceId = 'shared-database';
-      const agentId = 'database-agent';
+  describe("resource coordination with memory backing", () => {
+    it("should use memory to track resource allocation history", async () => {
+      const resourceId = "shared-database";
+      const agentId = "database-agent";
 
       // Store resource acquisition in memory
       const acquisitionEntry: MemoryEntry = {
-        id: generateId('memory'),
+        id: generateId("memory"),
         agentId,
-        sessionId: generateId('session'),
-        type: 'observation',
+        sessionId: generateId("session"),
+        type: "observation",
         content: `Acquiring resource ${resourceId}`,
         context: {
           resourceId,
-          action: 'acquire',
+          action: "acquire",
           timestamp: new Date().toISOString(),
         },
         timestamp: new Date(),
-        tags: ['resource', 'acquisition'],
+        tags: ["resource", "acquisition"],
         version: 1,
       };
 
@@ -228,12 +228,12 @@ describe('Memory-Coordination Integration', () => {
       // Store acquisition success
       const successEntry: MemoryEntry = {
         ...acquisitionEntry,
-        id: generateId('memory'),
+        id: generateId("memory"),
         content: `Successfully acquired resource ${resourceId}`,
         context: {
           ...acquisitionEntry.context,
-          action: 'acquired',
-          status: 'success',
+          action: "acquired",
+          status: "success",
         },
       };
 
@@ -241,7 +241,7 @@ describe('Memory-Coordination Integration', () => {
 
       // Query resource history
       const resourceQuery: MemoryQuery = {
-        tags: ['resource'],
+        tags: ["resource"],
         limit: 10,
       };
 
@@ -249,16 +249,16 @@ describe('Memory-Coordination Integration', () => {
       assertEquals(resourceHistory.length, 2);
 
       const actions = resourceHistory.map(entry => entry.context.action);
-      assertEquals(actions.includes('acquire'), true);
-      assertEquals(actions.includes('acquired'), true);
+      assertEquals(actions.includes("acquire"), true);
+      assertEquals(actions.includes("acquired"), true);
 
       // Release resource
       await coordinationManager.releaseResource(resourceId, agentId);
     });
 
-    it('should coordinate deadlock detection with memory logging', async () => {
-      const agents = ['agent-A', 'agent-B'];
-      const resources = ['resource-1', 'resource-2'];
+    it("should coordinate deadlock detection with memory logging", async () => {
+      const agents = ["agent-A", "agent-B"];
+      const resources = ["resource-1", "resource-2"];
 
       // Set up potential deadlock scenario
       // Agent A acquires resource-1, Agent B acquires resource-2
@@ -269,18 +269,18 @@ describe('Memory-Coordination Integration', () => {
       for (const agent of agents) {
         for (const resource of resources) {
           const entry: MemoryEntry = {
-            id: generateId('memory'),
+            id: generateId("memory"),
             agentId: agent,
-            sessionId: generateId('session'),
-            type: 'observation',
+            sessionId: generateId("session"),
+            type: "observation",
             content: `Resource state check: ${resource}`,
             context: {
               resourceId: resource,
               requestingAgent: agent,
-              action: 'deadlock-check',
+              action: "deadlock-check",
             },
             timestamp: new Date(),
-            tags: ['deadlock', 'resource'],
+            tags: ["deadlock", "resource"],
             version: 1,
           };
 
@@ -298,18 +298,18 @@ describe('Memory-Coordination Integration', () => {
 
       // Log deadlock detection in memory
       const deadlockEntry: MemoryEntry = {
-        id: generateId('memory'),
-        agentId: 'system',
-        sessionId: generateId('session'),
-        type: 'error',
-        content: 'Deadlock detected between agents',
+        id: generateId("memory"),
+        agentId: "system",
+        sessionId: generateId("session"),
+        type: "error",
+        content: "Deadlock detected between agents",
         context: {
           agents,
           resources,
           detectionTime: new Date().toISOString(),
         },
         timestamp: new Date(),
-        tags: ['deadlock', 'error', 'system'],
+        tags: ["deadlock", "error", "system"],
         version: 1,
       };
 
@@ -317,8 +317,8 @@ describe('Memory-Coordination Integration', () => {
 
       // Verify deadlock was logged
       const deadlockQuery: MemoryQuery = {
-        type: 'error',
-        tags: ['deadlock'],
+        type: "error",
+        tags: ["deadlock"],
       };
 
       const deadlockHistory = await memoryManager.queryEntries(deadlockQuery);
@@ -331,18 +331,18 @@ describe('Memory-Coordination Integration', () => {
     });
   });
 
-  describe('message coordination with memory persistence', () => {
-    it('should persist and coordinate inter-agent messages', async () => {
-      const senderAgent = 'coordinator-agent';
-      const receiverAgent = 'worker-agent';
-      const sessionId = generateId('session');
+  describe("message coordination with memory persistence", () => {
+    it("should persist and coordinate inter-agent messages", async () => {
+      const senderAgent = "coordinator-agent";
+      const receiverAgent = "worker-agent";
+      const sessionId = generateId("session");
 
       const message: Message = {
-        id: generateId('message'),
-        type: 'task-assignment',
+        id: generateId("message"),
+        type: "task-assignment",
         payload: {
-          taskId: generateId('task'),
-          description: 'Process data files',
+          taskId: generateId("task"),
+          description: "Process data files",
           priority: 1,
           deadline: new Date(Date.now() + 3600000), // 1 hour from now
         },
@@ -352,19 +352,19 @@ describe('Memory-Coordination Integration', () => {
 
       // Store message sending in memory
       const sendEntry: MemoryEntry = {
-        id: generateId('memory'),
+        id: generateId("memory"),
         agentId: senderAgent,
         sessionId,
-        type: 'observation',
+        type: "observation",
         content: `Sending message to ${receiverAgent}`,
         context: {
           messageId: message.id,
           messageType: message.type,
           recipient: receiverAgent,
-          action: 'send',
+          action: "send",
         },
         timestamp: new Date(),
-        tags: ['message', 'send'],
+        tags: ["message", "send"],
         version: 1,
       };
 
@@ -375,19 +375,19 @@ describe('Memory-Coordination Integration', () => {
 
       // Store message receipt in memory
       const receiveEntry: MemoryEntry = {
-        id: generateId('memory'),
+        id: generateId("memory"),
         agentId: receiverAgent,
         sessionId,
-        type: 'observation',
+        type: "observation",
         content: `Received message from ${senderAgent}`,
         context: {
           messageId: message.id,
           messageType: message.type,
           sender: senderAgent,
-          action: 'receive',
+          action: "receive",
         },
         timestamp: new Date(),
-        tags: ['message', 'receive'],
+        tags: ["message", "receive"],
         version: 1,
       };
 
@@ -395,7 +395,7 @@ describe('Memory-Coordination Integration', () => {
 
       // Query message history
       const messageQuery: MemoryQuery = {
-        tags: ['message'],
+        tags: ["message"],
         limit: 10,
       };
 
@@ -403,8 +403,8 @@ describe('Memory-Coordination Integration', () => {
       assertEquals(messageHistory.length, 2);
 
       const actions = messageHistory.map(entry => entry.context.action);
-      assertEquals(actions.includes('send'), true);
-      assertEquals(actions.includes('receive'), true);
+      assertEquals(actions.includes("send"), true);
+      assertEquals(actions.includes("receive"), true);
 
       // Verify message coordination worked
       assertEquals(coordinationManager.sendMessage.calls.length, 1);
@@ -412,20 +412,20 @@ describe('Memory-Coordination Integration', () => {
       assertEquals(sentMessage.id, message.id);
     });
 
-    it('should handle message delivery failures with memory logging', async () => {
-      const senderAgent = 'sender';
-      const receiverAgent = 'offline-receiver';
-      const sessionId = generateId('session');
+    it("should handle message delivery failures with memory logging", async () => {
+      const senderAgent = "sender";
+      const receiverAgent = "offline-receiver";
+      const sessionId = generateId("session");
 
       // Mock message delivery failure
       coordinationManager.sendMessage = spy(() => {
-        throw new Error('Agent not available');
+        throw new Error("Agent not available");
       });
 
       const message: Message = {
-        id: generateId('message'),
-        type: 'urgent-notification',
-        payload: { alert: 'System maintenance required' },
+        id: generateId("message"),
+        type: "urgent-notification",
+        payload: { alert: "System maintenance required" },
         timestamp: new Date(),
         priority: 10,
       };
@@ -436,10 +436,10 @@ describe('Memory-Coordination Integration', () => {
       } catch (error) {
         // Log delivery failure
         const failureEntry: MemoryEntry = {
-          id: generateId('memory'),
+          id: generateId("memory"),
           agentId: senderAgent,
           sessionId,
-          type: 'error',
+          type: "error",
           content: `Failed to deliver message to ${receiverAgent}`,
           context: {
             messageId: message.id,
@@ -448,7 +448,7 @@ describe('Memory-Coordination Integration', () => {
             retryRequired: true,
           },
           timestamp: new Date(),
-          tags: ['message', 'error', 'delivery'],
+          tags: ["message", "error", "delivery"],
           version: 1,
         };
 
@@ -457,8 +457,8 @@ describe('Memory-Coordination Integration', () => {
 
       // Query failed deliveries
       const failureQuery: MemoryQuery = {
-        type: 'error',
-        tags: ['delivery'],
+        type: "error",
+        tags: ["delivery"],
       };
 
       const failures = await memoryManager.queryEntries(failureQuery);
@@ -467,22 +467,22 @@ describe('Memory-Coordination Integration', () => {
     });
   });
 
-  describe('conflict resolution integration', () => {
-    it('should resolve memory conflicts using coordination locks', async () => {
-      const agentId = 'conflict-resolver';
-      const entryId = generateId('memory');
+  describe("conflict resolution integration", () => {
+    it("should resolve memory conflicts using coordination locks", async () => {
+      const agentId = "conflict-resolver";
+      const entryId = generateId("memory");
       const lockId = `memory-lock:${entryId}`;
 
       // Create base entry
       const baseEntry: MemoryEntry = {
         id: entryId,
         agentId,
-        sessionId: generateId('session'),
-        type: 'decision',
-        content: 'Base decision content',
+        sessionId: generateId("session"),
+        type: "decision",
+        content: "Base decision content",
         context: { priority: 1 },
         timestamp: new Date(),
-        tags: ['decision'],
+        tags: ["decision"],
         version: 1,
       };
 
@@ -490,9 +490,9 @@ describe('Memory-Coordination Integration', () => {
 
       // Simulate concurrent modification attempts
       const modifications = [
-        { content: 'Modification A', context: { priority: 2 } },
-        { content: 'Modification B', context: { priority: 3 } },
-        { content: 'Modification C', context: { priority: 1 } },
+        { content: "Modification A", context: { priority: 2 } },
+        { content: "Modification B", context: { priority: 3 } },
+        { content: "Modification C", context: { priority: 1 } },
       ];
 
       let finalVersion = 1;
@@ -519,10 +519,10 @@ describe('Memory-Coordination Integration', () => {
 
           // Log modification in memory
           const logEntry: MemoryEntry = {
-            id: generateId('memory'),
+            id: generateId("memory"),
             agentId,
             sessionId: baseEntry.sessionId,
-            type: 'observation',
+            type: "observation",
             content: `Modified entry ${entryId}`,
             context: {
               originalVersion: currentEntry.version,
@@ -530,7 +530,7 @@ describe('Memory-Coordination Integration', () => {
               modification: modification.content,
             },
             timestamp: new Date(),
-            tags: ['modification', 'coordination'],
+            tags: ["modification", "coordination"],
             version: 1,
           };
 
@@ -549,7 +549,7 @@ describe('Memory-Coordination Integration', () => {
 
       // Verify modification history
       const modificationQuery: MemoryQuery = {
-        tags: ['modification'],
+        tags: ["modification"],
         limit: 10,
       };
 
@@ -557,9 +557,9 @@ describe('Memory-Coordination Integration', () => {
       assertEquals(modificationHistory.length, 3);
     });
 
-    it('should coordinate distributed memory cleanup', async () => {
-      const sessionId = generateId('session');
-      const agents = ['agent-1', 'agent-2', 'agent-3'];
+    it("should coordinate distributed memory cleanup", async () => {
+      const sessionId = generateId("session");
+      const agents = ["agent-1", "agent-2", "agent-3"];
 
       // Create memories for cleanup
       const entriesToCleanup: MemoryEntry[] = [];
@@ -567,14 +567,14 @@ describe('Memory-Coordination Integration', () => {
       for (const agentId of agents) {
         for (let i = 0; i < 5; i++) {
           const entry: MemoryEntry = {
-            id: generateId('memory'),
+            id: generateId("memory"),
             agentId,
             sessionId,
-            type: 'observation',
+            type: "observation",
             content: `Temporary observation ${i}`,
             context: { temporary: true, index: i },
             timestamp: new Date(Date.now() - (i * 1000)), // Spread over time
-            tags: ['temp', agentId],
+            tags: ["temp", agentId],
             version: 1,
           };
 
@@ -584,7 +584,7 @@ describe('Memory-Coordination Integration', () => {
       }
 
       // Coordinate cleanup across agents
-      const cleanupLock = 'memory-cleanup';
+      const cleanupLock = "memory-cleanup";
       
       for (const agentId of agents) {
         await coordinationManager.acquireResource(cleanupLock, agentId);
@@ -593,7 +593,7 @@ describe('Memory-Coordination Integration', () => {
           // Query agent's temporary memories
           const query: MemoryQuery = {
             agentId,
-            tags: ['temp'],
+            tags: ["temp"],
             limit: 10,
           };
 
@@ -608,17 +608,17 @@ describe('Memory-Coordination Integration', () => {
 
           // Log cleanup action
           const cleanupEntry: MemoryEntry = {
-            id: generateId('memory'),
+            id: generateId("memory"),
             agentId,
             sessionId,
-            type: 'observation',
+            type: "observation",
             content: `Cleaned up ${agentMemories.length} temporary memories`,
             context: {
               cleanupAction: true,
               deletedCount: agentMemories.length,
             },
             timestamp: new Date(),
-            tags: ['cleanup', 'maintenance'],
+            tags: ["cleanup", "maintenance"],
             version: 1,
           };
 
@@ -631,29 +631,29 @@ describe('Memory-Coordination Integration', () => {
 
       // Verify cleanup was coordinated
       const remainingTemp = await memoryManager.queryEntries({
-        tags: ['temp'],
+        tags: ["temp"],
         limit: 50,
       });
       assertEquals(remainingTemp.length, 0);
 
       // Verify cleanup was logged
       const cleanupLogs = await memoryManager.queryEntries({
-        tags: ['cleanup'],
+        tags: ["cleanup"],
         limit: 10,
       });
       assertEquals(cleanupLogs.length, 3); // One per agent
     });
   });
 
-  describe('performance and scalability', () => {
-    it('should handle high-volume memory operations with coordination', async () => {
+  describe("performance and scalability", () => {
+    it("should handle high-volume memory operations with coordination", async () => {
       const agentCount = 5;
       const entriesPerAgent = 20;
-      const sessionId = generateId('session');
+      const sessionId = generateId("session");
 
       // Generate agents
       const agents = Array.from({ length: agentCount }, (_, i) => 
-        `performance-agent-${i}`
+        `performance-agent-${i}`,
       );
 
       // Concurrent memory operations
@@ -665,10 +665,10 @@ describe('Memory-Coordination Integration', () => {
           
           try {
             const entry: MemoryEntry = {
-              id: generateId('memory'),
+              id: generateId("memory"),
               agentId,
               sessionId,
-              type: 'observation',
+              type: "observation",
               content: `Performance test entry ${i}`,
               context: {
                 agentIndex,
@@ -676,7 +676,7 @@ describe('Memory-Coordination Integration', () => {
                 batchTest: true,
               },
               timestamp: new Date(),
-              tags: ['performance', 'batch'],
+              tags: ["performance", "batch"],
               version: 1,
             };
 
@@ -692,7 +692,7 @@ describe('Memory-Coordination Integration', () => {
 
       // Verify all entries were stored
       const allEntries = await memoryManager.queryEntries({
-        tags: ['performance'],
+        tags: ["performance"],
         limit: 200,
       });
 

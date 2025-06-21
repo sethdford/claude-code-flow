@@ -474,7 +474,36 @@ export class AgentManager extends EventEmitter {
       throw new Error("Maximum agent limit reached");
     }
 
-    const template = this.templates.get(templateName);
+    // Enhanced template lookup - try multiple strategies
+    let template = this.templates.get(templateName);
+    
+    if (!template) {
+      // Strategy 1: Try exact type match (case insensitive)
+      Array.from(this.templates.entries()).forEach(([key, tmpl]) => {
+        if (!template && tmpl.type.toLowerCase() === templateName.toLowerCase()) {
+          template = tmpl;
+        }
+      });
+    }
+    
+    if (!template) {
+      // Strategy 2: Try exact name match (case insensitive)
+      Array.from(this.templates.entries()).forEach(([key, tmpl]) => {
+        if (!template && tmpl.name.toLowerCase() === templateName.toLowerCase()) {
+          template = tmpl;
+        }
+      });
+    }
+    
+    if (!template) {
+      // Strategy 3: Try partial name match (includes substring)
+      Array.from(this.templates.entries()).forEach(([key, tmpl]) => {
+        if (!template && tmpl.name.toLowerCase().includes(templateName.toLowerCase())) {
+          template = tmpl;
+        }
+      });
+    }
+    
     if (!template) {
       throw new Error(`Template ${templateName} not found`);
     }
@@ -963,7 +992,7 @@ export class AgentManager extends EventEmitter {
     const now = Date.now();
     const timeout = this.config.heartbeatInterval * 3;
 
-    for (const [agentId, agent] of this.agents) {
+    Array.from(this.agents.entries()).forEach(([agentId, agent]) => {
       const timeSinceHeartbeat = now - agent.lastHeartbeat.getTime();
       
       if (timeSinceHeartbeat > timeout && agent.status !== "offline" && agent.status !== "terminated") {
@@ -988,7 +1017,7 @@ export class AgentManager extends EventEmitter {
           });
         }
       }
-    }
+    });
   }
 
   // === TYPE GUARDS ===
@@ -1266,16 +1295,16 @@ export class AgentManager extends EventEmitter {
 
   private removeAgentFromPoolsAndClusters(agentId: string): void {
     // Remove from pools
-    for (const pool of this.pools.values()) {
+    Array.from(this.pools.values()).forEach(pool => {
       pool.availableAgents = pool.availableAgents.filter(a => a.id !== agentId);
       pool.busyAgents = pool.busyAgents.filter(a => a.id !== agentId);
       pool.currentSize = pool.availableAgents.length + pool.busyAgents.length;
-    }
+    });
 
     // Remove from clusters
-    for (const cluster of this.clusters.values()) {
+    Array.from(this.clusters.values()).forEach(cluster => {
       cluster.agents = cluster.agents.filter(a => a.id !== agentId);
-    }
+    });
   }
 
   private initializeScalingPolicies(): void {

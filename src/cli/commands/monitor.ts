@@ -251,14 +251,14 @@ class Dashboard {
       const activeAlerts = this.realTimeMonitor.getActiveAlerts();
       const timeSeries = this.realTimeMonitor.getAllTimeSeries();
 
-             return {
-         timestamp,
-         system: {
-           cpu: systemMetrics.cpuUsage,
-           memory: systemMetrics.memoryUsage / (1024 * 1024), // Convert to MB
-           agents: systemMetrics.activeAgents,
-           tasks: systemMetrics.runningTasks,
-         },
+      return {
+        timestamp,
+        system: {
+          cpu: systemMetrics.cpuUsage,
+          memory: systemMetrics.memoryUsage / (1024 * 1024), // Convert to MB
+          agents: systemMetrics.activeAgents,
+          tasks: systemMetrics.runningTasks,
+        },
         components: this.generateRealComponentStatus(),
         agents: this.generateRealAgentStatus(swarmMetrics),
         tasks: this.generateRealTaskStatus(timeSeries),
@@ -279,11 +279,11 @@ class Dashboard {
       const eventStats = this.eventBus.getEventStats();
       const componentEvents = eventStats.filter(stat => 
         stat.event.toLowerCase().includes(component) ||
-        (component === "orchestrator" && stat.event.includes("SYSTEM"))
+        (component === "orchestrator" && stat.event.includes("SYSTEM")),
       );
       
       const hasRecentActivity = componentEvents.some(stat => 
-        stat.lastEmitted && (Date.now() - stat.lastEmitted.getTime()) < 60000
+        stat.lastEmitted && (Date.now() - stat.lastEmitted.getTime()) < 60000,
       );
       
       result[component] = {
@@ -343,16 +343,16 @@ class Dashboard {
     
     for (let i = 0; i < Math.min(8, activeTasks + 3); i++) {
       const status = i < activeTasks ? "running" : 
-                   Math.random() > 0.7 ? "completed" : 
-                   Math.random() > 0.9 ? "failed" : "pending";
+        Math.random() > 0.7 ? "completed" : 
+          Math.random() > 0.9 ? "failed" : "pending";
       
       tasks.push({
         id: `task-${String(i + 1).padStart(3, "0")}`,
         type: taskTypes[Math.floor(Math.random() * taskTypes.length)],
         status: status as any,
         progress: status === "completed" ? 100 : 
-                 status === "failed" ? Math.floor(Math.random() * 50) :
-                 status === "running" ? Math.floor(Math.random() * 80 + 10) : 0,
+          status === "failed" ? Math.floor(Math.random() * 50) :
+            status === "running" ? Math.floor(Math.random() * 80 + 10) : 0,
         duration: status === "completed" ? Math.floor(Math.random() * 60000) : undefined,
       });
     }

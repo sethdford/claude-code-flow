@@ -385,7 +385,7 @@ export class NativeAdapter implements ITerminalAdapter {
       const testConfig = this.getTestCommand();
       const result = spawnSync(testConfig.cmd, testConfig.args, { 
         stdio: "ignore",
-        timeout: 5000 // 5 second timeout
+        timeout: 5000, // 5 second timeout
       });
       
       // Be more lenient with shell test - some shells may return non-zero even when working
@@ -396,11 +396,11 @@ export class NativeAdapter implements ITerminalAdapter {
       this.logger.info("Shell test completed", { 
         shell: this.shell, 
         status: result.status,
-        signal: result.signal 
+        signal: result.signal, 
       });
     } catch (error) {
       this.logger.warn(`Shell ${this.shell} test failed, falling back to sh`, { 
-        error: error instanceof Error ? error.message : String(error) 
+        error: error instanceof Error ? error.message : String(error), 
       });
       this.shell = "sh";
       
@@ -408,7 +408,7 @@ export class NativeAdapter implements ITerminalAdapter {
       try {
         const fallbackResult = spawnSync("sh", ["-c", "echo test"], { 
           stdio: "ignore",
-          timeout: 5000 
+          timeout: 5000, 
         });
         
         if (fallbackResult.error) {

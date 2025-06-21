@@ -93,11 +93,21 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
   --parallel \
   --monitor
 
+# Agent lifecycle management
+./claude-flow agent spawn researcher --name "DataAnalyst"
+./claude-flow agent spawn developer --name "CodeBot" 
+./claude-flow agent spawn analyzer --name "QualityBot"
+
 # SPARC methodology workflows
 ./claude-flow sparc run architect "design microservice architecture"
-./claude-flow sparc run code "implement user authentication API"
+./claude-flow sparc run coder "implement user authentication API"
 ./claude-flow sparc run tdd "create comprehensive test suite"
-./claude-flow sparc run security-review "audit authentication flow"
+./claude-flow sparc run reviewer "audit authentication flow"
+./claude-flow sparc run optimizer "improve database performance"
+./claude-flow sparc run documenter "generate API documentation"
+
+# List available SPARC modes
+./claude-flow sparc modes --verbose
 ```
 
 ### **🧠 Memory & Knowledge Management**
@@ -109,9 +119,13 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 # Query stored information
 ./claude-flow memory query "authentication patterns"
 
-# Task coordination
-./claude-flow task create research "Market analysis for AI development tools"
-./claude-flow task workflow examples/development-pipeline.json
+# Workflow management
+./claude-flow workflow --help
+./claude-flow cancel <task-id>
+
+# System monitoring
+./claude-flow status
+./claude-flow monitor --dashboard
 ```
 
 ---
@@ -132,12 +146,23 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 
 | Mode | Purpose | Example |
 |------|---------|---------|
-| `architect` | System design and architecture | `./claude-flow sparc run architect "design API"` |
-| `code` | Implementation and development | `./claude-flow sparc run code "user authentication"` |
-| `tdd` | Test-driven development | `./claude-flow sparc run tdd "payment system"` |
-| `security-review` | Security auditing | `./claude-flow sparc run security-review "auth flow"` |
-| `integration` | System integration testing | `./claude-flow sparc run integration "microservices"` |
-| `devops` | Deployment and CI/CD | `./claude-flow sparc run devops "k8s deployment"` |
+| `architect` | System design and architecture | `./claude-flow sparc run architect "design scalable API"` |
+| `coder` | Autonomous code generation | `./claude-flow sparc run coder "implement user service"` |
+| `researcher` | Deep research and analysis | `./claude-flow sparc run researcher "best practices for microservices"` |
+| `tdd` | Test-driven development | `./claude-flow sparc run tdd "create comprehensive test suite"` |
+| `reviewer` | Code review and quality | `./claude-flow sparc run reviewer "audit authentication flow"` |
+| `debugger` | Debug and fix issues | `./claude-flow sparc run debugger "resolve API timeout issues"` |
+| `tester` | Comprehensive testing | `./claude-flow sparc run tester "validate payment system"` |
+| `analyzer` | Code and data analysis | `./claude-flow sparc run analyzer "performance bottlenecks"` |
+| `optimizer` | Performance optimization | `./claude-flow sparc run optimizer "database query efficiency"` |
+| `documenter` | Documentation generation | `./claude-flow sparc run documenter "API documentation"` |
+| `designer` | UI/UX design | `./claude-flow sparc run designer "user dashboard layout"` |
+| `innovator` | Creative problem solving | `./claude-flow sparc run innovator "novel authentication methods"` |
+| `orchestrator` | Multi-agent coordination | `./claude-flow sparc run orchestrator "coordinate development team"` |
+| `swarm-coordinator` | Swarm management | `./claude-flow sparc run swarm-coordinator "manage agent swarms"` |
+| `memory-manager` | Knowledge management | `./claude-flow sparc run memory-manager "organize project knowledge"` |
+| `batch-executor` | Parallel task execution | `./claude-flow sparc run batch-executor "run multiple tasks"` |
+| `workflow-manager` | Process automation | `./claude-flow sparc run workflow-manager "automate CI/CD"` |
 
 ### **Advanced Features**
 
@@ -147,6 +172,36 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 | `memory` | Knowledge management | `./claude-flow memory store key "value"` |
 | `task` | Task orchestration | `./claude-flow task create research "AI trends"` |
 | `mcp` | MCP server management | `./claude-flow mcp status` |
+
+### **Enterprise Commands**
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `enterprise project` | Project lifecycle management | `./claude-flow enterprise project create "API Project" --type web-app` |
+| `enterprise deploy` | Deployment automation | `./claude-flow enterprise deploy create "v1.2.0" --strategy blue-green` |
+| `enterprise cloud` | Multi-cloud infrastructure | `./claude-flow enterprise cloud providers` |
+| `enterprise security` | Security scanning & compliance | `./claude-flow enterprise security scan "Vulnerability Check" ./src` |
+| `enterprise analytics` | Performance analytics | `./claude-flow enterprise analytics dashboard` |
+| `enterprise audit` | Enterprise audit logging | `./claude-flow enterprise audit logs --framework SOC2` |
+
+### **Batch Processing & Parallel Workflows**
+
+```bash
+# BatchTool parallel development
+batchtool run --parallel \
+  "./claude-flow sparc run architect 'design user auth'" \
+  "./claude-flow sparc run coder 'implement login API'" \
+  "./claude-flow sparc run tdd 'create auth tests'" \
+  "./claude-flow sparc run reviewer 'audit auth flow'"
+
+# Complete development workflow
+./claude-flow sparc run researcher "research best practices for microservices"
+./claude-flow sparc run architect "design scalable architecture"  
+./claude-flow sparc run coder "implement user service"
+./claude-flow sparc run tdd "create comprehensive test suite"
+./claude-flow sparc run integration "integrate all services"
+./claude-flow sparc run devops "setup CI/CD pipeline"
+```
 
 ---
 

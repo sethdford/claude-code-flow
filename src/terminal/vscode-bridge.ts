@@ -32,14 +32,14 @@ export function initializeTerminalBridge(context: vscode.ExtensionContext): void
   // Register terminal output processor function
   (globalThis as any).registerTerminalOutputProcessor = (
     terminalId: string,
-    processor: (data: string) => void
+    processor: (data: string) => void,
   ) => {
     terminalOutputProcessors.set(terminalId, processor);
   };
 
   // Override terminal creation to capture output
   const originalCreateTerminal = vscode.window.createTerminal;
-  (vscode.window as any).createTerminal = function(options: vscode.TerminalOptions) {
+  (vscode.window as any).createTerminal = function (options: vscode.TerminalOptions) {
     const terminal = originalCreateTerminal.call(vscode.window, options) as vscode.Terminal;
     
     // Create write emulator for this terminal
@@ -77,7 +77,7 @@ export function initializeTerminalBridge(context: vscode.ExtensionContext): void
         emulator.dispose();
         terminalWriteEmulators.delete(terminal);
       }
-    })
+    }),
   );
 }
 
@@ -87,7 +87,7 @@ export function initializeTerminalBridge(context: vscode.ExtensionContext): void
 function captureTerminalOutput(terminal: vscode.Terminal, terminalId: string): void {
   // Method 1: Use terminal.sendText override to capture commands
   const originalSendText = terminal.sendText;
-  (terminal as any).sendText = function(text: string, addNewLine?: boolean) {
+  (terminal as any).sendText = function (text: string, addNewLine?: boolean) {
     // Call original method
     originalSendText.call(terminal, text, addNewLine);
     
@@ -95,12 +95,12 @@ function captureTerminalOutput(terminal: vscode.Terminal, terminalId: string): v
     const processor = terminalOutputProcessors.get(terminalId);
     if (processor && text) {
       // Simulate command echo
-      processor(text + (addNewLine !== false ? '\n' : ''));
+      processor(text + (addNewLine !== false ? "\n" : ""));
     }
   };
 
   // Method 2: Use proposed API if available
-  if ('onDidWriteData' in terminal) {
+  if ("onDidWriteData" in terminal) {
     const writeDataEvent = (terminal as any).onDidWriteData;
     if (writeDataEvent) {
       writeDataEvent((data: string) => {
@@ -126,7 +126,7 @@ function setupTerminalRenderer(terminal: vscode.Terminal, terminalId: string): v
     // It would involve creating a custom terminal profile that captures output
     
     // For now, we'll use a simpler approach with periodic output checking
-    let lastOutput = '';
+    const lastOutput = "";
     const checkOutput = setInterval(() => {
       // This is a placeholder - actual implementation would depend on
       // available VSCode APIs for reading terminal content
@@ -145,7 +145,7 @@ function setupTerminalRenderer(terminal: vscode.Terminal, terminalId: string): v
 export async function createCapturedTerminal(
   name: string,
   shellPath?: string,
-  shellArgs?: string[]
+  shellArgs?: string[],
 ): Promise<{
   terminal: vscode.Terminal;
   onData: vscode.Event<string>;
@@ -172,16 +172,16 @@ export async function createCapturedTerminal(
 export async function executeTerminalCommand(
   terminal: vscode.Terminal,
   command: string,
-  timeout: number = 30000
+  timeout: number = 30000,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const writeEmulator = terminalWriteEmulators.get(terminal);
     if (!writeEmulator) {
-      reject(new Error('No write emulator for terminal'));
+      reject(new Error("No write emulator for terminal"));
       return;
     }
 
-    let output = '';
+    let output = "";
     const marker = `__COMMAND_COMPLETE_${Date.now()}__`;
     
     // Set up output listener
@@ -199,7 +199,7 @@ export async function executeTerminalCommand(
     // Set timeout
     const timer = setTimeout(() => {
       disposable.dispose();
-      reject(new Error('Command timeout'));
+      reject(new Error("Command timeout"));
     }, timeout);
 
     // Execute command with marker

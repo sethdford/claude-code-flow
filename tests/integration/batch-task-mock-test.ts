@@ -3,11 +3,11 @@
  * This test uses mocked components to demonstrate the task system without full dependencies
  */
 
-import { EventBus } from '../../src/core/event-bus.ts';
-import { Logger, ILogger } from '../../src/core/logger.ts';
-import { IEventBus } from '../../src/core/event-bus.ts';
-import { Task, SystemEvents, AgentProfile } from '../../src/utils/types.ts';
-import { delay } from '../../src/utils/helpers.ts';
+import { EventBus } from "../../src/core/event-bus.ts";
+import { Logger, ILogger } from "../../src/core/logger.ts";
+import { IEventBus } from "../../src/core/event-bus.ts";
+import { Task, SystemEvents, AgentProfile } from "../../src/utils/types.ts";
+import { delay } from "../../src/utils/helpers.ts";
 
 // Simulate task processing
 class MockTaskProcessor {
@@ -44,11 +44,11 @@ class MockTaskProcessor {
   async assignTask(task: Task): Promise<void> {
     const agent = this.selectBestAgent(task);
     if (!agent) {
-      throw new Error('No suitable agent available');
+      throw new Error("No suitable agent available");
     }
     
     task.assignedAgent = agent.id;
-    task.status = 'assigned';
+    task.status = "assigned";
     
     const queue = this.taskQueues.get(agent.id)!;
     queue.push(task);
@@ -71,7 +71,7 @@ class MockTaskProcessor {
     for (const [agentId, profile] of this.agents) {
       // Check capabilities
       const hasRequiredCaps = requiredCaps.every(cap => 
-        profile.capabilities.includes(cap)
+        profile.capabilities.includes(cap),
       );
       
       if (!hasRequiredCaps) continue;
@@ -105,7 +105,7 @@ class MockTaskProcessor {
       
       // Process tasks in parallel
       await Promise.all(tasksToProcess.map(task => 
-        this.processTask(task, agentId)
+        this.processTask(task, agentId),
       ));
     }
   }
@@ -114,7 +114,7 @@ class MockTaskProcessor {
   private async processTask(task: Task, agentId: string): Promise<void> {
     try {
       // Start task
-      task.status = 'running';
+      task.status = "running";
       task.startedAt = new Date();
       this.activeTasks.set(task.id, task);
       
@@ -124,19 +124,19 @@ class MockTaskProcessor {
       });
       
       // Simulate processing time based on complexity
-      const complexity = (task.input.parameters as any)?.complexity || 'low';
-      const baseTime = complexity === 'high' ? 2000 : 1000;
+      const complexity = (task.input.parameters as any)?.complexity || "low";
+      const baseTime = complexity === "high" ? 2000 : 1000;
       const processingTime = baseTime + Math.random() * 1000;
       
       await delay(processingTime);
       
       // Simulate occasional failures
       if (Math.random() < 0.1) {
-        throw new Error('Simulated task failure');
+        throw new Error("Simulated task failure");
       }
       
       // Complete task
-      task.status = 'completed';
+      task.status = "completed";
       task.completedAt = new Date();
       task.output = {
         result: `Processed ${task.type} task`,
@@ -154,7 +154,7 @@ class MockTaskProcessor {
       });
       
     } catch (error) {
-      task.status = 'failed';
+      task.status = "failed";
       task.completedAt = new Date();
       task.error = error as Error;
       
@@ -189,10 +189,10 @@ class MockTaskProcessor {
 
 // Test runner
 export async function runMockBatchTest() {
-  console.log('🧪 Running Mock Batch Task Test\n');
+  console.log("🧪 Running Mock Batch Task Test\n");
   
   const eventBus = new EventBus();
-  const logger = new Logger({ level: 'info', format: 'json', destination: 'console' }, { component: 'mock-test' });
+  const logger = new Logger({ level: "info", format: "json", destination: "console" }, { component: "mock-test" });
   const processor = new MockTaskProcessor(eventBus, logger);
   
   // Track metrics
@@ -221,41 +221,41 @@ export async function runMockBatchTest() {
   
   try {
     // Phase 1: Create agents
-    console.log('📋 Creating agents...');
+    console.log("📋 Creating agents...");
     const agents: AgentProfile[] = [
       {
-        id: 'fast-agent-1',
-        name: 'Fast Agent 1',
-        type: 'implementer',
-        capabilities: ['coding', 'testing'],
-        systemPrompt: 'Fast processing agent',
+        id: "fast-agent-1",
+        name: "Fast Agent 1",
+        type: "implementer",
+        capabilities: ["coding", "testing"],
+        systemPrompt: "Fast processing agent",
         maxConcurrentTasks: 3,
         priority: 90,
       },
       {
-        id: 'fast-agent-2',
-        name: 'Fast Agent 2',
-        type: 'implementer',
-        capabilities: ['coding', 'optimization'],
-        systemPrompt: 'Fast processing agent',
+        id: "fast-agent-2",
+        name: "Fast Agent 2",
+        type: "implementer",
+        capabilities: ["coding", "optimization"],
+        systemPrompt: "Fast processing agent",
         maxConcurrentTasks: 3,
         priority: 90,
       },
       {
-        id: 'research-agent',
-        name: 'Research Agent',
-        type: 'researcher',
-        capabilities: ['research', 'analysis'],
-        systemPrompt: 'Research agent',
+        id: "research-agent",
+        name: "Research Agent",
+        type: "researcher",
+        capabilities: ["research", "analysis"],
+        systemPrompt: "Research agent",
         maxConcurrentTasks: 2,
         priority: 80,
       },
       {
-        id: 'analyst-agent',
-        name: 'Analyst Agent',
-        type: 'analyst',
-        capabilities: ['analysis', 'reporting'],
-        systemPrompt: 'Analysis agent',
+        id: "analyst-agent",
+        name: "Analyst Agent",
+        type: "analyst",
+        capabilities: ["analysis", "reporting"],
+        systemPrompt: "Analysis agent",
         maxConcurrentTasks: 4,
         priority: 70,
       },
@@ -266,102 +266,102 @@ export async function runMockBatchTest() {
     console.log(`✅ Spawned ${agents.length} agents\n`);
     
     // Phase 2: Create test tasks
-    console.log('📋 Creating test tasks...');
+    console.log("📋 Creating test tasks...");
     const taskBatches: Task[][] = [];
     
     // Batch 1: Coding tasks
     taskBatches.push([
       {
-        id: 'code-1',
-        type: 'implement',
-        description: 'Implement feature A',
+        id: "code-1",
+        type: "implement",
+        description: "Implement feature A",
         priority: 90,
         dependencies: [],
-        status: 'pending',
-        input: { feature: 'A', parameters: { complexity: 'high' } },
+        status: "pending",
+        input: { feature: "A", parameters: { complexity: "high" } },
         createdAt: new Date(),
-        metadata: { requiredCapabilities: ['coding'] },
+        metadata: { requiredCapabilities: ["coding"] },
       },
       {
-        id: 'code-2',
-        type: 'implement',
-        description: 'Implement feature B',
+        id: "code-2",
+        type: "implement",
+        description: "Implement feature B",
         priority: 85,
         dependencies: [],
-        status: 'pending',
-        input: { feature: 'B', parameters: { complexity: 'low' } },
+        status: "pending",
+        input: { feature: "B", parameters: { complexity: "low" } },
         createdAt: new Date(),
-        metadata: { requiredCapabilities: ['coding'] },
+        metadata: { requiredCapabilities: ["coding"] },
       },
       {
-        id: 'code-3',
-        type: 'implement',
-        description: 'Optimize module C',
+        id: "code-3",
+        type: "implement",
+        description: "Optimize module C",
         priority: 80,
         dependencies: [],
-        status: 'pending',
-        input: { module: 'C', parameters: { complexity: 'high' } },
+        status: "pending",
+        input: { module: "C", parameters: { complexity: "high" } },
         createdAt: new Date(),
-        metadata: { requiredCapabilities: ['coding', 'optimization'] },
+        metadata: { requiredCapabilities: ["coding", "optimization"] },
       },
     ]);
     
     // Batch 2: Research tasks
     taskBatches.push([
       {
-        id: 'research-1',
-        type: 'research',
-        description: 'Research algorithm X',
+        id: "research-1",
+        type: "research",
+        description: "Research algorithm X",
         priority: 95,
         dependencies: [],
-        status: 'pending',
-        input: { topic: 'algorithm X', parameters: { complexity: 'high' } },
+        status: "pending",
+        input: { topic: "algorithm X", parameters: { complexity: "high" } },
         createdAt: new Date(),
-        metadata: { requiredCapabilities: ['research'] },
+        metadata: { requiredCapabilities: ["research"] },
       },
       {
-        id: 'research-2',
-        type: 'research',
-        description: 'Analyze dataset Y',
+        id: "research-2",
+        type: "research",
+        description: "Analyze dataset Y",
         priority: 75,
         dependencies: [],
-        status: 'pending',
-        input: { dataset: 'Y', parameters: { complexity: 'low' } },
+        status: "pending",
+        input: { dataset: "Y", parameters: { complexity: "low" } },
         createdAt: new Date(),
-        metadata: { requiredCapabilities: ['research', 'analysis'] },
+        metadata: { requiredCapabilities: ["research", "analysis"] },
       },
     ]);
     
     // Batch 3: Analysis tasks
     taskBatches.push([
       {
-        id: 'analyze-1',
-        type: 'analyze',
-        description: 'Analyze performance metrics',
+        id: "analyze-1",
+        type: "analyze",
+        description: "Analyze performance metrics",
         priority: 70,
         dependencies: [],
-        status: 'pending',
-        input: { metrics: 'performance', parameters: { complexity: 'low' } },
+        status: "pending",
+        input: { metrics: "performance", parameters: { complexity: "low" } },
         createdAt: new Date(),
-        metadata: { requiredCapabilities: ['analysis'] },
+        metadata: { requiredCapabilities: ["analysis"] },
       },
       {
-        id: 'report-1',
-        type: 'report',
-        description: 'Generate weekly report',
+        id: "report-1",
+        type: "report",
+        description: "Generate weekly report",
         priority: 60,
         dependencies: [],
-        status: 'pending',
-        input: { type: 'weekly', parameters: { complexity: 'low' } },
+        status: "pending",
+        input: { type: "weekly", parameters: { complexity: "low" } },
         createdAt: new Date(),
-        metadata: { requiredCapabilities: ['reporting'] },
+        metadata: { requiredCapabilities: ["reporting"] },
       },
     ]);
     
     console.log(`✅ Created ${taskBatches.length} task batches\n`);
     
     // Phase 3: Submit tasks in batches
-    console.log('📋 Submitting tasks in batches...');
+    console.log("📋 Submitting tasks in batches...");
     const startTime = Date.now();
     
     for (let i = 0; i < taskBatches.length; i++) {
@@ -383,7 +383,7 @@ export async function runMockBatchTest() {
       console.log(`  📊 Current state: ${currentMetrics.activeTasks} active, ${currentMetrics.queuedTasks} queued`);
     }
     
-    console.log('\n⏳ Waiting for all tasks to complete...');
+    console.log("\n⏳ Waiting for all tasks to complete...");
     
     // Monitor progress
     const progressInterval = setInterval(() => {
@@ -406,9 +406,9 @@ export async function runMockBatchTest() {
     const totalTime = Date.now() - startTime;
     
     // Phase 4: Display results
-    console.log('\n' + '='.repeat(50));
-    console.log('📊 FINAL RESULTS');
-    console.log('='.repeat(50));
+    console.log(`\n${  "=".repeat(50)}`);
+    console.log("📊 FINAL RESULTS");
+    console.log("=".repeat(50));
     console.log(`\n⏱️  Total execution time: ${(totalTime / 1000).toFixed(2)}s`);
     console.log(`📋 Tasks created: ${metrics.tasksCreated}`);
     console.log(`✅ Tasks completed: ${metrics.tasksCompleted}`);
@@ -417,15 +417,15 @@ export async function runMockBatchTest() {
     console.log(`🚀 Throughput: ${(metrics.tasksCompleted / (totalTime / 1000)).toFixed(2)} tasks/second`);
     
     // Agent utilization
-    console.log('\n👥 Agent Performance:');
+    console.log("\n👥 Agent Performance:");
     const agentMetrics = processor.getMetrics();
     console.log(`  Active agents: ${agentMetrics.activeAgents}`);
     console.log(`  Tasks per agent: ${(metrics.tasksCreated / agents.length).toFixed(1)}`);
     
-    console.log('\n✅ Mock batch test completed successfully!');
+    console.log("\n✅ Mock batch test completed successfully!");
     
   } catch (error) {
-    console.error('❌ Test failed:', error);
+    console.error("❌ Test failed:", error);
     throw error;
   }
 }

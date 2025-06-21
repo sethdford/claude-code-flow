@@ -3,19 +3,19 @@ import { describe, it } from "@std/testing/bdd.ts";
 import { 
   createSparcClaudeMd, 
   createFullClaudeMd, 
-  createMinimalClaudeMd 
+  createMinimalClaudeMd, 
 } from "../../../../../src/cli/simple-commands/init/templates/claude-md.js";
 import { 
   createFullMemoryBankMd, 
-  createMinimalMemoryBankMd 
+  createMinimalMemoryBankMd, 
 } from "../../../../../src/cli/simple-commands/init/templates/memory-bank-md.js";
 import { 
   createFullCoordinationMd, 
-  createMinimalCoordinationMd 
+  createMinimalCoordinationMd, 
 } from "../../../../../src/cli/simple-commands/init/templates/coordination-md.js";
 import { 
   createAgentsReadme, 
-  createSessionsReadme 
+  createSessionsReadme, 
 } from "../../../../../src/cli/simple-commands/init/templates/readme-files.js";
 
 describe("Template Generation Tests", () => {
@@ -143,7 +143,7 @@ describe("Template Generation Tests", () => {
         createFullCoordinationMd(),
         createMinimalCoordinationMd(),
         createAgentsReadme(),
-        createSessionsReadme()
+        createSessionsReadme(),
       ];
 
       for (const template of templates) {

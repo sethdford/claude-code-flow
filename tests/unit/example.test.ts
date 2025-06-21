@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import { describe, it, beforeEach, afterEach, expect, jest } from "@jest/globals";
 
 // Example calculator class to test
 class Calculator {
@@ -96,7 +96,7 @@ describe("Calculator", () => {
       assertThrows(
         () => calculator.divide(10, 0),
         Error,
-        "Division by zero"
+        "Division by zero",
       );
     });
   });

@@ -56,8 +56,8 @@ function isSEA(): boolean {
   }
   
   // Fallback: check if we're running from a binary that's not node
-  const execPath = process.execPath;
-  const isNodeBinary = execPath.includes('node') && !execPath.includes('claude-flow');
+  const { execPath } = process;
+  const isNodeBinary = execPath.includes("node") && !execPath.includes("claude-flow");
   
   // If we're not running from a node binary, we're likely in a SEA
   return !isNodeBinary;

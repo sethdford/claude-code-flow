@@ -573,7 +573,7 @@ async function validateWorkflowDefinition(workflow: WorkflowDefinition, strict =
     if (task.depends && Array.isArray(task.depends)) {
       for (const dep of task.depends) {
         // For now, just check if the dependency is a valid string
-        if (typeof dep !== 'string' || dep.trim() === '') {
+        if (typeof dep !== "string" || dep.trim() === "") {
           errors.push(`Task ${task.id}: invalid dependency ${dep}`);
         }
       }
@@ -773,7 +773,7 @@ async function executeWorkflowWithTaskEngine(execution: WorkflowExecution, workf
   }
 
   // Display final results
-  const duration = formatDuration(execution.completedAt!.getTime() - execution.startedAt.getTime());
+  const duration = formatDuration(execution.completedAt.getTime() - execution.startedAt.getTime());
   
   if (execution.status === "completed") {
     console.log(colors.green.bold("✓ Workflow completed successfully"));

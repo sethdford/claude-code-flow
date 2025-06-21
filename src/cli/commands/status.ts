@@ -54,65 +54,53 @@ async function initializeStatusSystem(): Promise<void> {
     return; // Already initialized
   }
 
-  // Store original console methods to restore later
-  const originalConsoleLog = console.log;
-  const originalConsoleInfo = console.info;
-  const originalConsoleWarn = console.warn;
-  const originalConsoleError = console.error;
-
   try {
+    // Initialize with minimal, silent configuration for fast status checks
     eventBus = EventBus.getInstance();
     
-    // Create a completely silent logger for status command to avoid console clutter
+    // Create a silent logger that doesn't output anything to console
     logger = new Logger({
       level: "error",
       format: "text", 
-      destination: "file",
-      filePath: "/dev/null"  // Send logs to null device to completely suppress them
+      destination: "console", // Keep console but with error level only
     });
     
-    // Temporarily silence console output during initialization
-    console.log = () => {};
-    console.info = () => {};
-    console.warn = () => {};
-    console.error = () => {};
-    
-    // Initialize memory system first
+    // Quick memory system initialization
     const memoryConfig = {
       namespace: "status",
       distributed: false,
-      syncInterval: 5000,
+      syncInterval: 30000, // Slower sync for status-only usage
       consistency: "eventual" as const,
       replicationFactor: 1,
-      maxMemorySize: 100 * 1024 * 1024,
+      maxMemorySize: 50 * 1024 * 1024, // Smaller memory footprint
       compressionEnabled: false,
       encryptionEnabled: false,
       backupEnabled: false,
       persistenceEnabled: false,
       shardingEnabled: false,
-      cacheSize: 1000,
+      cacheSize: 100, // Much smaller cache
       cacheTtl: 60000,
     };
     
     memorySystem = new DistributedMemorySystem(memoryConfig, logger, eventBus);
     await memorySystem.initialize();
     
-    // Initialize coordination manager
+    // Minimal coordination manager
     const coordinationConfig = {
-      maxRetries: 3,
-      retryDelay: 1000,
-      deadlockDetection: true,
-      resourceTimeout: 60000,
-      messageTimeout: 30000,
+      maxRetries: 1,
+      retryDelay: 500,
+      deadlockDetection: false,
+      resourceTimeout: 30000,
+      messageTimeout: 15000,
     };
     
     coordinationManager = new CoordinationManager(coordinationConfig, eventBus, logger);
     await coordinationManager.initialize();
     
-    // Initialize real-time monitor
+    // Lightweight real-time monitor
     const monitorConfig = {
-      updateInterval: 5000,
-      alertingEnabled: true,
+      updateInterval: 10000, // Less frequent updates
+      alertingEnabled: false, // Disable alerts for status-only
       metricsEnabled: true,
       debugMode: false,
     };
@@ -120,7 +108,7 @@ async function initializeStatusSystem(): Promise<void> {
     realTimeMonitor = new RealTimeMonitor(monitorConfig, logger, eventBus, memorySystem);
     await realTimeMonitor.initialize();
     
-    // Create mock components for orchestrator dependencies
+    // Minimal orchestrator setup
     const mockTerminalManager = {
       initialize: async () => {},
       getHealthStatus: async () => ({ status: "healthy" as const, components: {}, timestamp: new Date() }),
@@ -136,33 +124,33 @@ async function initializeStatusSystem(): Promise<void> {
       getHealthStatus: async () => ({ status: "healthy" as const, components: {}, timestamp: new Date() }),
     };
     
-    // Initialize orchestrator with all required dependencies
-    const fullConfig = {
+    // Lightweight orchestrator config for status monitoring
+    const statusConfig = {
       orchestrator: {
         maxConcurrentAgents: 10,
-        taskQueueSize: 1000,
-        healthCheckInterval: 30000,
-        shutdownTimeout: 10000,
-        maintenanceInterval: 300000,
-        metricsInterval: 60000,
-        persistSessions: true,
-        sessionRetentionMs: 86400000,
-        taskHistoryRetentionMs: 604800000,
-        taskMaxRetries: 3,
+        taskQueueSize: 100,
+        healthCheckInterval: 60000, // Less frequent health checks
+        shutdownTimeout: 5000,
+        maintenanceInterval: 600000, // Less frequent maintenance
+        metricsInterval: 30000, // Less frequent metrics
+        persistSessions: false, // Disable persistence for status-only
+        sessionRetentionMs: 3600000,
+        taskHistoryRetentionMs: 86400000,
+        taskMaxRetries: 1,
       },
       terminal: {
         type: "auto" as const,
-        poolSize: 5,
-        recycleAfter: 10,
-        healthCheckInterval: 60000,
-        commandTimeout: 300000,
+        poolSize: 1, // Minimal pool
+        recycleAfter: 5,
+        healthCheckInterval: 120000,
+        commandTimeout: 60000,
       },
       memory: {
-        backend: "hybrid" as const,
-        cacheSizeMB: 100,
-        syncInterval: 5000,
-        conflictResolution: "crdt" as const,
-        retentionDays: 30,
+        backend: "sqlite" as const, // Use sqlite backend for speed and simplicity
+        cacheSizeMB: 25,
+        syncInterval: 30000,
+        conflictResolution: "last-write" as const,
+        retentionDays: 1,
       },
       coordination: coordinationConfig,
       mcp: {
@@ -171,38 +159,26 @@ async function initializeStatusSystem(): Promise<void> {
         tlsEnabled: false,
       },
       logging: {
-        level: "error" as const,  // Only show errors to avoid cluttering status UI
-        format: "text" as const,  // Use text format instead of JSON
-        destination: "file" as const,  // Log to file instead of console
+        level: "error" as const,
+        format: "text" as const,
+        destination: "console" as const,
       },
     };
     
     orchestrator = new Orchestrator(
-      fullConfig,
+      statusConfig,
       mockTerminalManager as any,
       mockMemoryManager as any,
       coordinationManager as any,
       mockMCPServer as any,
       eventBus,
-      logger
+      logger,
     );
     
     await orchestrator.initialize();
     
-    // Restore console methods
-    console.log = originalConsoleLog;
-    console.info = originalConsoleInfo;
-    console.warn = originalConsoleWarn;
-    console.error = originalConsoleError;
-    
     console.log(colors.green("✓ Real system components initialized"));
   } catch (error) {
-    // Restore console methods in case of error
-    console.log = originalConsoleLog;
-    console.info = originalConsoleInfo;
-    console.warn = originalConsoleWarn;
-    console.error = originalConsoleError;
-    
     console.log(colors.yellow("⚠ Failed to initialize real components, using fallback mode"));
     logger?.warn("Status system initialization failed", { error });
     

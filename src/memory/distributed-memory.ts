@@ -342,7 +342,16 @@ export class DistributedMemorySystem extends EventEmitter {
       const now = new Date();
       
       // Determine partition
-      const partitionId = options.partition ?? this.selectPartition(options.type ?? "knowledge");
+      let partitionId: string;
+      if (options.partition) {
+        // If partition is specified, try to find it by name first, then by ID
+        partitionId = this.selectPartition(options.partition);
+        if (!partitionId) {
+          partitionId = options.partition; // Fallback to treating it as ID
+        }
+      } else {
+        partitionId = this.selectPartition(options.type ?? "knowledge");
+      }
       const partition = this.partitions.get(partitionId);
       
       if (!partition) {
@@ -717,7 +726,14 @@ export class DistributedMemorySystem extends EventEmitter {
   }
 
   private selectPartition(type: string): string {
-    // Simple partition selection based on type
+    // First try to find by partition name (for cases where partition name is passed)
+    for (const [id, partition] of this.partitions) {
+      if (partition.name === type) {
+        return id;
+      }
+    }
+    
+    // Then try to find by partition type
     for (const [id, partition] of this.partitions) {
       if (partition.type === type) {
         return id;

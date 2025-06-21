@@ -32,7 +32,7 @@ async function initializeEnterpriseManagers(): Promise<void> {
   try {
     const logger = new Logger(
       { level: "info", format: "json", destination: "console" },
-      { component: "EnterpriseCommand" }
+      { component: "EnterpriseCommand" },
     );
 
     // Don't pass config manager - let enterprise managers use their own defaults
@@ -112,8 +112,8 @@ enterpriseCommand
       const project = await projectManager.createProject({
         name,
         description: options.description || `Enterprise project: ${name}`,
-        type: options.type as any,
-        priority: options.priority as any,
+        type: options.type,
+        priority: options.priority,
         owner: options.owner,
         stakeholders: [options.owner],
         budget: {
@@ -164,8 +164,8 @@ enterpriseCommand
             type: "web-app",
             priority: "high",
             owner: "system",
-            created: new Date().toLocaleDateString()
-          }
+            created: new Date().toLocaleDateString(),
+          },
         ];
 
         if (options.json) {
@@ -177,7 +177,7 @@ enterpriseCommand
         
         const table = new Table({
           head: ["Name", "ID", "Status", "Type", "Priority", "Owner", "Created"],
-          colWidths: [20, 12, 12, 12, 10, 12, 12]
+          colWidths: [20, 12, 12, 12, 10, 12, 12],
         });
 
         for (const project of projects) {
@@ -189,7 +189,7 @@ enterpriseCommand
             project.type,
             project.priority,
             project.owner,
-            project.created
+            project.created,
           ]);
         }
 
@@ -213,13 +213,13 @@ enterpriseCommand
       
       const table = new Table({
         head: ["Name", "ID", "Status", "Type", "Priority", "Owner", "Progress", "Budget"],
-        colWidths: [20, 12, 12, 12, 10, 12, 10, 12]
+        colWidths: [20, 12, 12, 12, 10, 12, 10, 12],
       });
 
       for (const project of projects) {
         const statusColor = project.status === "active" ? chalk.green : 
-                           project.status === "completed" ? chalk.blue :
-                           project.status === "on-hold" ? chalk.yellow : chalk.red;
+          project.status === "completed" ? chalk.blue :
+            project.status === "on-hold" ? chalk.yellow : chalk.red;
         
         const progress = project.phases.length > 0 ? 
           Math.round(project.phases.reduce((sum, p) => sum + p.completionPercentage, 0) / project.phases.length) : 0;
@@ -232,7 +232,7 @@ enterpriseCommand
           project.priority,
           project.owner,
           `${progress}%`,
-          `$${project.budget.total}`
+          `$${project.budget.total}`,
         ]);
       }
 
@@ -285,7 +285,7 @@ enterpriseCommand
         console.log(`\n${chalk.bold("Phases:")}`);
         const phaseTable = new Table({
           head: ["Name", "Status", "Progress", "Start", "End"],
-          colWidths: [20, 12, 10, 12, 12]
+          colWidths: [20, 12, 10, 12, 12],
         });
         
         for (const phase of project.phases) {
@@ -294,7 +294,7 @@ enterpriseCommand
             phase.status,
             `${phase.completionPercentage}%`,
             phase.startDate?.toLocaleDateString() || "Not started",
-            phase.endDate?.toLocaleDateString() || "TBD"
+            phase.endDate?.toLocaleDateString() || "TBD",
           ]);
         }
         
@@ -383,59 +383,59 @@ enterpriseCommand
         return;
       }
 
-             const environment = await deploymentManager.createEnvironment({
-         name,
-         type: options.environment as any,
-         configuration: {
-           region: options.region,
-           provider: options.provider as any,
-           endpoints: [],
-           secrets: {},
-           environment_variables: {},
-           resources: {
-             cpu: "1",
-             memory: "1Gi",
-             storage: "10Gi",
-             replicas: 1,
-           },
-         },
-         healthCheck: {
-           url: "/health",
-           method: "GET",
-           expectedStatus: 200,
-           timeout: 5000,
-           interval: 30000,
-           retries: 3,
-         },
-         monitoring: {
-           enabled: true,
-           alerts: [],
-           metrics: ["cpu", "memory", "requests"],
-           logs: {
-             level: "info",
-             retention: "7d",
-             aggregation: true,
-           },
-         },
-         security: {
-           tls: true,
-           authentication: true,
-           authorization: [],
-           compliance: [],
-           scanning: {
-             vulnerabilities: true,
-             secrets: true,
-             licenses: true,
-           },
-         },
-       });
+      const environment = await deploymentManager.createEnvironment({
+        name,
+        type: options.environment,
+        configuration: {
+          region: options.region,
+          provider: options.provider,
+          endpoints: [],
+          secrets: {},
+          environment_variables: {},
+          resources: {
+            cpu: "1",
+            memory: "1Gi",
+            storage: "10Gi",
+            replicas: 1,
+          },
+        },
+        healthCheck: {
+          url: "/health",
+          method: "GET",
+          expectedStatus: 200,
+          timeout: 5000,
+          interval: 30000,
+          retries: 3,
+        },
+        monitoring: {
+          enabled: true,
+          alerts: [],
+          metrics: ["cpu", "memory", "requests"],
+          logs: {
+            level: "info",
+            retention: "7d",
+            aggregation: true,
+          },
+        },
+        security: {
+          tls: true,
+          authentication: true,
+          authorization: [],
+          compliance: [],
+          scanning: {
+            vulnerabilities: true,
+            secrets: true,
+            licenses: true,
+          },
+        },
+      });
        
-       success(`Enterprise deployment environment created: ${name}`);
-       console.log(`${chalk.blue("ID:")} ${environment.id}`);
-       console.log(`${chalk.blue("Type:")} ${environment.type}`);
-       console.log(`${chalk.blue("Provider:")} ${environment.configuration.provider}`);
-       console.log(`${chalk.blue("Region:")} ${environment.configuration.region}`);
-       console.log(`${chalk.blue("Status:")} ${environment.status}`);
+      success(`Enterprise deployment environment created: ${name}`);
+      console.log(`${chalk.blue("ID:")} ${environment.id}`);
+      console.log(`${chalk.blue("Type:")} ${environment.type}`);
+      console.log(`${chalk.blue("Provider:")} ${environment.configuration.provider}`);
+      console.log(`${chalk.blue("Region:")} ${environment.configuration.region}`);
+      console.log(`${chalk.blue("Status:")} ${environment.status}`);
       
     } catch (err) {
       error(`Failed to create deployment environment: ${(err as Error).message}`);
@@ -469,14 +469,14 @@ enterpriseCommand
         const providers = [
           { name: "AWS", type: "aws", region: "us-east-1", status: "available" },
           { name: "GCP", type: "gcp", region: "us-central1", status: "available" },
-          { name: "Azure", type: "azure", region: "eastus", status: "available" }
+          { name: "Azure", type: "azure", region: "eastus", status: "available" },
         ];
 
         success("Available cloud providers (fallback mode):");
         
         const table = new Table({
           head: ["Provider", "Type", "Region", "Status"],
-          colWidths: [15, 12, 15, 12]
+          colWidths: [15, 12, 15, 12],
         });
 
         for (const provider of providers) {
@@ -485,7 +485,7 @@ enterpriseCommand
             provider.name,
             provider.type,
             provider.region,
-            statusColor(provider.status)
+            statusColor(provider.status),
           ]);
         }
 
@@ -493,33 +493,33 @@ enterpriseCommand
         return;
       }
 
-             // Get cloud metrics which includes provider information
-       const metrics = await cloudManager.getCloudMetrics();
+      // Get cloud metrics which includes provider information
+      const metrics = await cloudManager.getCloudMetrics();
        
-       success("Available cloud providers:");
+      success("Available cloud providers:");
        
-       const table = new Table({
-         head: ["Status", "Total", "Active", "Inactive", "Errors", "Total Cost"],
-         colWidths: [15, 12, 15, 12, 12, 15]
-       });
+      const table = new Table({
+        head: ["Status", "Total", "Active", "Inactive", "Errors", "Total Cost"],
+        colWidths: [15, 12, 15, 12, 12, 15],
+      });
 
-       table.push([
-         "Providers",
-         metrics.providers.total.toString(),
-         chalk.green(metrics.providers.active.toString()),
-         chalk.yellow(metrics.providers.inactive.toString()),
-         chalk.red(metrics.providers.errors.toString()),
-         `$${metrics.costs.totalSpend.toFixed(2)}`
-       ]);
+      table.push([
+        "Providers",
+        metrics.providers.total.toString(),
+        chalk.green(metrics.providers.active.toString()),
+        chalk.yellow(metrics.providers.inactive.toString()),
+        chalk.red(metrics.providers.errors.toString()),
+        `$${metrics.costs.totalSpend.toFixed(2)}`,
+      ]);
 
-       console.log(table.toString());
+      console.log(table.toString());
        
-       console.log(`\n${chalk.bold("Resource Summary:")}`);
-       console.log(`Total Resources: ${metrics.resources.total}`);
-       console.log(`Running: ${chalk.green(metrics.resources.running)}`);
-       console.log(`Stopped: ${chalk.yellow(metrics.resources.stopped)}`);
-       console.log(`Monthly Spend: $${metrics.costs.monthlySpend.toFixed(2)}`);
-       console.log(`Projected Spend: $${metrics.costs.projectedSpend.toFixed(2)}`);
+      console.log(`\n${chalk.bold("Resource Summary:")}`);
+      console.log(`Total Resources: ${metrics.resources.total}`);
+      console.log(`Running: ${chalk.green(metrics.resources.running)}`);
+      console.log(`Stopped: ${chalk.yellow(metrics.resources.stopped)}`);
+      console.log(`Monthly Spend: $${metrics.costs.monthlySpend.toFixed(2)}`);
+      console.log(`Projected Spend: $${metrics.costs.projectedSpend.toFixed(2)}`);
       
     } catch (err) {
       error(`Failed to list cloud providers: ${(err as Error).message}`);
@@ -559,42 +559,42 @@ enterpriseCommand
         return;
       }
 
-             console.log(chalk.blue("🔍 Running comprehensive security scan..."));
+      console.log(chalk.blue("🔍 Running comprehensive security scan..."));
        
-       const scan = await securityManager.createSecurityScan({
-         name: `Security Scan - ${new Date().toISOString()}`,
-         type: options.target === "code" ? "code-quality" : "vulnerability",
-         target: {
-           type: options.target === "infrastructure" ? "infrastructure" : "repository",
-           path: process.cwd(),
-         },
-         configuration: {
-           severity: options.severity === "high" ? ["critical", "high"] : 
-                    options.severity === "medium" ? ["critical", "high", "medium"] :
-                    ["critical", "high", "medium", "low"],
-           formats: ["json"],
-           outputPath: "./security-reports",
-         },
-       });
+      const scan = await securityManager.createSecurityScan({
+        name: `Security Scan - ${new Date().toISOString()}`,
+        type: options.target === "code" ? "code-quality" : "vulnerability",
+        target: {
+          type: options.target === "infrastructure" ? "infrastructure" : "repository",
+          path: process.cwd(),
+        },
+        configuration: {
+          severity: options.severity === "high" ? ["critical", "high"] : 
+            options.severity === "medium" ? ["critical", "high", "medium"] :
+              ["critical", "high", "medium", "low"],
+          formats: ["json"],
+          outputPath: "./security-reports",
+        },
+      });
        
-       // Execute the scan
-       await securityManager.executeScan(scan.id);
+      // Execute the scan
+      await securityManager.executeScan(scan.id);
        
-       console.log(`${chalk.blue("Scan ID:")} ${scan.id}`);
-       console.log(`${chalk.blue("Target:")} ${scan.target.type} - ${scan.target.path}`);
-       console.log(`${chalk.blue("Status:")} ${scan.status}`);
-       console.log(`${chalk.blue("Findings:")} ${scan.results.length}`);
+      console.log(`${chalk.blue("Scan ID:")} ${scan.id}`);
+      console.log(`${chalk.blue("Target:")} ${scan.target.type} - ${scan.target.path}`);
+      console.log(`${chalk.blue("Status:")} ${scan.status}`);
+      console.log(`${chalk.blue("Findings:")} ${scan.results.length}`);
        
-       if (scan.results.length > 0) {
-         const criticalCount = scan.results.filter(f => f.severity === "critical").length;
-         const highCount = scan.results.filter(f => f.severity === "high").length;
-         const mediumCount = scan.results.filter(f => f.severity === "medium").length;
+      if (scan.results.length > 0) {
+        const criticalCount = scan.results.filter(f => f.severity === "critical").length;
+        const highCount = scan.results.filter(f => f.severity === "high").length;
+        const mediumCount = scan.results.filter(f => f.severity === "medium").length;
          
-         console.log(`\n${chalk.bold("Findings Summary:")}`);
-         if (criticalCount > 0) console.log(`  ${chalk.red("Critical:")} ${criticalCount}`);
-         if (highCount > 0) console.log(`  ${chalk.yellow("High:")} ${highCount}`);
-         if (mediumCount > 0) console.log(`  ${chalk.blue("Medium:")} ${mediumCount}`);
-       }
+        console.log(`\n${chalk.bold("Findings Summary:")}`);
+        if (criticalCount > 0) console.log(`  ${chalk.red("Critical:")} ${criticalCount}`);
+        if (highCount > 0) console.log(`  ${chalk.yellow("High:")} ${highCount}`);
+        if (mediumCount > 0) console.log(`  ${chalk.blue("Medium:")} ${mediumCount}`);
+      }
       
       success("Security scan completed");
       
@@ -635,32 +635,32 @@ enterpriseCommand
         return;
       }
 
-             // Get comprehensive metrics instead of dashboard
-       const performanceMetrics = await analyticsManager.getPerformanceMetrics();
-       const usageMetrics = await analyticsManager.getUsageMetrics();
-       const businessMetrics = await analyticsManager.getBusinessMetrics();
+      // Get comprehensive metrics instead of dashboard
+      const performanceMetrics = await analyticsManager.getPerformanceMetrics();
+      const usageMetrics = await analyticsManager.getUsageMetrics();
+      const businessMetrics = await analyticsManager.getBusinessMetrics();
        
-       console.log(`\n${chalk.bold.cyan("Enterprise Analytics Dashboard")}`);
-       console.log("=".repeat(50));
+      console.log(`\n${chalk.bold.cyan("Enterprise Analytics Dashboard")}`);
+      console.log("=".repeat(50));
        
-       console.log(`\n${chalk.bold("Performance Metrics")}:`);
-       console.log(`  ${chalk.blue("CPU Usage:")} ${performanceMetrics.system.cpu.usage.toFixed(1)}%`);
-       console.log(`  ${chalk.blue("Memory Usage:")} ${performanceMetrics.system.memory.usage.toFixed(1)}%`);
-       console.log(`  ${chalk.blue("Avg Response Time:")} ${performanceMetrics.application.responseTime.avg.toFixed(0)}ms`);
-       console.log(`  ${chalk.blue("Requests/sec:")} ${performanceMetrics.application.throughput.requestsPerSecond.toFixed(0)}`);
-       console.log(`  ${chalk.blue("Error Rate:")} ${performanceMetrics.application.errors.rate.toFixed(2)}%`);
+      console.log(`\n${chalk.bold("Performance Metrics")}:`);
+      console.log(`  ${chalk.blue("CPU Usage:")} ${performanceMetrics.system.cpu.usage.toFixed(1)}%`);
+      console.log(`  ${chalk.blue("Memory Usage:")} ${performanceMetrics.system.memory.usage.toFixed(1)}%`);
+      console.log(`  ${chalk.blue("Avg Response Time:")} ${performanceMetrics.application.responseTime.avg.toFixed(0)}ms`);
+      console.log(`  ${chalk.blue("Requests/sec:")} ${performanceMetrics.application.throughput.requestsPerSecond.toFixed(0)}`);
+      console.log(`  ${chalk.blue("Error Rate:")} ${performanceMetrics.application.errors.rate.toFixed(2)}%`);
        
-       console.log(`\n${chalk.bold("Usage Metrics")}:`);
-       console.log(`  ${chalk.blue("Total Users:")} ${usageMetrics.users.total}`);
-       console.log(`  ${chalk.blue("Active Users:")} ${usageMetrics.users.active}`);
-       console.log(`  ${chalk.blue("API Calls:")} ${usageMetrics.api.calls}`);
-       console.log(`  ${chalk.blue("Avg Session Duration:")} ${usageMetrics.sessions.duration.avg.toFixed(0)}s`);
+      console.log(`\n${chalk.bold("Usage Metrics")}:`);
+      console.log(`  ${chalk.blue("Total Users:")} ${usageMetrics.users.total}`);
+      console.log(`  ${chalk.blue("Active Users:")} ${usageMetrics.users.active}`);
+      console.log(`  ${chalk.blue("API Calls:")} ${usageMetrics.api.calls}`);
+      console.log(`  ${chalk.blue("Avg Session Duration:")} ${usageMetrics.sessions.duration.avg.toFixed(0)}s`);
        
-       console.log(`\n${chalk.bold("Business Metrics")}:`);
-       console.log(`  ${chalk.blue("Total Revenue:")} $${businessMetrics.revenue.total.toFixed(2)}`);
-       console.log(`  ${chalk.blue("Total Customers:")} ${businessMetrics.customers.total}`);
-       console.log(`  ${chalk.blue("Conversion Rate:")} ${businessMetrics.conversion.rate.toFixed(2)}%`);
-       console.log(`  ${chalk.blue("Support Tickets:")} ${businessMetrics.support.tickets}`);
+      console.log(`\n${chalk.bold("Business Metrics")}:`);
+      console.log(`  ${chalk.blue("Total Revenue:")} $${businessMetrics.revenue.total.toFixed(2)}`);
+      console.log(`  ${chalk.blue("Total Customers:")} ${businessMetrics.customers.total}`);
+      console.log(`  ${chalk.blue("Conversion Rate:")} ${businessMetrics.conversion.rate.toFixed(2)}%`);
+      console.log(`  ${chalk.blue("Support Tickets:")} ${businessMetrics.support.tickets}`);
       
     } catch (err) {
       error(`Failed to load analytics dashboard: ${(err as Error).message}`);
@@ -698,52 +698,52 @@ enterpriseCommand
         return;
       }
 
-             // AuditManager doesn't have getAuditLogs method, implement fallback
-       success(`Audit Logs (Fallback Mode - ${options.limit} entries)`);
+      // AuditManager doesn't have getAuditLogs method, implement fallback
+      success(`Audit Logs (Fallback Mode - ${options.limit} entries)`);
        
-       // Mock audit logs for demonstration
-       const logs = [
-         {
-           timestamp: new Date(),
-           userId: options.user || "system",
-           action: options.action || "enterprise_command_executed",
-           target: "enterprise-cli",
-           status: "success"
-         },
-         {
-           timestamp: new Date(Date.now() - 60000),
-           userId: "admin",
-           action: "project_created",
-           target: "project-001",
-           status: "success"
-         },
-         {
-           timestamp: new Date(Date.now() - 120000),
-           userId: "user",
-           action: "deployment_started",
-           target: "env-prod",
-           status: "success"
-         }
-       ];
+      // Mock audit logs for demonstration
+      const logs = [
+        {
+          timestamp: new Date(),
+          userId: options.user || "system",
+          action: options.action || "enterprise_command_executed",
+          target: "enterprise-cli",
+          status: "success",
+        },
+        {
+          timestamp: new Date(Date.now() - 60000),
+          userId: "admin",
+          action: "project_created",
+          target: "project-001",
+          status: "success",
+        },
+        {
+          timestamp: new Date(Date.now() - 120000),
+          userId: "user",
+          action: "deployment_started",
+          target: "env-prod",
+          status: "success",
+        },
+      ];
        
-       const table = new Table({
-         head: ["Timestamp", "User", "Action", "Target", "Status"],
-         colWidths: [20, 15, 20, 25, 12]
-       });
+      const table = new Table({
+        head: ["Timestamp", "User", "Action", "Target", "Status"],
+        colWidths: [20, 15, 20, 25, 12],
+      });
        
-       for (const log of logs.slice(0, parseInt(options.limit))) {
-         const statusColor = log.status === "success" ? chalk.green : chalk.red;
-         table.push([
-           log.timestamp.toLocaleString(),
-           log.userId,
-           log.action,
-           log.target,
-           statusColor(log.status)
-         ]);
-       }
+      for (const log of logs.slice(0, parseInt(options.limit))) {
+        const statusColor = log.status === "success" ? chalk.green : chalk.red;
+        table.push([
+          log.timestamp.toLocaleString(),
+          log.userId,
+          log.action,
+          log.target,
+          statusColor(log.status),
+        ]);
+      }
        
-       console.log(table.toString());
-       console.log(chalk.gray("\nNote: Real audit logs require full audit manager integration"));
+      console.log(table.toString());
+      console.log(chalk.gray("\nNote: Real audit logs require full audit manager integration"));
       
     } catch (err) {
       error(`Failed to get audit logs: ${(err as Error).message}`);

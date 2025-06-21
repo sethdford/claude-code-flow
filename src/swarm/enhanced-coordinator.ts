@@ -338,7 +338,7 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
       this.emit("taskStarted", { 
         taskName: nextTask.name, 
         taskId: nextTask.id.id, 
-        agentId: bestAgent.getId() 
+        agentId: bestAgent.getId(), 
       });
       
       await bestAgent.assignTask(nextTask);
@@ -465,7 +465,7 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
         taskId: event.taskId, 
         agentId: event.agentId,
         duration,
-        result: event.result 
+        result: event.result, 
       });
     }
   }
@@ -489,7 +489,7 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
         taskName: task.name,
         taskId: event.taskId, 
         agentId: event.agentId,
-        error: event.error.message || event.error 
+        error: event.error.message || event.error, 
       });
     }
   }
@@ -505,8 +505,8 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
       activeAgents: busyAgents,
       totalAgents: this.agents.size,
       activeTasks: this.activeTasksMap.size,
-      totalTasks: totalTasks,
-      completedTasks: completedTasks,
+      totalTasks,
+      completedTasks,
       failedTasks: 0, // TODO: Track failed tasks
       queuedTasks: this.taskQueue.length,
       strategy: this.strategy,

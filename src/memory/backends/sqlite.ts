@@ -19,8 +19,8 @@ function isSEA(): boolean {
   }
   
   // Fallback: check if we're running from a binary that's not node
-  const execPath = process.execPath;
-  const isNodeBinary = execPath.includes('node') && !execPath.includes('claude-flow');
+  const { execPath } = process;
+  const isNodeBinary = execPath.includes("node") && !execPath.includes("claude-flow");
   
   // If we're not running from a node binary, we're likely in a SEA
   return !isNodeBinary;
@@ -36,24 +36,24 @@ async function getSQLiteNativePath(): Promise<string | null> {
 
   try {
     // In SEA, we need to extract the native binary to a temporary location
-    const { getAsset } = await import('node:sea');
-    const binaryData = getAsset('better_sqlite3.node');
+    const { getAsset } = await import("node:sea");
+    const binaryData = getAsset("better_sqlite3.node");
     
     if (!binaryData) {
-      throw new Error('SQLite native binary not found in SEA bundle');
+      throw new Error("SQLite native binary not found in SEA bundle");
     }
 
     // Create a temporary file for the native binary
-    const tmpDir = path.join(process.cwd(), '.claude-flow-tmp');
+    const tmpDir = path.join(process.cwd(), ".claude-flow-tmp");
     await fs.mkdir(tmpDir, { recursive: true });
     
-    const nativePath = path.join(tmpDir, 'better_sqlite3.node');
+    const nativePath = path.join(tmpDir, "better_sqlite3.node");
     // Convert ArrayBuffer to Buffer for file writing
     await fs.writeFile(nativePath, Buffer.from(binaryData));
     
     return nativePath;
   } catch (error) {
-    console.warn('Failed to extract SQLite binary from SEA bundle:', error);
+    console.warn("Failed to extract SQLite binary from SEA bundle:", error);
     return null;
   }
 }
@@ -118,7 +118,7 @@ export class SQLiteBackend implements IMemoryBackend {
         throw new MemoryBackendError(
           "SQLite backend failed in SEA mode. Consider using 'markdown' backend instead. " +
           "Set CLAUDE_FLOW_MEMORY_BACKEND=markdown or update your config to use markdown backend.",
-          { error, suggestion: "Use markdown backend for SEA compatibility" }
+          { error, suggestion: "Use markdown backend for SEA compatibility" },
         );
       }
       

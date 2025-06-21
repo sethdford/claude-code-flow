@@ -10,8 +10,8 @@ import { Command } from "../cliffy-compat.js";
 // Simplified imports to avoid complex dependencies
 import { generateId } from "../../utils/helpers.js";
 import { formatDuration, formatBytes, formatPercentage } from "../../utils/formatters.js";
-import path from "node:path";
-import fs from "node:fs/promises";
+import * as pathModule from "node:path";
+import { readFile } from "node:fs/promises";
 import { AgentManager } from "../../agents/agent-manager.js";
 import type { 
   AgentInfo, 
@@ -58,12 +58,18 @@ let memorySystem: DistributedMemorySystem | null = null;
 
 // Initialize real agent manager with proper dependencies
 async function initializeAgentManager(): Promise<AgentManager> {
-  if (agentManager) return agentManager;
+  if (agentManager) {
+    return agentManager;
+  }
   
   try {
-    // Initialize core dependencies
+    // Initialize core dependencies with clean text logging for CLI
     eventBus = EventBus.getInstance();
-    logger = Logger.getInstance();
+    logger = new Logger({ 
+      level: 'warn',  // Reduce log level to only show warnings and errors
+      format: 'text', 
+      destination: 'console' 
+    });
     
     // Initialize memory system for agent manager
     const memoryConfig = {
@@ -118,6 +124,7 @@ async function initializeAgentManager(): Promise<AgentManager> {
     
   } catch (error) {
     console.log(chalk.yellow("⚠ Failed to initialize real agent manager, using fallback mode"));
+    console.log(chalk.red("Error details:"), error);
     logger?.warn("Agent manager initialization failed", { error });
     
     // Return enhanced mock as fallback
@@ -273,13 +280,14 @@ agentCommand
   .action(async (template: string | undefined, options: AgentSpawnOptions) => {
     try {
       const manager = await initializeAgentManager();
+      const templates = manager.getAgentTemplates();
         
       let agentConfig: Record<string, any> = {};
         
       // Load from config file if provided
       if (options.config) {
-        const configPath = path.resolve(options.config);
-        const configData = await fs.readFile(configPath, "utf-8");
+        const configPath = pathModule.resolve(options.config);
+        const configData = await readFile(configPath, "utf-8");
         agentConfig = JSON.parse(configData);
       }
         
@@ -294,46 +302,76 @@ agentCommand
           return;
         }
           
-        const templates = manager.getAgentTemplates() as any as AgentTemplate[];
-        const selectedTemplate = templates.find((t) => t.name.toLowerCase().includes(templateName.toLowerCase()));
-          
+        // Enhanced template matching - try multiple strategies
+        let selectedTemplate: any = undefined;
+        
+        // Strategy 1: Exact type match (highest priority)
+        selectedTemplate = templates.find(t => t.type === templateName.toLowerCase());
+        
+        // Strategy 2: Exact name match (case insensitive)
+        if (!selectedTemplate) {
+          selectedTemplate = templates.find(t => t.name.toLowerCase() === templateName.toLowerCase());
+        }
+        
+        // Strategy 3: Partial name match (like ruvnet - includes substring)
+        if (!selectedTemplate) {
+          selectedTemplate = templates.find(t => t.name.toLowerCase().includes(templateName.toLowerCase()));
+        }
+        
+        // Strategy 4: Partial type match
+        if (!selectedTemplate) {
+          selectedTemplate = templates.find(t => t.type.toLowerCase().includes(templateName.toLowerCase()));
+        }
+        
         if (!selectedTemplate) {
           console.error(chalk.red(`Template '${templateName}' not found.`));
-          console.log("Available templates:");
-          templates.forEach((t) => console.log(`  - ${t.name} (${t.type})`));
+          console.log('Available templates:');
+          templates.forEach((t) => {
+            console.log(`  - ${t.name} (${t.type})`);
+          });
           return;
         }
-          
-        agentConfig = {
-          template: selectedTemplate.name,
-          name: options.name,
-          config: {
-            autonomyLevel: parseFloat(options.autonomy || "0.7"),
-            maxConcurrentTasks: parseInt(options.maxTasks || "5"),
-            timeoutThreshold: parseInt(options.timeout || "300000"),
-          },
-          environment: {
+
+        // Find the template key (Map key) for the selected template
+        // Templates are stored by their type as the key (e.g., "researcher")
+        const templateKey = selectedTemplate.type;
+
+        console.log(chalk.cyan('\n🚀 Creating new agent...'));
+        
+        // Prepare agent configuration
+        const agentConfig = {
+          autonomyLevel: parseFloat(options.autonomy || "0.7"),
+          maxConcurrentTasks: parseInt(options.maxTasks || "5"),
+          timeoutThreshold: parseInt(options.timeout || "300000"),
+        };
+        
+        // Prepare environment configuration
+        const envConfig = {
+          resourceLimits: {
             maxMemoryUsage: parseInt(options.maxMemory || "512") * 1024 * 1024,
           },
         };
+        
+        console.log(chalk.cyan('\n🚀 Creating new agent...'));
+        
+        // Create the agent using the template key
+        const agentId = await manager.createAgent(templateKey, {
+          name: options.name,
+          config: agentConfig,
+          environment: envConfig,
+        });
+        console.log(chalk.green(`✅ Agent created successfully with ID: ${agentId}`));
+        console.log(`Name: ${options.name ?? "Unnamed"}`);
+        console.log(`Template: ${selectedTemplate.name}`);
+        
+        if (options.start) {
+          console.log(chalk.cyan("Starting agent..."));
+          await manager.startAgent(agentId);
+          console.log(chalk.green("✅ Agent started successfully!"));
+        }
       }
-        
-      console.log(chalk.cyan("\n🚀 Creating new agent..."));
-        
-      // Mock agent creation
-      const agentId = await manager.createAgent(agentConfig.template, agentConfig);
-      console.log(chalk.green(`✅ Agent created successfully with ID: ${agentId}`));
-      console.log(`Name: ${agentConfig.name ?? "Unnamed"}`);
-      console.log(`Template: ${agentConfig.template}`);
-      
-      if (options.start) {
-        console.log(chalk.cyan("\n🔄 Starting agent..."));
-        await manager.startAgent(agentId);
-        console.log(chalk.green("✅ Agent started successfully"));
-      }
-        
-    } catch (error) {
-      console.error(chalk.red("Error spawning agent:"), error instanceof Error ? error.message : String(error));
+    } catch (error: any) {
+      console.error(chalk.red("Error spawning agent:"), error.message);
       process.exit(1);
     }
   });

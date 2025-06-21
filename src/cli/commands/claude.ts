@@ -158,15 +158,15 @@ claudeCommand
         }
       });
         
-        } catch (error) {
+    } catch (error) {
       console.error(colors.red("Failed to spawn Claude:"), (error as Error).message);
     }
-  })
-  // Removed batch subcommand - use top-level 'batch' command instead
-  // .command("batch")
-  // .description("Spawn multiple Claude instances from workflow")
-  // .arguments("<workflow-file>")
-  // .option("--dry-run", "Show what would be executed without running")
-  // .action(async (options: ClaudeWorkflowOptions, workflowFile: string) => {
-  //   // Implementation moved to top-level batch command
-  // });
+  });
+// Removed batch subcommand - use top-level 'batch' command instead
+// .command("batch")
+// .description("Spawn multiple Claude instances from workflow")
+// .arguments("<workflow-file>")
+// .option("--dry-run", "Show what would be executed without running")
+// .action(async (options: ClaudeWorkflowOptions, workflowFile: string) => {
+//   // Implementation moved to top-level batch command
+// });

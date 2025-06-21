@@ -29,15 +29,15 @@ const mockEventBus = new EventEmitter();
 
 // Mock config
 const mockMCPConfig: MCPConfig = {
-  transport: 'stdio',
+  transport: "stdio",
   enableMetrics: true,
   auth: {
     enabled: false,
-    method: 'token',
+    method: "token",
   },
 };
 
-describe('MCP Server', () => {
+describe("MCP Server", () => {
   let server: MCPServer;
 
   beforeEach(() => {
@@ -54,16 +54,16 @@ describe('MCP Server', () => {
     }
   });
 
-  describe('Lifecycle Management', () => {
-    it('should start and stop server successfully', async () => {
+  describe("Lifecycle Management", () => {
+    it("should start and stop server successfully", async () => {
       await server.start();
-      expect(mockLogger.info).toHaveBeenCalledWith('MCP server started successfully');
+      expect(mockLogger.info).toHaveBeenCalledWith("MCP server started successfully");
       
       await server.stop();
-      expect(mockLogger.info).toHaveBeenCalledWith('MCP server stopped');
+      expect(mockLogger.info).toHaveBeenCalledWith("MCP server stopped");
     });
 
-    it('should handle initialization request', async () => {
+    it("should handle initialization request", async () => {
       await server.start();
       
       const initParams: MCPInitializeParams = {
@@ -72,65 +72,65 @@ describe('MCP Server', () => {
           tools: { listChanged: true },
         },
         clientInfo: {
-          name: 'test-client',
-          version: '1.0.0',
+          name: "test-client",
+          version: "1.0.0",
         },
       };
 
       const request: MCPRequest = {
-        jsonrpc: '2.0',
-        id: 'test-init',
-        method: 'initialize',
+        jsonrpc: "2.0",
+        id: "test-init",
+        method: "initialize",
         params: initParams,
       };
 
       // Mock transport handler
-      const transport = (server as any).transport;
+      const { transport } = (server as any);
       transport.onRequest = jest.fn();
       
       const response = await (server as any).handleRequest(request);
       
-      expect(response.jsonrpc).toBe('2.0');
-      expect(response.id).toBe('test-init');
+      expect(response.jsonrpc).toBe("2.0");
+      expect(response.id).toBe("test-init");
       expect(response.result).toBeDefined();
       expect(response.result.protocolVersion).toEqual({ major: 2024, minor: 11, patch: 5 });
     });
   });
 
-  describe('Tool Registration', () => {
+  describe("Tool Registration", () => {
     beforeEach(async () => {
       await server.start();
     });
 
-    it('should register tools successfully', () => {
+    it("should register tools successfully", () => {
       const tool = {
-        name: 'test/tool',
-        description: 'Test tool',
+        name: "test/tool",
+        description: "Test tool",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            input: { type: 'string' },
+            input: { type: "string" },
           },
         },
-        handler: jest.fn().mockResolvedValue('test result'),
+        handler: jest.fn().mockResolvedValue("test result"),
       };
 
       server.registerTool(tool);
-      expect(mockLogger.info).toHaveBeenCalledWith('Tool registered', { name: 'test/tool' });
+      expect(mockLogger.info).toHaveBeenCalledWith("Tool registered", { name: "test/tool" });
     });
 
-    it('should list registered tools', async () => {
+    it("should list registered tools", async () => {
       const tool1 = {
-        name: 'test/tool1',
-        description: 'Test tool 1',
-        inputSchema: { type: 'object', properties: {} },
+        name: "test/tool1",
+        description: "Test tool 1",
+        inputSchema: { type: "object", properties: {} },
         handler: jest.fn(),
       };
 
       const tool2 = {
-        name: 'test/tool2',
-        description: 'Test tool 2',
-        inputSchema: { type: 'object', properties: {} },
+        name: "test/tool2",
+        description: "Test tool 2",
+        inputSchema: { type: "object", properties: {} },
         handler: jest.fn(),
       };
 
@@ -139,17 +139,17 @@ describe('MCP Server', () => {
 
       const tools = (server as any).toolRegistry.listTools();
       expect(tools).toHaveLength(2 + 4); // 2 custom + 4 built-in tools
-      expect(tools.some((t: any) => t.name === 'test/tool1')).toBe(true);
-      expect(tools.some((t: any) => t.name === 'test/tool2')).toBe(true);
+      expect(tools.some((t: any) => t.name === "test/tool1")).toBe(true);
+      expect(tools.some((t: any) => t.name === "test/tool2")).toBe(true);
     });
   });
 
-  describe('Health Checks', () => {
+  describe("Health Checks", () => {
     beforeEach(async () => {
       await server.start();
     });
 
-    it('should report healthy status when running', async () => {
+    it("should report healthy status when running", async () => {
       const health = await server.getHealthStatus();
       
       expect(health.healthy).toBe(true);
@@ -157,19 +157,19 @@ describe('MCP Server', () => {
       expect(health.metrics?.registeredTools).toBeGreaterThan(0);
     });
 
-    it('should include metrics in health status', async () => {
+    it("should include metrics in health status", async () => {
       const health = await server.getHealthStatus();
       
       expect(health.metrics).toBeDefined();
-      expect(typeof health.metrics?.registeredTools).toBe('number');
-      expect(typeof health.metrics?.totalRequests).toBe('number');
-      expect(typeof health.metrics?.successfulRequests).toBe('number');
-      expect(typeof health.metrics?.failedRequests).toBe('number');
+      expect(typeof health.metrics?.registeredTools).toBe("number");
+      expect(typeof health.metrics?.totalRequests).toBe("number");
+      expect(typeof health.metrics?.successfulRequests).toBe("number");
+      expect(typeof health.metrics?.failedRequests).toBe("number");
     });
   });
 });
 
-describe('MCP Lifecycle Manager', () => {
+describe("MCP Lifecycle Manager", () => {
   let lifecycleManager: MCPLifecycleManager;
   let mockServerFactory: Mock;
 
@@ -227,25 +227,25 @@ describe('MCP Lifecycle Manager', () => {
     }
   });
 
-  describe('State Management', () => {
-    it('should start in stopped state', () => {
+  describe("State Management", () => {
+    it("should start in stopped state", () => {
       expect(lifecycleManager.getState()).toBe(LifecycleState.STOPPED);
     });
 
-    it('should transition to running state when started', async () => {
+    it("should transition to running state when started", async () => {
       await lifecycleManager.start();
       expect(lifecycleManager.getState()).toBe(LifecycleState.RUNNING);
     });
 
-    it('should transition back to stopped when stopped', async () => {
+    it("should transition back to stopped when stopped", async () => {
       await lifecycleManager.start();
       await lifecycleManager.stop();
       expect(lifecycleManager.getState()).toBe(LifecycleState.STOPPED);
     });
 
-    it('should emit state change events', async () => {
+    it("should emit state change events", async () => {
       const stateChanges: any[] = [];
-      lifecycleManager.on('stateChange', (event) => {
+      lifecycleManager.on("stateChange", (event) => {
         stateChanges.push(event);
       });
 
@@ -260,8 +260,8 @@ describe('MCP Lifecycle Manager', () => {
     });
   });
 
-  describe('Health Monitoring', () => {
-    it('should perform health checks when enabled', async () => {
+  describe("Health Monitoring", () => {
+    it("should perform health checks when enabled", async () => {
       const config = {
         healthCheckInterval: 100,
         enableHealthChecks: true,
@@ -290,7 +290,7 @@ describe('MCP Lifecycle Manager', () => {
       expect(health.state).toBe(LifecycleState.RUNNING);
     });
 
-    it('should track uptime', async () => {
+    it("should track uptime", async () => {
       await lifecycleManager.start();
       
       // Wait a bit
@@ -302,7 +302,7 @@ describe('MCP Lifecycle Manager', () => {
   });
 });
 
-describe('MCP Performance Monitor', () => {
+describe("MCP Performance Monitor", () => {
   let performanceMonitor: MCPPerformanceMonitor;
 
   beforeEach(() => {
@@ -315,24 +315,24 @@ describe('MCP Performance Monitor', () => {
     }
   });
 
-  describe('Request Tracking', () => {
-    it('should track request metrics', async () => {
+  describe("Request Tracking", () => {
+    it("should track request metrics", async () => {
       const mockSession: MCPSession = {
-        id: 'test-session',
-        clientInfo: { name: 'test', version: '1.0' },
+        id: "test-session",
+        clientInfo: { name: "test", version: "1.0" },
         protocolVersion: { major: 2024, minor: 11, patch: 5 },
         capabilities: {},
         isInitialized: true,
         createdAt: new Date(),
         lastActivity: new Date(),
-        transport: 'stdio',
+        transport: "stdio",
         authenticated: false,
       };
 
       const mockRequest: MCPRequest = {
-        jsonrpc: '2.0',
-        id: 'test-request',
-        method: 'test/method',
+        jsonrpc: "2.0",
+        id: "test-request",
+        method: "test/method",
       };
 
       const requestId = performanceMonitor.recordRequestStart(mockRequest, mockSession);
@@ -342,9 +342,9 @@ describe('MCP Performance Monitor', () => {
       await new Promise(resolve => setTimeout(resolve, 10));
       
       performanceMonitor.recordRequestEnd(requestId, {
-        jsonrpc: '2.0',
-        id: 'test-request',
-        result: 'success',
+        jsonrpc: "2.0",
+        id: "test-request",
+        result: "success",
       });
 
       const metrics = performanceMonitor.getCurrentMetrics();
@@ -354,15 +354,15 @@ describe('MCP Performance Monitor', () => {
   });
 });
 
-describe('MCP Protocol Manager', () => {
+describe("MCP Protocol Manager", () => {
   let protocolManager: MCPProtocolManager;
 
   beforeEach(() => {
     protocolManager = new MCPProtocolManager(mockLogger);
   });
 
-  describe('Version Compatibility', () => {
-    it('should check version compatibility correctly', () => {
+  describe("Version Compatibility", () => {
+    it("should check version compatibility correctly", () => {
       const clientVersion = { major: 2024, minor: 11, patch: 5 };
       const compatibility = protocolManager.checkCompatibility(clientVersion);
       
@@ -370,7 +370,7 @@ describe('MCP Protocol Manager', () => {
       expect(compatibility.errors).toHaveLength(0);
     });
 
-    it('should reject incompatible major versions', () => {
+    it("should reject incompatible major versions", () => {
       const clientVersion = { major: 2023, minor: 11, patch: 5 };
       const compatibility = protocolManager.checkCompatibility(clientVersion);
       
@@ -379,17 +379,17 @@ describe('MCP Protocol Manager', () => {
     });
   });
 
-  describe('Protocol Negotiation', () => {
-    it('should negotiate protocol successfully', async () => {
+  describe("Protocol Negotiation", () => {
+    it("should negotiate protocol successfully", async () => {
       const clientParams: MCPInitializeParams = {
         protocolVersion: { major: 2024, minor: 11, patch: 5 },
         capabilities: {
           tools: { listChanged: true },
-          logging: { level: 'info' },
+          logging: { level: "info" },
         },
         clientInfo: {
-          name: 'test-client',
-          version: '1.0.0',
+          name: "test-client",
+          version: "1.0.0",
         },
       };
 
@@ -402,91 +402,91 @@ describe('MCP Protocol Manager', () => {
   });
 });
 
-describe('Tool Registry', () => {
+describe("Tool Registry", () => {
   let toolRegistry: ToolRegistry;
 
   beforeEach(() => {
     toolRegistry = new ToolRegistry(mockLogger);
   });
 
-  describe('Tool Management', () => {
-    it('should register tools with capabilities', () => {
+  describe("Tool Management", () => {
+    it("should register tools with capabilities", () => {
       const tool = {
-        name: 'test/tool',
-        description: 'Test tool for registry',
+        name: "test/tool",
+        description: "Test tool for registry",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
-            input: { type: 'string' },
+            input: { type: "string" },
           },
         },
-        handler: jest.fn().mockImplementation(async () => 'test result'),
+        handler: jest.fn().mockImplementation(async () => "test result"),
       };
 
       const capability = {
-        name: 'test/tool',
-        version: '1.0.0',
-        description: 'Test capability',
-        category: 'test',
-        tags: ['testing', 'demo'],
+        name: "test/tool",
+        version: "1.0.0",
+        description: "Test capability",
+        category: "test",
+        tags: ["testing", "demo"],
         supportedProtocolVersions: [{ major: 2024, minor: 11, patch: 5 }],
       };
 
       toolRegistry.register(tool, capability);
       
-      const registeredCapability = toolRegistry.getToolCapability('test/tool');
+      const registeredCapability = toolRegistry.getToolCapability("test/tool");
       expect(registeredCapability).toEqual(capability);
     });
 
-    it('should discover tools by criteria', () => {
+    it("should discover tools by criteria", () => {
       const tool1 = {
-        name: 'file/read',
-        description: 'Read files',
-        inputSchema: { type: 'object', properties: {} },
-        handler: jest.fn().mockImplementation(async () => 'result'),
+        name: "file/read",
+        description: "Read files",
+        inputSchema: { type: "object", properties: {} },
+        handler: jest.fn().mockImplementation(async () => "result"),
       };
 
       const tool2 = {
-        name: 'memory/query',
-        description: 'Query memory',
-        inputSchema: { type: 'object', properties: {} },
-        handler: jest.fn().mockImplementation(async () => 'result'),
+        name: "memory/query",
+        description: "Query memory",
+        inputSchema: { type: "object", properties: {} },
+        handler: jest.fn().mockImplementation(async () => "result"),
       };
 
       toolRegistry.register(tool1);
       toolRegistry.register(tool2);
 
-      const fileTools = toolRegistry.discoverTools({ category: 'file' });
+      const fileTools = toolRegistry.discoverTools({ category: "file" });
       expect(fileTools).toHaveLength(1);
-      expect(fileTools[0].tool.name).toBe('file/read');
+      expect(fileTools[0].tool.name).toBe("file/read");
 
-      const memoryTools = toolRegistry.discoverTools({ tags: ['memory'] });
+      const memoryTools = toolRegistry.discoverTools({ tags: ["memory"] });
       expect(memoryTools).toHaveLength(1);
-      expect(memoryTools[0].tool.name).toBe('memory/query');
+      expect(memoryTools[0].tool.name).toBe("memory/query");
     });
 
-    it('should track tool metrics', async () => {
+    it("should track tool metrics", async () => {
       const tool = {
-        name: 'test/metric-tool',
-        description: 'Tool for metrics testing',
-        inputSchema: { type: 'object', properties: {} },
-        handler: jest.fn().mockImplementation(async () => 'success'),
+        name: "test/metric-tool",
+        description: "Tool for metrics testing",
+        inputSchema: { type: "object", properties: {} },
+        handler: jest.fn().mockImplementation(async () => "success"),
       };
 
       toolRegistry.register(tool);
       
       // Execute tool multiple times
-      await toolRegistry.executeTool('test/metric-tool', {});
-      await toolRegistry.executeTool('test/metric-tool', {});
+      await toolRegistry.executeTool("test/metric-tool", {});
+      await toolRegistry.executeTool("test/metric-tool", {});
       
-      const metrics = toolRegistry.getToolMetrics('test/metric-tool');
+      const metrics = toolRegistry.getToolMetrics("test/metric-tool");
       expect(Array.isArray(metrics) ? metrics[0].totalInvocations : metrics.totalInvocations).toBe(2);
       expect(Array.isArray(metrics) ? metrics[0].successfulInvocations : metrics.successfulInvocations).toBe(2);
     });
   });
 });
 
-describe('MCP Orchestration Integration', () => {
+describe("MCP Orchestration Integration", () => {
   let integration: MCPOrchestrationIntegration;
   let mockComponents: any;
 
@@ -496,7 +496,7 @@ describe('MCP Orchestration Integration', () => {
     
     mockComponents = {
       orchestrator: {
-        getStatus: jest.fn().mockResolvedValue({ status: 'running' }),
+        getStatus: jest.fn().mockResolvedValue({ status: "running" }),
         listTasks: jest.fn().mockResolvedValue([]),
       },
       eventBus: new EventEmitter(),
@@ -544,18 +544,18 @@ describe('MCP Orchestration Integration', () => {
     jest.clearAllTimers();
   });
 
-  describe('Integration Management', () => {
-    it('should start integration successfully', async () => {
+  describe("Integration Management", () => {
+    it("should start integration successfully", async () => {
       await integration.start();
       
       const status = integration.getIntegrationStatus();
       expect(status).toHaveLength(7); // All component types
       
-      const orchestratorStatus = status.find(s => s.component === 'orchestrator');
+      const orchestratorStatus = status.find(s => s.component === "orchestrator");
       expect(orchestratorStatus?.enabled).toBe(true);
     });
 
-    it('should register orchestrator tools when enabled', async () => {
+    it("should register orchestrator tools when enabled", async () => {
       await integration.start();
       
       const server = integration.getServer();
@@ -563,13 +563,13 @@ describe('MCP Orchestration Integration', () => {
       
       // Check that orchestrator tools are registered
       const tools = (server as any).toolRegistry.listTools();
-      const orchestratorTools = tools.filter((t: any) => t.name.startsWith('orchestrator/'));
+      const orchestratorTools = tools.filter((t: any) => t.name.startsWith("orchestrator/"));
       expect(orchestratorTools.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Health Monitoring', () => {
-    it('should monitor component health', async () => {
+  describe("Health Monitoring", () => {
+    it("should monitor component health", async () => {
       await integration.start();
       
       // Advance timers to trigger health check

@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, expect } from '@jest/globals';
+import { describe, it, beforeEach, expect } from "@jest/globals";
 
 // Simple utility functions to test
 function greet(name: string): string {
@@ -11,8 +11,8 @@ function sum(numbers: number[]): number {
 
 function formatDate(date: Date): string {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 

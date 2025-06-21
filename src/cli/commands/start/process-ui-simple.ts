@@ -138,7 +138,7 @@ export class ProcessUI {
       // Wait for either countdown or cancellation
       await Promise.race([
         cancelPromise,
-        new Promise(resolve => setTimeout(resolve, 6000))
+        new Promise(resolve => setTimeout(resolve, 6000)),
       ]);
     }
   }
@@ -156,7 +156,7 @@ export class ProcessUI {
         "claude",
         "npx claude",
         "npx @anthropic-ai/claude",
-        "npx claude-ai"
+        "npx claude-ai",
       ];
       
       let claudeLaunched = false;
@@ -172,8 +172,8 @@ export class ProcessUI {
             env: {
               ...process.env,
               CLAUDE_FLOW_ACTIVE: "true",
-              CLAUDE_FLOW_PORT: "3000"
-            }
+              CLAUDE_FLOW_PORT: "3000",
+            },
           });
           
           claudeProcess.on("error", (error) => {
