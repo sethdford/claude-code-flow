@@ -20,9 +20,16 @@
     "build:binary": "npm run build:sea",
     "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
+    "test-only": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --passWithNoTests",
     "prepare": "npm run build:ts",
-    "lint": "eslint src --ext .ts,.js",
-    "format": "prettier --write src"
+    "lint": "eslint . --ext .ts,.js --max-warnings 0",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "format": "prettier --write src",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "npm run build && changeset publish"
   },
   "keywords": [
     "ai",

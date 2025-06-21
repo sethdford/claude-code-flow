@@ -42,9 +42,9 @@ export class CodeAgent extends BaseAgent {
     super(id, "developer" as AgentType);
     
     this.modelHierarchy = {
-      primary: config?.models?.primary || "claude-3-5-sonnet-20241022",
-      apply: config?.models?.apply || "claude-3-haiku-20240307",
-      review: config?.models?.review || "claude-3-5-sonnet-20241022",
+      primary: config?.models?.primary || "claude-sonnet-4-20250514",
+      apply: config?.models?.apply || "claude-sonnet-4-20250514",
+      review: config?.models?.review || "claude-sonnet-4-20250514",
     };
 
     this.capabilities = {
