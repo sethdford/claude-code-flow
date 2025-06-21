@@ -23,6 +23,7 @@ import { swarmCommand } from "./commands/swarm.js";
 import { sparcCommand } from "./commands/sparc.js";
 import { enterpriseCommand } from "./commands/enterprise.js";
 import { modelsCommand } from "./commands/models.js";
+import { initCommand } from "./commands/init.js";
 import { formatError, displayBanner, displayVersion } from "./formatter.js";
 import { startNodeREPL as startREPL } from "./node-repl.js";
 import { CompletionGenerator } from "./completion.js";
@@ -83,6 +84,7 @@ export function createCLI(): Command {
 
   // Add all subcommands
   cli
+    .addCommand(initCommand)
     .addCommand(startCommand)
     .addCommand(agentCommand)
     .addCommand(taskCommand)
