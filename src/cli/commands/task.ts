@@ -45,7 +45,7 @@ export const taskCommand = new Command()
   .option("-d, --dependencies <deps>", "Comma-separated list of dependency task IDs")
   .option("-i, --input <input>", "Task input as JSON")
   .option("-a, --assign <agent>", "Assign to specific agent")
-  .action(async (options: TaskCreateOptions, type: string, description: string) => {
+  .action(async (type: string, description: string, options: TaskCreateOptions) => {
     const task: Task = {
       id: generateId("task"),
       type,
@@ -72,29 +72,13 @@ export const taskCommand = new Command()
   .command("status")
   .description("Get task status")
   .arguments("<task-id>")
-  .action(async (_options: BaseCommandOptions, _taskId: string) => {
+  .action(async (_taskId: string, _options: BaseCommandOptions) => {
     console.log(chalk.yellow("Task status requires a running Claude-Flow instance"));
   })
   .command("cancel")
   .description("Cancel a task")
   .arguments("<task-id>")
   .option("-r, --reason <reason>", "Cancellation reason")
-  .action(async (options: TaskCancelOptions, taskId: string) => {
+  .action(async (taskId: string, options: TaskCancelOptions) => {
     console.log(chalk.yellow(`Cancelling task ${taskId} requires a running Claude-Flow instance`));
   })
-  .command("workflow")
-  .description("Execute a workflow from file")
-  .arguments("<workflow-file>")
-  .action(async (options: BaseCommandOptions, workflowFile: string) => {
-    try {
-      const content = await fs.readFile(workflowFile, "utf-8");
-      const workflow = JSON.parse(content);
-        
-      console.log(chalk.green("Workflow loaded:"));
-      console.log(`- Name: ${workflow.name ?? "Unnamed"}`);
-      console.log(`- Tasks: ${workflow.tasks?.length || 0}`);
-      console.log(chalk.yellow("\nTo execute this workflow, ensure Claude-Flow is running"));
-    } catch (error) {
-      console.error(chalk.red("Failed to load workflow:"), (error as Error).message);
-    }
-  });

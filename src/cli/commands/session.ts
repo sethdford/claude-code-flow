@@ -151,7 +151,7 @@ export const sessionCommand = new Command()
   .description("Save current session state")
   .arguments("<session-id>")
   .option("-m, --message <msg>", "Save message")
-  .action(async (options: { message?: string }, sessionId: string) => {
+  .action(async (sessionId: string, options: { message?: string }) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -184,7 +184,7 @@ export const sessionCommand = new Command()
   .description("Restore a saved session")
   .arguments("<session-id>")
   .option("-f, --force", "Force restore without confirmation")
-  .action(async (options: { force?: boolean }, sessionId: string) => {
+  .action(async (sessionId: string, options: { force?: boolean }) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -211,7 +211,7 @@ export const sessionCommand = new Command()
   .description("Delete a session")
   .arguments("<session-id>")
   .option("-f, --force", "Force delete without confirmation")
-  .action(async (options: { force?: boolean }, sessionId: string) => {
+  .action(async (sessionId: string, options: { force?: boolean }) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -237,7 +237,7 @@ export const sessionCommand = new Command()
   .description("Export session to file")
   .arguments("<session-id> <output-file>")
   .option("--format <fmt>", "Export format (json, yaml)", "json")
-  .action(async (options: { format?: string }, sessionId: string, outputFile: string) => {
+  .action(async (sessionId: string, outputFile: string, options: { format?: string }) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -274,7 +274,7 @@ export const sessionCommand = new Command()
   .arguments("<input-file>")
   .option("-n, --name <name>", "Override session name")
   .option("-f, --force", "Force import even if session exists")
-  .action(async (options: { name?: string; force?: boolean }, inputFile: string) => {
+  .action(async (inputFile: string, options: { name?: string; force?: boolean }) => {
     try {
       const content = await fs.readFile(inputFile, "utf-8");
       const importData: SessionExportData = JSON.parse(content);
@@ -316,7 +316,7 @@ export const sessionCommand = new Command()
   .description("Show detailed session information")
   .arguments("<session-id>")
   .option("--json", "Output in JSON format")
-  .action(async (options: { json?: boolean }, sessionId: string) => {
+  .action(async (sessionId: string, options: { json?: boolean }) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {

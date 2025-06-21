@@ -40,7 +40,10 @@ export const workflowCommand = new Command()
   .description("Execute and manage workflows")
   .action(() => {
     workflowCommand.outputHelp();
-  })
+  });
+
+// Add subcommands properly
+workflowCommand
   .command("run")
   .description("Execute a workflow from file")
   .arguments("<workflow-file>")
@@ -49,43 +52,53 @@ export const workflowCommand = new Command()
   .option("-w, --watch", "Watch workflow execution progress")
   .option("--parallel", "Allow parallel execution where possible")
   .option("--fail-fast", "Stop on first task failure")
-  .action(async (options: { dryRun?: boolean; variables?: string; watch?: boolean; parallel?: boolean; failFast?: boolean }, workflowFile: string) => {
+  .action(async (workflowFile: string, options: { dryRun?: boolean; variables?: string; watch?: boolean; parallel?: boolean; failFast?: boolean }) => {
     await runWorkflow(workflowFile, options);
-  })
+  });
+
+workflowCommand
   .command("validate")
   .description("Validate a workflow file")
   .arguments("<workflow-file>")
   .option("--strict", "Use strict validation mode")
-  .action(async (options: { strict?: boolean }, workflowFile: string) => {
+  .action(async (workflowFile: string, options: { strict?: boolean }) => {
     await validateWorkflow(workflowFile, options);
-  })
+  });
+
+workflowCommand
   .command("list")
   .description("List running workflows")
   .option("--all", "Include completed workflows")
   .option("--format <format>", "Output format (table, json)", "table")
   .action(async (options: { all?: boolean; format?: string }) => {
     await listWorkflows(options);
-  })
+  });
+
+workflowCommand
   .command("status")
   .description("Show workflow execution status")
   .arguments("<workflow-id>")
   .option("-w, --watch", "Watch workflow progress")
-  .action(async (options: { watch?: boolean }, workflowId: string) => {
+  .action(async (workflowId: string, options: { watch?: boolean }) => {
     await showWorkflowStatus(workflowId, options);
-  })
+  });
+
+workflowCommand
   .command("stop")
   .description("Stop a running workflow")
   .arguments("<workflow-id>")
   .option("-f, --force", "Force stop without cleanup")
-  .action(async (options: { force?: boolean }, workflowId: string) => {
+  .action(async (workflowId: string, options: { force?: boolean }) => {
     await stopWorkflow(workflowId, options);
-  })
+  });
+
+workflowCommand
   .command("template")
   .description("Generate workflow templates")
   .arguments("<template-type>")
   .option("-o, --output <file>", "Output file path")
   .option("--format <format>", "Template format (json, yaml)", "json")
-  .action(async (options: { output?: string; format?: string }, templateType: string) => {
+  .action(async (templateType: string, options: { output?: string; format?: string }) => {
     await generateTemplate(templateType, options);
   });
 
@@ -505,15 +518,22 @@ async function validateWorkflowDefinition(workflow: WorkflowDefinition, strict =
     if (!task.description) errors.push(`Task ${task.id}: description is required`);
     
     // Validate dependencies
-    if (task.depends) {
+    if (task.depends && Array.isArray(task.depends)) {
+      for (const dep of task.depends) {
+        // For now, just check if the dependency is a valid string
+        if (typeof dep !== 'string' || dep.trim() === '') {
+          errors.push(`Task ${task.id}: invalid dependency ${dep}`);
+        }
+      }
+    }
+  }
+
+  // Second pass: validate dependency references after all tasks are collected
+  for (const task of workflow.tasks ?? []) {
+    if (task.depends && Array.isArray(task.depends)) {
       for (const dep of task.depends) {
         if (!taskIds.has(dep)) {
-          // Check if dependency exists in previous tasks
-          const taskIndex = workflow.tasks.indexOf(task);
-          const depExists = workflow.tasks.slice(0, taskIndex).some(t => t.id === dep);
-          if (!depExists) {
-            errors.push(`Task ${task.id}: unknown dependency ${dep}`);
-          }
+          errors.push(`Task ${task.id}: unknown dependency ${dep}`);
         }
       }
     }
@@ -552,7 +572,7 @@ async function validateWorkflowDefinition(workflow: WorkflowDefinition, strict =
   }
 
   if (errors.length > 0) {
-    throw new Error(`Workflow validation failed:\n• ${  errors.join("\n• ")}`);
+    throw new Error(`Workflow validation failed:\n• ${errors.join("\n• ")}`);
   }
 }
 

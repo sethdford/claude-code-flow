@@ -4,7 +4,7 @@
  */
 
 import { EventEmitter } from "events";
-import { TaskEngine, WorkflowTask, TaskExecution } from "./engine.js";
+import { TaskEngine, WorkflowTask } from "./engine.js";
 import { generateId } from "../utils/helpers.js";
 
 export interface TodoItem {

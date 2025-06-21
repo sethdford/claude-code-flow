@@ -311,7 +311,7 @@ agentCommand
   .command("start")
   .description("Start a created agent")
   .arguments("<agent-id>")
-  .action(async (options: AgentStartOptions, agentId: string) => {
+  .action(async (agentId: string, options: AgentStartOptions) => {
     try {
       const manager = initializeAgentManager();
       console.log(chalk.cyan(`🚀 Starting agent ${agentId}...`));
@@ -326,7 +326,7 @@ agentCommand
   .description("Restart an agent")
   .arguments("<agent-id>")
   .option("--reason <reason>", "Restart reason")
-  .action(async (options: AgentStartOptions & { reason?: string }, agentId: string) => {
+  .action(async (agentId: string, options: AgentStartOptions & { reason?: string }) => {
     try {
       const manager = initializeAgentManager();
       console.log(chalk.cyan(`🔄 Restarting agent ${agentId}...`));

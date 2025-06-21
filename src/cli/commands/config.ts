@@ -211,7 +211,7 @@ export const configCommand = new Command()
   .option("--template <template>", "Configuration template (default, development, production, minimal, testing, enterprise)", "default")
   .option("--format <format>", "Output format (json, yaml, toml)", "json")
   .option("--interactive", "Interactive template selection")
-  .action(async (options: ConfigInitOptions, outputFile: string = "claude-flow.config.json") => {
+  .action(async (outputFile: string = "claude-flow.config.json", options: ConfigInitOptions) => {
     try {
       // Check if file exists
       try {

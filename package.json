@@ -10,7 +10,7 @@
     "access": "public"
   },
   "scripts": {
-    "dev": "tsx src/cli/main.ts",
+    "dev": "tsx src/cli/index.ts",
     "build": "npm run build:ts && npm run build:sea",
     "build:ts": "tsc",
     "build:sea": "npm run sea:bundle && npm run sea:blob && npm run sea:binaries",

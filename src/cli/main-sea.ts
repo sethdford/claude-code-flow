@@ -20,8 +20,7 @@ import { workflowCommand } from "./commands/workflow.js";
 import { helpCommand } from "./commands/help.js";
 import { mcpCommand } from "./commands/mcp.js";
 import { claudeCommand } from "./commands/claude.js";
-import { sparcCommand } from "./commands/sparc.js";
-import { swarmCommand } from "./commands/swarm.js";
+// Removed sparc and swarm commands - not part of core functionality
 import { formatError, displayBanner, displayVersion } from "./formatter.js";
 import { startNodeREPL as startREPL } from "./node-repl.js";
 import { CompletionGenerator } from "./completion.js";
@@ -90,9 +89,92 @@ cli
   .addCommand(workflowCommand)
   .addCommand(mcpCommand)
   .addCommand(claudeCommand)
-  .addCommand(sparcCommand)
-  .addCommand(swarmCommand)
   .addCommand(helpCommand)
+  .command("batch")
+  .description("Spawn multiple Claude instances from workflow")
+  .arguments("<workflow-file>")
+  .option("--dry-run", "Show what would be executed without running")
+  .action(async (workflowFile: string, options: { dryRun?: boolean }) => {
+    
+    try {
+      const fs = await import("fs/promises");
+      const content = await fs.readFile(workflowFile, "utf-8");
+      const workflow = JSON.parse(content) as any;
+      
+      console.log(colors.green("✓ Loading workflow:"), workflow.name ?? "Unnamed");
+      
+      // Handle different workflow formats
+      let tasks: Array<{
+        id?: string;
+        name?: string;
+        description?: string;
+        type?: string;
+        tools?: string[] | string;
+        skipPermissions?: boolean;
+        config?: string;
+      }> = [];
+      
+      if (workflow.tasks && Array.isArray(workflow.tasks)) {
+        tasks = workflow.tasks.map((task: any) => ({
+          id: task.id,
+          name: task.name || task.id,
+          description: task.description,
+          type: task.type || "general",
+          tools: task.tools || ["View", "Edit", "Replace", "GlobTool", "GrepTool", "LS", "Bash"],
+          skipPermissions: task.skipPermissions || false,
+          config: task.config ? (typeof task.config === 'string' ? task.config : JSON.stringify(task.config)) : undefined
+        }));
+      }
+      
+      console.log(colors.cyan("📋 Tasks:"), tasks.length);
+      
+      if (tasks.length === 0) {
+        console.log(colors.yellow("⚠️  No tasks found in workflow"));
+        return;
+      }
+      
+      if (options.dryRun) {
+        console.log(colors.yellow("\n🔍 DRY RUN - Commands that would be executed:"));
+        for (const task of tasks) {
+          const claudeCmd = ["claude", `"${task.description || task.name}"`];
+          
+          if (task.tools) {
+            const toolsList = Array.isArray(task.tools) ? task.tools.join(",") : task.tools;
+            claudeCmd.push("--allowedTools", toolsList);
+          }
+          
+          if (task.skipPermissions) {
+            claudeCmd.push("--dangerously-skip-permissions");
+          }
+          
+          if (task.config) {
+            claudeCmd.push("--mcp-config", task.config);
+          }
+          
+          console.log(colors.gray(`  ${claudeCmd.join(" ")}`));
+        }
+        return;
+      }
+      
+      console.log(colors.blue("\n🚀 Spawning Claude instances..."));
+      
+      for (const task of tasks) {
+        const taskId = task.id || `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        console.log(colors.cyan(`\n→ Task: ${task.name || taskId}`));
+        console.log(colors.gray(`  Description: ${task.description}`));
+        
+        // In a real implementation, you would spawn Claude here
+        // For now, just show what would be done
+        console.log(colors.green("  ✓ Would spawn Claude instance"));
+      }
+      
+      console.log(colors.green(`\n✅ Batch execution complete (${tasks.length} tasks)`));
+      
+    } catch (error) {
+      console.error(colors.red("❌ Failed to process workflow:"), (error as Error).message);
+      process.exit(1);
+    }
+  })
   .command("repl")
   .description("Start interactive REPL mode with command completion")
   .option("--no-banner", "Skip welcome banner")

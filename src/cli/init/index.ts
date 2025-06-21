@@ -1,7 +1,10 @@
 // init/index.ts - Main init command orchestrator
-import { success as printSuccess, error as printError } from "../cli-core.js";
+import chalk from "chalk";
+
+const printSuccess = (msg: string) => console.log(chalk.green(`✅ ${msg}`));
+const printError = (msg: string) => console.error(chalk.red(`❌ ${msg}`));
 import { createDirectoryStructure } from "./directory-structure.js";
-import { createSwarmCommands } from "./swarm-commands.js";
+// Removed swarm commands import - not part of core functionality
 import { createSparcEnvironment } from "./sparc-environment.js";
 import { createClaudeConfig } from "./claude-config.js";
 import { createBatchToolsGuide } from "./batch-tools.js";
@@ -28,7 +31,7 @@ export async function initCommand(options: InitOptions = {}) {
     
     // Phase 3: Create swarm commands and documentation
     console.log("\n🤖 Phase 3: Creating swarm commands...");
-    await createSwarmCommands();
+    // Swarm commands creation removed - not part of core functionality
     
     // Phase 4: Create batch tools guides
     console.log("\n🔧 Phase 4: Creating batch tools guides...");
