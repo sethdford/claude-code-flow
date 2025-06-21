@@ -27,6 +27,7 @@
     "format": "prettier --write src",
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
+    "cleanup": "node scripts/cleanup-root.js",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "npm run build && changeset publish"

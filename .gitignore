@@ -19,6 +19,7 @@ Thumbs.db
 # Logs
 *.log
 logs/
+lint-errors.log
 
 # Environment
 .env
@@ -30,21 +31,36 @@ coverage/
 .nyc_output/
 
 # Claude-Flow specific
-claude-flow.db
 claude-flow.config.json
 # memory/
 # sessions/
 
-# Temporary files
+# Runtime and temporary files
 *.tmp
 *.temp
 .cache/
+swarm-runs/
+status_*.txt
+*-output.txt
+*-test.txt
+
+# Test artifacts
+hello-world*.js
+hello-world*.json
+test-*.js
+*-integration.js
+
+# Analysis and debug files
+*-analysis.md
+*-error-analysis.md
+linter-error-analysis.md
+
+# History files
+.claude-flow-history
 
 package
 test-init
 test-full-init
-
-swarm-runs
 
 # Added by Task Master AI
 logs
