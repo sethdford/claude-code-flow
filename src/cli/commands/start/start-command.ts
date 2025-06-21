@@ -177,6 +177,14 @@ export const startCommand = new Command()
         console.log(colors.cyan("Starting in interactive mode..."));
         console.log();
 
+        // Auto-start if specified
+        if (options.autoStart) {
+          console.log(colors.blue("Auto-starting all processes..."));
+          await startWithProgress(processManager, "all");
+          console.log(colors.green.bold("✓"), "All processes started");
+          console.log();
+        }
+
         // Show available options
         console.log(colors.white.bold("Quick Actions:"));
         console.log("  [1] Start all processes");

@@ -17,7 +17,7 @@ import { MemoryManager } from "../../../memory/manager.js";
 import { CoordinationManager } from "../../../coordination/manager.js";
 import { MCPServer } from "../../../mcp/server.js";
 import { eventBus } from "../../../core/event-bus.js";
-import { logger } from "../../../core/logger.js";
+import { logger, ILogger } from "../../../core/logger.js";
 import { ConfigManager } from "../../../config/config-manager.js";
 import { type Config, type MemoryConfig, type TerminalConfig, type CoordinationConfig, type MCPConfig } from "../../../utils/types.js";
 
@@ -131,6 +131,15 @@ export class ProcessManager extends EventEmitter {
           break;
 
         case ProcessType.MCP_SERVER:
+          // Stop any existing MCP server instance first
+          if (this.mcpServer) {
+            try {
+              await this.mcpServer.stop();
+            } catch (error) {
+              // Ignore errors when stopping existing instance
+            }
+          }
+          
           this.mcpServer = new MCPServer(
             this.config.mcp,
             eventBus,
@@ -145,6 +154,20 @@ export class ProcessManager extends EventEmitter {
             throw new Error("Required components not initialized");
           }
           
+          // Create silent logger for orchestrator initialization to prevent UI clutter
+          const silentLogger: ILogger = {
+            info: () => {},
+            debug: () => {},
+            warn: () => {},
+            error: (message: string, error?: any) => {
+              // Only log errors to maintain error visibility
+              if (error) {
+                console.error(`Orchestrator error: ${error.message || error}`);
+              }
+            },
+            configure: async () => {} // No-op for silent logger
+          };
+          
           this.orchestrator = new Orchestrator(
             this.config,
             this.terminalManager,
@@ -152,7 +175,7 @@ export class ProcessManager extends EventEmitter {
             this.coordinationManager,
             this.mcpServer,
             eventBus,
-            logger,
+            silentLogger,
           );
           await this.orchestrator.initialize();
           break;

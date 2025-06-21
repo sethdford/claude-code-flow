@@ -380,18 +380,45 @@ export class NativeAdapter implements ITerminalAdapter {
   async initialize(): Promise<void> {
     this.logger.info("Initializing native terminal adapter", { shell: this.shell });
     
-    // Verify shell is available
+    // Verify shell is available with more robust testing
     try {
       const testConfig = this.getTestCommand();
       const { spawnSync } = require("child_process");
-      const result = spawnSync(testConfig.cmd, testConfig.args, { stdio: "ignore" });
+      const result = spawnSync(testConfig.cmd, testConfig.args, { 
+        stdio: "ignore",
+        timeout: 5000 // 5 second timeout
+      });
       
-      if (result.status !== 0) {
-        throw new Error("Shell test failed");
+      // Be more lenient with shell test - some shells may return non-zero even when working
+      if (result.error) {
+        throw result.error;
       }
+      
+      this.logger.info("Shell test completed", { 
+        shell: this.shell, 
+        status: result.status,
+        signal: result.signal 
+      });
     } catch (error) {
-      this.logger.warn(`Shell ${this.shell} not available, falling back to sh`, { error });
+      this.logger.warn(`Shell ${this.shell} test failed, falling back to sh`, { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
       this.shell = "sh";
+      
+      // Test fallback shell
+      try {
+        const { spawnSync } = require("child_process");
+        const fallbackResult = spawnSync("sh", ["-c", "echo test"], { 
+          stdio: "ignore",
+          timeout: 5000 
+        });
+        
+        if (fallbackResult.error) {
+          throw new TerminalError("No working shell found - both primary and fallback shells failed");
+        }
+      } catch (fallbackError) {
+        throw new TerminalError("No working shell found", { error: fallbackError });
+      }
     }
   }
 
@@ -477,11 +504,19 @@ export class NativeAdapter implements ITerminalAdapter {
   private getTestCommand(): { cmd: string; args: string[] } {
     switch (this.shell) {
       case "powershell":
-        return { cmd: "powershell", args: ["-Version"] };
+        return { cmd: "powershell", args: ["-Command", "echo 'test'"] };
       case "cmd":
         return { cmd: "cmd", args: ["/C", "echo test"] };
+      case "zsh":
+        // zsh --version might fail in some environments, use echo instead
+        return { cmd: "zsh", args: ["-c", "echo test"] };
+      case "bash":
+        return { cmd: "bash", args: ["-c", "echo test"] };
+      case "sh":
+        return { cmd: "sh", args: ["-c", "echo test"] };
       default:
-        return { cmd: this.shell, args: ["--version"] };
+        // For any other shell, try a simple echo command
+        return { cmd: this.shell, args: ["-c", "echo test"] };
     }
   }
 }

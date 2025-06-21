@@ -300,9 +300,22 @@ export class TerminalManager implements ITerminalManager {
   }
 
   private isVSCodeEnvironment(): boolean {
-    // Check for VSCode-specific environment variables
-    return process.env.TERM_PROGRAM === "vscode" ||
-           process.env.VSCODE_PID !== undefined ||
-           process.env.VSCODE_IPC_HOOK !== undefined;
+    // Check if we're actually running as a VSCode extension, not just in a VSCode terminal
+    // VSCode extensions have access to the global 'vscode' object and specific APIs
+    try {
+      // Check if we have the VSCode extension API available
+      const hasVSCodeAPI = typeof (globalThis as any).vscode !== 'undefined' &&
+                          typeof (globalThis as any).vscode.window !== 'undefined';
+      
+      // Check if we're in a VSCode extension host process
+      const isExtensionHost = process.env.VSCODE_EXTHOST_WILL_SEND_SOCKET !== undefined ||
+                             process.env.VSCODE_EXTENSION_HOST_WILL_SEND_SOCKET !== undefined;
+      
+      // Only return true if we have actual VSCode extension capabilities
+      return hasVSCodeAPI && isExtensionHost;
+    } catch (error) {
+      // If any check fails, assume we're not in a VSCode extension
+      return false;
+    }
   }
 }

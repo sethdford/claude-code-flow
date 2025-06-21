@@ -123,7 +123,8 @@ export class MCPServer implements IMCPServer {
 
   async start(): Promise<void> {
     if (this.running) {
-      throw new MCPErrorClass("MCP server already running");
+      this.logger.warn("MCP server already running, skipping start");
+      return;
     }
 
     this.logger.info("Starting MCP server", { transport: this.config.transport });
@@ -134,8 +135,29 @@ export class MCPServer implements IMCPServer {
         return await this.handleRequest(request);
       });
 
-      // Start transport
-      await this.transport.start();
+      // Start transport with retry logic for port conflicts
+      try {
+        await this.transport.start();
+      } catch (transportError) {
+        // If it's a port conflict, try to handle gracefully
+        if (transportError instanceof Error && 
+            (transportError.message.includes("EADDRINUSE") || 
+             transportError.message.includes("address already in use"))) {
+          this.logger.warn("Transport port already in use, attempting recovery");
+          
+          // Try to stop any existing transport
+          try {
+            await this.transport.stop();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            await this.transport.start();
+          } catch (retryError) {
+            this.logger.error("Failed to recover from port conflict", retryError);
+            throw transportError;
+          }
+        } else {
+          throw transportError;
+        }
+      }
 
       // Register built-in tools
       this.registerBuiltInTools();
