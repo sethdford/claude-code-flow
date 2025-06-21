@@ -51,6 +51,7 @@ export interface SystemStats {
 
 export interface StartOptions {
   daemon?: boolean;
+  background?: boolean;
   port?: number;
   mcpTransport?: string;
   config?: string;

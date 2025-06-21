@@ -55,6 +55,7 @@ export const startCommand = new Command()
   .name("start")
   .description("Start the Claude-Flow orchestration system")
   .option("-d, --daemon", "Run as daemon in background")
+  .option("-b, --background", "Start all processes and exit (leaves terminal free)")
   .option("-p, --port <port>", "MCP server port", "3000")
   .option("--mcp-transport <transport>", "MCP transport type (stdio, http)", "stdio")
   .option("-u, --ui", "Launch interactive process management UI")
@@ -152,6 +153,24 @@ export const startCommand = new Command()
         console.log(colors.green.bold("✓"), "Shutdown complete");
         process.exit(0);
       } 
+      // Background mode - start processes and exit
+      else if (options.background) {
+        console.log(colors.yellow("Starting in background mode..."));
+        console.log(colors.blue("Starting all system processes..."));
+        
+        await startWithProgress(processManager, "all");
+        
+        // Wait for services to be fully ready
+        await waitForSystemReady(processManager);
+        
+        console.log(colors.green.bold("✓"), "All processes started successfully");
+        console.log(colors.gray("Claude-Flow services are running in the background"));
+        console.log(colors.gray("Use \"claude-flow status\" to check system status"));
+        console.log(colors.gray("Your terminal is ready for use"));
+        
+        // Exit cleanly, processes will continue running
+        process.exit(0);
+      } 
       // Daemon mode
       else if (options.daemon) {
         console.log(colors.yellow("Starting in daemon mode..."));
@@ -183,9 +202,29 @@ export const startCommand = new Command()
         console.log(colors.green.bold("✓"), "Daemon started successfully");
         console.log(colors.gray("Use \"claude-flow status\" to check system status"));
         console.log(colors.gray("Use \"claude-flow monitor\" for real-time monitoring"));
+        console.log(colors.gray("Use \"claude-flow stop\" to stop all services"));
         
-        // Keep process running
-        await new Promise<void>(() => {});
+        // Set up background process management
+        process.stdin.unref();
+        process.stdout.unref();
+        process.stderr.unref();
+        
+        // Setup graceful shutdown handlers but don't wait
+        const shutdownHandler = async () => {
+          console.log(colors.yellow("\nShutting down daemon..."));
+          systemMonitor.stop();
+          await processManager.stopAll();
+          await fs.unlink(".claude-flow.pid").catch(() => {});
+          process.exit(0);
+        };
+        
+        process.on("SIGTERM", shutdownHandler);
+        process.on("SIGINT", shutdownHandler);
+        
+        // Exit the CLI process, leaving services running in background
+        console.log(colors.green("Claude-Flow services are now running in the background"));
+        console.log(colors.gray("Your terminal is ready for use"));
+        process.exit(0);
       } 
       // Interactive mode (default)
       else {
