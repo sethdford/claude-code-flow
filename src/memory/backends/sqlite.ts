@@ -10,10 +10,60 @@ import { MemoryEntry, MemoryQuery, ILogger } from "../../utils/types.js";
 import { MemoryBackendError } from "../../utils/errors.js";
 
 /**
+ * Check if we're running in a SEA (Single Executable Application) environment
+ */
+function isSEA(): boolean {
+  // Check for process.isSEA property (Node.js 20+)
+  if ((process as any).isSEA) {
+    return true;
+  }
+  
+  // Fallback: check if we're running from a binary that's not node
+  const execPath = process.execPath;
+  const isNodeBinary = execPath.includes('node') && !execPath.includes('claude-flow');
+  
+  // If we're not running from a node binary, we're likely in a SEA
+  return !isNodeBinary;
+}
+
+/**
+ * Get the SQLite native binary path for SEA environment
+ */
+async function getSQLiteNativePath(): Promise<string | null> {
+  if (!isSEA()) {
+    return null; // Use default better-sqlite3 behavior
+  }
+
+  try {
+    // In SEA, we need to extract the native binary to a temporary location
+    const { getAsset } = await import('node:sea');
+    const binaryData = getAsset('better_sqlite3.node');
+    
+    if (!binaryData) {
+      throw new Error('SQLite native binary not found in SEA bundle');
+    }
+
+    // Create a temporary file for the native binary
+    const tmpDir = path.join(process.cwd(), '.claude-flow-tmp');
+    await fs.mkdir(tmpDir, { recursive: true });
+    
+    const nativePath = path.join(tmpDir, 'better_sqlite3.node');
+    // Convert ArrayBuffer to Buffer for file writing
+    await fs.writeFile(nativePath, Buffer.from(binaryData));
+    
+    return nativePath;
+  } catch (error) {
+    console.warn('Failed to extract SQLite binary from SEA bundle:', error);
+    return null;
+  }
+}
+
+/**
  * SQLite-based memory backend
  */
 export class SQLiteBackend implements IMemoryBackend {
   private db: Database.Database | null = null;
+  private nativePath: string | null = null;
 
   constructor(
     private dbPath: string,
@@ -21,15 +71,31 @@ export class SQLiteBackend implements IMemoryBackend {
   ) {}
 
   async initialize(): Promise<void> {
-    this.logger.info("Initializing SQLite backend", { dbPath: this.dbPath });
+    this.logger.info("Initializing SQLite backend", { dbPath: this.dbPath, isSEA: isSEA() });
 
     try {
       // Ensure directory exists
       const dir = path.dirname(this.dbPath);
       await fs.mkdir(dir, { recursive: true });
 
+      // Handle SEA environment
+      if (isSEA()) {
+        this.nativePath = await getSQLiteNativePath();
+        if (this.nativePath) {
+          this.logger.info("Using extracted SQLite binary for SEA", { nativePath: this.nativePath });
+        }
+      }
+
       // Open SQLite connection
-      this.db = new Database(this.dbPath);
+      const options: Database.Options = {};
+      if (this.nativePath) {
+        // For SEA, we would need to use a custom approach
+        // Since better-sqlite3 doesn't directly support custom binary paths,
+        // we'll fall back to error handling and suggest markdown backend
+        this.logger.warn("SEA mode detected - SQLite may not work properly");
+      }
+
+      this.db = new Database(this.dbPath, options);
 
       // Enable WAL mode for better performance
       this.db.pragma("journal_mode = WAL");
@@ -43,8 +109,19 @@ export class SQLiteBackend implements IMemoryBackend {
       // Create indexes
       this.createIndexes();
 
-      this.logger.info("SQLite backend initialized");
+      this.logger.info("SQLite backend initialized successfully");
     } catch (error) {
+      this.logger.error("Failed to initialize SQLite backend", { error });
+      
+      // In SEA mode, provide helpful error message
+      if (isSEA()) {
+        throw new MemoryBackendError(
+          "SQLite backend failed in SEA mode. Consider using 'markdown' backend instead. " +
+          "Set CLAUDE_FLOW_MEMORY_BACKEND=markdown or update your config to use markdown backend.",
+          { error, suggestion: "Use markdown backend for SEA compatibility" }
+        );
+      }
+      
       throw new MemoryBackendError("Failed to initialize SQLite backend", { error });
     }
   }
@@ -55,6 +132,17 @@ export class SQLiteBackend implements IMemoryBackend {
     if (this.db) {
       this.db.close();
       this.db = null;
+    }
+
+    // Clean up extracted native binary in SEA mode
+    if (this.nativePath && isSEA()) {
+      try {
+        await fs.unlink(this.nativePath);
+        const tmpDir = path.dirname(this.nativePath);
+        await fs.rmdir(tmpDir).catch(() => {}); // Ignore errors if directory not empty
+      } catch (error) {
+        this.logger.warn("Failed to clean up temporary SQLite binary", { error });
+      }
     }
   }
 

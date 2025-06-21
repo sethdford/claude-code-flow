@@ -47,6 +47,34 @@ export interface Config {
 }
 
 /**
+ * Check if we're running in a SEA (Single Executable Application) environment
+ */
+function isSEA(): boolean {
+  // Check for process.isSEA property (Node.js 20+)
+  if ((process as any).isSEA) {
+    return true;
+  }
+  
+  // Fallback: check if we're running from a binary that's not node
+  const execPath = process.execPath;
+  const isNodeBinary = execPath.includes('node') && !execPath.includes('claude-flow');
+  
+  // If we're not running from a node binary, we're likely in a SEA
+  return !isNodeBinary;
+}
+
+/**
+ * Get default memory backend based on environment
+ */
+function getDefaultMemoryBackend(): "sqlite" | "markdown" | "hybrid" {
+  // In SEA mode, use markdown to avoid SQLite native module issues
+  if (isSEA()) {
+    return "markdown";
+  }
+  return "hybrid";
+}
+
+/**
  * Default configuration values
  */
 const DEFAULT_CONFIG: Config = {
@@ -64,7 +92,7 @@ const DEFAULT_CONFIG: Config = {
     commandTimeout: 300000,
   },
   memory: {
-    backend: "hybrid",
+    backend: "hybrid", // Will be overridden in createDefaultConfig for SEA
     cacheSizeMB: 100,
     syncInterval: 5000,
     conflictResolution: "crdt",
@@ -142,6 +170,14 @@ export class ConfigManager {
    */
   async createDefaultConfig(configPath: string): Promise<void> {
     const config = this.deepClone(DEFAULT_CONFIG);
+    
+    // Override memory backend for SEA mode
+    const defaultBackend = getDefaultMemoryBackend();
+    if (defaultBackend !== config.memory.backend) {
+      config.memory.backend = defaultBackend;
+      console.log(`ℹ️  Using ${defaultBackend} backend for SEA (Single Executable) compatibility`);
+    }
+    
     const content = JSON.stringify(config, null, 2);
     await fs.writeFile(configPath, content, "utf8");
     this.configPath = configPath;

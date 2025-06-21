@@ -80,9 +80,15 @@ export class ProcessManager extends EventEmitter {
         // Try to load default config file if it exists
         try {
           await configManager.load("./claude-flow.config.json");
-        } catch {
-          // Use defaults if no config file found
-          await configManager.load(); // This will use defaults
+        } catch (error) {
+          // If config file doesn't exist, create a default one
+          if (error.message && error.message.includes("not found")) {
+            console.log("Creating default configuration file...");
+            await configManager.createDefaultConfig("./claude-flow.config.json");
+            await configManager.load("./claude-flow.config.json");
+          } else {
+            throw error;
+          }
         }
       }
       this.config = configManager.show() as Config;

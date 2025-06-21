@@ -4,6 +4,8 @@
   "disableExperimentalSEAWarning": true,
   "useCodeCache": true,
   "assets": {
-    "package.json": "package.json"
+    "package.json": "package.json",
+    "better_sqlite3.node": "node_modules/better-sqlite3/build/Release/better_sqlite3.node",
+    "pty.node": "node_modules/node-pty/build/Release/pty.node"
   }
 }
