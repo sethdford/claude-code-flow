@@ -1,10 +1,11 @@
 {
   "servers": {
-    "vibex-task-manager": {
-      "command": "npx",
-      "args": ["vibex-task-manager-mcp"],
+    "claude-flow": {
+      "command": "claude-flow",
+      "args": ["start", "--mcp-transport", "stdio", "--daemon"],
       "env": {
-        "PROJECT_ROOT": "."
+        "PROJECT_ROOT": ".",
+        "NODE_ENV": "development"
       }
     }
   }
