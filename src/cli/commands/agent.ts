@@ -12,7 +12,7 @@ import { generateId } from "../../utils/helpers.js";
 import { formatDuration, formatBytes, formatPercentage } from "../../utils/formatters.js";
 import path from "node:path";
 import fs from "node:fs/promises";
-import type { AgentManager } from "../../agents/agent-manager.js";
+import { AgentManager } from "../../agents/agent-manager.js";
 import type { 
   AgentInfo, 
   AgentListOptions, 
@@ -20,6 +20,12 @@ import type {
   AgentStartOptions,
   AgentTemplate, 
 } from "./types.js";
+import { EventBus } from "../../core/event-bus.js";
+import { Logger } from "../../core/logger.js";
+import { DistributedMemorySystem } from "../../memory/distributed-memory.js";
+
+// Export functions for use by other modules
+export { initializeAgentManager };
 
 // Type definitions for better type safety
 interface PoolOptions {
@@ -46,69 +52,154 @@ interface PoolInfo {
 
 // Global agent manager instance
 let agentManager: AgentManager | null = null;
+let eventBus: EventBus | null = null;
+let logger: Logger | null = null;
+let memorySystem: DistributedMemorySystem | null = null;
 
-// Initialize agent manager - simplified for now
-function initializeAgentManager(): AgentManager {
+// Initialize real agent manager with proper dependencies
+async function initializeAgentManager(): Promise<AgentManager> {
   if (agentManager) return agentManager;
   
-  // Simplified mock agent manager to avoid complex dependencies
-  const mockManager = {
-    getAllAgents: () => [],
-    getAgent: (_id: string) => null,
-    createAgent: async (_template: string, _options: any) => generateId("agent"),
-    startAgent: async (_id: string) => {},
-    stopAgent: async (_id: string) => {},
-    restartAgent: async (_id: string) => {},
-    removeAgent: async (_id: string) => {},
-    getAgentHealth: (_id: string) => null,
-    getSystemStats: () => ({
-      totalAgents: 0,
-      activeAgents: 0,
-      healthyAgents: 0,
-      averageHealth: 1.0,
-      pools: 0,
-      clusters: 0, // Add missing clusters property
-      resourceUtilization: { cpu: 0, memory: 0, disk: 0 },
-    }),
-    getAgentTemplates: () => [
-      { 
-        name: "researcher", 
-        type: "researcher",
-        description: "Research and analysis agent",
-        capabilities: ["research", "analysis", "web-search"],
-        config: {},
-        environment: {},
+  try {
+    // Initialize core dependencies
+    eventBus = EventBus.getInstance();
+    logger = Logger.getInstance();
+    
+    // Initialize memory system for agent manager
+    const memoryConfig = {
+      namespace: "agents",
+      distributed: false,
+      syncInterval: 5000,
+      consistency: "eventual" as const,
+      replicationFactor: 1,
+      maxMemorySize: 200 * 1024 * 1024, // 200MB
+      compressionEnabled: false,
+      encryptionEnabled: false,
+      backupEnabled: false,
+      persistenceEnabled: false,
+      shardingEnabled: false,
+      cacheSize: 1000,
+      cacheTtl: 60000,
+    };
+    
+    memorySystem = new DistributedMemorySystem(memoryConfig, logger, eventBus);
+    await memorySystem.initialize();
+    
+    // Initialize agent manager with real implementation
+    const agentManagerConfig = {
+      maxAgents: 50,
+      defaultTimeout: 30000,
+      heartbeatInterval: 10000,
+      healthCheckInterval: 30000,
+      autoRestart: true,
+      resourceLimits: {
+        memory: 512 * 1024 * 1024, // 512MB
+        cpu: 1.0,
+        disk: 1024 * 1024 * 1024, // 1GB
       },
-      { 
-        name: "developer", 
-        type: "developer",
-        description: "Software development agent", 
-        capabilities: ["coding", "testing", "debugging"],
-        config: {},
-        environment: {},
+      agentDefaults: {
+        autonomyLevel: 0.7,
+        learningEnabled: true,
+        adaptationEnabled: true,
       },
-      { 
-        name: "analyzer", 
-        type: "analyzer",
-        description: "Data analysis agent",
-        capabilities: ["data-analysis", "visualization", "reporting"],
-        config: {},
-        environment: {},
+      environmentDefaults: {
+        runtime: "node" as const,
+        workingDirectory: "./agents",
+        tempDirectory: "./tmp",
+        logDirectory: "./logs",
       },
-    ],
-    getAllPools: () => [],
-    createAgentPool: async (_name: string, _template: string, _config: any) => generateId("pool"),
-    scalePool: async (_id: string, _size: number) => {},
-    memory: { 
-      store: async () => generateId("memory"), 
-    },
-  } as any as AgentManager;
-  
-  agentManager = mockManager;
-  if (!agentManager) {
-    throw new Error("Failed to initialize agent manager");
+    };
+    
+    agentManager = new AgentManager(agentManagerConfig, logger, eventBus, memorySystem);
+    agentManager.initialize();
+    
+    console.log(chalk.green("✓ Real agent manager initialized"));
+    return agentManager;
+    
+  } catch (error) {
+    console.log(chalk.yellow("⚠ Failed to initialize real agent manager, using fallback mode"));
+    logger?.warn("Agent manager initialization failed", { error });
+    
+    // Return enhanced mock as fallback
+    const enhancedMockManager = {
+      getAllAgents: () => [],
+      getAgent: (_id: string) => null,
+      createAgent: async (_template: string, _options: any) => {
+        const agentId = generateId("agent");
+        console.log(`✅ Agent created with ID: ${agentId} (fallback implementation)`);
+        return agentId;
+      },
+      startAgent: async (id: string) => {
+        console.log(`🚀 Starting agent ${id} (fallback implementation)`);
+      },
+      stopAgent: async (id: string) => {
+        console.log(`⏹️  Stopping agent ${id} (fallback implementation)`);
+      },
+      restartAgent: async (id: string) => {
+        console.log(`🔄 Restarting agent ${id} (fallback implementation)`);
+      },
+      removeAgent: async (id: string) => {
+        console.log(`🗑️  Removing agent ${id} (fallback implementation)`);
+      },
+      getAgentHealth: (_id: string) => null,
+      getSystemStats: () => ({
+        totalAgents: 0,
+        activeAgents: 0,
+        healthyAgents: 0,
+        averageHealth: 1.0,
+        pools: 0,
+        clusters: 0,
+        resourceUtilization: { cpu: 0, memory: 0, disk: 0 },
+      }),
+      getAgentTemplates: () => [
+        { 
+          name: "researcher", 
+          type: "researcher",
+          description: "Research and analysis agent",
+          capabilities: ["research", "analysis", "web-search"],
+          config: {},
+          environment: {},
+        },
+        { 
+          name: "developer", 
+          type: "developer",
+          description: "Software development agent", 
+          capabilities: ["coding", "testing", "debugging"],
+          config: {},
+          environment: {},
+        },
+        { 
+          name: "analyzer", 
+          type: "analyzer",
+          description: "Data analysis agent",
+          capabilities: ["data-analysis", "visualization", "reporting"],
+          config: {},
+          environment: {},
+        },
+      ],
+      getAllPools: () => [],
+      createAgentPool: async (_name: string, _template: string, _config: any) => {
+        const poolId = generateId("pool");
+        console.log(`✅ Agent pool created with ID: ${poolId} (fallback implementation)`);
+        return poolId;
+      },
+      scalePool: async (id: string, size: number) => {
+        console.log(`📏 Scaling pool ${id} to ${size} agents (fallback implementation)`);
+      },
+      initialize: () => {
+        console.log("🔧 Agent manager initialized (fallback implementation)");
+      },
+      shutdown: async () => {
+        console.log("🔒 Agent manager shutdown (fallback implementation)");
+      },
+      memory: { 
+        store: async () => generateId("memory"), 
+      },
+    } as any as AgentManager;
+    
+    agentManager = enhancedMockManager;
+    return agentManager;
   }
-  return agentManager;
 }
 
 export const agentCommand = new Command()
@@ -130,7 +221,7 @@ agentCommand
   .option("--sort <field>", "Sort by field (name, type, status, health, workload)", "name")
   .action(async (options: AgentListOptions) => {
     try {
-      const manager = initializeAgentManager();
+      const manager = await initializeAgentManager();
       
       if (options.json) {
         // For JSON output, only output JSON
@@ -181,7 +272,7 @@ agentCommand
   .option("--config <path>", "Load configuration from JSON file")
   .action(async (template: string | undefined, options: AgentSpawnOptions) => {
     try {
-      const manager = initializeAgentManager();
+      const manager = await initializeAgentManager();
         
       let agentConfig: Record<string, any> = {};
         
@@ -257,7 +348,7 @@ agentCommand
   .option("--reason <reason>", "Termination reason for logging")
   .action(async (agentId: string, options: Record<string, any>) => {
     try {
-      const manager = initializeAgentManager();
+      const manager = await initializeAgentManager();
       
       // For mock implementation, show helpful message
       console.log(chalk.cyan(`\n🛑 Terminating agent: ${agentId}`));
@@ -279,7 +370,7 @@ agentCommand
   .option("--logs", "Include recent log entries")
   .action(async (agentId: string, options: any) => {
     try {
-      const manager = initializeAgentManager();
+      const manager = await initializeAgentManager();
       
       if (options.json) {
         // For JSON output, only output JSON
@@ -313,7 +404,7 @@ agentCommand
   .arguments("<agent-id>")
   .action(async (agentId: string, options: AgentStartOptions) => {
     try {
-      const manager = initializeAgentManager();
+      const manager = await initializeAgentManager();
       console.log(chalk.cyan(`🚀 Starting agent ${agentId}...`));
       await manager.startAgent(agentId);
       console.log(chalk.green("✅ Agent started successfully"));
@@ -328,7 +419,7 @@ agentCommand
   .option("--reason <reason>", "Restart reason")
   .action(async (agentId: string, options: AgentStartOptions & { reason?: string }) => {
     try {
-      const manager = initializeAgentManager();
+      const manager = await initializeAgentManager();
       console.log(chalk.cyan(`🔄 Restarting agent ${agentId}...`));
       await manager.restartAgent(agentId, options.reason);
       console.log(chalk.green("✅ Agent restarted successfully"));
@@ -349,7 +440,7 @@ agentCommand
   .option("--size <size:number>", "Target size for scaling")
   .action(async (options: PoolOptions) => {
     try {
-      const manager = initializeAgentManager();
+      const manager = await initializeAgentManager();
         
       if (options.create) {
         if (!options.template) {
@@ -418,7 +509,7 @@ agentCommand
   .option("--agent <agent-id>", "Monitor specific agent")
   .action(async (options: { watch?: boolean; threshold?: number; agent?: string }) => {
     try {
-      const manager = initializeAgentManager();
+      const manager = await initializeAgentManager();
         
       if (options.watch) {
         console.log(chalk.cyan("🔍 Monitoring agent health (Ctrl+C to stop)..."));

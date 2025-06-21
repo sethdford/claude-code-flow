@@ -1470,9 +1470,9 @@ export default {
 };
 
 export interface ModelHierarchy {
-  primary: "claude-4.0-sonnet" | "gpt-4.1" | "o4-mini" | "gemini-2.5-pro";
-  apply: "claude-3-haiku" | "gpt-3.5-turbo" | "gemini-1.5-flash";
-  review: "claude-4.0-sonnet" | "gpt-4.1";
+  primary: string;  // Use centralized model config instead of hardcoded values
+  apply: string;    // Allows for any model ID or alias
+  review: string;   // More flexible than hardcoded union types
 }
 
 export interface CodeEditInstruction {

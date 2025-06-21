@@ -1,11 +1,12 @@
 /**
- * Code Agent - Implements Cursor-inspired hierarchical model strategy
- * Based on reverse-engineering Cursor's LLM client architecture
+ * Code Agent - Implements hierarchical model strategy for intelligent code generation
+ * Uses different models based on task complexity and context requirements
  */
 
 import { BaseAgent } from "./base-agent.js";
 import { AgentType, TaskDefinition, AgentCapabilities } from "../types.js";
 import { logger } from "../../core/logger.js";
+import { getModelHierarchy, ModelHierarchyConfig } from "../../config/model-config.js";
 
 export interface CodeEditInstruction {
   type: "create" | "modify" | "delete";
@@ -41,10 +42,12 @@ export class CodeAgent extends BaseAgent {
   constructor(id: string, config?: any) {
     super(id, "developer" as AgentType);
     
+    // Use centralized model configuration
+    const defaultHierarchy = getModelHierarchy(config?.useCase || "development");
     this.modelHierarchy = {
-      primary: config?.models?.primary || "claude-sonnet-4-20250514",
-      apply: config?.models?.apply || "claude-sonnet-4-20250514",
-      review: config?.models?.review || "claude-sonnet-4-20250514",
+      primary: config?.models?.primary || defaultHierarchy.primary,
+      apply: config?.models?.apply || defaultHierarchy.apply,
+      review: config?.models?.review || defaultHierarchy.review,
     };
 
     this.capabilities = {
@@ -306,6 +309,36 @@ export class CodeAgent extends BaseAgent {
 
   getCapabilities(): AgentCapabilities {
     return this.capabilities;
+  }
+
+  override canHandleTask(task: TaskDefinition): boolean {
+    const requiredCapabilities = task.requirements?.capabilities || [];
+    
+    // Map task capability names to agent capability properties
+    const capabilityMap: Record<string, boolean> = {
+      "analysis": this.capabilities.analysis,
+      "planning": this.capabilities.analysis, // Planning is part of analysis
+      "coding": this.capabilities.codeGeneration,
+      "implementation": this.capabilities.codeGeneration,
+      "review": this.capabilities.codeReview,
+      "testing": this.capabilities.testing,
+      "documentation": this.capabilities.documentation,
+      "research": this.capabilities.research,
+      "web-search": this.capabilities.webSearch,
+      "api-integration": this.capabilities.apiIntegration,
+      "file-system": this.capabilities.fileSystem,
+      "terminal": this.capabilities.terminalAccess,
+    };
+
+    // Check if agent can handle all required capabilities
+    return requiredCapabilities.every(capability => {
+      const canHandle = capabilityMap[capability];
+      if (canHandle === undefined) {
+        // If capability is not mapped, assume agent can handle it
+        return true;
+      }
+      return canHandle;
+    });
   }
 
   override async cleanup(): Promise<void> {

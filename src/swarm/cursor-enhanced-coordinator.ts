@@ -1,6 +1,6 @@
 /**
- * Cursor-Enhanced Swarm Coordinator
- * Implements patterns from reverse-engineering Cursor's LLM client architecture
+ * Enhanced Swarm Coordinator
+ * Implements hierarchical model strategy with intelligent task decomposition
  */
 
 import { EventEmitter } from "events";
@@ -9,7 +9,7 @@ import { BaseAgent } from "./agents/base-agent.js";
 import { CodeAgent } from "./agents/code-agent.js";
 import { TaskDefinition, AgentType, SwarmStrategy, TaskId, TaskType, TaskStatus, TaskPriority, TaskRequirements, TaskConstraints } from "./types.js";
 
-export interface CursorModelConfig {
+export interface HierarchicalModelConfig {
   primary: string;    // Complex reasoning, architecture decisions
   apply: string;      // Fast, precise edits  
   review: string;     // Quality assurance
@@ -46,16 +46,16 @@ export interface ExtendedTaskMetadata {
   requiredContext?: string[];
 }
 
-export class CursorEnhancedCoordinator extends EventEmitter {
+export class EnhancedSwarmCoordinator extends EventEmitter {
   private agents: Map<string, BaseAgent> = new Map();
   private taskQueue: TaskDefinition[] = [];
   private activeTasksMap: Map<string, TaskDefinition> = new Map();
-  private modelConfig: CursorModelConfig;
+  private modelConfig: HierarchicalModelConfig;
   private contextCache: Map<string, ContextWindow> = new Map();
   private strategy: SwarmStrategy;
 
   constructor(config: {
-    modelConfig: CursorModelConfig;
+    modelConfig: HierarchicalModelConfig;
     strategy: SwarmStrategy;
     maxAgents?: number;
   }) {
@@ -64,14 +64,14 @@ export class CursorEnhancedCoordinator extends EventEmitter {
     this.modelConfig = config.modelConfig;
     this.strategy = config.strategy;
     
-    // Initialize specialized agents based on Cursor's architecture
+    // Initialize specialized agents with hierarchical model configuration
     this.initializeAgents(config.maxAgents || 5);
   }
 
   private initializeAgents(maxAgents: number): void {
     // Create specialized agents with hierarchical model configuration
     for (let i = 0; i < maxAgents; i++) {
-      const agentId = `cursor-agent-${i}`;
+      const agentId = `enhanced-agent-${i}`;
       const agent = new CodeAgent(agentId, {
         models: {
           primary: this.modelConfig.primary,
@@ -120,10 +120,14 @@ export class CursorEnhancedCoordinator extends EventEmitter {
     }
 
     const objectiveId = `obj-${Date.now()}`;
+    logger.info(`Created objective ${objectiveId} with ${analyzedTasks.length} tasks`);
     this.emit("objectiveAdded", { objectiveId, tasks: analyzedTasks.length });
     
-    // Start processing tasks
-    await this.processTasks();
+    // Start processing tasks asynchronously
+    this.processTasks().catch(error => {
+      logger.error("Error processing tasks:", error);
+      this.emit("error", error);
+    });
     
     return objectiveId;
   }
@@ -140,7 +144,7 @@ export class CursorEnhancedCoordinator extends EventEmitter {
       {
         id: {
           id: `task-${timestamp}-1`,
-          swarmId: "cursor-swarm",
+          swarmId: "enhanced-swarm",
           sequence: 1,
           priority: 1,
         } as TaskId,
@@ -170,7 +174,7 @@ export class CursorEnhancedCoordinator extends EventEmitter {
       {
         id: {
           id: `task-${timestamp}-2`,
-          swarmId: "cursor-swarm",
+          swarmId: "enhanced-swarm",
           sequence: 2,
           priority: 1,
         } as TaskId,
@@ -187,7 +191,7 @@ export class CursorEnhancedCoordinator extends EventEmitter {
         constraints: {
           dependencies: [{
             id: `task-${timestamp}-1`,
-            swarmId: "cursor-swarm",
+            swarmId: "enhanced-swarm",
             sequence: 1,
             priority: 1,
           } as TaskId],
@@ -214,7 +218,7 @@ export class CursorEnhancedCoordinator extends EventEmitter {
     requiredContext: string[];
     suggestedModel: string;
   }> {
-    // Analyze task using Cursor's complexity detection patterns
+    // Analyze task using intelligent complexity detection patterns
     const description = task.description.toLowerCase();
     const name = task.name.toLowerCase();
     
@@ -331,6 +335,12 @@ export class CursorEnhancedCoordinator extends EventEmitter {
 
       // Assign task to agent
       logger.info(`Assigning task ${nextTask.id.id} to agent ${bestAgent.getId()}`);
+      this.emit("taskStarted", { 
+        taskName: nextTask.name, 
+        taskId: nextTask.id.id, 
+        agentId: bestAgent.getId() 
+      });
+      
       await bestAgent.assignTask(nextTask);
     }
   }
@@ -448,7 +458,15 @@ export class CursorEnhancedCoordinator extends EventEmitter {
       task.result = event.result;
       
       this.activeTasksMap.delete(event.taskId);
-      this.emit("taskCompleted", { task, result: event.result });
+      
+      const duration = task.completedAt.getTime() - task.createdAt.getTime();
+      this.emit("taskCompleted", { 
+        taskName: task.name,
+        taskId: event.taskId, 
+        agentId: event.agentId,
+        duration,
+        result: event.result 
+      });
     }
   }
 
@@ -467,22 +485,36 @@ export class CursorEnhancedCoordinator extends EventEmitter {
       };
       
       this.activeTasksMap.delete(event.taskId);
-      this.emit("taskError", { task, error: event.error });
+      this.emit("taskError", { 
+        taskName: task.name,
+        taskId: event.taskId, 
+        agentId: event.agentId,
+        error: event.error.message || event.error 
+      });
     }
   }
 
   getStatus(): any {
+    const busyAgents = Array.from(this.agents.values()).filter(a => !a.isAvailable()).length;
+    const totalTasks = this.taskQueue.length + this.activeTasksMap.size;
+    const completedTasks = this.agents.size > 0 ? 
+      Array.from(this.agents.values()).reduce((sum, agent) => sum + agent.getMetrics().tasksCompleted, 0) : 0;
+    
     return {
-      activeAgents: Array.from(this.agents.values()).filter(a => a.isAvailable()).length,
+      status: this.taskQueue.length === 0 && this.activeTasksMap.size === 0 ? "completed" : "executing",
+      activeAgents: busyAgents,
       totalAgents: this.agents.size,
-      queuedTasks: this.taskQueue.length,
       activeTasks: this.activeTasksMap.size,
+      totalTasks: totalTasks,
+      completedTasks: completedTasks,
+      failedTasks: 0, // TODO: Track failed tasks
+      queuedTasks: this.taskQueue.length,
       strategy: this.strategy,
     };
   }
 
   async shutdown(): Promise<void> {
-    logger.info("Shutting down Cursor Enhanced Coordinator");
+    logger.info("Shutting down Enhanced Swarm Coordinator");
     
     // Cleanup all agents
     await Promise.all(

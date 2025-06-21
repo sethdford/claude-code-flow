@@ -5,7 +5,10 @@
 import { Command } from "../cliffy-compat.js";
 import { TaskExecutor } from "../../swarm/executor.js";
 import { SwarmMemoryManager } from "../../swarm/memory.js";
+import { EnhancedSwarmCoordinator } from "../../swarm/enhanced-coordinator.js";
+import { getModelHierarchy } from "../../config/model-config.js";
 import { generateId } from "../../utils/helpers.js";
+import { logger } from "../../core/logger.js";
 import * as fs from "node:fs/promises";
 
 export interface CommandContext {
@@ -13,138 +16,16 @@ export interface CommandContext {
   flags: Record<string, any>;
 }
 
-// Temporary SwarmCoordinator stub until proper implementation is available
-class SwarmCoordinator {
-  private config: any;
-  private agents = new Map();
-  private tasks: any[] = [];
-  private objectives: any[] = [];
-  private status = "idle";
-  private startTime = Date.now();
-  private swarmId: string;
-  private metrics = {
-    totalTasks: 0,
-    completedTasks: 0,
-    failedTasks: 0,
-    activeAgents: 0,
-    totalAgents: 0,
-    startTime: Date.now(),
-    executionTime: 0,
-    avgTaskTime: 0,
-    successRate: 0,
-  };
-  private modelHierarchy: any;
 
-  constructor(config: any) {
-    this.config = config;
-    this.swarmId = generateId("swarm");
-    
-    // Initialize Cursor-inspired model hierarchy with defaults
-    this.modelHierarchy = config.modelHierarchy || {
-      primary: "claude-3-5-sonnet-20241022", // Complex reasoning
-      apply: "claude-3-haiku-20240307", // Fast edits
-      review: "claude-3-5-sonnet-20241022", // Quality assurance
-      threshold: 50, // Lines of code threshold
-    };
-  }
-
-  initialize() {
-    this.status = "initialized";
-  }
-
-  createObjective(name: string, description: string, strategy: string, requirements: any) {
-    const objectiveId = generateId("objective");
-    this.objectives.push({
-      id: objectiveId,
-      name,
-      description,
-      strategy,
-      requirements,
-      status: "created",
-      progress: 0,
-    });
-    return objectiveId;
-  }
-
-  registerAgent(name: string, type: string, capabilities: any) {
-    const agentId = generateId("agent");
-    this.agents.set(agentId, {
-      id: agentId,
-      name,
-      type,
-      capabilities,
-      status: "idle",
-      currentTask: null,
-      assignedTasks: [],
-      completedTasks: 0,
-      errors: 0,
-    });
-    return agentId;
-  }
-
-  executeObjective(objectiveId: string) {
-    const objective = this.objectives.find(o => o.id === objectiveId);
-    if (objective) {
-      objective.status = "executing";
-      this.status = "executing";
-    }
-  }
-
-  getSwarmId() {
-    return this.swarmId;
-  }
-
-  getStatus() {
-    return this.status;
-  }
-
-  getSwarmStatus() {
-    return {
-      objectives: this.objectives.length,
-      tasks: {
-        total: this.tasks.length,
-        completed: this.tasks.filter((t: any) => t.status === "completed").length,
-        inProgress: this.tasks.filter((t: any) => t.status === "running").length,
-        pending: this.tasks.filter((t: any) => t.status === "queued").length,
-        failed: this.tasks.filter((t: any) => t.status === "failed").length,
-      },
-      agents: {
-        total: this.agents.size,
-        active: Array.from(this.agents.values()).filter((a: any) => a.status === "busy").length,
-      },
-    };
-  }
-
-  getTasks() {
-    return this.tasks;
-  }
-
-  getAgents() {
-    return Array.from(this.agents.values());
-  }
-
-  getObjectives() {
-    return this.objectives;
-  }
-
-  getObjective(objectiveId: string) {
-    return this.objectives.find(o => o.id === objectiveId);
-  }
-
-  getMetrics() {
-    return this.metrics;
-  }
-
-  getUptime() {
-    return Date.now() - this.startTime;
-  }
-
-  shutdown() {
-    this.status = "shutdown";
-  }
-}
 
 export async function swarmAction(ctx: CommandContext): Promise<void> {
+  // Configure logger for clean swarm output (text format instead of JSON)
+  await logger.configure({
+    level: ctx.flags.verbose ? "debug" : "warn",
+    format: "text",
+    destination: "console",
+  });
+
   // First check if help is requested
   if (ctx.flags.help || ctx.flags.h) {
     showSwarmHelp();
@@ -181,17 +62,40 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
   console.log(`🤖 Max Agents: ${options.maxAgents}`);
 
   try {
-    // Initialize comprehensive swarm system
-    const coordinator = new SwarmCoordinator({
-      strategy: options.strategy,
-      mode: options.mode,
+          // Initialize comprehensive swarm system with enhanced coordinator
+    const modelHierarchy = getModelHierarchy(options.strategy as any);
+    const coordinator = new EnhancedSwarmCoordinator({
+      modelConfig: {
+        primary: modelHierarchy.primary,
+        apply: modelHierarchy.apply, 
+        review: modelHierarchy.review,
+        threshold: 50,
+      },
+      strategy: options.strategy as any,
       maxAgents: options.maxAgents,
-      maxDepth: options.maxDepth || 5,
-      timeout: options.timeout * 60 * 1000,
-      parallel: options.parallel,
-      monitoring: options.monitor,
-      persistence: options.persistence,
-      memoryNamespace: options.memoryNamespace,
+    });
+
+    // Set up event listeners for interactive feedback
+    coordinator.on("objectiveAdded", (event) => {
+      console.log(`📋 Objective decomposed into ${event.tasks} tasks`);
+    });
+
+    coordinator.on("taskStarted", (event) => {
+      console.log(`🔄 Starting task: ${event.taskName} (Agent: ${event.agentId})`);
+    });
+
+    coordinator.on("taskCompleted", (event) => {
+      console.log(`✅ Completed task: ${event.taskName} (Duration: ${event.duration}ms)`);
+    });
+
+    coordinator.on("taskError", (event) => {
+      console.log(`❌ Task failed: ${event.taskName} - ${event.error}`);
+    });
+
+    coordinator.on("agentStatusChanged", (event) => {
+      if (options.verbose) {
+        console.log(`🤖 Agent ${event.agentId}: ${event.status}`);
+      }
     });
 
     // Initialize task executor
@@ -226,27 +130,53 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
       consistencyLevel: "eventual",
     });
 
-    coordinator.initialize();
-
-    // Create and execute the main objective
-    const objectiveId = coordinator.createObjective(
-      `Main Objective: ${objective}`,
-      objective,
-      options.strategy,
-      { maxAgents: options.maxAgents, timeout: options.timeout }
-    );
-
     console.log(`✅ Swarm initialized successfully`);
-    console.log(`🎯 Created objective: ${objectiveId}`);
     console.log(`🚀 Starting execution...`);
 
-    coordinator.executeObjective(objectiveId);
+    // Add progress monitoring
+    let lastStatus = { tasks: 0, agents: 0 };
+    const statusInterval = setInterval(() => {
+      const status = coordinator.getStatus();
+      if (status.activeTasks !== lastStatus.tasks || status.activeAgents !== lastStatus.agents) {
+        console.log(`📊 Progress: ${status.activeTasks} active tasks, ${status.activeAgents} active agents`);
+        lastStatus = { tasks: status.activeTasks, agents: status.activeAgents };
+      }
+    }, 2000);
+
+    // Create and execute the main objective
+    const objectiveId = await coordinator.addObjective(objective);
+    console.log(`🎯 Created objective: ${objectiveId}`);
+
+    // Wait for completion or timeout
+    const timeoutMs = options.timeout * 60 * 1000;
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeoutMs) {
+      const status = coordinator.getStatus();
+      
+      if (status.activeTasks === 0 && status.totalTasks > 0) {
+        clearInterval(statusInterval);
+        console.log(`🎉 All tasks completed!`);
+        break;
+      }
+      
+      // Wait a bit before checking again
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    if (Date.now() - startTime >= timeoutMs) {
+      clearInterval(statusInterval);
+      console.log(`⏰ Execution timed out after ${options.timeout} minutes`);
+    }
 
     // Show final results
     await showSwarmResults(coordinator, executor, memory, `./swarm-runs/${swarmId}`);
 
   } catch (error) {
     console.error(`❌ Swarm execution failed:`, (error as Error).message);
+    if (options.verbose) {
+      console.error(error);
+    }
     process.exit(1);
   }
 }
@@ -291,15 +221,20 @@ function showDryRunConfiguration(swarmId: string, objective: string, options: an
   console.log(`Monitoring: ${options.monitor}`);
 }
 
-async function showSwarmResults(coordinator: SwarmCoordinator, executor: TaskExecutor, memory: SwarmMemoryManager, swarmDir: string): Promise<void> {
+async function showSwarmResults(coordinator: EnhancedSwarmCoordinator, executor: TaskExecutor, memory: SwarmMemoryManager, swarmDir: string): Promise<void> {
   console.log(`\n📊 Swarm Execution Results`);
-  console.log(`Swarm ID: ${coordinator.getSwarmId()}`);
-  console.log(`Status: ${coordinator.getStatus()}`);
-  console.log(`Uptime: ${Math.round(coordinator.getUptime() / 1000)}s`);
   
-  const status = coordinator.getSwarmStatus();
-  console.log(`Tasks: ${status.tasks.completed}/${status.tasks.total} completed`);
-  console.log(`Agents: ${status.agents.active}/${status.agents.total} active`);
+  const status = coordinator.getStatus();
+  console.log(`Status: ${status.status || 'completed'}`);
+  console.log(`Total Tasks: ${status.totalTasks || 0}`);
+  console.log(`Completed Tasks: ${status.completedTasks || 0}`);
+  console.log(`Failed Tasks: ${status.failedTasks || 0}`);
+  console.log(`Active Agents: ${status.activeAgents || 0}`);
+  
+  if (status.totalTasks > 0) {
+    const successRate = ((status.completedTasks || 0) / status.totalTasks * 100).toFixed(1);
+    console.log(`Success Rate: ${successRate}%`);
+  }
 }
 
 function showSwarmHelp(): void {

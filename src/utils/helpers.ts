@@ -169,9 +169,14 @@ export function throttle<T extends(...args: unknown[]) => unknown>(
 /**
  * Deep clones an object
  */
-export function deepClone<T>(obj: T): T {
+export function deepClone<T>(obj: T, visited = new WeakMap()): T {
   if (obj === null || typeof obj !== "object") {
     return obj;
+  }
+
+  // Check for circular reference
+  if (visited.has(obj as object)) {
+    return visited.get(obj as object) as T;
   }
 
   if (obj instanceof Date) {
@@ -179,29 +184,38 @@ export function deepClone<T>(obj: T): T {
   }
 
   if (obj instanceof Array) {
-    return obj.map((item) => deepClone(item)) as T;
+    const clonedArray = [] as unknown as T;
+    visited.set(obj as object, clonedArray);
+    (obj as unknown as unknown[]).forEach((item, index) => {
+      (clonedArray as unknown as unknown[])[index] = deepClone(item, visited);
+    });
+    return clonedArray;
   }
 
   if (obj instanceof Map) {
     const map = new Map();
+    visited.set(obj as object, map as T);
     obj.forEach((value, key) => {
-      map.set(key, deepClone(value));
+      map.set(key, deepClone(value, visited));
     });
     return map as T;
   }
 
   if (obj instanceof Set) {
     const set = new Set();
+    visited.set(obj as object, set as T);
     obj.forEach((value) => {
-      set.add(deepClone(value));
+      set.add(deepClone(value, visited));
     });
     return set as T;
   }
 
   const cloned = {} as T;
+  visited.set(obj as object, cloned);
+  
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      cloned[key] = deepClone(obj[key]);
+      cloned[key] = deepClone(obj[key], visited);
     }
   }
 

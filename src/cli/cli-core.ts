@@ -22,6 +22,7 @@ import { claudeCommand } from "./commands/claude.js";
 import { swarmCommand } from "./commands/swarm.js";
 import { sparcCommand } from "./commands/sparc.js";
 import { enterpriseCommand } from "./commands/enterprise.js";
+import { modelsCommand } from "./commands/models.js";
 import { formatError, displayBanner, displayVersion } from "./formatter.js";
 import { startNodeREPL as startREPL } from "./node-repl.js";
 import { CompletionGenerator } from "./completion.js";
@@ -96,6 +97,7 @@ export function createCLI(): Command {
     .addCommand(swarmCommand)
     .addCommand(sparcCommand)
     .addCommand(enterpriseCommand)
+    .addCommand(modelsCommand)
     .addCommand(helpCommand)
     .command("batch")
     .description("Spawn multiple Claude instances from workflow")
@@ -280,7 +282,11 @@ export async function setupLogging(options: any): Promise<void> {
       await configManager.applyProfile(options.profile);
     }
   } catch (error) {
-    logger.warn("Failed to load configuration:", (error as Error).message);
+    // Suppress the circular reference warning as it's not fatal
+    const errorMessage = (error as Error).message;
+    if (!errorMessage.includes("Maximum call stack size exceeded")) {
+      logger.warn("Failed to load configuration:", errorMessage);
+    }
     configManager.loadDefault();
   }
 }

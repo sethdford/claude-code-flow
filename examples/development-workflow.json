@@ -27,7 +27,7 @@
       "type": "architect",
       "name": "System Architect",
       "config": {
-        "model": "claude-3",
+        "model": "claude-4-opus",
         "specialization": "system-design",
         "experience_level": "senior"
       },

@@ -9,6 +9,7 @@ import { ClaudeConnectionPool } from "./connection-pool.js";
 import { AsyncFileManager } from "./async-file-manager.js";
 import { TTLMap } from "./ttl-map.js";
 import { CircularBuffer } from "./circular-buffer.js";
+import { DEFAULT_MODEL_CONFIG } from "../../config/model-config.js";
 // import PQueue from "p-queue"; // Disabled - using simplified queue
 import { 
   TaskDefinition, 
@@ -91,6 +92,7 @@ export class OptimizedExecutor extends EventEmitter {
     this.connectionPool = new ClaudeConnectionPool({
       min: config.connectionPool?.min ?? 2,
       max: config.connectionPool?.max ?? 10,
+      apiKey: process.env.ANTHROPIC_API_KEY || "",
     });
     
     // Initialize file manager
@@ -150,16 +152,30 @@ export class OptimizedExecutor extends EventEmitter {
       try {
         // Execute with connection pool
         const executionResult = await this.connectionPool.execute(async (api) => {
+          // Get system prompt if available
+          const taskWithMetadata = task as TaskDefinition & { metadata?: { systemPrompt?: string } };
+          const systemPrompt = taskWithMetadata.metadata?.systemPrompt || `Task: ${task.description}`;
+          
           const response = await api.complete({
             messages: this.buildMessages(task),
-            model: (task as any).metadata?.model || "claude-3-5-sonnet-20241022",
+            model: (task as any).metadata?.model || DEFAULT_MODEL_CONFIG.primary,
             max_tokens: (task.constraints as any).maxTokens || 4096,
             temperature: (task as any).metadata?.temperature ?? 0.7,
+            system: systemPrompt,
           });
+          
+          // Extract text content from response
+          let outputText = "";
+          if (response.content && response.content.length > 0) {
+            const firstContent = response.content[0];
+            if (firstContent.type === "text") {
+              outputText = firstContent.text;
+            }
+          }
           
           return {
             success: true,
-            output: response.content[0]?.text ?? "",
+            output: outputText,
             usage: {
               inputTokens: response.usage?.input_tokens ?? 0,
               outputTokens: response.usage?.output_tokens ?? 0,
@@ -300,17 +316,8 @@ export class OptimizedExecutor extends EventEmitter {
     );
   }
   
-  private buildMessages(task: TaskDefinition): Array<{ role: string; content: string }> {
-    const messages: Array<{ role: string; content: string }> = [];
-    
-    // Add system message if needed
-    const taskWithMetadata = task as TaskDefinition & { metadata?: { systemPrompt?: string } };
-    if (taskWithMetadata.metadata?.systemPrompt) {
-      messages.push({
-        role: "system",
-        content: taskWithMetadata.metadata.systemPrompt,
-      });
-    }
+  private buildMessages(task: TaskDefinition): Array<{ role: "user" | "assistant"; content: string }> {
+    const messages: Array<{ role: "user" | "assistant"; content: string }> = [];
     
     // Add main task objective
     messages.push({

@@ -1,5 +1,6 @@
 /**
  * Workflow execution commands for Claude-Flow
+ * Connects to real task engine and coordination manager
  */
 
 import { Command } from "../cliffy-compat.js";
@@ -9,6 +10,11 @@ import { formatDuration, formatStatusIndicator, formatProgressBar } from "../for
 import { generateId } from "../../utils/helpers.js";
 import inquirer from "inquirer";
 import { promises as fs } from "node:fs";
+import { TaskEngine, Workflow, WorkflowTask } from "../../task/engine.js";
+import { CoordinationManager } from "../../coordination/manager.js";
+import { EventBus } from "../../core/event-bus.js";
+import { Logger } from "../../core/logger.js";
+import { SystemEvents } from "../../utils/types.js";
 
 // Simple prompt wrappers
 const Confirm = async (message: string): Promise<boolean> => {
@@ -35,6 +41,46 @@ const colors = {
   dim: chalk.dim,
 };
 
+// Global instances for real workflow execution
+let taskEngine: TaskEngine | null = null;
+let coordinationManager: CoordinationManager | null = null;
+let eventBus: EventBus | null = null;
+let logger: Logger | null = null;
+
+// Initialize real workflow components
+async function initializeWorkflowSystem(): Promise<void> {
+  if (taskEngine && coordinationManager) {
+    return; // Already initialized
+  }
+
+  try {
+    eventBus = EventBus.getInstance();
+    logger = Logger.getInstance();
+    
+    // Initialize task engine
+    taskEngine = new TaskEngine(10); // Max 10 concurrent tasks
+    
+    // Initialize coordination manager
+    const coordinationConfig = {
+      maxRetries: 3,
+      retryDelay: 1000,
+      deadlockDetection: true,
+      resourceTimeout: 60000,
+      messageTimeout: 30000,
+    };
+    
+    coordinationManager = new CoordinationManager(coordinationConfig, eventBus, logger);
+    await coordinationManager.initialize();
+    
+    console.log(colors.green("✓ Workflow system initialized"));
+  } catch (error) {
+    console.log(colors.yellow("⚠ Workflow system initialization failed, using fallback mode"));
+    logger?.warn("Failed to initialize workflow system", { error });
+    taskEngine = null;
+    coordinationManager = null;
+  }
+}
+
 export const workflowCommand = new Command()
   .name("workflow")
   .description("Execute and manage workflows")
@@ -53,6 +99,7 @@ workflowCommand
   .option("--parallel", "Allow parallel execution where possible")
   .option("--fail-fast", "Stop on first task failure")
   .action(async (workflowFile: string, options: { dryRun?: boolean; variables?: string; watch?: boolean; parallel?: boolean; failFast?: boolean }) => {
+    await initializeWorkflowSystem();
     await runWorkflow(workflowFile, options);
   });
 
@@ -71,6 +118,7 @@ workflowCommand
   .option("--all", "Include completed workflows")
   .option("--format <format>", "Output format (table, json)", "table")
   .action(async (options: { all?: boolean; format?: string }) => {
+    await initializeWorkflowSystem();
     await listWorkflows(options);
   });
 
@@ -80,6 +128,7 @@ workflowCommand
   .arguments("<workflow-id>")
   .option("-w, --watch", "Watch workflow progress")
   .action(async (workflowId: string, options: { watch?: boolean }) => {
+    await initializeWorkflowSystem();
     await showWorkflowStatus(workflowId, options);
   });
 
@@ -89,6 +138,7 @@ workflowCommand
   .arguments("<workflow-id>")
   .option("-f, --force", "Force stop without cleanup")
   .action(async (workflowId: string, options: { force?: boolean }) => {
+    await initializeWorkflowSystem();
     await stopWorkflow(workflowId, options);
   });
 
@@ -173,6 +223,9 @@ interface RunWorkflowOptions {
   failFast?: boolean;
 }
 
+// Active workflow executions storage
+const activeWorkflows = new Map<string, WorkflowExecution>();
+
 async function runWorkflow(workflowFile: string, options: RunWorkflowOptions): Promise<void> {
   try {
     // Load and validate workflow
@@ -203,7 +256,6 @@ async function runWorkflow(workflowFile: string, options: RunWorkflowOptions): P
     console.log(`${colors.white("Tasks:")} ${execution.tasks.length}`);
     console.log();
 
-    // Execute workflow
     if (options.watch) {
       await executeWorkflowWithWatch(execution, workflow, options);
     } else {
@@ -599,11 +651,148 @@ async function createExecution(workflow: WorkflowDefinition): Promise<WorkflowEx
 
 async function executeWorkflow(execution: WorkflowExecution, workflow: WorkflowDefinition, options: RunWorkflowOptions): Promise<void> {
   execution.status = "running";
+  activeWorkflows.set(execution.id, execution);
   
   console.log(colors.blue("Executing workflow..."));
   console.log();
 
-  // Mock execution - in production, this would use the orchestrator
+  if (taskEngine) {
+    // Use real task engine
+    await executeWorkflowWithTaskEngine(execution, workflow, options);
+  } else {
+    // Fallback to mock execution
+    await executeWorkflowFallback(execution, workflow, options);
+  }
+}
+
+async function executeWorkflowWithTaskEngine(execution: WorkflowExecution, workflow: WorkflowDefinition, options: RunWorkflowOptions): Promise<void> {
+  if (!taskEngine) {
+    throw new Error("Task engine not available");
+  }
+
+  console.log(colors.green("Using real task engine for execution"));
+
+  try {
+    // Convert workflow definition to engine format
+    const engineWorkflow: Workflow = {
+      id: execution.id,
+      name: workflow.name,
+      description: workflow.description || "",
+      version: workflow.version || "1.0.0",
+      tasks: workflow.tasks.map(task => ({
+        id: task.id,
+        type: task.type,
+        description: task.description,
+        priority: 0,
+        status: "pending",
+        input: task.input || {},
+        createdAt: new Date(),
+        dependencies: (task.depends || []).map(depId => ({
+          taskId: depId,
+          type: "finish-to-start" as const,
+        })),
+        resourceRequirements: [],
+        timeout: task.timeout || 300000,
+        tags: [],
+        progressPercentage: 0,
+        checkpoints: [],
+        metadata: {},
+      })),
+      variables: workflow.variables || {},
+      parallelism: {
+        maxConcurrent: workflow.settings?.maxConcurrency || 5,
+        strategy: "priority-based" as const,
+      },
+      errorHandling: {
+        strategy: options.failFast ? "fail-fast" : "continue-on-error",
+        maxRetries: 3,
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "cli",
+    };
+
+    // Set up event listeners for progress tracking
+    const handleTaskStarted = (data: any) => {
+      const taskExec = execution.tasks.find(t => t.taskId === data.taskId);
+      if (taskExec) {
+        taskExec.status = "running";
+        taskExec.startedAt = new Date();
+        console.log(`${colors.cyan("→")} Starting task: ${data.taskId}`);
+      }
+    };
+
+    const handleTaskCompleted = (data: any) => {
+      const taskExec = execution.tasks.find(t => t.taskId === data.taskId);
+      if (taskExec) {
+        taskExec.status = "completed";
+        taskExec.completedAt = new Date();
+        taskExec.output = data.result;
+        execution.progress.completed++;
+        console.log(`${colors.green("✓")} Completed: ${data.taskId}`);
+      }
+    };
+
+    const handleTaskFailed = (data: any) => {
+      const taskExec = execution.tasks.find(t => t.taskId === data.taskId);
+      if (taskExec) {
+        taskExec.status = "failed";
+        taskExec.completedAt = new Date();
+        taskExec.error = data.error.message;
+        execution.progress.failed++;
+        console.log(`${colors.red("✗")} Failed: ${data.taskId} - ${data.error.message}`);
+      }
+    };
+
+    if (eventBus) {
+      eventBus.on(SystemEvents.TASK_STARTED, handleTaskStarted);
+      eventBus.on(SystemEvents.TASK_COMPLETED, handleTaskCompleted);
+      eventBus.on(SystemEvents.TASK_FAILED, handleTaskFailed);
+    }
+
+    try {
+      // Execute workflow through task engine
+      await taskEngine.executeWorkflow(engineWorkflow);
+      
+      execution.status = execution.progress.failed > 0 ? "failed" : "completed";
+      execution.completedAt = new Date();
+      
+    } finally {
+      // Clean up event listeners
+      if (eventBus) {
+        eventBus.off(SystemEvents.TASK_STARTED, handleTaskStarted);
+        eventBus.off(SystemEvents.TASK_COMPLETED, handleTaskCompleted);
+        eventBus.off(SystemEvents.TASK_FAILED, handleTaskFailed);
+      }
+    }
+
+  } catch (error) {
+    execution.status = "failed";
+    execution.completedAt = new Date();
+    console.error(colors.red("Workflow execution failed:"), (error as Error).message);
+  }
+
+  // Display final results
+  const duration = formatDuration(execution.completedAt!.getTime() - execution.startedAt.getTime());
+  
+  if (execution.status === "completed") {
+    console.log(colors.green.bold("✓ Workflow completed successfully"));
+  } else {
+    console.log(colors.red.bold("✗ Workflow completed with failures"));
+  }
+  
+  console.log(`${colors.white("Duration:")} ${duration}`);
+  console.log(`${colors.white("Tasks:")} ${execution.progress.completed}/${execution.progress.total} completed`);
+  
+  if (execution.progress.failed > 0) {
+    console.log(`${colors.white("Failed:")} ${execution.progress.failed}`);
+  }
+}
+
+async function executeWorkflowFallback(execution: WorkflowExecution, workflow: WorkflowDefinition, options: RunWorkflowOptions): Promise<void> {
+  console.log(colors.yellow("Using fallback execution mode (task engine not available)"));
+
+  // Mock execution - simplified version for fallback
   for (let i = 0; i < execution.tasks.length; i++) {
     const taskExec = execution.tasks[i];
     const taskDef = workflow.tasks.find(t => t.id === taskExec.taskId);
