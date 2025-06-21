@@ -20,6 +20,7 @@ import { helpCommand } from "./commands/help.js";
 import { mcpCommand } from "./commands/mcp.js";
 import { claudeCommand } from "./commands/claude.js";
 import { swarmCommand } from "./commands/swarm.js";
+import { sparcCommand } from "./commands/sparc.js";
 import { formatError, displayBanner, displayVersion } from "./formatter.js";
 import { startNodeREPL as startREPL } from "./node-repl.js";
 import { CompletionGenerator } from "./completion.js";
@@ -92,6 +93,7 @@ export function createCLI(): Command {
     .addCommand(mcpCommand)
     .addCommand(claudeCommand)
     .addCommand(swarmCommand)
+    .addCommand(sparcCommand)
     .addCommand(helpCommand)
     .command("batch")
     .description("Spawn multiple Claude instances from workflow")
