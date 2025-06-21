@@ -18,7 +18,7 @@ import { CoordinationManager } from "../../../coordination/manager.js";
 import { MCPServer } from "../../../mcp/server.js";
 import { eventBus } from "../../../core/event-bus.js";
 import { logger } from "../../../core/logger.js";
-import { configManager } from "../../../core/config.js";
+import { ConfigManager } from "../../../config/config-manager.js";
 import { type Config, type MemoryConfig, type TerminalConfig, type CoordinationConfig, type MCPConfig } from "../../../utils/types.js";
 
 
@@ -64,8 +64,19 @@ export class ProcessManager extends EventEmitter {
 
   async initialize(configPath?: string): Promise<void> {
     try {
-      await configManager.load(configPath);
-      this.config = configManager.get();
+      const configManager = ConfigManager.getInstance();
+      if (configPath) {
+        await configManager.load(configPath);
+      } else {
+        // Try to load default config file if it exists
+        try {
+          await configManager.load("./claude-flow.config.json");
+        } catch {
+          // Use defaults if no config file found
+          await configManager.load(); // This will use defaults
+        }
+      }
+      this.config = configManager.show() as Config;
       this.emit("initialized", { config: this.config });
     } catch (error) {
       this.emit("error", { component: "ProcessManager", error });
