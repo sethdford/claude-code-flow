@@ -1,5 +1,5 @@
 {
-  "version": "1.2.8",
+  "version": "1.4.0",
   "description": "Batch tools configuration for Claude Code orchestration",
   "tools": {
     "todoWrite": {

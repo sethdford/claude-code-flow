@@ -1,9 +1,8 @@
 ---
-description: AI Integration Rules for Enhanced Multi-Model Architecture
-globs: src/**/*.ts, src/**/*.js, docs/**/*.md
+description: Guidelines for creating and maintaining Cursor rules to ensure consistency and effectiveness.
+globs: .cursor/rules/*.mdc
 alwaysApply: true
 ---
-
 # AI Integration Rules for Claude Code Flow
 
 ## Hierarchical Model Strategy
@@ -34,6 +33,23 @@ const singleModel = "claude-3-5-sonnet"; // Inefficient
   - Consider project structure and conventions
   - Cache context for performance
 
+```typescript
+// ✅ DO: Use context-aware file analysis
+interface FileContext {
+  path: string;
+  language: string;
+  dependencies: string[];
+  exports: string[];
+  complexity: 'low' | 'medium' | 'high';
+  relatedFiles: string[];
+}
+
+// ❌ DON'T: Generate code without context
+function generateCode(prompt: string) {
+  // Missing context analysis
+}
+```
+
 ## Task Complexity Analysis
 
 - **Analyze task complexity before execution**
@@ -41,6 +57,26 @@ const singleModel = "claude-3-5-sonnet"; // Inefficient
   - Estimate token requirements and context needs
   - Select appropriate model and strategy
   - Consider file size and modification scope
+
+```typescript
+// ✅ DO: Implement complexity analysis
+private analyzeTaskComplexity(task: TaskDefinition): TaskComplexityAnalysis {
+  const description = task.description.toLowerCase();
+  
+  const complexityIndicators = {
+    simple: ["fix typo", "rename variable", "add import"],
+    medium: ["implement function", "add method", "refactor"],
+    complex: ["design architecture", "security audit", "integration"]
+  };
+  
+  return determineComplexity(description, complexityIndicators);
+}
+
+// ❌ DON'T: Use same approach for all tasks
+function executeTask(task: TaskDefinition) {
+  // Missing complexity analysis
+}
+```
 
 ## Enhanced Error Recovery
 
@@ -50,6 +86,29 @@ const singleModel = "claude-3-5-sonnet"; // Inefficient
   - Provide contextual error messages and suggestions
   - Learn from previous errors to improve future attempts
 
+```typescript
+// ✅ DO: Implement progressive error recovery
+private async handleError(error: any, task: TaskDefinition): Promise<any> {
+  logger.error(`Error handling for task ${task.id}:`, error);
+  
+  return {
+    status: "error",
+    error: error.message,
+    recovery: "attempted",
+    suggestions: [
+      "Retry with different model",
+      "Break down into smaller tasks",
+      "Request additional context"
+    ]
+  };
+}
+
+// ❌ DON'T: Fail without recovery attempts
+function handleError(error: any) {
+  throw error; // No recovery strategy
+}
+```
+
 ## Multi-Agent Coordination
 
 - **Coordinate agents based on capabilities**
@@ -57,6 +116,20 @@ const singleModel = "claude-3-5-sonnet"; // Inefficient
   - Share context between related agents
   - Avoid resource conflicts and duplication
   - Monitor agent performance and adjust assignments
+
+```typescript
+// ✅ DO: Implement intelligent agent selection
+private findBestAgent(task: TaskDefinition, agents: BaseAgent[]): BaseAgent | null {
+  return agents
+    .filter(agent => agent.canHandleTask(task))
+    .sort((a, b) => this.calculateAgentScore(b, task) - this.calculateAgentScore(a, task))[0] || null;
+}
+
+// ❌ DON'T: Assign tasks randomly
+function assignTask(task: TaskDefinition, agents: BaseAgent[]) {
+  return agents[Math.floor(Math.random() * agents.length)];
+}
+```
 
 ## Performance Optimization
 
@@ -66,6 +139,26 @@ const singleModel = "claude-3-5-sonnet"; // Inefficient
   - Monitor token usage and optimize prompts
   - Use streaming for long-running operations
 
+```typescript
+// ✅ DO: Implement context caching
+private contextCache: Map<string, ContextWindow> = new Map();
+
+private async getContext(key: string): Promise<ContextWindow> {
+  if (this.contextCache.has(key)) {
+    return this.contextCache.get(key)!;
+  }
+  
+  const context = await this.generateContext(key);
+  this.contextCache.set(key, context);
+  return context;
+}
+
+// ❌ DON'T: Regenerate context repeatedly
+async function getContext(key: string) {
+  return await generateContext(key); // No caching
+}
+```
+
 ## AWS Bedrock Integration
 
 - **Support enterprise AI deployments**
@@ -74,6 +167,23 @@ const singleModel = "claude-3-5-sonnet"; // Inefficient
   - Implement proper error handling for access issues
   - Support both direct and profiled model access
 
+```typescript
+// ✅ DO: Implement proper Bedrock integration
+export interface BedrockRequest {
+  anthropic_version: "bedrock-2023-05-31";
+  max_tokens: number;
+  messages: BedrockMessage[];
+  system?: string;
+  temperature?: number;
+}
+
+// ❌ DON'T: Use incorrect API format
+const request = {
+  model: "claude-3-sonnet", // Wrong format for Bedrock
+  prompt: "Hello" // Missing required structure
+};
+```
+
 ## Code Quality Standards
 
 - **Maintain high code quality in AI-generated code**
@@ -81,3 +191,38 @@ const singleModel = "claude-3-5-sonnet"; // Inefficient
   - Include proper error handling and validation
   - Add appropriate comments and documentation
   - Ensure type safety and proper imports
+
+```typescript
+// ✅ DO: Generate code with proper structure
+export class CodeAgent extends BaseAgent {
+  private readonly modelHierarchy: ModelHierarchy;
+  
+  constructor(id: string, config?: AgentConfig) {
+    super(id, "developer");
+    this.modelHierarchy = this.initializeModels(config);
+  }
+  
+  async executeTask(task: TaskDefinition): Promise<TaskResult> {
+    try {
+      const complexity = await this.analyzeTaskComplexity(task);
+      return await this.executeWithComplexity(task, complexity);
+    } catch (error) {
+      return await this.handleError(error, task);
+    }
+  }
+}
+
+// ❌ DON'T: Generate code without proper structure
+class Agent {
+  execute(task) {
+    // Missing types, error handling, structure
+  }
+}
+```
+
+## References
+
+- [Enhanced Coordinator](mdc:src/swarm/enhanced-coordinator.ts) - Main coordination logic
+- [Code Agent](mdc:src/swarm/agents/code-agent.ts) - AI-powered code generation
+- [Model Config](mdc:src/config/model-config.ts) - Hierarchical model configuration
+- [AI Integration Guide](mdc:docs/ai-integration-guide.md) - Detailed implementation guide 

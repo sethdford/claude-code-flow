@@ -474,6 +474,34 @@ export function calculator(a: number, b: number, operation: "+" | "-" | "*" | "/
 }
 
 /**
+ * Calculates the factorial of a number
+ * @param n - The number to calculate factorial for
+ * @returns The factorial of n
+ * @throws Error if n is negative or not an integer
+ */
+export function factorial(n: number): number {
+  if (n < 0) {
+    throw new Error("Factorial is not defined for negative numbers");
+  }
+  
+  if (!Number.isInteger(n)) {
+    throw new Error("Factorial is only defined for integers");
+  }
+  
+  if (n === 0 || n === 1) {
+    return 1;
+  }
+  
+  // Iterative approach for better performance and to avoid stack overflow
+  let result = 1;
+  for (let i = 2; i <= n; i++) {
+    result *= i;
+  }
+  
+  return result;
+}
+
+/**
  * Creates a circuit breaker
  */
 export function circuitBreaker(

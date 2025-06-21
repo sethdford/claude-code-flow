@@ -1,5 +1,5 @@
 {
-  "version": "1.2.8",
+  "version": "1.4.0",
   "description": "Agent coordination and orchestration configuration",
   "coordination": {
     "taskManagement": {

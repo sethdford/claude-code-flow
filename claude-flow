@@ -10,12 +10,6 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 
 async function findClaudeFlow() {
-  // Method 0: Check for local SEA binary first (development)
-  const localBinary = join(process.cwd(), 'bin', 'claude-flow');
-  if (existsSync(localBinary)) {
-    return localBinary;
-  }
-  
   // Method 1: Check for local node_modules installation
   const localPath = join(process.cwd(), 'node_modules', '.bin', 'claude-flow');
   if (existsSync(localPath)) {

@@ -116,11 +116,13 @@ async function initializeStatusSystem(): Promise<void> {
     const mockTerminalManager = {
       initialize: async () => {},
       getHealthStatus: async () => ({ status: "healthy" as const, components: {}, timestamp: new Date() }),
+      performMaintenance: async () => {},
     };
     
     const mockMemoryManager = {
       initialize: async () => {},
       getHealthStatus: async () => ({ status: "healthy" as const, components: {}, timestamp: new Date() }),
+      performMaintenance: async () => {},
     };
     
     const mockMCPServer = {
