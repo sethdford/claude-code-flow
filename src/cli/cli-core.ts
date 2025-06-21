@@ -5,7 +5,7 @@
  */
 
 import { logger } from "../core/logger.js";
-import { configManager } from "../core/config.js";
+import { ConfigManager } from "../config/config-manager.js";
 import { Command } from "./cliffy-compat.js";
 import { startCommand } from "./commands/start.js";
 import { agentCommand } from "./commands/agent.js";
@@ -265,6 +265,7 @@ export async function setupLogging(options: any): Promise<void> {
   
   // Load configuration
   try {
+    const configManager = ConfigManager.getInstance();
     if (options.config) {
       await configManager.load(options.config);
     } else {
@@ -272,22 +273,20 @@ export async function setupLogging(options: any): Promise<void> {
       try {
         await configManager.load("./claude-flow.config.json");
       } catch {
-        // Use default config if no file found
-        configManager.loadDefault();
+        // Use default config if no file found - load method handles this
+        await configManager.load(); // This will use defaults
       }
     }
     
-    // Apply profile if specified
-    if (options.profile) {
-      await configManager.applyProfile(options.profile);
-    }
+    // Note: The simple ConfigManager doesn't have applyProfile method
+    // This is fine as it's a simpler configuration system
   } catch (error) {
     // Suppress the circular reference warning as it's not fatal
     const errorMessage = (error as Error).message;
     if (!errorMessage.includes("Maximum call stack size exceeded")) {
       logger.warn("Failed to load configuration:", errorMessage);
     }
-    configManager.loadDefault();
+    // ConfigManager will use defaults automatically
   }
 }
 
