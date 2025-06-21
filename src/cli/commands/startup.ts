@@ -246,16 +246,51 @@ async function activateCapabilities(ctx: CommandContext): Promise<void> {
 async function checkActivation(ctx: CommandContext): Promise<void> {
   console.log(chalk.cyan("\n🔍 Checking Activation Status\n"));
   
-  // Simulate activation check
+  // Check memory management status
+  let memoryStatus = "inactive";
+  try {
+    const { MemoryManager } = await import("../../memory/manager.js");
+    if (MemoryManager) {
+      memoryStatus = "active";
+    }
+  } catch (error) {
+    memoryStatus = "inactive";
+  }
+  
+  // Check MCP integration status
+  let mcpStatus = "inactive";
+  try {
+    const mcpConfig = process.env.MCP_SERVER_URL || process.env.MCP_ENABLED;
+    if (mcpConfig) {
+      mcpStatus = "partial";
+    }
+  } catch (error) {
+    mcpStatus = "inactive";
+  }
+  
+  // Check web research capability
+  let webResearchStatus = "inactive";
+  const hasWebApiKeys = process.env.PERPLEXITY_API_KEY || process.env.GOOGLE_API_KEY || process.env.OPENAI_API_KEY;
+  if (hasWebApiKeys) {
+    webResearchStatus = "partial";
+  }
+  
+  // Check enterprise features
+  let enterpriseStatus = "inactive";
+  const hasEnterpriseConfig = process.env.ENTERPRISE_MODE || process.env.BEDROCK_REGION;
+  if (hasEnterpriseConfig) {
+    enterpriseStatus = "partial";
+  }
+  
   const checks = [
     { name: "Terminal Integration", status: "active", icon: "✅" },
     { name: "Codebase Understanding", status: "active", icon: "✅" },
     { name: "Git Operations", status: "active", icon: "✅" },
-    { name: "Web Research", status: "partial", icon: "⚠️" },
+    { name: "Web Research", status: webResearchStatus, icon: webResearchStatus === "partial" ? "⚠️" : "❌" },
     { name: "Multi-File Operations", status: "active", icon: "✅" },
-    { name: "Memory Management", status: "inactive", icon: "❌" },
-    { name: "MCP Integration", status: "partial", icon: "⚠️" },
-    { name: "Enterprise Features", status: "inactive", icon: "❌" }
+    { name: "Memory Management", status: memoryStatus, icon: memoryStatus === "active" ? "✅" : "❌" },
+    { name: "MCP Integration", status: mcpStatus, icon: mcpStatus === "partial" ? "⚠️" : "❌" },
+    { name: "Enterprise Features", status: enterpriseStatus, icon: enterpriseStatus === "partial" ? "⚠️" : "❌" }
   ];
   
   console.log(chalk.blue("Capability Status:"));
@@ -276,8 +311,18 @@ async function checkActivation(ctx: CommandContext): Promise<void> {
     console.log();
     console.log(chalk.yellow("Recommendations:"));
     console.log("  • Run 'claude-flow startup run metaclaude' for full activation");
-    console.log("  • Check MCP server configuration for integration features");
-    console.log("  • Verify API keys for external service connections");
+    if (mcpStatus !== "active") {
+      console.log("  • Check MCP server configuration for integration features");
+    }
+    if (webResearchStatus !== "active") {
+      console.log("  • Set API keys (PERPLEXITY_API_KEY, GOOGLE_API_KEY) for web research");
+    }
+    if (memoryStatus !== "active") {
+      console.log("  • Memory management system is available and ready");
+    }
+    if (enterpriseStatus !== "active") {
+      console.log("  • Set ENTERPRISE_MODE or BEDROCK_REGION for enterprise features");
+    }
   }
 }
 

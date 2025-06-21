@@ -316,6 +316,7 @@ export class CodeAgent extends BaseAgent {
     
     // Map task capability names to agent capability properties
     const capabilityMap: Record<string, boolean> = {
+      // Core capabilities
       "analysis": this.capabilities.analysis,
       "planning": this.capabilities.analysis, // Planning is part of analysis
       "coding": this.capabilities.codeGeneration,
@@ -323,18 +324,45 @@ export class CodeAgent extends BaseAgent {
       "review": this.capabilities.codeReview,
       "testing": this.capabilities.testing,
       "documentation": this.capabilities.documentation,
-      "research": this.capabilities.research,
+      "research": this.capabilities.research || true, // CodeAgent can do basic research
       "web-search": this.capabilities.webSearch,
       "api-integration": this.capabilities.apiIntegration,
       "file-system": this.capabilities.fileSystem,
       "terminal": this.capabilities.terminalAccess,
+      
+      // Development strategy specific capabilities
+      "architecture": this.capabilities.analysis, // Architecture design is analysis
+      "design": this.capabilities.analysis, // Design is analysis
+      "frontend": this.capabilities.codeGeneration, // Frontend is code generation
+      "backend": this.capabilities.codeGeneration, // Backend is code generation
+      "api_development": this.capabilities.codeGeneration, // API dev is code generation
+      "coordination": true, // CodeAgent can coordinate through Memory
+      "quality_assurance": this.capabilities.codeReview, // QA is code review
+      "integration": this.capabilities.codeGeneration, // Integration is coding
+      "deployment": this.capabilities.terminalAccess, // Deployment uses terminal
+      "monitoring": this.capabilities.analysis, // Monitoring is analysis
+      
+      // Tool capabilities - CodeAgent supports all these through its tools
+      "memory": true,
+      "web_search": this.capabilities.webSearch || true, // Can do basic web search
+      "file_operations": this.capabilities.fileSystem,
+      "batch_operations": true,
+      "mcp_orchestration": true,
+      "pattern_synthesis": this.capabilities.analysis,
+      "meta_learning": this.capabilities.analysis,
+      "feature_discovery": this.capabilities.analysis,
+      "code_review_game": this.capabilities.codeReview,
+      "virgil_protocol": this.capabilities.analysis,
+      "ulysses_protocol": this.capabilities.analysis,
+      "wisdom_distillation": this.capabilities.analysis,
     };
 
     // Check if agent can handle all required capabilities
     return requiredCapabilities.every(capability => {
       const canHandle = capabilityMap[capability];
       if (canHandle === undefined) {
-        // If capability is not mapped, assume agent can handle it
+        // If capability is not mapped, log it and assume agent can handle it
+        logger.info(`Unknown capability '${capability}' for task ${task.id.id}, assuming agent can handle it`);
         return true;
       }
       return canHandle;

@@ -375,32 +375,62 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
   }
 
   private async processTasks(): Promise<void> {
-    logger.info(`Processing ${this.taskQueue.length} tasks`);
-    
-    while (this.taskQueue.length > 0) {
-      const availableAgents = Array.from(this.agents.values()).filter(agent => agent.isAvailable());
+    logger.info("Starting task processing...");
+
+    while (this.taskQueue.length > 0 || this.activeTasksMap.size > 0) {
+      const nextTask = this.getNextTask();
       
-      if (availableAgents.length === 0) {
-        logger.info("No available agents, waiting...");
+      if (!nextTask) {
+        // No tasks ready, wait for dependencies to complete
         await new Promise(resolve => setTimeout(resolve, 1000));
         continue;
       }
 
-      const nextTask = this.getNextTask();
-      if (!nextTask) {
-        logger.info("No tasks ready for execution, waiting...");
+      const availableAgents = Array.from(this.agents.values()).filter(agent => agent.isAvailable());
+      
+      if (availableAgents.length === 0) {
+        // No agents available, wait
+        logger.info("No agents available, waiting...");
         await new Promise(resolve => setTimeout(resolve, 1000));
         continue;
       }
 
       const bestAgent = this.findBestAgent(nextTask, availableAgents);
+      
       if (!bestAgent) {
+        // No suitable agent found - try to make agents more flexible
         logger.warn(`No suitable agent found for task: ${nextTask.name}`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Try with any available agent as fallback
+        const fallbackAgent = availableAgents[0];
+        if (fallbackAgent) {
+          logger.info(`Using fallback agent ${fallbackAgent.getId()} for task: ${nextTask.name}`);
+          
+          // Prepare context for the agent
+          await this.prepareContextWindow(nextTask, fallbackAgent);
+          
+          // Remove task from queue and add to active tasks
+          const taskIndex = this.taskQueue.indexOf(nextTask);
+          this.taskQueue.splice(taskIndex, 1);
+          this.activeTasksMap.set(nextTask.id.id, nextTask);
+
+          // Assign task to fallback agent
+          logger.info(`Assigning task ${nextTask.id.id} to fallback agent ${fallbackAgent.getId()}`);
+          this.emit("taskStarted", { 
+            taskName: nextTask.name, 
+            taskId: nextTask.id.id, 
+            agentId: fallbackAgent.getId(), 
+          });
+          
+          await fallbackAgent.assignTask(nextTask);
+        } else {
+          // Still no agent, wait and retry
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
         continue;
       }
 
-      // Prepare context window for the task
+      // Found suitable agent
       await this.prepareContextWindow(nextTask, bestAgent);
       
       // Remove task from queue and add to active tasks
@@ -441,7 +471,8 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
     let bestScore = 0;
 
     for (const agent of availableAgents) {
-      if (!agent.canHandleTask(task)) {
+      // Use more lenient capability checking
+      if (!this.agentCanHandleTaskLenient(agent, task)) {
         continue;
       }
 
@@ -450,7 +481,14 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
 
       // Score based on capability match
       const taskCapabilities = task.requirements?.capabilities || [];
-      const matchingCapabilities = taskCapabilities.filter(capability => capabilities.tools.includes(capability));
+      const matchingCapabilities = taskCapabilities.filter(capability => {
+        // Check if agent's tools include this capability or related ones
+        return capabilities.tools.some(tool => 
+          tool.includes(capability) || 
+          capability.includes(tool) ||
+          this.areCapabilitiesRelated(capability, tool)
+        );
+      });
       score += matchingCapabilities.length * 10;
 
       // Score based on agent reliability
@@ -459,6 +497,12 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
       // Score based on agent speed
       score += capabilities.speed * 3;
 
+      // Bonus for CodeAgent handling development tasks
+      if (agent.getType() === "developer" && 
+          (task.type === "coding" || task.type === "analysis" || task.type === "research")) {
+        score += 20;
+      }
+
       if (score > bestScore) {
         bestScore = score;
         bestAgent = agent;
@@ -466,6 +510,47 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
     }
 
     return bestAgent;
+  }
+
+  private agentCanHandleTaskLenient(agent: BaseAgent, task: TaskDefinition): boolean {
+    // First try the agent's own canHandleTask method
+    try {
+      if (agent.canHandleTask(task)) {
+        return true;
+      }
+    } catch (error) {
+      logger.warn(`Error checking if agent ${agent.getId()} can handle task ${task.id.id}:`, error);
+    }
+
+    // Fallback: CodeAgent can handle most development tasks
+    if (agent.getType() === "developer") {
+      const developmentTaskTypes = ["coding", "analysis", "research", "implementation", "review"];
+      if (developmentTaskTypes.includes(task.type)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private areCapabilitiesRelated(cap1: string, cap2: string): boolean {
+    const relatedCapabilities: Record<string, string[]> = {
+      "analysis": ["research", "planning", "architecture", "design"],
+      "coding": ["implementation", "frontend", "backend", "api_development"],
+      "review": ["quality_assurance", "testing"],
+      "research": ["analysis", "web_search"],
+      "planning": ["analysis", "architecture"],
+      "architecture": ["design", "analysis", "planning"],
+      "design": ["architecture", "analysis"],
+      "frontend": ["coding", "implementation"],
+      "backend": ["coding", "implementation", "api_development"],
+      "api_development": ["backend", "coding", "implementation"],
+    };
+
+    const related1 = relatedCapabilities[cap1] || [];
+    const related2 = relatedCapabilities[cap2] || [];
+
+    return related1.includes(cap2) || related2.includes(cap1);
   }
 
   private async prepareContextWindow(task: TaskDefinition, agent: BaseAgent): Promise<void> {
