@@ -1,12 +1,12 @@
 # 🧠 Claude-Flow: Advanced AI Agent Orchestration System
 
-> **Transform your development workflow with intelligent multi-agent coordination**
+> **Transform your development workflow with intelligent multi-agent coordination and game-theoretic development protocols**
 
 [![npm version](https://badge.fury.io/js/@sethdouglasford/claude-flow.svg)](https://badge.fury.io/js/@sethdouglasford/claude-flow)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-Claude-Flow is a **next-generation AI agent orchestration platform** that enables sophisticated multi-agent coordination, advanced process management, and intelligent task distribution. Built with modern TypeScript and featuring native MCP integration, it represents the evolution of AI-powered development workflows.
+Claude-Flow is a **next-generation AI agent orchestration platform** that enables sophisticated multi-agent coordination, advanced process management, and intelligent task distribution. Built with modern TypeScript and featuring native MCP integration, it represents the evolution of AI-powered development workflows with game-theoretic protocols and advanced synthesis capabilities.
 
 ## 🎬 **See Claude Code in Action**
 
@@ -20,7 +20,7 @@ Claude-Flow is a **next-generation AI agent orchestration platform** that enable
 
 ### **Method 1: NPX Quick Start (Recommended)**
 ```bash
-# Initialize complete SPARC environment
+# Initialize complete environment
 npx @sethdouglasford/claude-flow@latest init --sparc
 
 # Start with Web UI
@@ -64,6 +64,12 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 - **Distributed memory system** - Shared knowledge across all agents
 - **Event-driven architecture** - Real-time communication between components
 
+### **🎮 Game-Theoretic Development Protocols**
+- **Meta-frameworks** - 6 advanced development protocols with cognitive budgets
+- **Strategic orchestration** - MCP DSL and swarm intelligence coordination
+- **Synthesis capabilities** - Pattern analysis and meta-learning systems
+- **Capability activation** - Progressive skill unlocking and enhancement
+
 ### **⚡ Modern Technical Architecture**
 - **TypeScript-first** - Full type safety and modern ES modules
 - **MCP native integration** - Model Context Protocol for advanced tool usage
@@ -90,30 +96,114 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 ./claude-flow agent info agent-123
 ```
 
-### **🔥 Advanced Multi-Agent Workflows**
+### **🎯 Game-Theoretic Meta-Frameworks**
 ```bash
-# Deploy coordinated development swarm
-./claude-flow swarm "Build e-commerce platform with React and Node.js" \
-  --strategy development \
-  --max-agents 5 \
-  --parallel \
-  --monitor
+# Advanced development protocols with cognitive budgets
+./claude-flow meta-frameworks run code-review-game "Review authentication system" --reviewers 3
+./claude-flow meta-frameworks run feature-discovery "Add real-time collaboration" --explorers 4
+./claude-flow meta-frameworks run refactoring-game "Optimize database layer" --energy-budget 100
+./claude-flow meta-frameworks run ulysses-protocol "Debug complex race condition" --time-box 2h
+./claude-flow meta-frameworks run virgil-protocol "Innovative caching strategy" --restraint-level high
+./claude-flow meta-frameworks run wisdom-distillation "Extract patterns from codebase" --levels 5
 
-# Agent lifecycle management
-./claude-flow agent spawn researcher --name "DataAnalyst"
-./claude-flow agent spawn developer --name "CodeBot" 
-./claude-flow agent spawn analyzer --name "QualityBot"
+# List all available meta-frameworks
+./claude-flow meta-frameworks list
+./claude-flow meta-frameworks info ulysses-protocol
+```
 
-# SPARC methodology workflows
-./claude-flow sparc run architect "design microservice architecture"
-./claude-flow sparc run coder "implement user authentication API"
-./claude-flow sparc run tdd "create comprehensive test suite"
-./claude-flow sparc run reviewer "audit authentication flow"
-./claude-flow sparc run optimizer "improve database performance"
-./claude-flow sparc run documenter "generate API documentation"
+### **🔧 Advanced Orchestration Systems**
+```bash
+# MCP Orchestration DSL for complex workflows
+./claude-flow orchestration run mcp-dsl "
+  parallel {
+    task analyze_code { tool: code_analyzer, input: './src' }
+    task run_tests { tool: test_runner, input: './tests' }
+  }
+  task generate_report { 
+    depends: [analyze_code, run_tests]
+    tool: report_generator 
+  }
+"
 
-# List available SPARC modes
-./claude-flow sparc modes --verbose
+# Swarm Intelligence with dynamic coordination
+./claude-flow orchestration run swarm-intelligence "Build microservices architecture" \
+  --agents 5 --coordination hierarchical --spawn-strategy adaptive
+
+# Show orchestration capabilities
+./claude-flow orchestration list
+./claude-flow orchestration dsl  # Show DSL reference
+```
+
+### **🌟 Startup & Capability Activation**
+```bash
+# MetaClaude Protocol for comprehensive orientation
+./claude-flow startup run metaclaude "Initialize development environment"
+
+# Check capability activation status
+./claude-flow startup check
+
+# Activate specific capabilities
+./claude-flow startup activate terminal-integration
+./claude-flow startup activate codebase-exploration
+./claude-flow startup activate real-time-development
+
+# List all available capabilities and tutorials
+./claude-flow startup list
+```
+
+### **🧬 Synthesis & Pattern Analysis**
+```bash
+# Multi-source pattern synthesis
+./claude-flow synthesis patterns error-handling --sources code,docs,research
+./claude-flow synthesis patterns state-management --domains frontend,backend,mobile
+
+# Meta-learning and capability evolution
+./claude-flow synthesis evolve orchestration --benchmark current --enhance coordination
+./claude-flow synthesis evolve debugging --target advanced --metrics accuracy,speed
+
+# Show synthesis capabilities
+./claude-flow synthesis list
+```
+
+### **🔥 Enhanced Swarm Strategies**
+```bash
+# Advanced swarm strategies with intelligent coordination
+./claude-flow swarm "Build e-commerce platform" --strategy development --max-agents 5
+./claude-flow swarm "Analyze user behavior data" --strategy analysis --parallel
+./claude-flow swarm "Optimize system performance" --strategy optimization --research
+./claude-flow swarm "Comprehensive testing suite" --strategy testing --coverage 95
+./claude-flow swarm "System maintenance update" --strategy maintenance --safety-checks
+
+# Strategy intelligence and recommendations
+./claude-flow swarm-strategies  # List all strategies in tree format
+./claude-flow swarm-strategies development  # Detailed strategy info
+./claude-flow swarm "Create REST API" --strategy auto  # Auto-recommendation
+```
+
+### **📊 Intelligent Task Analysis**
+```bash
+# AI-powered task complexity analysis
+./claude-flow analyze task "Implement user authentication with JWT and session management"
+./claude-flow analyze breakdown "Create REST API" --subtasks 5 --tech-stack "Node.js,Express,MongoDB"
+
+# Workflow analysis and optimization
+./claude-flow analyze workflow examples/02-workflows/claude-workflow.json --breakdown
+./claude-flow analyze project --tech-stack "React,Node.js,PostgreSQL" --team-experience senior
+```
+
+### **⚡ Comprehensive Workflow Management**
+```bash
+# Execute workflows with advanced features
+./claude-flow workflow run my-workflow.json --variables '{"env":"prod"}' --watch
+./claude-flow workflow validate workflow.json --strict
+./claude-flow workflow status workflow-abc123 --watch
+
+# Template generation and management
+./claude-flow workflow template development -o dev-workflow.json
+./claude-flow workflow template research -o research-workflow.json
+
+# Workflow examples and help
+./claude-flow workflow examples
 ```
 
 ### **🧠 Memory & Knowledge Management**
@@ -125,10 +215,6 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 # Query stored information
 ./claude-flow memory query "authentication patterns"
 
-# Workflow management
-./claude-flow workflow --help
-./claude-flow cancel <task-id>
-
 # System monitoring
 ./claude-flow status
 ./claude-flow monitor --dashboard
@@ -137,6 +223,70 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 ---
 
 ## 📋 **Complete Command Reference**
+
+### **🎯 Game-Theoretic Meta-Frameworks**
+
+| Framework | Purpose | Key Features | Example |
+|-----------|---------|--------------|---------|
+| `code-review-game` | Multi-agent code review with concern budgets | Progressive disclosure, reviewer tournaments | `./claude-flow meta-frameworks run code-review-game "Review auth system"` |
+| `feature-discovery` | Cognitive exploration with diversity tournaments | Isolated generation, cross-pollination | `./claude-flow meta-frameworks run feature-discovery "Add collaboration"` |
+| `refactoring-game` | Energy-budget refactoring with spiral detection | Minimax regret, efficiency optimization | `./claude-flow meta-frameworks run refactoring-game "Optimize DB layer"` |
+| `ulysses-protocol` | High-stakes debugging with systematic escalation | Time-boxed phases, escalation triggers | `./claude-flow meta-frameworks run ulysses-protocol "Debug race condition"` |
+| `virgil-protocol` | 3% Rule innovation with restraint | Exhaustive discovery, innovation restraint | `./claude-flow meta-frameworks run virgil-protocol "Novel caching strategy"` |
+| `wisdom-distillation` | Multi-level abstraction extraction | Tactical to universal principles | `./claude-flow meta-frameworks run wisdom-distillation "Extract patterns"` |
+
+### **🔧 Advanced Orchestration Systems**
+
+| System | Purpose | Key Features | Example |
+|--------|---------|--------------|---------|
+| `mcp-dsl` | MCP Orchestration DSL | Parallel execution, variables, conditionals | `./claude-flow orchestration run mcp-dsl "workflow definition"` |
+| `swarm-intelligence` | Dynamic agent coordination | 5 specialized agents, 3 coordination modes | `./claude-flow orchestration run swarm-intelligence "Build architecture"` |
+
+### **🌟 Startup & Capability Systems**
+
+| Capability | Purpose | Status Tracking | Example |
+|------------|---------|-----------------|---------|
+| `metaclaude` | Comprehensive orientation protocol | Progressive activation | `./claude-flow startup run metaclaude "Initialize environment"` |
+| `terminal-integration` | Advanced terminal operations | Capability monitoring | `./claude-flow startup activate terminal-integration` |
+| `codebase-exploration` | Deep code analysis | Skill progression | `./claude-flow startup activate codebase-exploration` |
+| `real-time-development` | Live coding assistance | Performance metrics | `./claude-flow startup activate real-time-development` |
+
+### **🧬 Synthesis & Meta-Learning**
+
+| System | Purpose | Intelligence Level | Example |
+|--------|---------|-------------------|---------|
+| `pattern-synthesizer` | Multi-source pattern analysis | Cross-domain synthesis | `./claude-flow synthesis patterns error-handling` |
+| `meta-learning-darwin` | Self-improving AI system | Evolutionary branching | `./claude-flow synthesis evolve orchestration` |
+
+### **🔥 Enhanced Swarm Strategies**
+
+| Strategy | Purpose | Coordination Mode | Duration | Example |
+|----------|---------|-------------------|----------|---------|
+| `development` | Full-stack development | Hierarchical | ~120 min | `./claude-flow swarm "Build API" --strategy development` |
+| `analysis` | Data analysis & insights | Mesh | ~90 min | `./claude-flow swarm "Analyze data" --strategy analysis` |
+| `testing` | Comprehensive testing | Parallel | ~60 min | `./claude-flow swarm "Test suite" --strategy testing` |
+| `optimization` | Performance optimization | Hybrid | ~90 min | `./claude-flow swarm "Optimize system" --strategy optimization` |
+| `maintenance` | System maintenance | Centralized | ~75 min | `./claude-flow swarm "Update system" --strategy maintenance` |
+| `research` | Deep research & analysis | Distributed | ~180 min | `./claude-flow swarm "Research trends" --strategy research` |
+| `auto` | Intelligent strategy selection | Adaptive | Variable | `./claude-flow swarm "Any objective" --strategy auto` |
+
+### **📊 Intelligent Task Analysis**
+
+| Command | Purpose | AI-Powered Features | Example |
+|---------|---------|-------------------|---------|
+| `analyze task` | Single task complexity analysis | Complexity scoring, risk assessment | `./claude-flow analyze task "Implement auth"` |
+| `analyze breakdown` | Task decomposition | Subtask generation, acceptance criteria | `./claude-flow analyze breakdown "Build API" --subtasks 5` |
+| `analyze workflow` | Workflow optimization | Multi-task analysis, recommendations | `./claude-flow analyze workflow workflow.json` |
+| `analyze project` | Project-wide analysis | Technology context, team assessment | `./claude-flow analyze project --tech-stack "React,Node"` |
+
+### **⚡ Comprehensive Workflow Management**
+
+| Command | Purpose | Advanced Features | Example |
+|---------|---------|-------------------|---------|
+| `workflow run` | Execute workflows | Variables, watch mode, parallel execution | `./claude-flow workflow run workflow.json --watch` |
+| `workflow validate` | Workflow validation | Strict mode, dependency checking | `./claude-flow workflow validate workflow.json --strict` |
+| `workflow status` | Execution monitoring | Real-time progress, task status | `./claude-flow workflow status workflow-123 --watch` |
+| `workflow template` | Template generation | Multiple workflow types | `./claude-flow workflow template development -o dev.json` |
 
 ### **Core System Commands**
 
@@ -162,22 +312,6 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 | `analyzer` | Code and data analysis | `./claude-flow sparc run analyzer "performance bottlenecks"` |
 | `optimizer` | Performance optimization | `./claude-flow sparc run optimizer "database query efficiency"` |
 | `documenter` | Documentation generation | `./claude-flow sparc run documenter "API documentation"` |
-| `designer` | UI/UX design | `./claude-flow sparc run designer "user dashboard layout"` |
-| `innovator` | Creative problem solving | `./claude-flow sparc run innovator "novel authentication methods"` |
-| `orchestrator` | Multi-agent coordination | `./claude-flow sparc run orchestrator "coordinate development team"` |
-| `swarm-coordinator` | Swarm management | `./claude-flow sparc run swarm-coordinator "manage agent swarms"` |
-| `memory-manager` | Knowledge management | `./claude-flow sparc run memory-manager "organize project knowledge"` |
-| `batch-executor` | Parallel task execution | `./claude-flow sparc run batch-executor "run multiple tasks"` |
-| `workflow-manager` | Process automation | `./claude-flow sparc run workflow-manager "automate CI/CD"` |
-
-### **Advanced Features**
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `swarm` | Multi-agent coordination | `./claude-flow swarm "Build API" --parallel` |
-| `memory` | Knowledge management | `./claude-flow memory store key "value"` |
-| `task` | Task orchestration | `./claude-flow task create research "AI trends"` |
-| `mcp` | MCP server management | `./claude-flow mcp status` |
 
 ### **Enterprise Commands**
 
@@ -190,25 +324,6 @@ Unlike simple CLI wrappers, Claude-Flow provides **true process orchestration** 
 | `enterprise analytics` | Performance analytics | `./claude-flow enterprise analytics dashboard` |
 | `enterprise audit` | Enterprise audit logging | `./claude-flow enterprise audit logs --framework SOC2` |
 
-### **Batch Processing & Parallel Workflows**
-
-```bash
-# BatchTool parallel development
-batchtool run --parallel \
-  "./claude-flow sparc run architect 'design user auth'" \
-  "./claude-flow sparc run coder 'implement login API'" \
-  "./claude-flow sparc run tdd 'create auth tests'" \
-  "./claude-flow sparc run reviewer 'audit auth flow'"
-
-# Complete development workflow
-./claude-flow sparc run researcher "research best practices for microservices"
-./claude-flow sparc run architect "design scalable architecture"  
-./claude-flow sparc run coder "implement user service"
-./claude-flow sparc run tdd "create comprehensive test suite"
-./claude-flow sparc run integration "integrate all services"
-./claude-flow sparc run devops "setup CI/CD pipeline"
-```
-
 ---
 
 ## 🏗️ **Technical Architecture**
@@ -216,7 +331,11 @@ batchtool run --parallel \
 ### **Multi-Layer Orchestration System**
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                Process Orchestrator                     │
+│            Game-Theoretic Meta-Frameworks               │
+├─────────────────────────────────────────────────────────┤
+│          Advanced Orchestration & Synthesis             │
+├─────────────────────────────────────────────────────────┤
+│               Process Orchestrator                      │
 ├─────────────────────────────────────────────────────────┤
 │  Agent 1    Agent 2    Agent 3    Agent 4    Agent 5   │
 │ Architect │   Coder   │   TDD    │ Security │  DevOps   │
@@ -232,6 +351,11 @@ batchtool run --parallel \
 ```
 
 ### **Core Components**
+- **🎯 Meta-Frameworks**: Game-theoretic development protocols with cognitive budgets
+- **🔧 Orchestration Engine**: MCP DSL and swarm intelligence coordination
+- **🌟 Synthesis System**: Pattern analysis and meta-learning capabilities
+- **📊 Task Analyzer**: AI-powered complexity analysis and intelligent breakdown
+- **⚡ Workflow Engine**: Comprehensive workflow execution with real-time monitoring
 - **🎛️ Process Orchestrator**: Dependency-aware component lifecycle management
 - **🤖 Agent Pool**: Specialized AI agents with hierarchical model selection
 - **🧠 Memory System**: Distributed knowledge sharing with multiple backends
@@ -246,10 +370,16 @@ batchtool run --parallel \
 
 ### **vs. Other AI Orchestration Tools**
 
+✅ **Game-Theoretic Protocols** - Advanced development methodologies with cognitive budgets  
+✅ **Intelligent Task Analysis** - AI-powered complexity assessment and breakdown  
+✅ **Advanced Orchestration** - MCP DSL and swarm intelligence coordination  
+✅ **Synthesis Capabilities** - Pattern analysis and meta-learning systems  
+✅ **Enhanced Swarm Strategies** - 7 specialized coordination strategies with auto-recommendation  
+✅ **Comprehensive Workflows** - Full workflow lifecycle with real-time monitoring  
 ✅ **True Process Orchestration** - Not just a CLI wrapper  
 ✅ **Modern TypeScript Architecture** - Full type safety and ES modules  
 ✅ **Native MCP Integration** - Advanced tool protocol support  
-✅ **Intelligent Model Selection** - Automatic complexity-based model routing  
+✅ **Hierarchical Model Selection** - Automatic complexity-based model routing  
 ✅ **Cross-platform SEA Binaries** - Self-contained executables  
 ✅ **Advanced Memory Management** - Distributed knowledge systems  
 ✅ **Real-time Monitoring** - Live process health and metrics  
@@ -283,6 +413,9 @@ npm run typecheck
 - **✅ Cross-platform**: Windows, Mac, Linux support
 - **✅ Self-contained**: 71MB SEA binaries with zero dependencies
 - **✅ Production-ready**: Advanced error handling and recovery
+- **✅ Game-Theoretic Protocols**: Scientifically-backed development methodologies
+- **✅ AI-Powered Analysis**: Intelligent task complexity assessment
+- **✅ Advanced Orchestration**: Multi-modal coordination strategies
 
 ---
 
@@ -310,6 +443,9 @@ npm link
 - 💡 **Feature Requests**: Propose new features with use cases and examples
 - 🔧 **Pull Requests**: Follow TypeScript standards and include tests
 - 📚 **Documentation**: Help improve docs and add real-world examples
+- 🎯 **Meta-Frameworks**: Contribute new game-theoretic development protocols
+- 🔧 **Orchestration**: Add new coordination strategies and patterns
+- 🧬 **Synthesis**: Enhance pattern analysis and meta-learning capabilities
 
 ---
 
@@ -325,6 +461,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 - **TypeScript Team**: For the excellent type system and tooling
 - **Node.js Community**: For the robust runtime environment
 - **MCP Protocol**: For standardized AI tool integration
+- **Game Theory Research**: For cognitive budget and tournament methodologies
 - **Open Source Community**: For contributions and feedback
 
 ---
@@ -335,8 +472,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 npx @sethdouglasford/claude-flow@latest init --sparc
 ```
 
-**Join developers building the future of AI-assisted development!**
+**Join developers building the future of AI-assisted development with game-theoretic protocols and advanced synthesis capabilities!**
 
 ---
 
-**Built with ❤️ and TypeScript | Powered by Claude AI | Advanced Process Orchestration** 
+**Built with ❤️ and TypeScript | Powered by Claude AI | Advanced Process Orchestration | Game-Theoretic Development** 

@@ -48,7 +48,7 @@ export class Logger implements ILogger {
   constructor(
     config: LoggingConfig = {
       level: "info",
-      format: "json",
+      format: "text",
       destination: "console",
     },
     context: Record<string, unknown> = {},
@@ -75,7 +75,7 @@ export class Logger implements ILogger {
         }
         config = {
           level: "info",
-          format: "json",
+          format: "text",
           destination: "console",
         };
       }

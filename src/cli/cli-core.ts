@@ -35,6 +35,7 @@ import { CompletionGenerator } from "./completion.js";
 import { getVersion, getBuildDate } from "../utils/version.js";
 import { bedrockTestCommand } from "./commands/bedrock-test.js";
 import { tokenMonitorCommand } from "./commands/token-monitor.js";
+import { analyzeCommand } from "./commands/analyze.js";
 
 import chalk from "chalk";
 
@@ -122,6 +123,7 @@ export function createCLI(): Command {
     .addCommand(helpCommand)
     .addCommand(bedrockTestCommand)
     .addCommand(tokenMonitorCommand)
+    .addCommand(analyzeCommand)
     .command("batch")
     .description("Spawn multiple Claude instances from workflow")
     .arguments("<workflow-file>")
