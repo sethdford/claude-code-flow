@@ -6,6 +6,7 @@ import { Command } from "../cliffy-compat.js";
 import { TaskExecutor } from "../../swarm/executor.js";
 import { SwarmMemoryManager } from "../../swarm/memory.js";
 import { EnhancedSwarmCoordinator } from "../../swarm/enhanced-coordinator.js";
+import { StrategyFactory } from "../../swarm/strategy-factory.js";
 import { getModelHierarchy } from "../../config/model-config.js";
 import { generateId } from "../../utils/helpers.js";
 import { logger } from "../../core/logger.js";
@@ -57,7 +58,21 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
 
   console.log(`🐝 Initializing Advanced Swarm: ${swarmId}`);
   console.log(`📋 Objective: ${objective}`);
-  console.log(`🎯 Strategy: ${options.strategy}`);
+  
+  // Show strategy recommendation if using auto or provide feedback
+  if (options.strategy === "auto") {
+    const recommendedStrategy = StrategyFactory.recommendStrategy(objective);
+    console.log(`🎯 Strategy: auto (recommended: ${recommendedStrategy})`);
+    options.strategy = recommendedStrategy;
+  } else {
+    const recommendedStrategy = StrategyFactory.recommendStrategy(objective);
+    if (recommendedStrategy !== options.strategy) {
+      console.log(`🎯 Strategy: ${options.strategy} (recommended: ${recommendedStrategy})`);
+    } else {
+      console.log(`🎯 Strategy: ${options.strategy} ✨`);
+    }
+  }
+  
   console.log(`🏗️  Mode: ${options.mode}`);
   console.log(`🤖 Max Agents: ${options.maxAgents}`);
 
@@ -187,8 +202,18 @@ export async function swarmAction(ctx: CommandContext): Promise<void> {
 }
 
 function parseSwarmOptions(flags: Record<string, any>) {
+  // Validate and recommend strategy
+  const requestedStrategy = flags.strategy || "auto";
+  const availableStrategies = StrategyFactory.getAvailableStrategies();
+  
+  if (!availableStrategies.includes(requestedStrategy)) {
+    console.error(`❌ Unknown strategy: ${requestedStrategy}`);
+    console.error(`Available strategies: ${availableStrategies.join(", ")}`);
+    process.exit(1);
+  }
+
   return {
-    strategy: flags.strategy || "development",
+    strategy: requestedStrategy,
     mode: flags.mode || "hierarchical",
     maxAgents: parseInt(flags.maxAgents || flags.agents || "4"),
     maxDepth: parseInt(flags.maxDepth || "5"),
@@ -397,6 +422,9 @@ Available commands:
 }
 
 function showSwarmHelp(): void {
+  const strategyInfo = StrategyFactory.getStrategyInfo();
+  const availableStrategies = StrategyFactory.getAvailableStrategies();
+  
   console.log(`
 Usage: claude-flow swarm <objective> [options]
 
@@ -406,7 +434,7 @@ Arguments:
   objective                  The main goal or task for the swarm to accomplish
 
 Options:
-  --strategy <type>          Swarm strategy: development, research, analysis, testing (default: development)
+  --strategy <type>          Swarm strategy (default: auto)
   --mode <mode>              Coordination mode: hierarchical, distributed, mesh (default: hierarchical)
   --max-agents <number>      Maximum number of agents (default: 4)
   --timeout <minutes>        Maximum execution time in minutes (default: 30)
@@ -417,11 +445,25 @@ Options:
   --interactive, -i          Start interactive session after execution
   --verbose, -v              Enable verbose logging
 
+Available Strategies:`);
+
+  // Show strategy information
+  availableStrategies.forEach(strategy => {
+    const info = strategyInfo[strategy];
+    console.log(`
+  ${strategy.padEnd(12)} - ${info.description}
+                   Features: ${info.features.join(", ")}
+                   Best for: ${info.preferredFor.join(", ")}
+                   Duration: ~${info.estimatedDuration} minutes`);
+  });
+
+  console.log(`
 Examples:
-  claude-flow swarm "Build a REST API with authentication"
+  claude-flow swarm "Build a REST API with authentication" --strategy development
   claude-flow swarm "Research and analyze market trends" --strategy research
-  claude-flow swarm "Optimize application performance" --strategy analysis --parallel
+  claude-flow swarm "Optimize application performance" --strategy optimization --parallel
   claude-flow swarm "Create comprehensive test suite" --strategy testing --max-agents 6
+  claude-flow swarm "Update system dependencies" --strategy maintenance
   claude-flow swarm "Debug application issues" --interactive
 
 Interactive Mode:
@@ -437,7 +479,7 @@ export const swarmCommand = new Command()
   .name("swarm")
   .description("Execute complex objectives using coordinated AI agent swarms")
   .arguments("<objective...>")
-  .option("--strategy <type>", "Swarm strategy: development, research, analysis, testing", "development")
+  .option("--strategy <type>", "Swarm strategy: auto, research, development, analysis, testing, optimization, maintenance, custom", "auto")
   .option("--mode <mode>", "Coordination mode: hierarchical, distributed, mesh", "hierarchical")
   .option("--max-agents <number>", "Maximum number of agents", "4")
   .option("--timeout <minutes>", "Maximum execution time in minutes", "30")

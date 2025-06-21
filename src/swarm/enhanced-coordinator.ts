@@ -9,6 +9,8 @@ import { logger } from "../core/logger.js";
 import { BaseAgent } from "./agents/base-agent.js";
 import { CodeAgent } from "./agents/code-agent.js";
 import { TaskDefinition, AgentType, SwarmStrategy, TaskId, TaskType, TaskStatus, TaskPriority, TaskRequirements, TaskConstraints } from "./types.js";
+import { StrategyFactory } from "./strategy-factory.js";
+import { IStrategy } from "./strategies/base.js";
 
 export interface HierarchicalModelConfig {
   primary: string;    // Complex reasoning, architecture decisions
@@ -62,6 +64,7 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
   private modelConfig: HierarchicalModelConfig;
   private contextCache: Map<string, ContextWindow> = new Map();
   private strategy: SwarmStrategy;
+  private strategyInstance: IStrategy;
 
   constructor(config: {
     modelConfig: HierarchicalModelConfig;
@@ -69,12 +72,22 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
     maxAgents?: number;
   }) {
     super();
-    
     this.modelConfig = config.modelConfig;
     this.strategy = config.strategy;
+    this.strategyInstance = StrategyFactory.createStrategy(config.strategy);
     
-    // Initialize specialized agents with hierarchical model configuration
     this.initializeAgents(config.maxAgents || 5);
+    this.setupEventHandlers();
+    
+    logger.info(`Enhanced Swarm Coordinator initialized with strategy: ${config.strategy}`);
+  }
+
+  private setupEventHandlers(): void {
+    // Setup event handlers for agent communication
+    this.on("taskCompleted", this.handleAgentTaskCompleted.bind(this));
+    this.on("taskError", this.handleAgentTaskError.bind(this));
+    
+    logger.info("Event handlers setup complete");
   }
 
   private initializeAgents(maxAgents: number): void {
@@ -142,82 +155,135 @@ export class EnhancedSwarmCoordinator extends EventEmitter {
   }
 
   private async decomposeObjective(objective: string): Promise<TaskDefinition[]> {
-    // Use primary model for complex objective decomposition
-    logger.info(`Decomposing objective with primary model: ${this.modelConfig.primary}`);
+    // Enhanced task decomposition using the selected strategy
+    logger.info(`Decomposing objective with ${this.strategy} strategy: ${objective}`);
     
-    const timestamp = Date.now();
-    
-    // This would integrate with actual LLM to decompose the objective
-    // For now, return a simplified decomposition
-    const tasks: TaskDefinition[] = [
-      {
-        id: {
-          id: `task-${timestamp}-1`,
-          swarmId: "enhanced-swarm",
+    // Create SwarmObjective for the strategy
+    const swarmObjective = {
+      id: `objective-${Date.now()}`,
+      name: objective.substring(0, 50), // Truncate for name
+      description: objective,
+      strategy: this.strategy,
+      mode: "centralized" as const,
+      requirements: {
+        minAgents: 1,
+        maxAgents: 5,
+        agentTypes: ["developer", "researcher", "analyzer"] as AgentType[],
+        estimatedDuration: 60,
+        maxDuration: 120,
+        qualityThreshold: 0.8,
+        reviewCoverage: 0.5,
+        testCoverage: 0.7,
+        reliabilityTarget: 0.9,
+      },
+      constraints: {
+        milestones: [],
+        resourceLimits: {},
+        minQuality: 0.8,
+        requiredApprovals: [],
+        allowedFailures: 1,
+        recoveryTime: 300,
+      },
+      tasks: [],
+      dependencies: [],
+      status: "planning" as const,
+      progress: {
+        totalTasks: 0,
+        completedTasks: 0,
+        failedTasks: 0,
+        runningTasks: 0,
+        estimatedCompletion: new Date(Date.now() + 60 * 60 * 1000),
+        timeRemaining: 3600,
+        percentComplete: 0,
+        averageQuality: 0,
+        passedReviews: 0,
+        passedTests: 0,
+        resourceUtilization: {},
+        costSpent: 0,
+        activeAgents: 0,
+        idleAgents: 0,
+        busyAgents: 0,
+      },
+      metrics: {
+        throughput: 0,
+        latency: 0,
+        efficiency: 0,
+        reliability: 0,
+        averageQuality: 0,
+        defectRate: 0,
+        reworkRate: 0,
+        resourceUtilization: {},
+        costEfficiency: 0,
+        agentUtilization: 0,
+        agentSatisfaction: 0,
+        collaborationEffectiveness: 0,
+        scheduleVariance: 0,
+        deadlineAdherence: 0,
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    try {
+      // Use the strategy instance to decompose the objective
+      const decompositionResult = await this.strategyInstance.decomposeObjective(swarmObjective);
+      
+      logger.info(`Strategy decomposed objective into ${decompositionResult.tasks.length} tasks`);
+      logger.info(`Estimated duration: ${decompositionResult.estimatedDuration} minutes`);
+      
+      // Update task dependencies based on the decomposition result
+      decompositionResult.tasks.forEach(task => {
+        const dependencies = decompositionResult.dependencies.get(task.id.id) || [];
+        task.constraints.dependencies = dependencies.map(depId => ({
+          id: depId,
+          swarmId: task.id.swarmId,
           sequence: 1,
           priority: 1,
-        } as TaskId,
-        name: `Analyze ${objective}`,
-        description: `Analyze the requirements for: ${objective}`,
-        status: "created" as TaskStatus,
-        priority: "high" as TaskPriority,
-        type: "analysis" as TaskType,
-        requirements: {
-          capabilities: ["analysis", "planning"],
-          tools: [],
-          permissions: [],
-        } as TaskRequirements,
-        constraints: {
-          dependencies: [],
-          dependents: [],
-          conflicts: [],
-        } as TaskConstraints,
-        input: { objective },
-        instructions: `Analyze the requirements for: ${objective}`,
-        context: {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        attempts: [],
-        statusHistory: [],
-      },
-      {
-        id: {
-          id: `task-${timestamp}-2`,
-          swarmId: "enhanced-swarm",
-          sequence: 2,
-          priority: 1,
-        } as TaskId,
-        name: `Implement ${objective}`,
-        description: `Implement the solution for: ${objective}`,
-        status: "created" as TaskStatus,
-        priority: "high" as TaskPriority,
-        type: "coding" as TaskType,
-        requirements: {
-          capabilities: ["coding", "implementation"],
-          tools: [],
-          permissions: [],
-        } as TaskRequirements,
-        constraints: {
-          dependencies: [{
-            id: `task-${timestamp}-1`,
-            swarmId: "enhanced-swarm",
-            sequence: 1,
-            priority: 1,
-          } as TaskId],
-          dependents: [],
-          conflicts: [],
-        } as TaskConstraints,
-        input: { objective },
-        instructions: `Implement the solution for: ${objective}`,
-        context: {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        attempts: [],
-        statusHistory: [],
-      },
-    ];
+        } as TaskId));
+      });
 
-    return tasks;
+      return decompositionResult.tasks;
+    } catch (error) {
+      logger.error(`Error decomposing objective with ${this.strategy} strategy:`, error);
+      
+      // Fallback to simple task creation
+      return this.createFallbackTasks(objective);
+    }
+  }
+
+  private createFallbackTasks(objective: string): TaskDefinition[] {
+    const timestamp = Date.now();
+    
+    return [{
+      id: {
+        id: `fallback-task-${timestamp}`,
+        swarmId: "enhanced-swarm",
+        sequence: 1,
+        priority: 1,
+      } as TaskId,
+      name: "Execute Objective",
+      description: `Execute: ${objective}`,
+      status: "created" as TaskStatus,
+      priority: "high" as TaskPriority,
+      type: "research" as TaskType,
+      requirements: {
+        capabilities: ["research", "analysis"],
+        tools: ["memory"],
+        permissions: ["read", "write"],
+      } as TaskRequirements,
+      constraints: {
+        dependencies: [],
+        dependents: [],
+        conflicts: [],
+      } as TaskConstraints,
+      input: { objective },
+      instructions: `Execute the objective: ${objective}`,
+      context: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      attempts: [],
+      statusHistory: [],
+    }];
   }
 
   private async analyzeTaskComplexity(task: TaskDefinition): Promise<{

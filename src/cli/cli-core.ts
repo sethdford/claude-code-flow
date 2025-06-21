@@ -20,6 +20,11 @@ import { helpCommand } from "./commands/help.js";
 import { mcpCommand } from "./commands/mcp.js";
 import { claudeCommand } from "./commands/claude.js";
 import { swarmCommand } from "./commands/swarm.js";
+import { swarmStrategiesCommand } from "./commands/swarm-strategies.js";
+import { metaFrameworksCommand } from "./commands/meta-frameworks.js";
+import { orchestrationCommand } from "./commands/orchestration.js";
+import { startupCommand } from "./commands/startup.js";
+import { synthesisCommand } from "./commands/synthesis.js";
 import { sparcCommand } from "./commands/sparc.js";
 import { enterpriseCommand } from "./commands/enterprise.js";
 import { modelsCommand } from "./commands/models.js";
@@ -106,6 +111,11 @@ export function createCLI(): Command {
     .addCommand(mcpCommand)
     .addCommand(claudeCommand)
     .addCommand(swarmCommand)
+    .addCommand(swarmStrategiesCommand)
+    .addCommand(metaFrameworksCommand)
+    .addCommand(orchestrationCommand)
+    .addCommand(startupCommand)
+    .addCommand(synthesisCommand)
     .addCommand(sparcCommand)
     .addCommand(enterpriseCommand)
     .addCommand(modelsCommand)
