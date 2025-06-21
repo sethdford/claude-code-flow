@@ -1,6 +1,6 @@
 {
   "name": "@sethdouglasford/claude-flow",
-  "version": "1.0.83",
+  "version": "1.0.84",
   "description": "Enterprise AI agent orchestration via AWS Bedrock - Connect to Claude 4 through your AWS infrastructure",
   "main": "dist/cli/index.js",
   "bin": {
