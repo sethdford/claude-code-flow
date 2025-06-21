@@ -39,13 +39,23 @@ interface SystemMetrics {
   throughput: number; // tasks per minute
 }
 
+interface AlertDetails {
+  agentId?: string;
+  cpuUsage?: number;
+  memoryUsage?: number;
+  errorRate?: number;
+  throughput?: number;
+  stallTime?: number;
+  [key: string]: unknown;
+}
+
 interface Alert {
   id: string;
   timestamp: number;
   level: "info" | "warning" | "error" | "critical";
   type: "agent_failure" | "high_cpu" | "high_memory" | "stalled_agent" | "low_throughput" | "error_rate";
   message: string;
-  details?: any;
+  details?: AlertDetails;
 }
 
 interface MonitoringConfig {
@@ -104,7 +114,7 @@ export class SwarmMonitor extends EventEmitter {
 
     // Start periodic monitoring
     this.monitoringInterval = setInterval(() => {
-      this.collectMetrics();
+      void this.collectMetrics();
     }, this.config.updateInterval);
 
     // Start initial collection
@@ -348,7 +358,7 @@ export class SwarmMonitor extends EventEmitter {
     }
   }
 
-  private createAlert(type: Alert["type"], level: Alert["level"], message: string, details?: any): void {
+  private createAlert(type: Alert["type"], level: Alert["level"], message: string, details?: AlertDetails): void {
     const alert: Alert = {
       id: `${type}_${Date.now()}`,
       timestamp: Date.now(),

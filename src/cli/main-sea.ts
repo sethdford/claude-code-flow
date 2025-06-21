@@ -58,8 +58,8 @@ const cli = new Command()
   .action(async (options: any) => {
     // Only start REPL if no subcommand was provided and help wasn't requested
     const args = process.argv.slice(2);
-    const hasSubcommand = args.some(arg => !arg.startsWith('-'));
-    const helpRequested = args.includes('--help') || args.includes('-h');
+    const hasSubcommand = args.some(arg => !arg.startsWith("-"));
+    const helpRequested = args.includes("--help") || args.includes("-h");
     
     if (hasSubcommand || helpRequested) {
       // Let the subcommand or help handler handle execution
@@ -71,7 +71,7 @@ const cli = new Command()
     
     if (!options.quiet) {
       displayBanner(VERSION);
-      console.log(colors.gray('Type "help" for available commands or "exit" to quit.\n'));
+      console.log(colors.gray("Type \"help\" for available commands or \"exit\" to quit.\n"));
     }
     
     await startREPL(options);
@@ -146,7 +146,7 @@ async function handleError(error: unknown, options?: any): Promise<void> {
   // Suggest helpful actions
   if (!options?.quiet) {
     console.error(colors.gray("\nTry running with --verbose for more details"));
-    console.error(colors.gray('Or use "claude-flow help" to see available commands'));
+    console.error(colors.gray("Or use \"claude-flow help\" to see available commands"));
   }
   
   process.exit(1);

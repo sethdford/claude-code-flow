@@ -24,7 +24,7 @@ import {
   SpawnAgentInput,
   MemoryQueryInput,
   MemoryStoreInput,
-  ExecuteCommandInput
+  ExecuteCommandInput,
 } from "./types.js";
 
 export interface OrchestrationComponents {
@@ -292,7 +292,7 @@ export class MCPOrchestrationIntegration extends EventEmitter {
    */
   async reconnectComponent(component: string): Promise<void> {
     const status = this.integrationStatus.get(component);
-    if (!status || !status.enabled) {
+    if (!status?.enabled) {
       throw new MCPError(`Component ${component} is not enabled`);
     }
 
@@ -466,7 +466,7 @@ export class MCPOrchestrationIntegration extends EventEmitter {
         inputSchema: { type: "object", properties: {} },
         handler: async () => {
           if (typeof this.components.orchestrator?.getStatus === "function") {
-            return await this.components.orchestrator.getStatus();
+            return this.components.orchestrator.getStatus();
           }
           throw new MCPError("Orchestrator status not available");
         },
@@ -507,7 +507,7 @@ export class MCPOrchestrationIntegration extends EventEmitter {
         inputSchema: { type: "object", properties: {} },
         handler: async () => {
           if (typeof this.components.swarmCoordinator?.getStatus === "function") {
-            return await this.components.swarmCoordinator.getStatus();
+            return this.components.swarmCoordinator.getStatus();
           }
           throw new MCPError("Swarm coordinator status not available");
         },
@@ -562,7 +562,7 @@ export class MCPOrchestrationIntegration extends EventEmitter {
           if (typeof this.components.agentManager?.spawnAgent === "function") {
             return await this.components.agentManager.spawnAgent(
               params.profile as unknown as AgentProfile,
-              params.config as SpawnAgentInput["config"]
+              params.config,
             );
           }
           throw new MCPError("Agent spawning not available");
@@ -597,7 +597,7 @@ export class MCPOrchestrationIntegration extends EventEmitter {
         inputSchema: { type: "object", properties: {} },
         handler: async () => {
           if (typeof this.components.resourceManager?.getStatus === "function") {
-            return await this.components.resourceManager.getStatus();
+            return this.components.resourceManager.getStatus();
           }
           throw new MCPError("Resource manager status not available");
         },
@@ -763,7 +763,7 @@ export class MCPOrchestrationIntegration extends EventEmitter {
   }
 
   private async setupComponentIntegrations(): Promise<void> {
-    const promises = [];
+    const promises: Promise<void>[] = [];
 
     for (const [component, status] of this.integrationStatus.entries()) {
       if (status.enabled) {
@@ -892,7 +892,7 @@ export class MCPOrchestrationIntegration extends EventEmitter {
       if (!instance) return false;
 
       // Check if the component has a healthCheck method
-      if ('healthCheck' in instance && typeof instance.healthCheck === 'function') {
+      if ("healthCheck" in instance && typeof instance.healthCheck === "function") {
         const result = await instance.healthCheck();
         return result?.healthy !== false;
       }

@@ -1,20 +1,20 @@
-const { TestHarness } = require('../test-harness');
-const assert = require('assert');
+const { TestHarness } = require("../test-harness");
+const assert = require("assert");
 
-describe('Rollback Mechanism Tests', () => {
+describe("Rollback Mechanism Tests", () => {
   let harness;
 
   beforeEach(() => {
     harness = new TestHarness();
-    harness.createMockProject('standard');
+    harness.createMockProject("standard");
   });
 
   afterEach(() => {
     harness.reset();
   });
 
-  describe('Transaction Rollback', () => {
-    it('should rollback file operations on failure', async () => {
+  describe("Transaction Rollback", () => {
+    it("should rollback file operations on failure", async () => {
       // Track all file operations for rollback
       const fileOperations = [];
       const originalFiles = new Map();
@@ -27,31 +27,31 @@ describe('Rollback Mechanism Tests', () => {
       const operations = [
         {
           id: 1,
-          type: 'create',
-          path: 'src/new-file1.js',
-          content: 'export const feature1 = () => {};'
+          type: "create",
+          path: "src/new-file1.js",
+          content: "export const feature1 = () => {};"
         },
         {
           id: 2,
-          type: 'update',
-          path: 'src/index.js',
-          content: 'import { feature1 } from "./new-file1";\nconsole.log("Updated");'
+          type: "update",
+          path: "src/index.js",
+          content: "import { feature1 } from \"./new-file1\";\nconsole.log(\"Updated\");"
         },
         {
           id: 3,
-          type: 'create',
-          path: 'src/new-file2.js',
-          content: 'export const feature2 = () => {};'
+          type: "create",
+          path: "src/new-file2.js",
+          content: "export const feature2 = () => {};"
         },
         {
           id: 4,
-          type: 'delete',
-          path: 'src/utils.js'
+          type: "delete",
+          path: "src/utils.js"
         },
         {
           id: 5,
-          type: 'error',
-          message: 'Simulated failure - should trigger rollback'
+          type: "error",
+          message: "Simulated failure - should trigger rollback"
         }
       ];
 
@@ -60,52 +60,52 @@ describe('Rollback Mechanism Tests', () => {
         
         try {
           for (const op of operations) {
-            if (op.type === 'error') {
+            if (op.type === "error") {
               throw new Error(op.message);
             }
             
             switch (op.type) {
-              case 'create':
+              case "create":
                 await harness.mockWriteFile(op.path, op.content);
                 rollbackStack.push({
-                  action: 'delete',
+                  action: "delete",
                   path: op.path
                 });
                 break;
                 
-              case 'update':
+              case "update":
                 const originalContent = await harness.mockReadFile(op.path);
                 await harness.mockWriteFile(op.path, op.content);
                 rollbackStack.push({
-                  action: 'restore',
+                  action: "restore",
                   path: op.path,
                   content: originalContent
                 });
                 break;
                 
-              case 'delete':
+              case "delete":
                 const deletedContent = await harness.mockReadFile(op.path);
                 harness.mockFS.delete(op.path);
                 rollbackStack.push({
-                  action: 'restore',
+                  action: "restore",
                   path: op.path,
                   content: deletedContent
                 });
                 break;
             }
             
-            fileOperations.push({ ...op, status: 'completed' });
+            fileOperations.push({ ...op, status: "completed" });
           }
         } catch (error) {
-          console.log('Error occurred, rolling back changes...');
+          console.log("Error occurred, rolling back changes...");
           
           // Execute rollback in reverse order
           for (const rollback of rollbackStack.reverse()) {
             switch (rollback.action) {
-              case 'delete':
+              case "delete":
                 harness.mockFS.delete(rollback.path);
                 break;
-              case 'restore':
+              case "restore":
                 await harness.mockWriteFile(rollback.path, rollback.content);
                 break;
             }
@@ -121,30 +121,30 @@ describe('Rollback Mechanism Tests', () => {
         await executeWithRollback();
       } catch (error) {
         errorCaught = true;
-        assert(error.message.includes('Simulated failure'));
+        assert(error.message.includes("Simulated failure"));
       }
 
-      assert(errorCaught, 'Error should have been thrown');
+      assert(errorCaught, "Error should have been thrown");
 
       // Verify rollback completed successfully
-      assert(!harness.mockFS.has('src/new-file1.js'), 'New file 1 should be rolled back');
-      assert(!harness.mockFS.has('src/new-file2.js'), 'New file 2 should be rolled back');
+      assert(!harness.mockFS.has("src/new-file1.js"), "New file 1 should be rolled back");
+      assert(!harness.mockFS.has("src/new-file2.js"), "New file 2 should be rolled back");
       
       // Verify original files restored
-      const indexContent = await harness.mockReadFile('src/index.js');
-      assert.strictEqual(indexContent, originalFiles.get('src/index.js'));
+      const indexContent = await harness.mockReadFile("src/index.js");
+      assert.strictEqual(indexContent, originalFiles.get("src/index.js"));
       
-      assert(harness.mockFS.has('src/utils.js'), 'Deleted file should be restored');
-      const utilsContent = await harness.mockReadFile('src/utils.js');
-      assert.strictEqual(utilsContent, originalFiles.get('src/utils.js'));
+      assert(harness.mockFS.has("src/utils.js"), "Deleted file should be restored");
+      const utilsContent = await harness.mockReadFile("src/utils.js");
+      assert.strictEqual(utilsContent, originalFiles.get("src/utils.js"));
     });
 
-    it('should handle partial rollback failures gracefully', async () => {
+    it("should handle partial rollback failures gracefully", async () => {
       const operations = [
-        { id: 1, type: 'create', path: 'file1.txt', content: 'content1' },
-        { id: 2, type: 'create', path: 'file2.txt', content: 'content2' },
-        { id: 3, type: 'create', path: 'file3.txt', content: 'content3' },
-        { id: 4, type: 'fail' }
+        { id: 1, type: "create", path: "file1.txt", content: "content1" },
+        { id: 2, type: "create", path: "file2.txt", content: "content2" },
+        { id: 3, type: "create", path: "file3.txt", content: "content3" },
+        { id: 4, type: "fail" }
       ];
 
       const rollbackLog = [];
@@ -155,8 +155,8 @@ describe('Rollback Mechanism Tests', () => {
         
         try {
           for (const op of operations) {
-            if (op.type === 'fail') {
-              throw new Error('Operation failed');
+            if (op.type === "fail") {
+              throw new Error("Operation failed");
             }
             
             await harness.mockWriteFile(op.path, op.content);
@@ -168,15 +168,15 @@ describe('Rollback Mechanism Tests', () => {
             const file = createdFiles[i];
             
             try {
-              if (file === 'file2.txt') {
+              if (file === "file2.txt") {
                 // Simulate rollback failure for file2
-                throw new Error('Rollback failed for file2.txt');
+                throw new Error("Rollback failed for file2.txt");
               }
               
               harness.mockFS.delete(file);
-              rollbackLog.push({ file, status: 'rolled back' });
+              rollbackLog.push({ file, status: "rolled back" });
             } catch (rollbackError) {
-              rollbackLog.push({ file, status: 'rollback failed', error: rollbackError.message });
+              rollbackLog.push({ file, status: "rollback failed", error: rollbackError.message });
               rollbackWithFailure = true;
             }
           }
@@ -188,21 +188,21 @@ describe('Rollback Mechanism Tests', () => {
       try {
         await executeWithFailingRollback();
       } catch (error) {
-        assert(error.message === 'Operation failed');
+        assert(error.message === "Operation failed");
       }
 
       // Verify rollback log
       assert.strictEqual(rollbackLog.length, 3);
-      assert(rollbackLog.some(entry => entry.status === 'rollback failed'));
+      assert(rollbackLog.some(entry => entry.status === "rollback failed"));
       assert(rollbackWithFailure);
       
       // Verify partial rollback state
-      assert(!harness.mockFS.has('file3.txt'), 'file3.txt should be rolled back');
-      assert(harness.mockFS.has('file2.txt'), 'file2.txt rollback failed, should still exist');
-      assert(!harness.mockFS.has('file1.txt'), 'file1.txt should be rolled back');
+      assert(!harness.mockFS.has("file3.txt"), "file3.txt should be rolled back");
+      assert(harness.mockFS.has("file2.txt"), "file2.txt rollback failed, should still exist");
+      assert(!harness.mockFS.has("file1.txt"), "file1.txt should be rolled back");
     });
 
-    it('should implement two-phase commit for distributed operations', async () => {
+    it("should implement two-phase commit for distributed operations", async () => {
       // Simulate distributed system with multiple services
       const services = {
         database: { 
@@ -233,7 +233,7 @@ describe('Rollback Mechanism Tests', () => {
             // Simulate prepare phase
             service.transactions.set(transactionId, {
               operation: op,
-              state: 'prepared',
+              state: "prepared",
               rollbackData: op.rollbackData
             });
             service.prepared.add(transactionId);
@@ -259,16 +259,16 @@ describe('Rollback Mechanism Tests', () => {
               throw new Error(`${op.service} failed to commit`);
             }
             
-            tx.state = 'committed';
+            tx.state = "committed";
             service.prepared.delete(transactionId);
             console.log(`  - ${op.service}: committed`);
           }
           
-          return { transactionId, status: 'committed' };
+          return { transactionId, status: "committed" };
           
         } catch (error) {
           console.log(`\nError: ${error.message}`);
-          console.log('Rolling back prepared services...');
+          console.log("Rolling back prepared services...");
           
           // Rollback all prepared services
           for (const serviceName of preparedServices) {
@@ -276,7 +276,7 @@ describe('Rollback Mechanism Tests', () => {
             
             if (service.prepared.has(transactionId)) {
               const tx = service.transactions.get(transactionId);
-              tx.state = 'aborted';
+              tx.state = "aborted";
               service.prepared.delete(transactionId);
               console.log(`  - ${serviceName}: rolled back`);
             }
@@ -288,36 +288,36 @@ describe('Rollback Mechanism Tests', () => {
 
       // Test successful two-phase commit
       const successfulOps = [
-        { service: 'database', action: 'insert', data: { id: 1, name: 'test' } },
-        { service: 'cache', action: 'set', key: 'user:1', value: 'test' },
-        { service: 'queue', action: 'publish', message: 'user.created' }
+        { service: "database", action: "insert", data: { id: 1, name: "test" } },
+        { service: "cache", action: "set", key: "user:1", value: "test" },
+        { service: "queue", action: "publish", message: "user.created" }
       ];
 
       const successResult = await distributedTransaction(successfulOps);
-      assert(successResult.status === 'committed');
+      assert(successResult.status === "committed");
 
       // Test rollback on prepare failure
       const failPrepareOps = [
-        { service: 'database', action: 'insert', data: { id: 2 } },
-        { service: 'cache', action: 'set', key: 'user:2', shouldFailPrepare: true }
+        { service: "database", action: "insert", data: { id: 2 } },
+        { service: "cache", action: "set", key: "user:2", shouldFailPrepare: true }
       ];
 
       try {
         await distributedTransaction(failPrepareOps);
-        assert.fail('Should have thrown error');
+        assert.fail("Should have thrown error");
       } catch (error) {
-        assert(error.message.includes('failed to prepare'));
+        assert(error.message.includes("failed to prepare"));
       }
 
       // Verify rollback
       const dbTransactions = Array.from(services.database.transactions.values());
-      const abortedDb = dbTransactions.filter(tx => tx.state === 'aborted');
+      const abortedDb = dbTransactions.filter(tx => tx.state === "aborted");
       assert(abortedDb.length > 0);
     });
   });
 
-  describe('State Recovery', () => {
-    it('should create and restore from checkpoints', async () => {
+  describe("State Recovery", () => {
+    it("should create and restore from checkpoints", async () => {
       const stateManager = {
         checkpoints: new Map(),
         currentState: {
@@ -358,46 +358,46 @@ describe('Rollback Mechanism Tests', () => {
       };
 
       // Create initial checkpoint
-      createCheckpoint('initial');
+      createCheckpoint("initial");
 
       // Make changes
-      await harness.mockWriteFile('src/feature1.js', 'export const feature1 = true;');
-      await harness.mockWriteFile('src/feature2.js', 'export const feature2 = true;');
-      createCheckpoint('after-features');
+      await harness.mockWriteFile("src/feature1.js", "export const feature1 = true;");
+      await harness.mockWriteFile("src/feature2.js", "export const feature2 = true;");
+      createCheckpoint("after-features");
 
       // More changes
-      harness.mockFS.delete('src/utils.js');
-      await harness.mockWriteFile('src/feature3.js', 'export const feature3 = true;');
-      createCheckpoint('after-deletion');
+      harness.mockFS.delete("src/utils.js");
+      await harness.mockWriteFile("src/feature3.js", "export const feature3 = true;");
+      createCheckpoint("after-deletion");
 
       // Simulate error and restore
       try {
         // Attempt risky operation
-        await harness.mockWriteFile('src/broken.js', 'syntax error {');
-        throw new Error('Build failed due to syntax error');
+        await harness.mockWriteFile("src/broken.js", "syntax error {");
+        throw new Error("Build failed due to syntax error");
       } catch (error) {
-        console.log('Error detected, restoring from checkpoint...');
+        console.log("Error detected, restoring from checkpoint...");
         
         // Restore to last known good state
-        const restored = restoreCheckpoint('after-features');
+        const restored = restoreCheckpoint("after-features");
         console.log(`Restored to checkpoint: ${restored.name}`);
       }
 
       // Verify restoration
-      assert(harness.mockFS.has('src/feature1.js'));
-      assert(harness.mockFS.has('src/feature2.js'));
-      assert(!harness.mockFS.has('src/feature3.js')); // Should not exist after restore
-      assert(harness.mockFS.has('src/utils.js')); // Should be restored
-      assert(!harness.mockFS.has('src/broken.js')); // Error file should not exist
+      assert(harness.mockFS.has("src/feature1.js"));
+      assert(harness.mockFS.has("src/feature2.js"));
+      assert(!harness.mockFS.has("src/feature3.js")); // Should not exist after restore
+      assert(harness.mockFS.has("src/utils.js")); // Should be restored
+      assert(!harness.mockFS.has("src/broken.js")); // Error file should not exist
 
       // Verify checkpoint history
       assert.strictEqual(stateManager.checkpoints.size, 3);
-      assert(stateManager.checkpoints.has('initial'));
-      assert(stateManager.checkpoints.has('after-features'));
-      assert(stateManager.checkpoints.has('after-deletion'));
+      assert(stateManager.checkpoints.has("initial"));
+      assert(stateManager.checkpoints.has("after-features"));
+      assert(stateManager.checkpoints.has("after-deletion"));
     });
 
-    it('should implement incremental rollback', async () => {
+    it("should implement incremental rollback", async () => {
       const changeLog = [];
       
       const trackChange = (change) => {
@@ -410,18 +410,18 @@ describe('Rollback Mechanism Tests', () => {
 
       const applyChange = async (change) => {
         switch (change.type) {
-          case 'create':
+          case "create":
             await harness.mockWriteFile(change.path, change.content);
             trackChange({ ...change, oldContent: null });
             break;
             
-          case 'update':
+          case "update":
             const oldContent = await harness.mockReadFile(change.path);
             await harness.mockWriteFile(change.path, change.content);
             trackChange({ ...change, oldContent });
             break;
             
-          case 'delete':
+          case "delete":
             const deletedContent = await harness.mockReadFile(change.path);
             harness.mockFS.delete(change.path);
             trackChange({ ...change, oldContent: deletedContent });
@@ -440,12 +440,12 @@ describe('Rollback Mechanism Tests', () => {
           const change = changeLog[i];
           
           switch (change.type) {
-            case 'create':
+            case "create":
               harness.mockFS.delete(change.path);
               break;
               
-            case 'update':
-            case 'delete':
+            case "update":
+            case "delete":
               if (change.oldContent !== null) {
                 await harness.mockWriteFile(change.path, change.oldContent);
               }
@@ -458,35 +458,35 @@ describe('Rollback Mechanism Tests', () => {
       };
 
       // Apply series of changes
-      await applyChange({ type: 'create', path: 'v1.txt', content: 'Version 1' });
-      await applyChange({ type: 'create', path: 'v2.txt', content: 'Version 2' });
-      await applyChange({ type: 'update', path: 'src/index.js', content: 'Updated index' });
-      await applyChange({ type: 'create', path: 'v3.txt', content: 'Version 3' });
-      await applyChange({ type: 'delete', path: 'src/utils.js' });
+      await applyChange({ type: "create", path: "v1.txt", content: "Version 1" });
+      await applyChange({ type: "create", path: "v2.txt", content: "Version 2" });
+      await applyChange({ type: "update", path: "src/index.js", content: "Updated index" });
+      await applyChange({ type: "create", path: "v3.txt", content: "Version 3" });
+      await applyChange({ type: "delete", path: "src/utils.js" });
 
       // Verify all changes applied
       assert.strictEqual(changeLog.length, 5);
-      assert(harness.mockFS.has('v3.txt'));
-      assert(!harness.mockFS.has('src/utils.js'));
+      assert(harness.mockFS.has("v3.txt"));
+      assert(!harness.mockFS.has("src/utils.js"));
 
       // Rollback to change 2 (after v2.txt creation)
       await rollbackToChange(1);
 
       // Verify incremental rollback
-      assert(harness.mockFS.has('v1.txt'));
-      assert(harness.mockFS.has('v2.txt'));
-      assert(!harness.mockFS.has('v3.txt')); // Should be rolled back
-      assert(harness.mockFS.has('src/utils.js')); // Should be restored
+      assert(harness.mockFS.has("v1.txt"));
+      assert(harness.mockFS.has("v2.txt"));
+      assert(!harness.mockFS.has("v3.txt")); // Should be rolled back
+      assert(harness.mockFS.has("src/utils.js")); // Should be restored
       
-      const indexContent = await harness.mockReadFile('src/index.js');
-      assert(indexContent.includes('console.log')); // Original content
+      const indexContent = await harness.mockReadFile("src/index.js");
+      assert(indexContent.includes("console.log")); // Original content
       
       assert.strictEqual(changeLog.length, 2); // Only first 2 changes remain
     });
   });
 
-  describe('Compensation Patterns', () => {
-    it('should implement saga pattern for complex workflows', async () => {
+  describe("Compensation Patterns", () => {
+    it("should implement saga pattern for complex workflows", async () => {
       const saga = {
         steps: [],
         compensations: [],
@@ -521,11 +521,11 @@ describe('Rollback Mechanism Tests', () => {
             }
           }
           
-          return { status: 'completed', completed: saga.completed };
+          return { status: "completed", completed: saga.completed };
           
         } catch (error) {
           console.log(`\nSaga failed at step: ${error.message}`);
-          console.log('Running compensations...');
+          console.log("Running compensations...");
           
           saga.failed = error;
           
@@ -546,60 +546,60 @@ describe('Rollback Mechanism Tests', () => {
       // Define a complex workflow
       const orderWorkflow = [
         {
-          name: 'reserve-inventory',
+          name: "reserve-inventory",
           execute: async () => {
-            await harness.mockWriteFile('inventory-lock.json', JSON.stringify({
-              orderId: 'order-123',
-              items: ['item1', 'item2'],
+            await harness.mockWriteFile("inventory-lock.json", JSON.stringify({
+              orderId: "order-123",
+              items: ["item1", "item2"],
               locked: true
             }));
-            return { lockId: 'lock-123' };
+            return { lockId: "lock-123" };
           },
           compensate: async (data) => {
-            harness.mockFS.delete('inventory-lock.json');
+            harness.mockFS.delete("inventory-lock.json");
           }
         },
         {
-          name: 'charge-payment',
+          name: "charge-payment",
           execute: async () => {
-            await harness.mockWriteFile('payment-record.json', JSON.stringify({
-              orderId: 'order-123',
+            await harness.mockWriteFile("payment-record.json", JSON.stringify({
+              orderId: "order-123",
               amount: 100,
-              status: 'charged'
+              status: "charged"
             }));
-            return { paymentId: 'payment-123' };
+            return { paymentId: "payment-123" };
           },
           compensate: async (data) => {
-            await harness.mockWriteFile('payment-record.json', JSON.stringify({
-              orderId: 'order-123',
+            await harness.mockWriteFile("payment-record.json", JSON.stringify({
+              orderId: "order-123",
               amount: 100,
-              status: 'refunded',
-              refundId: 'refund-123'
+              status: "refunded",
+              refundId: "refund-123"
             }));
           }
         },
         {
-          name: 'create-shipment',
+          name: "create-shipment",
           execute: async () => {
-            await harness.mockWriteFile('shipment.json', JSON.stringify({
-              orderId: 'order-123',
-              status: 'pending'
+            await harness.mockWriteFile("shipment.json", JSON.stringify({
+              orderId: "order-123",
+              status: "pending"
             }));
-            return { shipmentId: 'ship-123' };
+            return { shipmentId: "ship-123" };
           },
           compensate: async (data) => {
-            harness.mockFS.delete('shipment.json');
+            harness.mockFS.delete("shipment.json");
           },
           shouldFail: true // Simulate failure at this step
         },
         {
-          name: 'send-confirmation',
+          name: "send-confirmation",
           execute: async () => {
-            await harness.mockWriteFile('confirmation.json', JSON.stringify({
-              orderId: 'order-123',
+            await harness.mockWriteFile("confirmation.json", JSON.stringify({
+              orderId: "order-123",
               sent: true
             }));
-            return { confirmationId: 'conf-123' };
+            return { confirmationId: "conf-123" };
           }
         }
       ];
@@ -607,27 +607,27 @@ describe('Rollback Mechanism Tests', () => {
       // Execute saga with expected failure
       try {
         await executeSaga(orderWorkflow);
-        assert.fail('Saga should have failed');
+        assert.fail("Saga should have failed");
       } catch (error) {
-        assert(error.message.includes('create-shipment failed'));
+        assert(error.message.includes("create-shipment failed"));
       }
 
       // Verify compensations were executed
-      assert(!harness.mockFS.has('inventory-lock.json'), 'Inventory should be released');
-      assert(harness.mockFS.has('payment-record.json'), 'Payment record should exist');
+      assert(!harness.mockFS.has("inventory-lock.json"), "Inventory should be released");
+      assert(harness.mockFS.has("payment-record.json"), "Payment record should exist");
       
-      const paymentRecord = JSON.parse(await harness.mockReadFile('payment-record.json'));
-      assert.strictEqual(paymentRecord.status, 'refunded', 'Payment should be refunded');
+      const paymentRecord = JSON.parse(await harness.mockReadFile("payment-record.json"));
+      assert.strictEqual(paymentRecord.status, "refunded", "Payment should be refunded");
       
-      assert(!harness.mockFS.has('shipment.json'), 'Shipment should not exist');
-      assert(!harness.mockFS.has('confirmation.json'), 'Confirmation should not be sent');
+      assert(!harness.mockFS.has("shipment.json"), "Shipment should not exist");
+      assert(!harness.mockFS.has("confirmation.json"), "Confirmation should not be sent");
       
       // Verify saga state
       assert.strictEqual(saga.completed.length, 2); // Only first 2 steps completed
       assert.strictEqual(saga.compensations.length, 2); // 2 compensations registered
     });
 
-    it('should handle compensation failures with fallback strategies', async () => {
+    it("should handle compensation failures with fallback strategies", async () => {
       const compensationLog = [];
       
       const executeWithFallback = async (operations) => {
@@ -640,10 +640,10 @@ describe('Rollback Mechanism Tests', () => {
           }
           
           // Simulate failure after all operations
-          throw new Error('System failure after operations');
+          throw new Error("System failure after operations");
           
         } catch (error) {
-          console.log('Attempting compensations with fallback strategies...');
+          console.log("Attempting compensations with fallback strategies...");
           
           for (const op of operations.reverse()) {
             if (!op.compensate) continue;
@@ -653,8 +653,8 @@ describe('Rollback Mechanism Tests', () => {
               await op.compensate();
               compensationLog.push({
                 operation: op.name,
-                status: 'compensated',
-                method: 'primary'
+                status: "compensated",
+                method: "primary"
               });
             } catch (compError) {
               // Try fallback compensation
@@ -663,20 +663,20 @@ describe('Rollback Mechanism Tests', () => {
                   await op.fallbackCompensate();
                   compensationLog.push({
                     operation: op.name,
-                    status: 'compensated',
-                    method: 'fallback'
+                    status: "compensated",
+                    method: "fallback"
                   });
                 } catch (fallbackError) {
                   compensationLog.push({
                     operation: op.name,
-                    status: 'failed',
+                    status: "failed",
                     error: fallbackError.message
                   });
                 }
               } else {
                 compensationLog.push({
                   operation: op.name,
-                  status: 'failed',
+                  status: "failed",
                   error: compError.message
                 });
               }
@@ -689,39 +689,39 @@ describe('Rollback Mechanism Tests', () => {
 
       const operations = [
         {
-          name: 'operation1',
+          name: "operation1",
           execute: async () => {
-            await harness.mockWriteFile('op1.txt', 'Operation 1 data');
+            await harness.mockWriteFile("op1.txt", "Operation 1 data");
             return { id: 1 };
           },
           compensate: async () => {
-            harness.mockFS.delete('op1.txt');
+            harness.mockFS.delete("op1.txt");
           }
         },
         {
-          name: 'operation2',
+          name: "operation2",
           execute: async () => {
-            await harness.mockWriteFile('op2.txt', 'Operation 2 data');
+            await harness.mockWriteFile("op2.txt", "Operation 2 data");
             return { id: 2 };
           },
           compensate: async () => {
             // Simulate compensation failure
-            throw new Error('Primary compensation failed');
+            throw new Error("Primary compensation failed");
           },
           fallbackCompensate: async () => {
             // Fallback: Mark for manual cleanup
-            await harness.mockWriteFile('cleanup-required.txt', 
-              'Manual cleanup needed for op2.txt');
+            await harness.mockWriteFile("cleanup-required.txt", 
+              "Manual cleanup needed for op2.txt");
           }
         },
         {
-          name: 'operation3',
+          name: "operation3",
           execute: async () => {
-            await harness.mockWriteFile('op3.txt', 'Operation 3 data');
+            await harness.mockWriteFile("op3.txt", "Operation 3 data");
             return { id: 3 };
           },
           compensate: async () => {
-            harness.mockFS.delete('op3.txt');
+            harness.mockFS.delete("op3.txt");
           }
         }
       ];
@@ -729,18 +729,18 @@ describe('Rollback Mechanism Tests', () => {
       try {
         await executeWithFallback(operations);
       } catch (error) {
-        assert(error.message.includes('System failure'));
+        assert(error.message.includes("System failure"));
       }
 
       // Verify compensation log
       assert.strictEqual(compensationLog.length, 3);
-      assert(compensationLog.some(log => log.method === 'fallback'));
-      assert(harness.mockFS.has('cleanup-required.txt'), 'Fallback should create cleanup marker');
+      assert(compensationLog.some(log => log.method === "fallback"));
+      assert(harness.mockFS.has("cleanup-required.txt"), "Fallback should create cleanup marker");
       
       // Verify compensations
-      assert(!harness.mockFS.has('op1.txt'), 'Operation 1 should be compensated');
-      assert(harness.mockFS.has('op2.txt'), 'Operation 2 compensation failed, file remains');
-      assert(!harness.mockFS.has('op3.txt'), 'Operation 3 should be compensated');
+      assert(!harness.mockFS.has("op1.txt"), "Operation 1 should be compensated");
+      assert(harness.mockFS.has("op2.txt"), "Operation 2 compensation failed, file remains");
+      assert(!harness.mockFS.has("op3.txt"), "Operation 3 should be compensated");
     });
   });
 });

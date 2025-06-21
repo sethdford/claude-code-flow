@@ -1,6 +1,6 @@
-const fs = require('fs').promises;
-const path = require('path');
-const { performance } = require('perf_hooks');
+const fs = require("fs").promises;
+const path = require("path");
+const { performance } = require("perf_hooks");
 
 /**
  * Test Harness for Batchtools Integration Tests
@@ -47,7 +47,7 @@ class TestHarness {
       async (path) => await this.mockReadFile(path)
     );
     const duration = performance.now() - startTime;
-    this.recordMetric('batchReadFiles', filePaths.length, duration);
+    this.recordMetric("batchReadFiles", filePaths.length, duration);
     return results;
   }
 
@@ -59,7 +59,7 @@ class TestHarness {
       async ([path, content]) => await this.mockWriteFile(path, content)
     );
     const duration = performance.now() - startTime;
-    this.recordMetric('batchWriteFiles', entries.length, duration);
+    this.recordMetric("batchWriteFiles", entries.length, duration);
     return results;
   }
 
@@ -70,7 +70,7 @@ class TestHarness {
       async (pattern) => await this.performSearch(pattern, searchIn)
     );
     const duration = performance.now() - startTime;
-    this.recordMetric('batchSearch', patterns.length, duration);
+    this.recordMetric("batchSearch", patterns.length, duration);
     return results;
   }
 
@@ -137,8 +137,8 @@ class TestHarness {
       
       report[operation] = {
         totalCalls: metrics.length,
-        averageDuration: avgDuration.toFixed(2) + 'ms',
-        averageThroughput: avgThroughput.toFixed(2) + ' items/s',
+        averageDuration: avgDuration.toFixed(2) + "ms",
+        averageThroughput: avgThroughput.toFixed(2) + " items/s",
         totalItemsProcessed: metrics.reduce((sum, m) => sum + m.itemCount, 0)
       };
     }
@@ -151,7 +151,7 @@ class TestHarness {
    */
   async injectError(probability = 0.1) {
     if (Math.random() < probability) {
-      throw new Error('Simulated batch operation error');
+      throw new Error("Simulated batch operation error");
     }
   }
 
@@ -188,14 +188,14 @@ class TestHarness {
   /**
    * Mock Project Structures
    */
-  createMockProject(type = 'standard') {
+  createMockProject(type = "standard") {
     const projects = {
       standard: {
-        'src/index.js': 'console.log("Hello World");',
-        'src/utils.js': 'export const add = (a, b) => a + b;',
-        'test/index.test.js': 'describe("Main", () => { /* tests */ });',
-        'package.json': '{ "name": "mock-project", "version": "1.0.0" }',
-        'README.md': '# Mock Project\n\nTest project for batch operations.'
+        "src/index.js": "console.log(\"Hello World\");",
+        "src/utils.js": "export const add = (a, b) => a + b;",
+        "test/index.test.js": "describe(\"Main\", () => { /* tests */ });",
+        "package.json": "{ \"name\": \"mock-project\", \"version\": \"1.0.0\" }",
+        "README.md": "# Mock Project\n\nTest project for batch operations."
       },
       large: this.generateLargeProject(100),
       complex: this.generateComplexProject()
@@ -220,19 +220,19 @@ class TestHarness {
 
   generateComplexProject() {
     return {
-      'src/index.ts': 'import { App } from "./app";\nnew App().start();',
-      'src/app.ts': 'export class App { start() { console.log("Started"); } }',
-      'src/services/auth.service.ts': 'export class AuthService { /* implementation */ }',
-      'src/services/user.service.ts': 'export class UserService { /* implementation */ }',
-      'src/controllers/auth.controller.ts': 'export class AuthController { /* implementation */ }',
-      'src/models/user.model.ts': 'export interface User { id: string; name: string; }',
-      'src/utils/logger.ts': 'export const logger = { info: console.log };',
-      'test/unit/auth.test.ts': 'describe("Auth", () => { /* tests */ });',
-      'test/integration/api.test.ts': 'describe("API", () => { /* tests */ });',
-      'config/default.json': '{ "port": 3000, "database": "mongodb://localhost" }',
-      'package.json': '{ "name": "complex-project", "type": "module" }',
-      'tsconfig.json': '{ "compilerOptions": { "target": "es2020" } }',
-      'README.md': '# Complex Project\n\nA more complex test project.'
+      "src/index.ts": "import { App } from \"./app\";\nnew App().start();",
+      "src/app.ts": "export class App { start() { console.log(\"Started\"); } }",
+      "src/services/auth.service.ts": "export class AuthService { /* implementation */ }",
+      "src/services/user.service.ts": "export class UserService { /* implementation */ }",
+      "src/controllers/auth.controller.ts": "export class AuthController { /* implementation */ }",
+      "src/models/user.model.ts": "export interface User { id: string; name: string; }",
+      "src/utils/logger.ts": "export const logger = { info: console.log };",
+      "test/unit/auth.test.ts": "describe(\"Auth\", () => { /* tests */ });",
+      "test/integration/api.test.ts": "describe(\"API\", () => { /* tests */ });",
+      "config/default.json": "{ \"port\": 3000, \"database\": \"mongodb://localhost\" }",
+      "package.json": "{ \"name\": \"complex-project\", \"type\": \"module\" }",
+      "tsconfig.json": "{ \"compilerOptions\": { \"target\": \"es2020\" } }",
+      "README.md": "# Complex Project\n\nA more complex test project."
     };
   }
 
@@ -245,7 +245,7 @@ class TestHarness {
 
   async performSearch(pattern, searchIn) {
     await this.simulateDelay();
-    const regex = new RegExp(pattern, 'gi');
+    const regex = new RegExp(pattern, "gi");
     const results = [];
     
     for (const [filePath, content] of this.mockFS.entries()) {
@@ -256,7 +256,7 @@ class TestHarness {
         results.push({
           file: filePath,
           matches: matches.length,
-          lines: content.split('\n')
+          lines: content.split("\n")
             .map((line, i) => ({ line: i + 1, content: line }))
             .filter(({ content }) => regex.test(content))
         });

@@ -219,7 +219,8 @@ export class AgentRegistry extends EventEmitter {
     }
 
     if (query.healthThreshold !== undefined) {
-      agents = agents.filter(agent => agent.health >= query.healthThreshold);
+      const threshold = query.healthThreshold;
+      agents = agents.filter(agent => agent.health >= threshold);
     }
 
     if (query.namePattern) {
@@ -228,24 +229,27 @@ export class AgentRegistry extends EventEmitter {
     }
 
     if (query.tags && query.tags.length > 0) {
+      const tags = query.tags;
       const entries = Array.from(this.cache.values());
       const matchingEntries = entries.filter(entry => 
-        query.tags.some(tag => entry.tags.includes(tag)),
+        tags.some(tag => entry.tags.includes(tag)),
       );
       agents = matchingEntries.map(entry => entry.agent);
     }
 
     if (query.createdAfter) {
+      const createdAfter = query.createdAfter;
       const entries = Array.from(this.cache.values());
       const matchingEntries = entries.filter(entry => 
-        entry.createdAt >= query.createdAfter,
+        entry.createdAt >= createdAfter,
       );
       agents = matchingEntries.map(entry => entry.agent);
     }
 
     if (query.lastActiveAfter) {
+      const lastActiveAfter = query.lastActiveAfter;
       agents = agents.filter(agent => 
-        agent.metrics.lastActivity >= query.lastActiveAfter,
+        agent.metrics.lastActivity >= lastActiveAfter,
       );
     }
 

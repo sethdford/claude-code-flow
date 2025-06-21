@@ -65,7 +65,7 @@ class NativeTerminal implements Terminal {
       this.setupOutputHandlers();
 
       // Monitor process status
-      this.monitorProcess();
+      void this.monitorProcess();
 
       // Wait for shell to be ready
       await this.waitForReady();
@@ -347,8 +347,8 @@ class NativeTerminal implements Terminal {
   private async waitForReady(): Promise<void> {
     // Send a test command to ensure shell is ready
     const testCommand = this.shell === "powershell" 
-      ? 'Write-Host "READY"'
-      : 'echo "READY"';
+      ? "Write-Host \"READY\""
+      : "echo \"READY\"";
     
     await this.write(`${testCommand  }\n`);
     

@@ -193,7 +193,7 @@ export class ClaudeFlowExecutor {
       description += ` in ${String(task.context.targetDir)}`;
     }
 
-    return description.replace(/"/g, '\\"');
+    return description.replace(/"/g, "\\\"");
   }
 
   private async executeCommand(command: string[]): Promise<any> {

@@ -7,6 +7,25 @@ import chalk from "chalk";
 import { spawn } from "node:child_process";
 import { generateId } from "../../utils/helpers.js";
 import { promises as fs } from "node:fs";
+import type { BaseCommandOptions } from "./types.js";
+
+// Type definitions for Claude workflows
+interface ClaudeTask {
+  id?: string;
+  name?: string;
+  description?: string;
+  type?: string;
+  tools?: string[] | string;
+  skipPermissions?: boolean;
+  dangerouslySkipPermissions?: boolean;
+  config?: string;
+}
+
+interface ClaudeWorkflow {
+  name?: string;
+  tasks?: ClaudeTask[];
+  parallel?: boolean;
+}
 
 // Color compatibility
 const colors = {
@@ -18,6 +37,27 @@ const colors = {
   blue: chalk.blue,
   bold: chalk.bold,
 };
+
+interface ClaudeSpawnOptions extends BaseCommandOptions {
+  tools?: string;
+  "no-permissions"?: boolean;
+  config?: string;
+  mode?: string;
+  parallel?: boolean;
+  research?: boolean;
+  coverage?: string;
+  commit?: string;
+  verbose?: boolean;
+  "dry-run"?: boolean;
+}
+
+interface ClaudeWorkflowOptions extends BaseCommandOptions {
+  "no-permissions"?: boolean;
+  config?: string;
+  parallel?: boolean;
+  verbose?: boolean;
+  "dry-run"?: boolean;
+}
 
 export const claudeCommand = new Command()
   .name("claude")
@@ -38,12 +78,15 @@ export const claudeCommand = new Command()
   .option("--commit <frequency>", "Commit frequency (phase, feature, manual)", "phase")
   .option("-v, --verbose", "Enable verbose output")
   .option("--dry-run", "Show what would be executed without running")
-  .action(async (options: any, task: string) => {
+  .action(async (options: ClaudeSpawnOptions, task: string) => {
     try {
       const instanceId = generateId("claude");
         
       // Build allowed tools list
       let { tools } = options;
+      const defaultTools = "View,Edit,Replace,GlobTool,GrepTool,LS,Bash";
+      tools = tools || defaultTools;
+      
       if (options.parallel && !tools.includes("BatchTool")) {
         tools += ",BatchTool,dispatch_agent";
       }
@@ -55,7 +98,7 @@ export const claudeCommand = new Command()
       const claudeArgs = [task];
       claudeArgs.push("--allowedTools", tools);
         
-      if (options.noPermissions) {
+      if (options["no-permissions"]) {
         claudeArgs.push("--dangerously-skip-permissions");
       }
         
@@ -67,7 +110,7 @@ export const claudeCommand = new Command()
         claudeArgs.push("--verbose");
       }
         
-      if (options.dryRun) {
+      if (options["dry-run"]) {
         console.log(colors.yellow("DRY RUN - Would execute:"));
         console.log(colors.gray(`claude ${claudeArgs.join(" ")}`));
         console.log("\nConfiguration:");
@@ -91,7 +134,7 @@ export const claudeCommand = new Command()
           ...process.env,
           CLAUDE_INSTANCE_ID: instanceId,
           CLAUDE_FLOW_MODE: options.mode,
-          CLAUDE_FLOW_COVERAGE: options.coverage.toString(),
+          CLAUDE_FLOW_COVERAGE: options.coverage || "90",
           CLAUDE_FLOW_COMMIT: options.commit,
         },
       });
@@ -116,12 +159,12 @@ export const claudeCommand = new Command()
   .description("Spawn multiple Claude instances from workflow")
   .arguments("<workflow-file>")
   .option("--dry-run", "Show what would be executed without running")
-  .action(async (options: any, workflowFile: string) => {
+  .action(async (options: ClaudeWorkflowOptions, workflowFile: string) => {
     try {
       const content = await fs.readFile(workflowFile, "utf-8");
-      const workflow = JSON.parse(content);
+      const workflow = JSON.parse(content) as ClaudeWorkflow;
         
-      console.log(colors.green("Loading workflow:"), workflow.name || "Unnamed");
+      console.log(colors.green("Loading workflow:"), workflow.name ?? "Unnamed");
       console.log(colors.gray(`Tasks: ${workflow.tasks?.length || 0}`));
         
       if (!workflow.tasks || workflow.tasks.length === 0) {
@@ -130,7 +173,7 @@ export const claudeCommand = new Command()
       }
         
       for (const task of workflow.tasks) {
-        const claudeArgs = [task.description || task.name];
+        const claudeArgs = [task.description ?? task.name ?? 'unnamed-task'];
           
         // Add tools
         if (task.tools) {
@@ -146,31 +189,31 @@ export const claudeCommand = new Command()
           claudeArgs.push("--mcp-config", task.config);
         }
           
-        if (options.dryRun) {
-          console.log(colors.yellow(`\nDRY RUN - Task: ${task.name || task.id}`));
+        if (options["dry-run"]) {
+          console.log(colors.yellow(`\nDRY RUN - Task: ${task.name ?? task.id}`));
           console.log(colors.gray(`claude ${claudeArgs.join(" ")}`));
         } else {
-          console.log(colors.blue(`\nSpawning Claude for task: ${task.name || task.id}`));
+          console.log(colors.blue(`\nSpawning Claude for task: ${task.name ?? task.id}`));
             
           const claude = spawn("claude", claudeArgs, {
             stdio: "inherit",
             env: {
               ...process.env,
-              CLAUDE_TASK_ID: task.id || generateId("task"),
-              CLAUDE_TASK_TYPE: task.type || "general",
+              CLAUDE_TASK_ID: task.id ?? generateId("task"),
+              CLAUDE_TASK_TYPE: task.type ?? "general",
             },
           });
             
           // Wait for completion if sequential
           if (!workflow.parallel) {
-            await new Promise((resolve) => {
-              claude.on("exit", resolve);
+            await new Promise<void>((resolve) => {
+              claude.on("exit", () => resolve());
             });
           }
         }
       }
         
-      if (!options.dryRun && workflow.parallel) {
+      if (!options["dry-run"] && workflow.parallel) {
         console.log(colors.green("\nAll Claude instances spawned in parallel mode"));
       }
         

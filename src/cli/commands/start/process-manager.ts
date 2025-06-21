@@ -8,7 +8,7 @@ import {
   ProcessInfo, 
   ProcessType, 
   ProcessStatus, 
-  ProcessMetrics,
+  // ProcessMetrics, // Not used currently
   SystemStats, 
 } from "./types.js";
 import { Orchestrator } from "../../../core/orchestrator.js";
@@ -18,6 +18,8 @@ import { CoordinationManager } from "../../../coordination/manager.js";
 import { MCPServer } from "../../../mcp/server.js";
 import { eventBus } from "../../../core/event-bus.js";
 import { logger } from "../../../core/logger.js";
+import { configManager } from "../../../core/config.js";
+import { type Config, type MemoryConfig, type TerminalConfig, type CoordinationConfig, type MCPConfig } from "../../../utils/types.js";
 
 
 // Color compatibility
@@ -30,7 +32,6 @@ const colors = {
   blue: chalk.blue,
   bold: chalk.bold,
 };
-import { configManager } from "../../../core/config.js";
 
 export class ProcessManager extends EventEmitter {
   private processes: Map<string, ProcessInfo> = new Map();
@@ -39,7 +40,7 @@ export class ProcessManager extends EventEmitter {
   private memoryManager: MemoryManager | undefined;
   private coordinationManager: CoordinationManager | undefined;
   private mcpServer: MCPServer | undefined;
-  private config: any;
+  private config: Config;
 
   constructor() {
     super();
@@ -47,44 +48,13 @@ export class ProcessManager extends EventEmitter {
   }
 
   private initializeProcesses(): void {
-    // Define all manageable processes
     const processDefinitions: ProcessInfo[] = [
-      {
-        id: "event-bus",
-        name: "Event Bus",
-        type: ProcessType.EVENT_BUS,
-        status: ProcessStatus.STOPPED,
-      },
-      {
-        id: "orchestrator",
-        name: "Orchestrator Engine",
-        type: ProcessType.ORCHESTRATOR,
-        status: ProcessStatus.STOPPED,
-      },
-      {
-        id: "memory-manager",
-        name: "Memory Manager",
-        type: ProcessType.MEMORY_MANAGER,
-        status: ProcessStatus.STOPPED,
-      },
-      {
-        id: "terminal-pool",
-        name: "Terminal Pool",
-        type: ProcessType.TERMINAL_POOL,
-        status: ProcessStatus.STOPPED,
-      },
-      {
-        id: "mcp-server",
-        name: "MCP Server",
-        type: ProcessType.MCP_SERVER,
-        status: ProcessStatus.STOPPED,
-      },
-      {
-        id: "coordinator",
-        name: "Coordination Manager",
-        type: ProcessType.COORDINATOR,
-        status: ProcessStatus.STOPPED,
-      },
+      { id: "event-bus", name: "Event Bus", type: ProcessType.EVENT_BUS, status: ProcessStatus.STOPPED, startTime: 0, metrics: {} },
+      { id: "memory-manager", name: "Memory Manager", type: ProcessType.MEMORY_MANAGER, status: ProcessStatus.STOPPED, startTime: 0, metrics: {} },
+      { id: "terminal-pool", name: "Terminal Pool", type: ProcessType.TERMINAL_POOL, status: ProcessStatus.STOPPED, startTime: 0, metrics: {} },
+      { id: "coordinator", name: "Coordination Manager", type: ProcessType.COORDINATOR, status: ProcessStatus.STOPPED, startTime: 0, metrics: {} },
+      { id: "mcp-server", name: "MCP Server", type: ProcessType.MCP_SERVER, status: ProcessStatus.STOPPED, startTime: 0, metrics: {} },
+      { id: "orchestrator", name: "Orchestrator Engine", type: ProcessType.ORCHESTRATOR, status: ProcessStatus.STOPPED, startTime: 0, metrics: {} },
     ];
 
     for (const process of processDefinitions) {
@@ -94,7 +64,8 @@ export class ProcessManager extends EventEmitter {
 
   async initialize(configPath?: string): Promise<void> {
     try {
-      this.config = await configManager.load(configPath);
+      await configManager.load(configPath);
+      this.config = configManager.get();
       this.emit("initialized", { config: this.config });
     } catch (error) {
       this.emit("error", { component: "ProcessManager", error });
@@ -348,7 +319,7 @@ export class ProcessManager extends EventEmitter {
     return 0;
   }
 
-  async getProcessLogs(processId: string, lines: number = 50): Promise<string[]> {
+  getProcessLogs(processId: string, _lines: number = 50): string[] {
     // Placeholder - would integrate with actual logging system
     return [
       `[${new Date().toISOString()}] Process ${processId} started`,

@@ -28,7 +28,7 @@ import { SessionManager, ISessionManager } from "./session-manager.js";
 import { AuthManager, IAuthManager } from "./auth.js";
 import { LoadBalancer, ILoadBalancer, RequestQueue } from "./load-balancer.js";
 import { createClaudeFlowTools, ClaudeFlowToolContext } from "./claude-flow-tools.js";
-// import { createSwarmTools, SwarmToolContext } from './swarm-tools.js'; // File missing, temporarily disabled
+// import { createSwarmTools, SwarmToolContext } from "./swarm-tools.js"; // File missing, temporarily disabled
 import { platform, arch } from "node:os";
 import { performance } from "node:perf_hooks";
 

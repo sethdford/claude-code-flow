@@ -863,7 +863,7 @@ export class SwarmMemoryManager extends EventEmitter {
         entriesByType[entry.type as MemoryType]++;
       }
       if (entry.accessLevel in entriesByAccess) {
-        entriesByAccess[entry.accessLevel as AccessLevel]++;
+        entriesByAccess[entry.accessLevel]++;
       }
       
       const entrySize = this.calculateEntrySize(entry);

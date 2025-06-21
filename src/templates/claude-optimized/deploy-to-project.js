@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Deploy Claude optimized template to a target project
@@ -10,18 +10,18 @@ const path = require('path');
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.error('Usage: node deploy-to-project.js <target-project-path>');
-  console.error('Example: node deploy-to-project.js /path/to/my-project');
+  console.error("Usage: node deploy-to-project.js <target-project-path>");
+  console.error("Example: node deploy-to-project.js /path/to/my-project");
   process.exit(1);
 }
 
 const TARGET_PROJECT = args[0];
-const SOURCE_DIR = path.join(__dirname, '.claude');
-const TARGET_DIR = path.join(TARGET_PROJECT, '.claude');
-const MANIFEST_PATH = path.join(__dirname, 'manifest.json');
+const SOURCE_DIR = path.join(__dirname, ".claude");
+const TARGET_DIR = path.join(TARGET_PROJECT, ".claude");
+const MANIFEST_PATH = path.join(__dirname, "manifest.json");
 
-console.log('Claude Optimized Template Deployment');
-console.log('====================================');
+console.log("Claude Optimized Template Deployment");
+console.log("====================================");
 console.log(`Source: ${SOURCE_DIR}`);
 console.log(`Target: ${TARGET_DIR}`);
 
@@ -32,28 +32,28 @@ if (!fs.existsSync(TARGET_PROJECT)) {
 }
 
 // Check if it's a valid project (has package.json or similar)
-const projectFiles = ['package.json', 'tsconfig.json', 'go.mod', 'Cargo.toml', 'setup.py'];
+const projectFiles = ["package.json", "tsconfig.json", "go.mod", "Cargo.toml", "setup.py"];
 const hasProjectFile = projectFiles.some(file => fs.existsSync(path.join(TARGET_PROJECT, file)));
 
 if (!hasProjectFile) {
-  console.warn('Warning: Target directory does not appear to be a project root (no package.json, etc.)');
-  console.log('Continue anyway? (y/n)');
+  console.warn("Warning: Target directory does not appear to be a project root (no package.json, etc.)");
+  console.log("Continue anyway? (y/n)");
   // For automation, we'll continue
 }
 
 // Read manifest
-const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
 
 // Create target .claude directory
 if (!fs.existsSync(TARGET_DIR)) {
   fs.mkdirSync(TARGET_DIR, { recursive: true });
-  console.log('✓ Created .claude directory');
+  console.log("✓ Created .claude directory");
 } else {
-  console.log('⚠️  .claude directory already exists - files will be overwritten');
+  console.log("⚠️  .claude directory already exists - files will be overwritten");
 }
 
 // Create directory structure
-console.log('\nCreating directory structure...');
+console.log("\nCreating directory structure...");
 for (const [dirName, dirInfo] of Object.entries(manifest.directories)) {
   const targetPath = path.join(TARGET_DIR, dirInfo.path);
   if (!fs.existsSync(targetPath)) {
@@ -63,7 +63,7 @@ for (const [dirName, dirInfo] of Object.entries(manifest.directories)) {
   
   // Create README for empty directories
   if (dirInfo.createEmpty) {
-    const readmePath = path.join(targetPath, 'README.md');
+    const readmePath = path.join(targetPath, "README.md");
     if (!fs.existsSync(readmePath)) {
       fs.writeFileSync(readmePath, `# ${dirName}\n\nThis directory will be populated during usage.\n`);
     }
@@ -71,7 +71,7 @@ for (const [dirName, dirInfo] of Object.entries(manifest.directories)) {
 }
 
 // Copy files
-console.log('\nDeploying template files...');
+console.log("\nDeploying template files...");
 let successCount = 0;
 let errorCount = 0;
 
@@ -111,26 +111,26 @@ const deploymentInfo = {
 };
 
 fs.writeFileSync(
-  path.join(TARGET_DIR, '.deployment-info.json'),
+  path.join(TARGET_DIR, ".deployment-info.json"),
   JSON.stringify(deploymentInfo, null, 2)
 );
 
 // Summary
-console.log('\n' + '='.repeat(50));
-console.log('Deployment Summary:');
+console.log("\n" + "=".repeat(50));
+console.log("Deployment Summary:");
 console.log(`  Files deployed: ${successCount}`);
 console.log(`  Errors: ${errorCount}`);
 console.log(`  Target project: ${TARGET_PROJECT}`);
 console.log(`  Template version: ${manifest.version}`);
 
 if (errorCount === 0) {
-  console.log('\n🎉 Template deployed successfully!');
-  console.log('\nNext steps:');
-  console.log('1. Open Claude Code in your project');
-  console.log('2. Type / to see available commands');
-  console.log('3. Use /sparc for SPARC methodology');
-  console.log('4. Use /claude-flow-* for Claude Flow features');
-  console.log('\nFor help, see the documentation files in .claude/');
+  console.log("\n🎉 Template deployed successfully!");
+  console.log("\nNext steps:");
+  console.log("1. Open Claude Code in your project");
+  console.log("2. Type / to see available commands");
+  console.log("3. Use /sparc for SPARC methodology");
+  console.log("4. Use /claude-flow-* for Claude Flow features");
+  console.log("\nFor help, see the documentation files in .claude/");
 } else {
-  console.log('\n⚠️  Template deployed with errors. Please check the messages above.');
+  console.log("\n⚠️  Template deployed with errors. Please check the messages above.");
 }

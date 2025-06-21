@@ -95,10 +95,11 @@ export class EventBus implements IEventBus {
   emit(event: string, data?: unknown): void {
     // Type-safe emission for known events
     if (event in SystemEvents) {
-      this.typedBus.emit(event as keyof EventMap, data as any);
+      this.typedBus.emit(event as keyof EventMap, data);
     } else {
       // For custom events, emit as-is
-      this.typedBus.emit(event as any, data as any);
+      // Cast to keyof EventMap for custom events - this is safe because we're extending the event system
+      this.typedBus.emit(event as keyof EventMap, data);
     }
   }
 
@@ -106,21 +107,21 @@ export class EventBus implements IEventBus {
    * Registers an event handler
    */
   on(event: string, handler: (data: unknown) => void): void {
-    this.typedBus.on(event as any, handler);
+    this.typedBus.on(event as keyof EventMap, handler as (data: EventMap[keyof EventMap]) => void);
   }
 
   /**
    * Removes an event handler
    */
   off(event: string, handler: (data: unknown) => void): void {
-    this.typedBus.off(event as any, handler);
+    this.typedBus.off(event as keyof EventMap, handler as (data: EventMap[keyof EventMap]) => void);
   }
 
   /**
    * Registers a one-time event handler
    */
   once(event: string, handler: (data: unknown) => void): void {
-    this.typedBus.once(event as any, handler);
+    this.typedBus.once(event as keyof EventMap, handler as (data: EventMap[keyof EventMap]) => void);
   }
 
   /**
@@ -178,7 +179,7 @@ export class EventBus implements IEventBus {
    * Remove all listeners for an event
    */
   removeAllListeners(event?: string): void {
-    this.typedBus.removeAllListeners(event as any);
+    this.typedBus.removeAllListeners(event as keyof EventMap | undefined);
   }
 }
 

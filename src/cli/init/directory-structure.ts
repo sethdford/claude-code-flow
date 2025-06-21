@@ -3,7 +3,7 @@ import { getVersion } from "../../utils/version.js";
 
 export async function createDirectoryStructure(): Promise<void> {
   const fs = await import("fs/promises");
-  const path = await import("path");
+  const _path = await import("path");
   
   // Define directory structure
   const directories = [

@@ -388,17 +388,17 @@ export class ResourceManager extends EventEmitter {
     this.eventBus.on("resource.usage.updated", (data: unknown) => {
       const resourceData = data as { resourceId: string; usage: number | ResourceUsage };
       // Convert number to ResourceUsage interface if needed
-      const resourceUsage: ResourceUsage = typeof resourceData.usage === 'number' 
+      const resourceUsage: ResourceUsage = typeof resourceData.usage === "number" 
         ? { 
-            cpu: resourceData.usage, 
-            memory: 0, 
-            disk: 0, 
-            network: 0,
-            custom: {},
-            timestamp: new Date(),
-            duration: 0
-          }
-        : resourceData.usage as ResourceUsage;
+          cpu: resourceData.usage, 
+          memory: 0, 
+          disk: 0, 
+          network: 0,
+          custom: {},
+          timestamp: new Date(),
+          duration: 0,
+        }
+        : resourceData.usage;
       this.updateResourceUsage(resourceData.resourceId, resourceUsage);
     });
 

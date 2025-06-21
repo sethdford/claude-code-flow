@@ -157,7 +157,7 @@ export class Logger implements ILogger {
     }
 
     if (this.config.destination === "file" || this.config.destination === "both") {
-      this.writeToFile(formatted);
+      void this.writeToFile(formatted);
     }
   }
 

@@ -6,8 +6,8 @@
 export class WebSocketClient {
   constructor() {
     this.ws = null;
-    this.url = '';
-    this.authToken = '';
+    this.url = "";
+    this.authToken = "";
     this.isConnected = false;
     this.isConnecting = false;
     this.reconnectAttempts = 0;
@@ -30,9 +30,9 @@ export class WebSocketClient {
   /**
    * Connect to WebSocket server
    */
-  async connect(url, authToken = '') {
+  async connect(url, authToken = "") {
     if (this.isConnecting || this.isConnected) {
-      console.warn('Already connected or connecting');
+      console.warn("Already connected or connecting");
       return;
     }
     
@@ -62,7 +62,7 @@ export class WebSocketClient {
           if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
             this.ws.close();
             this.isConnecting = false;
-            reject(new Error('Connection timeout'));
+            reject(new Error("Connection timeout"));
           }
         }, this.connectionTimeout);
         
@@ -73,11 +73,11 @@ export class WebSocketClient {
           this.reconnectAttempts = 0;
           this.lastPongReceived = Date.now();
           
-          this.emit('connected');
+          this.emit("connected");
           this.startHeartbeat();
           this.processMessageQueue();
           
-          console.log('WebSocket connected to:', this.url);
+          console.log("WebSocket connected to:", this.url);
           resolve();
         };
         
@@ -88,9 +88,9 @@ export class WebSocketClient {
         
         this.ws.onerror = (error) => {
           clearTimeout(connectionTimer);
-          console.error('WebSocket error:', error);
+          console.error("WebSocket error:", error);
           this.isConnecting = false;
-          this.emit('error', error);
+          this.emit("error", error);
           
           if (!this.isConnected) {
             reject(error);
@@ -114,7 +114,7 @@ export class WebSocketClient {
   disconnect() {
     if (this.ws) {
       this.stopHeartbeat();
-      this.ws.close(1000, 'User initiated disconnect');
+      this.ws.close(1000, "User initiated disconnect");
       this.ws = null;
     }
     
@@ -124,7 +124,7 @@ export class WebSocketClient {
     this.messageQueue = [];
     this.requestHandlers.clear();
     
-    this.emit('disconnected');
+    this.emit("disconnected");
   }
   
   /**
@@ -133,7 +133,7 @@ export class WebSocketClient {
   async sendRequest(method, params = {}) {
     const id = this.generateMessageId();
     const request = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id,
       method,
       params
@@ -161,7 +161,7 @@ export class WebSocketClient {
    */
   sendNotification(method, params = {}) {
     const notification = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       method,
       params
     };
@@ -176,17 +176,17 @@ export class WebSocketClient {
     if (!this.isConnected) {
       // Queue message for later
       this.messageQueue.push(message);
-      this.emit('message_queued', message);
+      this.emit("message_queued", message);
       return;
     }
     
     try {
       const messageStr = JSON.stringify(message);
       this.ws.send(messageStr);
-      this.emit('message_sent', message);
+      this.emit("message_sent", message);
     } catch (error) {
-      console.error('Failed to send message:', error);
-      this.emit('send_error', error);
+      console.error("Failed to send message:", error);
+      this.emit("send_error", error);
     }
   }
   
@@ -198,7 +198,7 @@ export class WebSocketClient {
       const message = JSON.parse(event.data);
       
       // Handle pong response
-      if (message.method === 'pong') {
+      if (message.method === "pong") {
         this.lastPongReceived = Date.now();
         return;
       }
@@ -209,7 +209,7 @@ export class WebSocketClient {
         this.requestHandlers.delete(message.id);
         
         if (message.error) {
-          handler.reject(new Error(message.error.message || 'Request failed'));
+          handler.reject(new Error(message.error.message || "Request failed"));
         } else {
           handler.resolve(message.result);
         }
@@ -218,15 +218,15 @@ export class WebSocketClient {
       
       // Handle notifications and other messages
       if (message.method) {
-        this.emit('notification', message);
+        this.emit("notification", message);
         this.emit(`notification_${message.method}`, message.params);
       }
       
-      this.emit('message_received', message);
+      this.emit("message_received", message);
       
     } catch (error) {
-      console.error('Failed to parse WebSocket message:', error);
-      this.emit('parse_error', error);
+      console.error("Failed to parse WebSocket message:", error);
+      this.emit("parse_error", error);
     }
   }
   
@@ -239,10 +239,10 @@ export class WebSocketClient {
     this.isConnecting = false;
     this.stopHeartbeat();
     
-    console.log('WebSocket disconnected:', event.code, event.reason);
+    console.log("WebSocket disconnected:", event.code, event.reason);
     
     if (wasConnected) {
-      this.emit('disconnected', { code: event.code, reason: event.reason });
+      this.emit("disconnected", { code: event.code, reason: event.reason });
       
       // Attempt reconnection if not a clean close
       if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -259,16 +259,16 @@ export class WebSocketClient {
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
     
     console.log(`Attempting reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`);
-    this.emit('reconnecting', { attempt: this.reconnectAttempts, delay });
+    this.emit("reconnecting", { attempt: this.reconnectAttempts, delay });
     
     setTimeout(async () => {
       try {
         await this.establishConnection();
       } catch (error) {
-        console.error('Reconnection failed:', error);
+        console.error("Reconnection failed:", error);
         
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          this.emit('reconnection_failed');
+          this.emit("reconnection_failed");
         } else {
           this.attemptReconnection();
         }
@@ -288,13 +288,13 @@ export class WebSocketClient {
         const timeSinceLastPong = Date.now() - this.lastPongReceived;
         
         if (timeSinceLastPong > this.heartbeatInterval * 2) {
-          console.warn('Heartbeat timeout - connection may be dead');
-          this.ws.close(1006, 'Heartbeat timeout');
+          console.warn("Heartbeat timeout - connection may be dead");
+          this.ws.close(1006, "Heartbeat timeout");
           return;
         }
         
         // Send ping
-        this.sendNotification('ping', { timestamp: Date.now() });
+        this.sendNotification("ping", { timestamp: Date.now() });
       }
     }, this.heartbeatInterval);
   }
@@ -331,7 +331,7 @@ export class WebSocketClient {
    */
   setupEventListeners() {
     // Handle page visibility changes
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         // Page is hidden - reduce heartbeat frequency
         this.heartbeatInterval = 60000; // 1 minute
@@ -345,7 +345,7 @@ export class WebSocketClient {
     });
     
     // Handle page unload
-    window.addEventListener('beforeunload', () => {
+    window.addEventListener("beforeunload", () => {
       if (this.isConnected) {
         this.disconnect();
       }
@@ -384,7 +384,7 @@ export class WebSocketClient {
         try {
           callback(data);
         } catch (error) {
-          console.error('Error in event listener:', error);
+          console.error("Error in event listener:", error);
         }
       });
     }
@@ -411,12 +411,12 @@ export class WebSocketClient {
     const params = {
       protocolVersion: { major: 2024, minor: 11, patch: 5 },
       clientInfo: {
-        name: 'Claude Code Console',
-        version: '1.0.0',
+        name: "Claude Code Console",
+        version: "1.0.0",
         ...clientInfo
       },
       capabilities: {
-        logging: { level: 'info' },
+        logging: { level: "info" },
         tools: { listChanged: true },
         resources: { listChanged: false, subscribe: false },
         prompts: { listChanged: false }
@@ -424,11 +424,11 @@ export class WebSocketClient {
     };
     
     try {
-      const result = await this.sendRequest('initialize', params);
-      this.emit('session_initialized', result);
+      const result = await this.sendRequest("initialize", params);
+      this.emit("session_initialized", result);
       return result;
     } catch (error) {
-      this.emit('session_error', error);
+      this.emit("session_error", error);
       throw error;
     }
   }
@@ -438,14 +438,14 @@ export class WebSocketClient {
    */
   async executeCommand(command, args = {}) {
     try {
-      const result = await this.sendRequest('tools/call', {
-        name: 'claude-flow/execute',
+      const result = await this.sendRequest("tools/call", {
+        name: "claude-flow/execute",
         arguments: { command, args }
       });
       
       return result;
     } catch (error) {
-      console.error('Command execution failed:', error);
+      console.error("Command execution failed:", error);
       throw error;
     }
   }
@@ -455,9 +455,9 @@ export class WebSocketClient {
    */
   async getAvailableTools() {
     try {
-      return await this.sendRequest('tools/list');
+      return await this.sendRequest("tools/list");
     } catch (error) {
-      console.error('Failed to get tools:', error);
+      console.error("Failed to get tools:", error);
       throw error;
     }
   }
@@ -467,11 +467,11 @@ export class WebSocketClient {
    */
   async getHealthStatus() {
     try {
-      return await this.sendRequest('tools/call', {
-        name: 'system/health'
+      return await this.sendRequest("tools/call", {
+        name: "system/health"
       });
     } catch (error) {
-      console.error('Failed to get health status:', error);
+      console.error("Failed to get health status:", error);
       throw error;
     }
   }

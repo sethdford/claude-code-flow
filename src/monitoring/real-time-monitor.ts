@@ -378,8 +378,8 @@ export class RealTimeMonitor extends EventEmitter {
     // Group by metric name
     const metricGroups = new Map<string, MetricPoint[]>();
     for (const point of this.metricsBuffer) {
-      const metricName = point.tags.metric || "unknown";
-      const group = metricGroups.get(metricName) || [];
+      const metricName = point.tags.metric ?? "unknown";
+      const group = metricGroups.get(metricName) ?? [];
       group.push(point);
       metricGroups.set(metricName, group);
     }
@@ -526,19 +526,19 @@ export class RealTimeMonitor extends EventEmitter {
             break;
 
           case "email":
-            this.sendEmailAlert(alert, action.config);
+            void this.sendEmailAlert(alert, action.config);
             break;
 
           case "webhook":
-            this.sendWebhookAlert(alert, action.config);
+            void this.sendWebhookAlert(alert, action.config);
             break;
 
           case "auto-scale":
-            this.triggerAutoScale(alert, action.config);
+            void this.triggerAutoScale(alert, action.config);
             break;
 
           case "restart":
-            this.triggerRestart(alert, action.config);
+            void this.triggerRestart(alert, action.config);
             break;
 
           default:
@@ -572,7 +572,7 @@ export class RealTimeMonitor extends EventEmitter {
     if (this.healthCheckInterval) return;
 
     this.healthCheckInterval = setInterval(() => {
-      this.performHealthChecks();
+      void this.performHealthChecks();
     }, 30000) as any; // Every 30 seconds
 
     this.logger.info("Started health checks");
@@ -642,7 +642,7 @@ export class RealTimeMonitor extends EventEmitter {
 
   getDashboardData(dashboardId: string): Record<string, unknown> {
     const dashboard = this.dashboards.get(dashboardId);
-    if (!dashboard) return null;
+    if (!dashboard) return {};
 
     const data: Record<string, unknown> = {
       dashboard,
@@ -801,7 +801,7 @@ export class RealTimeMonitor extends EventEmitter {
   }
 
   private calculateSwarmThroughput(agents: AgentMetrics[]): number {
-    return agents.reduce((sum, agent) => sum + (agent.tasksCompleted || 0), 0);
+    return agents.reduce((sum, agent) => sum + (agent.tasksCompleted ?? 0), 0);
   }
 
   private calculateAverageLatency(agents: AgentMetrics[]): number {
@@ -813,20 +813,20 @@ export class RealTimeMonitor extends EventEmitter {
   private calculateSwarmEfficiency(agents: AgentMetrics[]): number {
     if (agents.length === 0) return 0;
     const totalTasks = agents.reduce((sum, agent) => 
-      sum + (agent.tasksCompleted || 0) + (agent.tasksFailed || 0), 0);
-    const completedTasks = agents.reduce((sum, agent) => sum + (agent.tasksCompleted || 0), 0);
+      sum + (agent.tasksCompleted ?? 0) + (agent.tasksFailed ?? 0), 0);
+    const completedTasks = agents.reduce((sum, agent) => sum + (agent.tasksCompleted ?? 0), 0);
     return totalTasks > 0 ? completedTasks / totalTasks : 1;
   }
 
   private calculateSwarmReliability(agents: AgentMetrics[]): number {
     if (agents.length === 0) return 1;
-    const totalReliability = agents.reduce((sum, agent) => sum + (agent.successRate || 1), 0);
+    const totalReliability = agents.reduce((sum, agent) => sum + (agent.successRate ?? 1), 0);
     return totalReliability / agents.length;
   }
 
   private calculateAverageQuality(agents: AgentMetrics[]): number {
     if (agents.length === 0) return 0.8;
-    const totalQuality = agents.reduce((sum, agent) => sum + (agent.codeQuality || 0.8), 0);
+    const totalQuality = agents.reduce((sum, agent) => sum + (agent.codeQuality ?? 0.8), 0);
     return totalQuality / agents.length;
   }
 

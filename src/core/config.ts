@@ -17,8 +17,8 @@ const scryptAsync = promisify(scrypt);
 
 // Format parsers
 interface FormatParser {
-  parse(content: string): any;
-  stringify(obj: any): string;
+  parse(content: string): Partial<Config>;
+  stringify(obj: Partial<Config>): string;
   extension: string;
 }
 
@@ -26,8 +26,8 @@ interface FormatParser {
 interface ConfigChange {
   timestamp: string;
   path: string;
-  oldValue: any;
-  newValue: any;
+  oldValue: unknown;
+  newValue: unknown;
   user?: string;
   reason?: string;
   source: "cli" | "api" | "file" | "env";
@@ -48,8 +48,17 @@ interface ValidationRule {
   max?: number;
   values?: string[];
   pattern?: RegExp;
-  validator?: (value: any, config: Config) => string | null;
+  validator?: (value: unknown, config: Config) => string | null;
   dependencies?: string[];
+}
+
+// Add this interface near the top after other interfaces
+interface ConfigExport {
+  version: string;
+  exported: string;
+  profile?: string;
+  config: Config;
+  diff?: any;
 }
 
 /**
@@ -109,11 +118,11 @@ const FORMAT_PARSERS: Record<string, FormatParser> = {
         const value = trimmed.substring(colonIndex + 1).trim();
         
         // Simple value parsing
-        let parsedValue: any = value;
+        let parsedValue: string | number | boolean = value;
         if (value === "true") parsedValue = true;
         else if (value === "false") parsedValue = false;
         else if (!isNaN(Number(value)) && value !== "") parsedValue = Number(value);
-        else if (value.startsWith('"') && value.endsWith('"')) {
+        else if (value.startsWith("\"") && value.endsWith("\"")) {
           parsedValue = value.slice(1, -1);
         }
         
@@ -169,11 +178,11 @@ const FORMAT_PARSERS: Record<string, FormatParser> = {
         const value = trimmed.substring(equalsIndex + 1).trim();
         
         // Simple value parsing
-        let parsedValue: any = value;
+        let parsedValue: string | number | boolean = value;
         if (value === "true") parsedValue = true;
         else if (value === "false") parsedValue = false;
         else if (!isNaN(Number(value)) && value !== "") parsedValue = Number(value);
-        else if (value.startsWith('"') && value.endsWith('"')) {
+        else if (value.startsWith("\"") && value.endsWith("\"")) {
           parsedValue = value.slice(1, -1);
         }
         
@@ -316,7 +325,8 @@ export class ConfigManager {
       min: 1,
       max: 100,
       validator: (value, config) => {
-        if (value > config.terminal?.poolSize * 2) {
+        const numValue = value as number;
+        if (numValue > (config.terminal?.poolSize ?? 1) * 2) {
           return "maxConcurrentAgents should not exceed 2x terminal pool size";
         }
         return null;
@@ -330,8 +340,9 @@ export class ConfigManager {
       max: 10000,
       dependencies: ["orchestrator.maxConcurrentAgents"],
       validator: (value, config) => {
-        const maxAgents = config.orchestrator?.maxConcurrentAgents || 1;
-        if (value < maxAgents * 10) {
+        const numValue = value as number;
+        const maxAgents = config.orchestrator?.maxConcurrentAgents ?? 1;
+        if (numValue < maxAgents * 10) {
           return "taskQueueSize should be at least 10x maxConcurrentAgents";
         }
         return null;
@@ -365,7 +376,8 @@ export class ConfigManager {
       min: 1,
       max: 10000,
       validator: (value) => {
-        if (value > 1000) {
+        const numValue = value as number;
+        if (numValue > 1000) {
           return "Large cache sizes may impact system performance";
         }
         return null;
@@ -383,7 +395,8 @@ export class ConfigManager {
       type: "string",
       pattern: /^[a-zA-Z0-9_-]+$/,
       validator: (value) => {
-        if (value && value.length < 16) {
+        const strValue = value as string;
+        if (strValue && strValue.length < 16) {
           return "API key should be at least 16 characters long";
         }
         return null;
@@ -432,7 +445,7 @@ export class ConfigManager {
     const config = deepClone(this.config);
     
     if (maskSensitive && this.config.security?.maskSensitiveValues) {
-      return this.maskSensitiveValues(config);
+      return this.maskSensitiveValues(config) as Config;
     }
     
     return config;
@@ -474,12 +487,12 @@ export class ConfigManager {
    * Saves configuration to file with format support
    */
   async save(path?: string, format?: string): Promise<void> {
-    const savePath = path || this.configPath;
+    const savePath = path ?? this.configPath;
     if (!savePath) {
       throw new ConfigError("No configuration file path specified");
     }
 
-    const detectedFormat = format || this.detectFormat(savePath);
+    const detectedFormat = format ?? this.detectFormat(savePath);
     const parser = this.formatParsers[detectedFormat];
     
     if (!parser) {
@@ -571,7 +584,7 @@ export class ConfigManager {
     
     const profile = this.profiles.get(profileName);
     if (!profile) {
-      throw new ConfigError(`Profile '${profileName}' not found`);
+      throw new ConfigError(`Profile "${profileName}" not found`);
     }
 
     this.config = deepMergeConfig(this.config, profile);
@@ -588,7 +601,7 @@ export class ConfigManager {
     const profilesDir = join(this.userConfigDir, "profiles");
     await fs.mkdir(profilesDir, { recursive: true });
     
-    const profileConfig = config || this.config;
+    const profileConfig = config ?? this.config;
     const profilePath = join(profilesDir, `${profileName}.json`);
     
     const content = JSON.stringify(profileConfig, null, 2);
@@ -608,7 +621,7 @@ export class ConfigManager {
       this.profiles.delete(profileName);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        throw new ConfigError(`Profile '${profileName}' not found`);
+        throw new ConfigError(`Profile "${profileName}" not found`);
       }
       throw new ConfigError(`Failed to delete profile: ${(error as Error).message}`);
     }
@@ -640,19 +653,19 @@ export class ConfigManager {
   /**
    * Sets a configuration value by path with change tracking and validation
    */
-  set(path: string, value: any, options: { user?: string, reason?: string, source?: "cli" | "api" | "file" | "env" } = {}): void {
+  set(path: string, value: unknown, options: { user?: string, reason?: string, source?: "cli" | "api" | "file" | "env" } = {}): void {
     const oldValue = this.getValue(path);
     
     // Record the change
     this.recordChange(path, oldValue, value, {
       user: options.user,
       reason: options.reason,
-      source: options.source || "cli",
+      source: options.source ?? "cli",
     });
     
     // Encrypt sensitive values
     if (this.isSensitivePath(path) && this.config.security?.encryptionEnabled) {
-      value = this.encryptValue(value);
+      value = this.encryptValue(value as string);
     }
     
     const keys = path.split(".");
@@ -669,20 +682,20 @@ export class ConfigManager {
     current[keys[keys.length - 1]] = value;
     
     // Validate the path-specific rule and dependencies
-    this.validatePath(path, value);
+    this.validatePath(path, value, this.config);
     this.validateWithDependencies(this.config);
   }
 
   /**
    * Gets a configuration value by path with decryption for sensitive values
    */
-  getValue(path: string, decrypt = true): any {
+  getValue(path: string, decrypt = true): unknown {
     const keys = path.split(".");
-    let current: any = this.config;
+    let current: unknown = this.config;
     
     for (const key of keys) {
       if (current && typeof current === "object" && key in current) {
-        current = current[key];
+        current = (current as Record<string, unknown>)[key];
       } else {
         return undefined;
       }
@@ -691,7 +704,7 @@ export class ConfigManager {
     // Decrypt sensitive values if requested
     if (decrypt && this.isSensitivePath(path) && this.isEncryptedValue(current)) {
       try {
-        return this.decryptValue(current);
+        return this.decryptValue(current as string);
       } catch (error) {
         console.warn(`Failed to decrypt value at path ${path}:`, (error as Error).message);
         return current;
@@ -757,7 +770,7 @@ export class ConfigManager {
   /**
    * Validates a value against schema
    */
-  private validateValue(value: any, schema: any, path: string): void {
+  private validateValue(value: unknown, schema: ValidationRule, path: string): void {
     if (schema.type === "number") {
       if (typeof value !== "number" || isNaN(value)) {
         throw new ValidationError(`${path}: must be a number`);
@@ -819,14 +832,14 @@ export class ConfigManager {
       }
     };
     
-    findDifferences(this.config, defaultConfig);
+    findDifferences(this.config as any, defaultConfig as any);
     return diff;
   }
 
   /**
    * Exports configuration with metadata
    */
-  export(): any {
+  export(): ConfigExport {
     return {
       version: "1.0.0",
       exported: new Date().toISOString(),
@@ -839,7 +852,7 @@ export class ConfigManager {
   /**
    * Imports configuration from export
    */
-  import(data: any): void {
+  import(data: ConfigExport): void {
     if (!data.config) {
       throw new ConfigError("Invalid configuration export format");
     }
@@ -865,7 +878,7 @@ export class ConfigManager {
         throw new ConfigError(`Unsupported configuration format: ${format}`);
       }
       
-      const config = parser.parse(content) as Partial<Config>;
+      const config = parser.parse(content);
       
       if (!config) {
         throw new ConfigError(`Invalid ${format.toUpperCase()} in configuration file: ${path}`);
@@ -913,13 +926,13 @@ export class ConfigManager {
     const maxAgents = process.env.CLAUDE_FLOW_MAX_AGENTS;
     if (maxAgents) {
       if (!config.orchestrator) {
-        config.orchestrator = {} as any;
+        config.orchestrator = {
+          maxConcurrentAgents: parseInt(maxAgents, 10),
+          taskQueueSize: DEFAULT_CONFIG.orchestrator.taskQueueSize,
+          healthCheckInterval: DEFAULT_CONFIG.orchestrator.healthCheckInterval,
+          shutdownTimeout: DEFAULT_CONFIG.orchestrator.shutdownTimeout,
+        };
       }
-      config.orchestrator = {
-        ...DEFAULT_CONFIG.orchestrator,
-        ...config.orchestrator,
-        maxConcurrentAgents: parseInt(maxAgents, 10),
-      };
     }
 
     // Terminal settings
@@ -1110,98 +1123,64 @@ export class ConfigManager {
    * Validates configuration with dependency checking
    */
   private validateWithDependencies(config: Config): void {
-    const errors: string[] = [];
-    const warnings: string[] = [];
+    this.validate(config);
     
-    // Validate all paths with rules
-    for (const [path, rule] of this.validationRules.entries()) {
-      const value = this.getValueByPath(config, path);
-      
-      try {
-        this.validatePath(path, value, config);
-      } catch (error) {
-        errors.push((error as Error).message);
+    // Check dependencies between configuration sections
+    for (const [path, rule] of Array.from(this.validationRules.entries())) {
+      if (rule.dependencies) {
+        const value = this.getValueByPath(config as unknown as Record<string, unknown>, path);
+        for (const depPath of rule.dependencies) {
+          const depValue = this.getValueByPath(config as unknown as Record<string, unknown>, depPath);
+          if (value && !depValue) {
+            throw new ConfigError(`Configuration dependency not met: ${path} requires ${depPath}`);
+          }
+        }
       }
-    }
-    
-    // Additional cross-field validations
-    if (config.orchestrator.maxConcurrentAgents > config.terminal.poolSize * 3) {
-      warnings.push("High agent-to-terminal ratio may cause resource contention");
-    }
-    
-    if (config.memory.cacheSizeMB > 1000 && config.memory.backend === "sqlite") {
-      warnings.push("Large cache size with SQLite backend may impact performance");
-    }
-    
-    if (config.mcp.transport === "http" && !config.mcp.tlsEnabled) {
-      warnings.push("HTTP transport without TLS is not recommended for production");
-    }
-    
-    // Log warnings
-    if (warnings.length > 0 && config.logging?.level === "debug") {
-      console.warn("Configuration warnings:", warnings);
-    }
-    
-    // Throw errors
-    if (errors.length > 0) {
-      throw new ValidationError(`Configuration validation failed:\n${errors.join("\n")}`);
     }
   }
   
   /**
    * Validates a specific configuration path
    */
-  private validatePath(path: string, value: any, config?: Config): void {
+  private validatePath(path: string, value: unknown, config?: Config): void {
     const rule = this.validationRules.get(path);
     if (!rule) return;
-    
-    const currentConfig = config || this.config;
-    
+
+    // Type validation
+    if (rule.type && typeof value !== rule.type) {
+      throw new ConfigError(`Invalid type for ${path}: expected ${rule.type}, got ${typeof value}`);
+    }
+
     // Required validation
     if (rule.required && (value === undefined || value === null)) {
-      throw new ValidationError(`${path} is required`);
+      throw new ConfigError(`Required configuration missing: ${path}`);
     }
-    
-    if (value === undefined || value === null) return;
-    
-    // Type validation
-    if (rule.type === "number" && (typeof value !== "number" || isNaN(value))) {
-      throw new ValidationError(`${path} must be a number`);
-    }
-    
-    if (rule.type === "string" && typeof value !== "string") {
-      throw new ValidationError(`${path} must be a string`);
-    }
-    
-    if (rule.type === "boolean" && typeof value !== "boolean") {
-      throw new ValidationError(`${path} must be a boolean`);
-    }
-    
+
     // Range validation
     if (typeof value === "number") {
       if (rule.min !== undefined && value < rule.min) {
-        throw new ValidationError(`${path} must be at least ${rule.min}`);
+        throw new ConfigError(`Value for ${path} below minimum: ${value} < ${rule.min}`);
       }
       if (rule.max !== undefined && value > rule.max) {
-        throw new ValidationError(`${path} must be at most ${rule.max}`);
+        throw new ConfigError(`Value for ${path} above maximum: ${value} > ${rule.max}`);
       }
     }
-    
-    // Values validation
-    if (rule.values && !rule.values.includes(value)) {
-      throw new ValidationError(`${path} must be one of: ${rule.values.join(", ")}`);
+
+    // Enum validation
+    if (rule.values && !rule.values.includes(String(value))) {
+      throw new ConfigError(`Invalid value for ${path}: ${value}. Valid values: ${rule.values.join(", ")}`);
     }
-    
+
     // Pattern validation
     if (rule.pattern && typeof value === "string" && !rule.pattern.test(value)) {
-      throw new ValidationError(`${path} does not match required pattern`);
+      throw new ConfigError(`Invalid format for ${path}: ${value}`);
     }
-    
-    // Custom validator
-    if (rule.validator) {
-      const result = rule.validator(value, currentConfig);
-      if (result) {
-        throw new ValidationError(`${path}: ${result}`);
+
+    // Custom validation
+    if (rule.validator && config) {
+      const error = rule.validator(value, config);
+      if (error) {
+        throw new ConfigError(`Validation failed for ${path}: ${error}`);
       }
     }
   }
@@ -1209,13 +1188,13 @@ export class ConfigManager {
   /**
    * Gets a value from a configuration object by path
    */
-  private getValueByPath(obj: any, path: string): any {
+  private getValueByPath(obj: Record<string, unknown>, path: string): unknown {
     const keys = path.split(".");
-    let current = obj;
+    let current: unknown = obj;
     
     for (const key of keys) {
       if (current && typeof current === "object" && key in current) {
-        current = current[key];
+        current = (current as Record<string, unknown>)[key];
       } else {
         return undefined;
       }
@@ -1287,14 +1266,18 @@ export class ConfigManager {
       },
     };
 
-    const template = templates[templateName] || {};
-    return deepMerge(DEFAULT_CONFIG as any, template) as Config;
+    const template = templates[templateName];
+    if (!template) {
+      throw new ConfigError(`Unknown template: ${templateName}`);
+    }
+    
+    return deepMerge(DEFAULT_CONFIG as unknown as Record<string, unknown>, template as Record<string, unknown>) as unknown as Config;
   }
 
   /**
    * Gets format parsers for different config file formats
    */
-  getFormatParsers(): Record<string, { stringify: (obj: any) => string; parse: (str: string) => any }> {
+  getFormatParsers(): Record<string, { stringify: (obj: Partial<Config>) => string; parse: (str: string) => Partial<Config> }> {
     return FORMAT_PARSERS;
   }
 
@@ -1382,7 +1365,7 @@ export class ConfigManager {
   /**
    * Gets configuration change history
    */
-  getChangeHistory(): Array<{ timestamp: Date; path: string; oldValue: any; newValue: any }> {
+  getChangeHistory(): Array<{ timestamp: Date; path: string; oldValue: unknown; newValue: unknown }> {
     // Convert string timestamps to Date objects for compatibility
     return this.changeHistory.map(change => ({
       timestamp: new Date(change.timestamp),
@@ -1395,7 +1378,7 @@ export class ConfigManager {
   /**
    * Masks sensitive values in configuration
    */
-  private maskSensitiveValues(config: any): any {
+  private maskSensitiveValues(config: Partial<Config>): Partial<Config> {
     const masked = JSON.parse(JSON.stringify(config));
     
     const maskValue = (obj: any, path: string = ""): void => {
@@ -1420,7 +1403,7 @@ export class ConfigManager {
   /**
    * Tracks configuration changes
    */
-  private trackChanges(path: string, oldValue: any, newValue: any, options: any = {}): void {
+  private trackChanges(path: string, oldValue: unknown, newValue: unknown, options: { user?: string; reason?: string; source?: "cli" | "api" | "file" | "env" } = {}): void {
     const change: ConfigChange = {
       timestamp: new Date().toISOString(),
       path,
@@ -1428,7 +1411,7 @@ export class ConfigManager {
       newValue,
       user: options.user,
       reason: options.reason,
-      source: options.source || "api",
+      source: options.source ?? "api",
     };
     
     this.changeHistory.push(change);
@@ -1442,7 +1425,7 @@ export class ConfigManager {
   /**
    * Track changes from config updates
    */
-  private trackConfigChanges(oldConfig: Config, updates: Partial<Config>, options: any = {}): void {
+  private trackConfigChanges(oldConfig: Config, updates: Partial<Config>, options: { user?: string; reason?: string; source?: "cli" | "api" | "file" | "env" } = {}): void {
     // For now, just track that an update occurred
     this.trackChanges("config", oldConfig, updates, options);
   }
@@ -1450,7 +1433,7 @@ export class ConfigManager {
   /**
    * Records a configuration change
    */
-  private recordChange(path: string, oldValue: any, newValue: any, options: any = {}): void {
+  private recordChange(path: string, oldValue: unknown, newValue: unknown, options: { user?: string; reason?: string; source?: "cli" | "api" | "file" | "env" } = {}): void {
     this.trackChanges(path, oldValue, newValue, options);
   }
 
@@ -1470,17 +1453,17 @@ export class ConfigManager {
     if (!this.encryptionKey) return value;
     
     try {
-      const algorithm = 'aes-256-gcm';
+      const algorithm = "aes-256-gcm";
       const iv = randomBytes(16);
       const cipher = createCipheriv(algorithm, this.encryptionKey, iv);
       
-      let encrypted = cipher.update(value, 'utf8', 'hex');
-      encrypted += cipher.final('hex');
+      let encrypted = cipher.update(value, "utf8", "hex");
+      encrypted += cipher.final("hex");
       
       const authTag = cipher.getAuthTag();
       
       // Return iv:authTag:encrypted format
-      return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+      return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
     } catch (error) {
       console.warn("Failed to encrypt value:", error);
       return value;
@@ -1490,10 +1473,10 @@ export class ConfigManager {
   /**
    * Checks if a value is encrypted
    */
-  private isEncryptedValue(value: any): boolean {
+  private isEncryptedValue(value: unknown): boolean {
     if (typeof value !== "string") return false;
     // New format: iv:authTag:encrypted (3 parts separated by colons)
-    const parts = value.split(':');
+    const parts = value.split(":");
     return parts.length === 3 && 
            parts[0].length === 32 && // IV is 16 bytes = 32 hex chars
            parts[1].length === 32 && // Auth tag is 16 bytes = 32 hex chars
@@ -1507,23 +1490,23 @@ export class ConfigManager {
     if (!this.encryptionKey) return value;
     
     try {
-      const algorithm = 'aes-256-gcm';
-      const parts = value.split(':');
+      const algorithm = "aes-256-gcm";
+      const parts = value.split(":");
       
       if (parts.length !== 3) {
         // Not encrypted format, return as-is
         return value;
       }
       
-      const iv = Buffer.from(parts[0], 'hex');
-      const authTag = Buffer.from(parts[1], 'hex');
+      const iv = Buffer.from(parts[0], "hex");
+      const authTag = Buffer.from(parts[1], "hex");
       const encrypted = parts[2];
       
       const decipher = createDecipheriv(algorithm, this.encryptionKey, iv);
       decipher.setAuthTag(authTag);
       
-      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
+      let decrypted = decipher.update(encrypted, "hex", "utf8");
+      decrypted += decipher.final("utf8");
       
       return decrypted;
     } catch (error) {

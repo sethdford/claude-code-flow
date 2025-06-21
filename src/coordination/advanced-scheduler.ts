@@ -47,7 +47,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
       tasks.forEach(taskId => {
         const task = this.tasks.get(taskId);
         if (task) {
-          this.reassignTask(task);
+          void this.reassignTask(task);
         }
       });
     }
@@ -58,7 +58,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
   /**
    * Simple agent selection - pick the least loaded agent
    */
-  async selectAgentForTask(task: Task): Promise<string | null> {
+  selectAgentForTask(task: Task): string | null {
     const agents = Array.from(this.availableAgents.values());
     
     if (agents.length === 0) {
@@ -71,7 +71,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
     let minLoad = Infinity;
 
     for (const agent of agents) {
-      const load = this.agentLoads.get(agent.id) || 0;
+      const load = this.agentLoads.get(agent.id) ?? 0;
       
       // Check if agent can handle the task type
       if (task.type !== "any" && agent.capabilities && 
@@ -86,7 +86,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
       }
     }
 
-    return selectedAgent?.id || null;
+    return selectedAgent?.id ?? null;
   }
 
   /**
@@ -95,7 +95,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
   async scheduleTask(task: Task, agentId?: string): Promise<void> {
     // If no agent specified, select one
     if (!agentId) {
-      const selected = await this.selectAgentForTask(task);
+      const selected = this.selectAgentForTask(task);
       if (!selected) {
         throw new Error(`No suitable agent found for task ${task.id}`);
       }
@@ -103,7 +103,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
     }
 
     // Update load
-    const currentLoad = this.agentLoads.get(agentId) || 0;
+    const currentLoad = this.agentLoads.get(agentId) ?? 0;
     this.agentLoads.set(agentId, currentLoad + 1);
 
     // Schedule the task
@@ -113,10 +113,10 @@ export class AdvancedTaskScheduler extends TaskScheduler {
   /**
    * Complete a task and update agent load
    */
-  override async completeTask(taskId: string, _result: any): Promise<void> {
+  override async completeTask(taskId: string, _result: Record<string, unknown>): Promise<void> {
     const scheduledTask = this.tasks.get(taskId);
     if (scheduledTask) {
-      const load = this.agentLoads.get(scheduledTask.agentId) || 0;
+      const load = this.agentLoads.get(scheduledTask.agentId) ?? 0;
       this.agentLoads.set(scheduledTask.agentId, Math.max(0, load - 1));
     }
 
@@ -127,7 +127,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
    * Reassign a task to a different agent
    */
   private async reassignTask(scheduledTask: ScheduledTask): Promise<void> {
-    const newAgentId = await this.selectAgentForTask(scheduledTask.task);
+    const newAgentId = this.selectAgentForTask(scheduledTask.task);
     if (newAgentId && newAgentId !== scheduledTask.agentId) {
       // Remove from old agent
       const oldTasks = this.agentTasks.get(scheduledTask.agentId);
@@ -139,16 +139,18 @@ export class AdvancedTaskScheduler extends TaskScheduler {
       scheduledTask.agentId = newAgentId;
 
       // Add to new agent
-      if (!this.agentTasks.has(newAgentId)) {
-        this.agentTasks.set(newAgentId, new Set());
+      let newAgentTaskSet = this.agentTasks.get(newAgentId);
+      if (!newAgentTaskSet) {
+        newAgentTaskSet = new Set();
+        this.agentTasks.set(newAgentId, newAgentTaskSet);
       }
-      this.agentTasks.get(newAgentId)!.add(scheduledTask.task.id);
+      newAgentTaskSet.add(scheduledTask.task.id);
 
       // Update loads
-      const oldLoad = this.agentLoads.get(scheduledTask.agentId) || 0;
+      const oldLoad = this.agentLoads.get(scheduledTask.agentId) ?? 0;
       this.agentLoads.set(scheduledTask.agentId, Math.max(0, oldLoad - 1));
       
-      const newLoad = this.agentLoads.get(newAgentId) || 0;
+      const newLoad = this.agentLoads.get(newAgentId) ?? 0;
       this.agentLoads.set(newAgentId, newLoad + 1);
 
       this.logger.info("Task reassigned", {
@@ -169,7 +171,7 @@ export class AdvancedTaskScheduler extends TaskScheduler {
     } {
     const agents = Array.from(this.availableAgents.entries()).map(([id, agent]) => ({
       id,
-      load: this.agentLoads.get(id) || 0,
+      load: this.agentLoads.get(id) ?? 0,
       capabilities: agent.capabilities,
     }));
 

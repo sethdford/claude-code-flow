@@ -7,6 +7,44 @@ export default [
   // Base JS recommended config
   js.configs.recommended,
   
+  // JavaScript files config - Node.js
+  {
+    files: ["**/*.js"],
+    ignores: ["src/ui/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      "no-console": "off",
+    },
+  },
+  
+  // Browser JavaScript files config
+  {
+    files: ["src/ui/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.es2022,
+        event: "readonly",
+      },
+    },
+    rules: {
+      "no-console": "off",
+      "no-unused-vars": ["error", { 
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_|^event$",
+      }],
+    },
+  },
+  
   // TypeScript config
   {
     files: ["**/*.ts", "**/*.tsx"],
@@ -21,6 +59,7 @@ export default [
         ...globals.node,
         ...globals.es2022,
         ...globals.jest,
+        NodeJS: "readonly",
       },
     },
     plugins: {
@@ -98,11 +137,12 @@ export default [
       "bin/",
       "node_modules/",
       "coverage/",
-      "*.js",
-      "scripts/*.js",
+      "examples/",
+      "scripts/**/*.js",
       "jest.config.js",
       "jest.setup.js",
       "eslint.config.js",
+      ".claude/**/*.js",
     ],
   },
 ];

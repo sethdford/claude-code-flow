@@ -5,7 +5,7 @@
  * for terminal management and output capture.
  */
 
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 /**
  * Terminal output processors registry

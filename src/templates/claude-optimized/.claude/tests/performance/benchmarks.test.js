@@ -1,7 +1,7 @@
-const { TestHarness } = require('../test-harness');
-const assert = require('assert');
+const { TestHarness } = require("../test-harness");
+const assert = require("assert");
 
-describe('Performance Benchmarks', () => {
+describe("Performance Benchmarks", () => {
   let harness;
 
   beforeEach(() => {
@@ -12,8 +12,8 @@ describe('Performance Benchmarks', () => {
     harness.reset();
   });
 
-  describe('File Operations Performance', () => {
-    it('should measure file read performance at different scales', async () => {
+  describe("File Operations Performance", () => {
+    it("should measure file read performance at different scales", async () => {
       const scales = [10, 50, 100, 200];
       const results = {};
       
@@ -47,9 +47,9 @@ describe('Performance Benchmarks', () => {
       }
       
       // Analyze performance scaling
-      console.log('\n=== File Read Performance ===');
-      console.log('Scale | Concurrency | Duration (ms) | Throughput (files/s)');
-      console.log('------|-------------|---------------|--------------------');
+      console.log("\n=== File Read Performance ===");
+      console.log("Scale | Concurrency | Duration (ms) | Throughput (files/s)");
+      console.log("------|-------------|---------------|--------------------");
       
       for (const [scale, concurrencyResults] of Object.entries(results)) {
         for (const [concurrency, metrics] of Object.entries(concurrencyResults)) {
@@ -67,7 +67,7 @@ describe('Performance Benchmarks', () => {
       }
     });
 
-    it('should measure file write performance with different patterns', async () => {
+    it("should measure file write performance with different patterns", async () => {
       const patterns = {
         sequential: async (count) => {
           const files = {};
@@ -78,7 +78,7 @@ describe('Performance Benchmarks', () => {
         },
         bulk: async (count) => {
           const files = {};
-          const content = 'Bulk content '.repeat(1000); // Larger files
+          const content = "Bulk content ".repeat(1000); // Larger files
           for (let i = 0; i < count; i++) {
             files[`bulk${i}.txt`] = content;
           }
@@ -88,7 +88,7 @@ describe('Performance Benchmarks', () => {
           const files = {};
           for (let i = 0; i < count; i++) {
             const size = i % 3 === 0 ? 1000 : i % 3 === 1 ? 100 : 10;
-            files[`mixed${i}.txt`] = 'x'.repeat(size);
+            files[`mixed${i}.txt`] = "x".repeat(size);
           }
           return files;
         }
@@ -116,9 +116,9 @@ describe('Performance Benchmarks', () => {
         }
       }
       
-      console.log('\n=== File Write Performance ===');
-      console.log('Pattern | Count | Duration (ms) | Throughput (files/s) | Memory (MB)');
-      console.log('--------|-------|---------------|---------------------|------------');
+      console.log("\n=== File Write Performance ===");
+      console.log("Pattern | Count | Duration (ms) | Throughput (files/s) | Memory (MB)");
+      console.log("--------|-------|---------------|---------------------|------------");
       
       for (const [pattern, countResults] of Object.entries(results)) {
         for (const [count, metrics] of Object.entries(countResults)) {
@@ -128,8 +128,8 @@ describe('Performance Benchmarks', () => {
     });
   });
 
-  describe('Search Operations Performance', () => {
-    it('should benchmark concurrent search operations', async () => {
+  describe("Search Operations Performance", () => {
+    it("should benchmark concurrent search operations", async () => {
       // Create a large codebase
       const moduleCount = 100;
       for (let i = 0; i < moduleCount; i++) {
@@ -164,14 +164,14 @@ describe('Performance Benchmarks', () => {
       }
       
       const searchPatterns = [
-        'logger',
-        'error',
-        'async',
-        'process\\d+',
-        'Database',
-        'transform',
-        'SELECT.*FROM',
-        'constructor'
+        "logger",
+        "error",
+        "async",
+        "process\\d+",
+        "Database",
+        "transform",
+        "SELECT.*FROM",
+        "constructor"
       ];
       
       // Test different concurrency levels
@@ -197,9 +197,9 @@ describe('Performance Benchmarks', () => {
         };
       }
       
-      console.log('\n=== Search Performance ===');
-      console.log('Concurrency | Duration (ms) | Patterns/s | Total Matches | Avg Matches/Pattern');
-      console.log('------------|---------------|------------|---------------|-------------------');
+      console.log("\n=== Search Performance ===");
+      console.log("Concurrency | Duration (ms) | Patterns/s | Total Matches | Avg Matches/Pattern");
+      console.log("------------|---------------|------------|---------------|-------------------");
       
       for (const [concurrency, metrics] of Object.entries(results)) {
         console.log(`${concurrency.padEnd(11)} | ${metrics.duration.toFixed(2).padEnd(13)} | ${metrics.patternsPerSecond.toFixed(2).padEnd(10)} | ${metrics.totalMatches.toString().padEnd(13)} | ${metrics.avgMatchesPerPattern.toFixed(2)}`);
@@ -210,30 +210,30 @@ describe('Performance Benchmarks', () => {
       assert(speedup > 3, `Expected speedup > 3x, got ${speedup.toFixed(2)}x`);
     });
 
-    it('should measure complex pattern matching performance', async () => {
+    it("should measure complex pattern matching performance", async () => {
       // Create files with different content types
       const contentTypes = {
-        'code.js': 'function calculate() { return 42; }\nconst result = calculate();\nconsole.log(result);',
-        'data.json': '{"users": [{"id": 1, "name": "John"}, {"id": 2, "name": "Jane"}], "total": 2}',
-        'config.yaml': 'database:\n  host: localhost\n  port: 5432\n  name: myapp',
-        'readme.md': '# Project\n\n## Installation\n\n```bash\nnpm install\n```\n\n## Usage\n\nRun with `npm start`'
+        "code.js": "function calculate() { return 42; }\nconst result = calculate();\nconsole.log(result);",
+        "data.json": "{\"users\": [{\"id\": 1, \"name\": \"John\"}, {\"id\": 2, \"name\": \"Jane\"}], \"total\": 2}",
+        "config.yaml": "database:\n  host: localhost\n  port: 5432\n  name: myapp",
+        "readme.md": "# Project\n\n## Installation\n\n```bash\nnpm install\n```\n\n## Usage\n\nRun with `npm start`"
       };
       
       // Create multiple instances of each type
       const instancesPerType = 25;
       for (const [baseFile, content] of Object.entries(contentTypes)) {
         for (let i = 0; i < instancesPerType; i++) {
-          const filename = baseFile.replace('.', `${i}.`);
+          const filename = baseFile.replace(".", `${i}.`);
           harness.mockFS.set(filename, content);
         }
       }
       
       const complexPatterns = [
-        { pattern: 'function\\s+\\w+\\s*\\(', description: 'Function declarations' },
-        { pattern: '"\\w+":\\s*[\\[{]', description: 'JSON object/array values' },
-        { pattern: '^\\s*\\w+:', description: 'YAML keys' },
-        { pattern: '```\\w+', description: 'Markdown code blocks' },
-        { pattern: '\\b(?:const|let|var)\\s+\\w+', description: 'Variable declarations' }
+        { pattern: "function\\s+\\w+\\s*\\(", description: "Function declarations" },
+        { pattern: "\"\\w+\":\\s*[\\[{]", description: "JSON object/array values" },
+        { pattern: "^\\s*\\w+:", description: "YAML keys" },
+        { pattern: "```\\w+", description: "Markdown code blocks" },
+        { pattern: "\\b(?:const|let|var)\\s+\\w+", description: "Variable declarations" }
       ];
       
       const results = await harness.executeBatch(complexPatterns, async (test) => {
@@ -254,9 +254,9 @@ describe('Performance Benchmarks', () => {
         };
       });
       
-      console.log('\n=== Complex Pattern Performance ===');
-      console.log('Pattern              | Duration (ms) | Files Matched | Total Matches | Avg/File');
-      console.log('---------------------|---------------|---------------|---------------|----------');
+      console.log("\n=== Complex Pattern Performance ===");
+      console.log("Pattern              | Duration (ms) | Files Matched | Total Matches | Avg/File");
+      console.log("---------------------|---------------|---------------|---------------|----------");
       
       results.successful.forEach(r => {
         console.log(`${r.pattern.padEnd(20)} | ${r.duration.toFixed(2).padEnd(13)} | ${r.filesMatched.toString().padEnd(13)} | ${r.totalMatches.toString().padEnd(13)} | ${r.avgMatchesPerFile.toFixed(2)}`);
@@ -264,8 +264,8 @@ describe('Performance Benchmarks', () => {
     });
   });
 
-  describe('Batch Execution Scalability', () => {
-    it('should measure scalability with increasing batch sizes', async () => {
+  describe("Batch Execution Scalability", () => {
+    it("should measure scalability with increasing batch sizes", async () => {
       const batchSizes = [10, 25, 50, 100, 200];
       const results = {};
       
@@ -300,9 +300,9 @@ describe('Performance Benchmarks', () => {
         };
       }
       
-      console.log('\n=== Batch Execution Scalability ===');
-      console.log('Batch Size | Duration (ms) | Throughput (ops/s) | Concurrency | Avg Op Time (ms)');
-      console.log('-----------|---------------|-------------------|-------------|------------------');
+      console.log("\n=== Batch Execution Scalability ===");
+      console.log("Batch Size | Duration (ms) | Throughput (ops/s) | Concurrency | Avg Op Time (ms)");
+      console.log("-----------|---------------|-------------------|-------------|------------------");
       
       for (const [size, metrics] of Object.entries(results)) {
         console.log(`${size.padEnd(10)} | ${metrics.duration.toFixed(2).padEnd(13)} | ${metrics.throughput.toFixed(2).padEnd(17)} | ${metrics.concurrency.toString().padEnd(11)} | ${metrics.avgOperationTime.toFixed(2)}`);
@@ -316,7 +316,7 @@ describe('Performance Benchmarks', () => {
       assert(scalabilityRatio > 0.8, `Poor scalability: ${scalabilityRatio.toFixed(2)} (expected > 0.8)`);
     });
 
-    it('should measure memory efficiency at scale', async () => {
+    it("should measure memory efficiency at scale", async () => {
       const scales = [
         { operations: 50, dataSize: 1024 },      // 1KB per operation
         { operations: 100, dataSize: 10240 },    // 10KB per operation
@@ -328,14 +328,14 @@ describe('Performance Benchmarks', () => {
       for (const scale of scales) {
         const operations = Array.from({ length: scale.operations }, (_, i) => async () => {
           // Simulate data processing
-          const data = 'x'.repeat(scale.dataSize);
+          const data = "x".repeat(scale.dataSize);
           await harness.simulateDelay(10);
           
           // Transform data (simulate processing)
           return {
             id: i,
             processed: data.length,
-            hash: data.substring(0, 10) + '...' + data.substring(data.length - 10)
+            hash: data.substring(0, 10) + "..." + data.substring(data.length - 10)
           };
         });
         
@@ -354,9 +354,9 @@ describe('Performance Benchmarks', () => {
         });
       }
       
-      console.log('\n=== Memory Efficiency at Scale ===');
-      console.log('Ops | Data/Op | Total Data | Duration (ms) | Memory (MB) | Efficiency | Throughput');
-      console.log('----|---------|------------|---------------|-------------|------------|------------');
+      console.log("\n=== Memory Efficiency at Scale ===");
+      console.log("Ops | Data/Op | Total Data | Duration (ms) | Memory (MB) | Efficiency | Throughput");
+      console.log("----|---------|------------|---------------|-------------|------------|------------");
       
       results.forEach(r => {
         console.log(`${r.operations.toString().padEnd(3)} | ${(r.dataSize/1024).toFixed(0).padEnd(7)}KB | ${(r.totalDataProcessed/1024/1024).toFixed(1).padEnd(10)}MB | ${r.duration.toFixed(2).padEnd(13)} | ${(r.memoryUsed/1024/1024).toFixed(2).padEnd(11)} | ${r.memoryEfficiency.toFixed(3).padEnd(10)} | ${r.throughput.toFixed(2)}`);
@@ -373,16 +373,16 @@ describe('Performance Benchmarks', () => {
     });
   });
 
-  describe('Real-World Scenario Performance', () => {
-    it('should benchmark a complete SPARC workflow', async () => {
+  describe("Real-World Scenario Performance", () => {
+    it("should benchmark a complete SPARC workflow", async () => {
       // Simulate a full SPARC workflow with multiple phases
       const workflow = {
         specification: {
-          tasks: ['analyze-requirements', 'define-interfaces', 'create-specs'],
+          tasks: ["analyze-requirements", "define-interfaces", "create-specs"],
           concurrency: 3
         },
         architecture: {
-          tasks: ['design-components', 'plan-database', 'define-apis', 'create-diagrams'],
+          tasks: ["design-components", "plan-database", "define-apis", "create-diagrams"],
           concurrency: 4
         },
         implementation: {
@@ -394,7 +394,7 @@ describe('Performance Benchmarks', () => {
           concurrency: 10
         },
         integration: {
-          tasks: ['integrate-modules', 'e2e-tests', 'performance-tests'],
+          tasks: ["integrate-modules", "e2e-tests", "performance-tests"],
           concurrency: 3
         }
       };
@@ -407,9 +407,9 @@ describe('Performance Benchmarks', () => {
         
         const phaseTasks = config.tasks.map(task => async () => {
           // Simulate different task complexities
-          const complexity = task.includes('test') ? 50 : 
-                           task.includes('implement') ? 100 : 
-                           task.includes('analyze') ? 150 : 80;
+          const complexity = task.includes("test") ? 50 : 
+                           task.includes("implement") ? 100 : 
+                           task.includes("analyze") ? 150 : 80;
           
           await harness.simulateDelay(complexity);
           
@@ -417,7 +417,7 @@ describe('Performance Benchmarks', () => {
             task,
             phase,
             duration: complexity,
-            status: 'completed'
+            status: "completed"
           };
         });
         
@@ -437,9 +437,9 @@ describe('Performance Benchmarks', () => {
       const overallEnd = performance.now();
       const totalDuration = overallEnd - overallStart;
       
-      console.log('\n=== SPARC Workflow Performance ===');
-      console.log('Phase          | Tasks | Concurrency | Duration (ms) | Throughput (tasks/s)');
-      console.log('---------------|-------|-------------|---------------|--------------------');
+      console.log("\n=== SPARC Workflow Performance ===");
+      console.log("Phase          | Tasks | Concurrency | Duration (ms) | Throughput (tasks/s)");
+      console.log("---------------|-------|-------------|---------------|--------------------");
       
       for (const [phase, metrics] of Object.entries(phaseResults)) {
         console.log(`${phase.padEnd(14)} | ${metrics.taskCount.toString().padEnd(5)} | ${metrics.concurrency.toString().padEnd(11)} | ${metrics.duration.toFixed(2).padEnd(13)} | ${metrics.throughput.toFixed(2)}`);
@@ -458,21 +458,21 @@ describe('Performance Benchmarks', () => {
       assert(workflowSpeedup > 2.5, `Workflow speedup too low: ${workflowSpeedup.toFixed(2)}x`);
     });
 
-    it('should benchmark multi-mode parallel execution', async () => {
+    it("should benchmark multi-mode parallel execution", async () => {
       // Simulate running multiple SPARC modes in parallel
       const modes = [
-        { name: 'architect', tasks: 5, complexity: 'high' },
-        { name: 'code', tasks: 10, complexity: 'medium' },
-        { name: 'tdd', tasks: 15, complexity: 'medium' },
-        { name: 'debug', tasks: 8, complexity: 'high' },
-        { name: 'security', tasks: 12, complexity: 'high' }
+        { name: "architect", tasks: 5, complexity: "high" },
+        { name: "code", tasks: 10, complexity: "medium" },
+        { name: "tdd", tasks: 15, complexity: "medium" },
+        { name: "debug", tasks: 8, complexity: "high" },
+        { name: "security", tasks: 12, complexity: "high" }
       ];
       
       // Sequential execution
       const sequentialStart = performance.now();
       for (const mode of modes) {
         const tasks = Array.from({ length: mode.tasks }, (_, i) => async () => {
-          const delay = mode.complexity === 'high' ? 100 : 50;
+          const delay = mode.complexity === "high" ? 100 : 50;
           await harness.simulateDelay(delay);
           return { mode: mode.name, task: i };
         });
@@ -488,7 +488,7 @@ describe('Performance Benchmarks', () => {
       
       const allTasks = modes.flatMap(mode => 
         Array.from({ length: mode.tasks }, (_, i) => async () => {
-          const delay = mode.complexity === 'high' ? 100 : 50;
+          const delay = mode.complexity === "high" ? 100 : 50;
           await harness.simulateDelay(delay);
           return { mode: mode.name, task: i };
         })
@@ -499,7 +499,7 @@ describe('Performance Benchmarks', () => {
       
       const speedup = sequentialTime / parallelTime;
       
-      console.log('\n=== Multi-Mode Parallel Execution ===');
+      console.log("\n=== Multi-Mode Parallel Execution ===");
       console.log(`Total tasks: ${allTasks.length}`);
       console.log(`Sequential time: ${sequentialTime.toFixed(2)}ms`);
       console.log(`Parallel time: ${parallelTime.toFixed(2)}ms`);
@@ -509,13 +509,13 @@ describe('Performance Benchmarks', () => {
     });
   });
 
-  describe('Performance Validation', () => {
-    it('should validate claimed performance improvements', async () => {
+  describe("Performance Validation", () => {
+    it("should validate claimed performance improvements", async () => {
       const performanceClaims = [
-        { operation: 'file-operations', claimedSpeedup: 3 },
-        { operation: 'search-operations', claimedSpeedup: 2 },
-        { operation: 'multi-mode-execution', claimedSpeedup: 2 },
-        { operation: 'batch-processing', claimedSpeedup: 4 }
+        { operation: "file-operations", claimedSpeedup: 3 },
+        { operation: "search-operations", claimedSpeedup: 2 },
+        { operation: "multi-mode-execution", claimedSpeedup: 2 },
+        { operation: "batch-processing", claimedSpeedup: 4 }
       ];
       
       const validationResults = [];
@@ -524,7 +524,7 @@ describe('Performance Benchmarks', () => {
         let actualSpeedup = 0;
         
         switch (claim.operation) {
-          case 'file-operations':
+          case "file-operations":
             // Test file operations
             const fileCount = 50;
             for (let i = 0; i < fileCount; i++) {
@@ -545,9 +545,9 @@ describe('Performance Benchmarks', () => {
             actualSpeedup = seqFileTime / parFileTime;
             break;
             
-          case 'search-operations':
+          case "search-operations":
             // Test search operations
-            const patterns = ['test', 'content', '\\d+', 'Test.*content'];
+            const patterns = ["test", "content", "\\d+", "Test.*content"];
             
             harness.concurrencyLimit = 1;
             const seqSearchStart = Date.now();
@@ -562,7 +562,7 @@ describe('Performance Benchmarks', () => {
             actualSpeedup = seqSearchTime / parSearchTime;
             break;
             
-          case 'batch-processing':
+          case "batch-processing":
             // Test generic batch processing
             const operations = Array.from({ length: 40 }, (_, i) => async () => {
               await harness.simulateDelay(25);
@@ -594,12 +594,12 @@ describe('Performance Benchmarks', () => {
         harness.reset();
       }
       
-      console.log('\n=== Performance Claims Validation ===');
-      console.log('Operation           | Claimed | Actual | Validated | Variance');
-      console.log('--------------------|---------|--------|-----------|----------');
+      console.log("\n=== Performance Claims Validation ===");
+      console.log("Operation           | Claimed | Actual | Validated | Variance");
+      console.log("--------------------|---------|--------|-----------|----------");
       
       validationResults.forEach(r => {
-        console.log(`${r.operation.padEnd(19)} | ${r.claimedSpeedup.toFixed(1).padEnd(7)}x | ${r.actualSpeedup.toFixed(1).padEnd(6)}x | ${r.validated ? 'YES' : 'NO '.padEnd(9)} | ${r.variance > 0 ? '+' : ''}${r.variance.toFixed(1)}%`);
+        console.log(`${r.operation.padEnd(19)} | ${r.claimedSpeedup.toFixed(1).padEnd(7)}x | ${r.actualSpeedup.toFixed(1).padEnd(6)}x | ${r.validated ? "YES" : "NO ".padEnd(9)} | ${r.variance > 0 ? "+" : ""}${r.variance.toFixed(1)}%`);
       });
       
       const validatedCount = validationResults.filter(r => r.validated).length;

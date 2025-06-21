@@ -91,7 +91,7 @@ export async function retry<T>(
     onRetry,
   } = options;
 
-  let lastError: Error;
+  let lastError: Error | undefined;
   let delayMs = initialDelay;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -113,8 +113,8 @@ export async function retry<T>(
     }
   }
 
-  // lastError is guaranteed to be defined here
-  throw lastError;
+  // lastError should be defined here, but provide fallback
+  throw lastError ?? new Error("Operation failed after maximum attempts");
 }
 
 /**
@@ -388,7 +388,7 @@ export function createDeferred<T>(): {
   return { 
     promise, 
     resolve: resolve as (value: T) => void, 
-    reject: reject as (reason?: unknown) => void 
+    reject: reject as (reason?: unknown) => void, 
   };
 }
 

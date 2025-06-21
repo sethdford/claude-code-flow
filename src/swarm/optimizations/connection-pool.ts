@@ -5,7 +5,7 @@
 
 import { EventEmitter } from "node:events";
 import { Logger } from "../../core/logger.js";
-// import { ClaudeAPI } from '../../services/claude/api.js'; // File missing, temporarily disabled
+// import { ClaudeAPI } from "../../services/claude/api.js"; // File missing, temporarily disabled
 
 // Temporary ClaudeAPI type definition until the actual file is available
 interface ClaudeAPI {
@@ -101,7 +101,7 @@ export class ClaudeConnectionPool extends EventEmitter {
       { component: "ClaudeConnectionPool" },
     );
     
-    this.initialize();
+    void this.initialize();
   }
   
   private async initialize(): Promise<void> {
@@ -253,7 +253,7 @@ export class ClaudeConnectionPool extends EventEmitter {
       if (!conn.inUse && 
           conn.lastUsedAt.getTime() < idleThreshold && 
           this.connections.size > this.config.min) {
-        this.destroyConnection(conn);
+        void this.destroyConnection(conn);
       }
     }
   }

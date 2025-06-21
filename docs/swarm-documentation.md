@@ -166,7 +166,7 @@ Agents communicate through shared memory. If agents aren't coordinating:
 The swarm system consists of:
 
 1. **CLI Command** (`swarm.ts`): Handles command parsing and initialization
-2. **Swarm Spawner** (`swarm-spawn.ts`): Manages agent lifecycle and terminal spawning
+2. **Swarm Orchestrator** (`swarm-new.ts`): Comprehensive swarm coordination and agent management
 3. **Terminal Manager**: Handles terminal creation and management
 4. **MCP Tools** (`swarm-tools.ts`): Provides tools for agent coordination
 5. **Memory System**: Shared state and communication

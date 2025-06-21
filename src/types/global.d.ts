@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * Global type definitions for missing types
  */
@@ -50,6 +52,30 @@ declare global {
       AWS_PROFILE?: string;
       ANTHROPIC_MODEL?: string;
       ANTHROPIC_SMALL_FAST_MODEL?: string;
+    }
+    
+    // Timer types
+    interface Timeout {
+      ref(): this;
+      unref(): this;
+      hasRef(): boolean;
+      refresh(): this;
+      [Symbol.toPrimitive](): number;
+    }
+    
+    interface Timer extends Timeout {
+      hasRef(): boolean;
+      ref(): this;
+      refresh(): this;
+      unref(): this;
+    }
+    
+    // Error types
+    interface ErrnoException extends Error {
+      errno?: number | undefined;
+      code?: string | undefined;
+      path?: string | undefined;
+      syscall?: string | undefined;
     }
   }
 

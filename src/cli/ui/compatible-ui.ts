@@ -109,7 +109,7 @@ export class CompatibleUI {
         if (!isNaN(num) && num >= 1 && num <= this.processes.length) {
           await this.showProcessDetails(this.processes[num - 1]);
         } else {
-          console.log(chalk.yellow('Invalid command. Type "h" for help.'));
+          console.log(chalk.yellow("Invalid command. Type \"h\" for help."));
         }
         break;
     }

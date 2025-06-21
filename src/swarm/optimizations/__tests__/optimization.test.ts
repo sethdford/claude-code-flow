@@ -6,7 +6,7 @@
 // Set NODE_ENV for tests
 process.env.NODE_ENV = 'test';
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 
 // Mock the fs/promises module before importing anything that uses it
 jest.unstable_mockModule('node:fs/promises', () => ({
@@ -54,17 +54,17 @@ jest.unstable_mockModule('node:fs', () => {
 });
 
 // Import fs after mocking
-const fs = await import('node:fs/promises');
-const fsSync = await import('node:fs');
+const fs = await import("node:fs/promises");
+const fsSync = await import("node:fs");
 
 // Import modules that use fs after fs is mocked
-import { CircularBuffer } from '../circular-buffer';
-import { TTLMap } from '../ttl-map';
-import { ClaudeConnectionPool } from '../connection-pool';
+import { CircularBuffer } from "../circular-buffer";
+import { TTLMap } from "../ttl-map";
+import { ClaudeConnectionPool } from "../connection-pool";
 // AsyncFileManager will be imported dynamically in tests
-import { OptimizedExecutor } from '../optimized-executor';
-import { generateId } from '../../../utils/helpers';
-import type { TaskDefinition, AgentId } from '../../types';
+import { OptimizedExecutor } from "../optimized-executor";
+import { generateId } from "../../../utils/helpers";
+import type { TaskDefinition, AgentId } from "../../types";
 
 // Set up default mock implementations
 beforeEach(() => {
@@ -204,13 +204,13 @@ describe('Swarm Optimizations', () => {
   });
   
   describe('AsyncFileManager', () => {
-    const testDir = '/tmp/swarm-test';
+    const testDir = "/tmp/swarm-test";
     let AsyncFileManager: any;
     let fileManager: any;
     
     beforeEach(async () => {
       // Dynamically import AsyncFileManager to ensure mocks are set up first
-      const module = await import('../async-file-manager');
+      const module = await import("../async-file-manager");
       AsyncFileManager = module.AsyncFileManager;
       fileManager = new AsyncFileManager();
     });

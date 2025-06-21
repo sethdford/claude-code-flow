@@ -83,7 +83,7 @@ export class TerminalPool {
       
       const pooled = this.terminals.get(terminalId);
 
-      if (pooled && pooled.terminal.isAlive()) {
+      if (pooled?.terminal.isAlive()) {
         pooled.inUse = true;
         pooled.lastUsed = new Date();
         

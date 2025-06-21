@@ -8,6 +8,7 @@ import { Table } from "../cliffy-compat.js";
 import { formatProgressBar, formatDuration, formatStatusIndicator } from "../formatter.js";
 import { existsSync } from "node:fs";
 import { promises as fs } from "node:fs";
+import type { BaseCommandOptions } from "./types.js";
 
 // Color compatibility
 const colors = {
@@ -21,6 +22,16 @@ const colors = {
   white: chalk.white,
 };
 
+interface MonitorCommandOptions extends BaseCommandOptions {
+  interval?: string;
+  compact?: boolean;
+  graphs?: boolean;
+  noGraphs?: boolean;
+  focus?: string;
+  threshold?: number;
+  export?: string;
+}
+
 export const monitorCommand = new Command()
   .name("monitor")
   .description("Start live monitoring dashboard")
@@ -28,7 +39,7 @@ export const monitorCommand = new Command()
   .option("-c, --compact", "Compact view mode")
   .option("--no-graphs", "Disable ASCII graphs")
   .option("--focus <component>", "Focus on specific component")
-  .action(async (options: any) => {
+  .action(async (options: MonitorCommandOptions) => {
     await startMonitorDashboard(options);
   });
 
@@ -40,10 +51,10 @@ interface MonitorData {
     agents: number;
     tasks: number;
   };
-  components: Record<string, any>;
-  agents: any[];
-  tasks: any[];
-  events: any[];
+  components: Record<string, ComponentStatus>;
+  agents: AgentStatus[];
+  tasks: TaskStatus[];
+  events: EventData[];
 }
 
 interface ComponentStatus {
@@ -64,14 +75,44 @@ interface AlertData {
   acknowledged: boolean;
 }
 
+interface AgentStatus {
+  id: string;
+  name: string;
+  type: string;
+  status: "active" | "idle" | "error";
+  workload: number;
+  tasksCompleted: number;
+  lastActivity: number;
+  activeTasks: number;
+}
+
+interface TaskStatus {
+  id: string;
+  type: string;
+  status: "pending" | "running" | "completed" | "failed";
+  assignedTo?: string;
+  progress: number;
+  startTime?: number;
+  duration?: number;
+}
+
+interface EventData {
+  id: string;
+  type: string;
+  message: string;
+  level: "info" | "warning" | "error";
+  timestamp: number;
+  component?: string;
+}
+
 class Dashboard {
   private data: MonitorData[] = [];
   private maxDataPoints = 60; // 2 minutes at 2-second intervals
   private running = true;
-  private alerts: any[] = [];
+  private alerts: AlertData[] = [];
   private startTime: Date = new Date();
 
-  constructor(private options: any) {}
+  constructor(private options: MonitorCommandOptions) {}
 
   async start(): Promise<void> {
     // Hide cursor and clear screen
@@ -96,7 +137,7 @@ class Dashboard {
   private async monitoringLoop(): Promise<void> {
     while (this.running) {
       try {
-        const data = await this.collectData();
+        const data = this.collectData();
         this.data.push(data);
         
         // Keep only recent data points
@@ -105,15 +146,17 @@ class Dashboard {
         }
 
         this.render();
-        await new Promise(resolve => setTimeout(resolve, this.options.interval * 1000));
-      } catch (error) {
-        this.renderError(error);
-        await new Promise(resolve => setTimeout(resolve, this.options.interval * 1000));
+        const intervalMs = parseInt(String(this.options?.interval ?? "2"), 10) * 1000;
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+      } catch (err) {
+        console.error(`Monitor error: ${err}`);
+        const intervalMs = parseInt(String(this.options?.interval ?? "2"), 10) * 1000;
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
       }
     }
   }
 
-  private async collectData(): Promise<MonitorData> {
+  private collectData(): MonitorData {
     // Mock data collection - in production, this would connect to the orchestrator
     const timestamp = new Date();
     const cpuUsage = 10 + Math.random() * 20; // 10-30%
@@ -128,11 +171,41 @@ class Dashboard {
         tasks: 5 + Math.floor(Math.random() * 10),
       },
       components: {
-        orchestrator: { status: "healthy", load: Math.random() * 100 },
-        terminal: { status: "healthy", load: Math.random() * 100 },
-        memory: { status: "healthy", load: Math.random() * 100 },
-        coordination: { status: "healthy", load: Math.random() * 100 },
-        mcp: { status: "healthy", load: Math.random() * 100 },
+        orchestrator: { 
+          name: "orchestrator", 
+          status: "healthy", 
+          load: Math.random() * 100, 
+          uptime: Date.now() - this.startTime.getTime(),
+          errorCount: 0
+        },
+        terminal: { 
+          name: "terminal", 
+          status: "healthy", 
+          load: Math.random() * 100, 
+          uptime: Date.now() - this.startTime.getTime(),
+          errorCount: 0
+        },
+        memory: { 
+          name: "memory", 
+          status: "healthy", 
+          load: Math.random() * 100, 
+          uptime: Date.now() - this.startTime.getTime(),
+          errorCount: 0
+        },
+        coordination: { 
+          name: "coordination", 
+          status: "healthy", 
+          load: Math.random() * 100, 
+          uptime: Date.now() - this.startTime.getTime(),
+          errorCount: 0
+        },
+        mcp: { 
+          name: "mcp", 
+          status: "healthy", 
+          load: Math.random() * 100, 
+          uptime: Date.now() - this.startTime.getTime(),
+          errorCount: 0
+        },
       },
       agents: this.generateMockAgents(),
       tasks: this.generateMockTasks(),
@@ -236,7 +309,7 @@ class Dashboard {
         
         agentTable.push([
           colors.gray(`${agent.id.substring(0, 8)  }...`),
-          colors.cyan(agent.type),
+          colors.cyan(agent.name),
           `${statusIcon} ${agent.status}`,
           agent.activeTasks.toString(),
         ]);
@@ -334,7 +407,7 @@ class Dashboard {
                colors.yellow(`${this.options.interval}s`));
   }
 
-  private renderError(error: any): void {
+  private renderError(error: Error | unknown): void {
     console.clear();
     console.log(colors.red.bold("Monitor Error"));
     console.log("─".repeat(40));
@@ -382,53 +455,66 @@ class Dashboard {
       system_warning: colors.yellow("⚠"),
       system_error: colors.red("✗"),
     };
-    return icons[type as keyof typeof icons] || colors.blue("•");
+    return icons[type as keyof typeof icons] ?? colors.blue("•");
   }
 
-  private generateMockAgents(): any[] {
+  private generateMockAgents(): AgentStatus[] {
     return [
       {
         id: "agent-001",
+        name: "Coordinator Agent",
         type: "coordinator",
         status: "active",
+        workload: Math.floor(Math.random() * 100),
+        tasksCompleted: Math.floor(Math.random() * 50),
+        lastActivity: Date.now() - Math.floor(Math.random() * 60000),
         activeTasks: Math.floor(Math.random() * 5) + 1,
       },
       {
         id: "agent-002",
+        name: "Research Agent",
         type: "researcher",
         status: "active",
+        workload: Math.floor(Math.random() * 100),
+        tasksCompleted: Math.floor(Math.random() * 30),
+        lastActivity: Date.now() - Math.floor(Math.random() * 60000),
         activeTasks: Math.floor(Math.random() * 8) + 1,
       },
       {
         id: "agent-003",
+        name: "Implementation Agent",
         type: "implementer",
         status: Math.random() > 0.7 ? "idle" : "active",
+        workload: Math.floor(Math.random() * 100),
+        tasksCompleted: Math.floor(Math.random() * 20),
+        lastActivity: Date.now() - Math.floor(Math.random() * 60000),
         activeTasks: Math.floor(Math.random() * 3),
       },
     ];
   }
 
-  private generateMockTasks(): any[] {
+  private generateMockTasks(): TaskStatus[] {
     const types = ["research", "implementation", "analysis", "coordination"];
-    const statuses = ["running", "pending", "completed", "failed"];
+    const statuses: ("running" | "pending" | "completed" | "failed")[] = ["running", "pending", "completed", "failed"];
     
     return Array.from({ length: 8 }, (_, i) => ({
       id: `task-${String(i + 1).padStart(3, "0")}`,
       type: types[Math.floor(Math.random() * types.length)],
       status: statuses[Math.floor(Math.random() * statuses.length)],
-      duration: Math.random() > 0.5 ? Math.floor(Math.random() * 120000) : null,
+      progress: Math.floor(Math.random() * 100),
+      duration: Math.random() > 0.5 ? Math.floor(Math.random() * 120000) : undefined,
     }));
   }
 
-  private generateMockEvents(): any[] {
+  private generateMockEvents(): EventData[] {
     const eventTypes = [
       { type: "task_completed", message: "Research task completed successfully", level: "info" as const },
       { type: "agent_spawned", message: "New implementer agent spawned", level: "info" as const },
       { type: "task_assigned", message: "Task assigned to coordinator agent", level: "info" as const },
-      { type: "system_warning", message: "High memory usage detected", level: "warn" as const },
+      { type: "system_warning", message: "High memory usage detected", level: "warning" as const },
       { type: "task_failed", message: "Analysis task failed due to timeout", level: "error" as const },
       { type: "system_info", message: "System health check completed", level: "info" as const },
-      { type: "memory_gc", message: "Garbage collection triggered", level: "debug" as const },
+      { type: "memory_gc", message: "Garbage collection triggered", level: "info" as const },
       { type: "network_event", message: "MCP connection established", level: "info" as const },
     ];
     
@@ -437,6 +523,7 @@ class Dashboard {
     return Array.from({ length: 6 + Math.floor(Math.random() * 4) }, (_, i) => {
       const event = eventTypes[Math.floor(Math.random() * eventTypes.length)];
       return {
+        id: `event-${Date.now()}-${i}`,
         ...event,
         timestamp: Date.now() - (i * Math.random() * 300000), // Random intervals up to 5 minutes
         component: Math.random() > 0.3 ? components[Math.floor(Math.random() * components.length)] : undefined,
@@ -444,7 +531,7 @@ class Dashboard {
     }).sort((a, b) => b.timestamp - a.timestamp);
   }
   
-  private async checkSystemRunning(): Promise<boolean> {
+  private checkSystemRunning(): boolean {
     try {
       return existsSync(".claude-flow.pid");
     } catch {
@@ -452,7 +539,7 @@ class Dashboard {
     }
   }
   
-  private async getRealSystemData(): Promise<MonitorData | null> {
+  private getRealSystemData(): MonitorData | null {
     // This would connect to the actual orchestrator for real data
     // For now, return null to use mock data
     return null;
@@ -485,7 +572,7 @@ class Dashboard {
     const newAlerts: AlertData[] = [];
     
     // Check system thresholds
-    if (data.system.cpu > this.options.threshold) {
+    if (data.system.cpu > (this.options?.threshold ?? 80)) {
       newAlerts.push({
         id: "cpu-high",
         type: "warning",
@@ -520,7 +607,7 @@ class Dashboard {
         });
       }
       
-      if (component.load > this.options.threshold) {
+      if (component.load > (this.options?.threshold ?? 80)) {
         newAlerts.push({
           id: `component-load-${name}`,
           type: "warning",
@@ -561,14 +648,16 @@ class Dashboard {
   }
 }
 
-async function startMonitorDashboard(options: any): Promise<void> {
+async function startMonitorDashboard(options: MonitorCommandOptions): Promise<void> {
   // Validate options
-  if (options.interval < 1) {
+  const interval = parseInt(options.interval || "2", 10);
+  if (interval < 1) {
     console.error(colors.red("Update interval must be at least 1 second"));
     return;
   }
   
-  if (options.threshold < 1 || options.threshold > 100) {
+  const threshold = options.threshold || 80;
+  if (threshold < 1 || threshold > 100) {
     console.error(colors.red("Threshold must be between 1 and 100"));
     return;
   }
@@ -584,6 +673,13 @@ async function startMonitorDashboard(options: any): Promise<void> {
     }
   }
   
-  const dashboard = new Dashboard(options);
+  // Create normalized options
+  const normalizedOptions: MonitorCommandOptions & { threshold: number } = {
+    ...options,
+    interval: String(interval),
+    threshold: threshold,
+  };
+  
+  const dashboard = new Dashboard(normalizedOptions);
   await dashboard.start();
 }

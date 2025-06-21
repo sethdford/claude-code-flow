@@ -52,7 +52,7 @@ export class WorkStealingCoordinator {
     );
   }
 
-  async shutdown(): Promise<void> {
+  shutdown(): void {
     if (this.stealInterval) {
       clearInterval(this.stealInterval);
     }
@@ -76,11 +76,12 @@ export class WorkStealingCoordinator {
   }
 
   recordTaskDuration(agentId: string, duration: number): void {
-    if (!this.taskDurations.has(agentId)) {
-      this.taskDurations.set(agentId, []);
+    let durations = this.taskDurations.get(agentId);
+    if (!durations) {
+      durations = [];
+      this.taskDurations.set(agentId, durations);
     }
 
-    const durations = this.taskDurations.get(agentId)!;
     durations.push(duration);
 
     // Keep only last 100 durations

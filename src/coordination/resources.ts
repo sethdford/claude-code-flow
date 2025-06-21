@@ -65,7 +65,10 @@ export class ResourceManager {
       });
     }
 
-    const resource = this.resources.get(resourceId)!;
+    const resource = this.resources.get(resourceId);
+    if (!resource) {
+      throw new Error(`Resource ${resourceId} not found after creation`);
+    }
 
     // Check if already locked by this agent
     if (this.locks.get(resourceId) === agentId) {
@@ -91,7 +94,10 @@ export class ResourceManager {
       this.waitQueue.set(resourceId, []);
     }
 
-    const queue = this.waitQueue.get(resourceId)!;
+    const queue = this.waitQueue.get(resourceId);
+    if (!queue) {
+      throw new Error(`Wait queue for resource ${resourceId} not found after creation`);
+    }
     queue.push(request);
     
     // Sort by priority and timestamp
@@ -161,7 +167,10 @@ export class ResourceManager {
     // Process wait queue
     const queue = this.waitQueue.get(resourceId);
     if (queue && queue.length > 0) {
-      const nextRequest = queue.shift()!;
+      const nextRequest = queue.shift();
+      if (!nextRequest) {
+        return; // Queue was empty after all
+      }
       
       // Grant lock to next in queue
       await this.lockResource(resourceId, nextRequest.agentId);
@@ -234,7 +243,10 @@ export class ResourceManager {
   }
 
   private lockResource(resourceId: string, agentId: string): Promise<void> {
-    const resource = this.resources.get(resourceId)!;
+    const resource = this.resources.get(resourceId);
+    if (!resource) {
+      throw new Error(`Resource ${resourceId} not found`);
+    }
     
     resource.locked = true;
     resource.lockedBy = agentId;
@@ -246,7 +258,11 @@ export class ResourceManager {
     if (!this.agentResources.has(agentId)) {
       this.agentResources.set(agentId, new Set());
     }
-    this.agentResources.get(agentId)!.add(resourceId);
+    const agentResourceSet = this.agentResources.get(agentId);
+    if (!agentResourceSet) {
+      throw new Error(`Agent resource set for ${agentId} not found after creation`);
+    }
+    agentResourceSet.add(resourceId);
 
     this.logger.info("Resource locked", { resourceId, agentId });
     

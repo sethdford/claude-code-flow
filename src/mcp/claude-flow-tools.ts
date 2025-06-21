@@ -14,7 +14,7 @@ import {
   MemoryStoreInput,
   WorkflowExecuteInput,
   CreateObjectiveInput,
-  TaskListParams
+  TaskListParams,
 } from "./types.js";
 
 export interface ClaudeFlowToolContext extends MCPContext {
@@ -227,7 +227,7 @@ function createSpawnAgentTool(logger: ILogger): MCPTool {
         priority: spawnInput.priority || 5,
         environment: spawnInput.environment ? 
           Object.fromEntries(
-            Object.entries(spawnInput.environment).map(([k, v]) => [k, String(v)])
+            Object.entries(spawnInput.environment).map(([k, v]) => [k, String(v)]),
           ) : undefined,
         workingDirectory: spawnInput.workingDirectory,
       };
@@ -429,8 +429,8 @@ function createCreateTaskTool(logger: ILogger): MCPTool {
 
       const createInput = input as CreateTaskInput;
       const task: Partial<Task> = {
-        type: createInput.type!,
-        description: createInput.description!,
+        type: createInput.type,
+        description: createInput.description,
         priority: createInput.priority || 5,
         dependencies: createInput.dependencies || [],
         input: createInput.input || {},
@@ -1085,7 +1085,7 @@ function createUpdateConfigTool(logger: ILogger): MCPTool {
       const result = await context.orchestrator.updateConfig(
         updateInput.section,
         updateInput.config,
-        updateInput.restart
+        updateInput.restart,
       );
 
       return {

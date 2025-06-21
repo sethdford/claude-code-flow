@@ -8,6 +8,11 @@ import { logger } from "../../core/logger.js";
 import { configManager } from "../../core/config.js";
 import { MCPServer } from "../../mcp/server.js";
 import { eventBus } from "../../core/event-bus.js";
+import type { BaseCommandOptions, McpStartOptions } from "./types.js";
+
+interface McpLogsOptions extends BaseCommandOptions {
+  lines?: string;
+}
 
 
 // Color compatibility
@@ -41,7 +46,7 @@ export const mcpCommand = new Command()
   .option("-p, --port <port>", "Port for MCP server", "3000")
   .option("-h, --host <host>", "Host for MCP server", "localhost")
   .option("--transport <transport>", "Transport type (stdio, http)", "stdio")
-  .action(async (options: any) => {
+  .action(async (options: McpStartOptions) => {
     try {
       await configManager.load();
       const config = configManager.get();
@@ -49,9 +54,9 @@ export const mcpCommand = new Command()
       // Override with CLI options
       const mcpConfig = {
         ...config.mcp,
-        port: options.port,
-        host: options.host,
-        transport: options.transport,
+        port: parseInt(String(options.port || "3000")),
+        host: options.host || "localhost",
+        transport: options.transport || "stdio",
       };
 
       mcpServer = new MCPServer(mcpConfig, eventBus, logger);
@@ -99,7 +104,7 @@ export const mcpCommand = new Command()
         console.log(`🔧 Tools: ${colors.green("Available")}`);
         console.log(`📊 Metrics: ${colors.green("Collecting")}`);
       } else {
-        console.log(colors.gray('Use "claude-flow mcp start" to start the server'));
+        console.log(colors.gray("Use \"claude-flow mcp start\" to start the server"));
       }
     } catch (error) {
       console.error(colors.red(`❌ Failed to get MCP status: ${(error as Error).message}`));
@@ -169,7 +174,7 @@ export const mcpCommand = new Command()
   .command("logs")
   .description("Show MCP server logs")
   .option("-n, --lines <lines>", "Number of log lines to show", "50")
-  .action((options: any) => {
+  .action((options: McpLogsOptions) => {
     console.log(colors.cyan(`MCP Server Logs (last ${options.lines} lines):`));
       
     // Mock logs since logging system might not be fully implemented
@@ -186,7 +191,8 @@ export const mcpCommand = new Command()
       "2024-01-10 10:03:01 [INFO] Data stored in namespace: default",
     ];
       
-    const startIndex = Math.max(0, logEntries.length - options.lines);
+    const lines = parseInt(options.lines ?? "50", 10);
+    const startIndex = Math.max(0, logEntries.length - lines);
     const displayLogs = logEntries.slice(startIndex);
       
     for (const entry of displayLogs) {

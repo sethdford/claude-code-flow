@@ -77,17 +77,21 @@ export class TaskScheduler {
     this.tasks.set(task.id, scheduledTask);
 
     // Update agent tasks
-    if (!this.agentTasks.has(agentId)) {
-      this.agentTasks.set(agentId, new Set());
+    let agentTaskSet = this.agentTasks.get(agentId);
+    if (!agentTaskSet) {
+      agentTaskSet = new Set();
+      this.agentTasks.set(agentId, agentTaskSet);
     }
-    this.agentTasks.get(agentId)!.add(task.id);
+    agentTaskSet.add(task.id);
 
     // Update dependencies
     for (const depId of task.dependencies) {
-      if (!this.taskDependencies.has(depId)) {
-        this.taskDependencies.set(depId, new Set());
+      let depSet = this.taskDependencies.get(depId);
+      if (!depSet) {
+        depSet = new Set();
+        this.taskDependencies.set(depId, depSet);
       }
-      this.taskDependencies.get(depId)!.add(task.id);
+      depSet.add(task.id);
     }
 
     // Start task execution

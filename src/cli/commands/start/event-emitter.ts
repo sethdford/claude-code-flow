@@ -2,37 +2,45 @@
  * Simple EventEmitter implementation for process management
  */
 
-type EventHandler = (...args: any[]) => void;
+// Define a generic event handler type that can accept any arguments
+type EventHandler<T extends unknown[] = unknown[]> = (...args: T) => void;
 
-export class EventEmitter {
-  private events: Map<string, EventHandler[]> = new Map();
+// Define event map interface for type safety
+interface EventMap {
+  [event: string]: unknown[];
+}
 
-  on(event: string, handler: EventHandler): void {
-    if (!this.events.has(event)) {
-      this.events.set(event, []);
+export class EventEmitter<T extends EventMap = EventMap> {
+  private events: Map<keyof T, EventHandler[]> = new Map();
+
+  on<K extends keyof T>(event: K, handler: EventHandler<T[K]>): void {
+    let handlers = this.events.get(event) as EventHandler<T[K]>[] | undefined;
+    if (!handlers) {
+      handlers = [];
+      this.events.set(event, handlers);
     }
-    this.events.get(event)!.push(handler);
+    handlers.push(handler);
   }
 
-  emit(event: string, ...args: any[]): void {
+  emit<K extends keyof T>(event: K, ...args: T[K]): void {
     const handlers = this.events.get(event);
     if (handlers) {
-      handlers.forEach(handler => handler(...args));
+      handlers.forEach(handler => (handler as EventHandler<T[K]>)(...args));
     }
   }
 
-  off(event: string, handler: EventHandler): void {
+  off<K extends keyof T>(event: K, handler: EventHandler<T[K]>): void {
     const handlers = this.events.get(event);
     if (handlers) {
-      const index = handlers.indexOf(handler);
+      const index = handlers.indexOf(handler as EventHandler);
       if (index > -1) {
         handlers.splice(index, 1);
       }
     }
   }
 
-  once(event: string, handler: EventHandler): void {
-    const onceHandler = (...args: any[]) => {
+  once<K extends keyof T>(event: K, handler: EventHandler<T[K]>): void {
+    const onceHandler: EventHandler<T[K]> = (...args) => {
       handler(...args);
       this.off(event, onceHandler);
     };

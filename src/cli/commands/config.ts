@@ -8,6 +8,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { configManager } from "../../core/config.js";
 import { deepMerge } from "../../utils/helpers.js";
+import { BaseCommandOptions } from "./types.js";
 
 // Local type definitions
 interface ConfigShowOptions {
@@ -23,10 +24,61 @@ interface ConfigSetOptions {
 }
 
 // Generic options interface for commands with file arguments
-interface FileCommandOptions {
+interface FileCommandOptions extends BaseCommandOptions {
   force?: boolean;
   format?: string;
-  [key: string]: any;
+  includeDefaults?: boolean;
+  merge?: boolean;
+  autoName?: boolean;
+}
+
+interface ConfigExportOptions extends BaseCommandOptions {
+  force?: boolean;
+}
+
+interface ConfigImportOptions extends BaseCommandOptions {
+  force?: boolean;
+  merge?: boolean;
+  strict?: boolean;
+}
+
+interface ConfigValidateOptions extends BaseCommandOptions {
+}
+
+interface ConfigChangelogOptions extends BaseCommandOptions {
+  limit?: number;
+  format?: string;
+  path?: string;
+}
+
+interface ConfigInitOptions extends BaseCommandOptions {
+  interactive?: boolean;
+  template?: string;
+  force?: boolean;
+  format?: string;
+}
+
+interface ConfigSchemaOptions extends BaseCommandOptions {
+  path?: string;
+}
+
+interface ConfigTemplatesOptions extends BaseCommandOptions {
+  detailed?: boolean;
+}
+
+type ConfigValue = string | number | boolean | null | ConfigObject | ConfigValue[];
+interface ConfigObject {
+  [key: string]: ConfigValue;
+}
+
+interface ConfigChange {
+  timestamp: Date | string;
+  path: string;
+  oldValue: ConfigValue;
+  newValue: ConfigValue;
+  reason?: string;
+  user?: string;
+  source?: string;
 }
 
 export const configCommand = new Command()
@@ -40,7 +92,7 @@ export const configCommand = new Command()
   .option("--format <format>", "Output format (json, yaml)", "json")
   .option("--diff", "Show only differences from defaults")
   .option("--profile", "Include profile information")
-  .action(async (options: ConfigShowOptions) => {
+  .action((options: ConfigShowOptions) => {
     if (options.diff) {
       const diff = configManager.getDiff();
       console.log(JSON.stringify(diff, null, 2));
@@ -61,7 +113,7 @@ export const configCommand = new Command()
   .command("get")
   .description("Get a specific configuration value")
   .arguments("<path>")
-  .action(async (path: string) => {
+  .action((path: string) => {
     try {
       const value = configManager.getValue(path);
         
@@ -82,9 +134,9 @@ export const configCommand = new Command()
   .option("--type <type>", "Value type (string, number, boolean, json)", "auto")
   .option("--reason <reason>", "Reason for the change (for audit trail)")
   .option("--force", "Skip validation warnings")
-  .action(async (path: string, value: string, options: ConfigSetOptions) => {
+  .action((path: string, value: string, options: ConfigSetOptions) => {
     try {
-      let parsedValue: any;
+      let parsedValue: ConfigValue;
         
       switch (options.type) {
         case "string":
@@ -100,12 +152,16 @@ export const configCommand = new Command()
           parsedValue = value.toLowerCase() === "true";
           break;
         case "json":
-          parsedValue = JSON.parse(value);
+          try {
+            parsedValue = JSON.parse(value) as ConfigValue;
+          } catch (error) {
+            throw new Error(`Invalid JSON format: ${(error as Error).message}`);
+          }
           break;
         default:
           // Auto-detect type
           try {
-            parsedValue = JSON.parse(value);
+            parsedValue = JSON.parse(value) as ConfigValue;
           } catch {
             parsedValue = value;
           }
@@ -155,7 +211,7 @@ export const configCommand = new Command()
   .option("--template <template>", "Configuration template (default, development, production, minimal, testing, enterprise)", "default")
   .option("--format <format>", "Output format (json, yaml, toml)", "json")
   .option("--interactive", "Interactive template selection")
-  .action(async (options: any, outputFile: string = "claude-flow.config.json") => {
+  .action(async (options: ConfigInitOptions, outputFile: string = "claude-flow.config.json") => {
     try {
       // Check if file exists
       try {
@@ -174,7 +230,7 @@ export const configCommand = new Command()
       // Interactive template selection
       if (options.interactive) {
         const availableTemplates = configManager.getAvailableTemplates();
-        const templateAnswer = await inquirer.prompt([{
+        const templateAnswer = await inquirer.prompt<{ template: string }>([{
           type: "list",
           name: "template",
           message: "Select configuration template:",
@@ -183,11 +239,11 @@ export const configCommand = new Command()
         templateName = templateAnswer.template;
       }
         
-      const config = configManager.createTemplate(templateName);
+      const config = configManager.createTemplate(templateName || 'default');
         
       // Detect format from file extension or use option
       const ext = outputFile.split(".").pop()?.toLowerCase();
-      const format = options.format || (ext === "yaml" || ext === "yml" ? "yaml" : ext === "toml" ? "toml" : "json");
+      const format = options.format ?? (ext === "yaml" || ext === "yml" ? "yaml" : ext === "toml" ? "toml" : "json");
         
       const formatParsers = configManager.getFormatParsers();
       const parser = formatParsers[format];
@@ -207,7 +263,7 @@ export const configCommand = new Command()
   .description("Validate a configuration file")
   .arguments("<config-file>")
   .option("--strict", "Use strict validation")
-  .action(async (options: any, configFile: string) => {
+  .action(async (configFile: string, options: ConfigValidateOptions & { strict?: boolean }) => {
     try {
       await configManager.load(configFile);
       console.log(chalk.blue("Validating configuration file:"), configFile);
@@ -304,7 +360,7 @@ export const configCommand = new Command()
   .action(async (profileName: string, options: FileCommandOptions) => {
     try {
       if (!options.force) {
-        const answers = await inquirer.prompt([{
+        const answers = await inquirer.prompt<{ confirmed: boolean }>([{
           type: "confirm",
           name: "confirmed",
           message: `Delete profile '${profileName}'?`,
@@ -371,14 +427,14 @@ export const configCommand = new Command()
   .action(async (inputFile: string, options: FileCommandOptions) => {
     try {
       const content = await import("fs").then(fs => fs.promises.readFile(inputFile, "utf-8"));
-      const data = JSON.parse(content);
+      const data = JSON.parse(content) as { config?: ConfigObject; profile?: string };
         
       if (options.merge) {
         const current = configManager.get();
-        data.config = deepMerge(current as unknown as Record<string, unknown>, data.config) as any;
+        data.config = deepMerge(current as unknown as Record<string, unknown>, data.config ?? {}) as ConfigObject;
       }
         
-      configManager.import(data);
+      configManager.import(data as any);
       console.log(chalk.green("✓"), "Configuration imported successfully");
         
       if (data.profile) {
@@ -391,7 +447,7 @@ export const configCommand = new Command()
   .command("schema")
   .description("Show configuration schema")
   .option("--path <path>", "Show schema for specific path")
-  .action(async (options: Record<string, any>) => {
+  .action((options: ConfigSchemaOptions) => {
     const schema = configManager.getSchema();
       
     if (options.path) {
@@ -410,7 +466,7 @@ export const configCommand = new Command()
   .option("--path <path>", "Show history for specific configuration path")
   .option("--limit <limit:number>", "Maximum number of changes to show", "20")
   .option("--format <format>", "Output format (json, table)", "table")
-  .action(async (options: Record<string, any>) => {
+  .action((options: ConfigChangelogOptions) => {
     try {
       const changes = options.path 
         ? configManager.getPathHistory()
@@ -427,10 +483,10 @@ export const configCommand = new Command()
         console.log(chalk.cyan.bold(`Configuration Change History (${changes.length} changes)`));
         console.log("─".repeat(80));
           
-        changes.reverse().forEach((change: any, index: number) => {
-          const timestamp = new Date(change.timestamp).toLocaleString();
-          const user = change.user || "system";
-          const source = change.source || "unknown";
+        (changes as ConfigChange[]).reverse().forEach((change: ConfigChange, index: number) => {
+          const timestamp = change.timestamp instanceof Date ? change.timestamp.toLocaleString() : new Date(change.timestamp).toLocaleString();
+          const user = change.user ?? "system";
+          const source = change.source ?? "unknown";
             
           console.log(`${chalk.green(timestamp)} | ${chalk.blue(user)} | ${chalk.yellow(source)}`);
           console.log(`Path: ${chalk.cyan(change.path)}`);
@@ -459,7 +515,7 @@ export const configCommand = new Command()
   .option("--auto-name", "Generate automatic backup filename")
   .action(async (backupPath: string | undefined, options: FileCommandOptions) => {
     try {
-      const finalPath = backupPath || (options.autoName ? undefined : "config-backup.json");
+      const finalPath = backupPath ?? (options.autoName ? undefined : "config-backup.json");
       const savedPath = await configManager.backup(finalPath);
         
       console.log(chalk.green("✓"), `Configuration backed up to: ${savedPath}`);
@@ -476,7 +532,7 @@ export const configCommand = new Command()
   .action(async (backupPath: string, options: FileCommandOptions) => {
     try {
       if (!options.force) {
-        const answers = await inquirer.prompt([{
+        const answers = await inquirer.prompt<{ confirmed: boolean }>([{
           type: "confirm",
           name: "confirmed",
           message: `Restore configuration from ${backupPath}? This will overwrite current configuration.`,
@@ -501,7 +557,7 @@ export const configCommand = new Command()
   .command("templates")
   .description("List available configuration templates")
   .option("--detailed", "Show detailed template information")
-  .action(async (options: Record<string, any>) => {
+  .action((options: ConfigTemplatesOptions) => {
     try {
       const templates = configManager.getAvailableTemplates();
         
@@ -546,16 +602,16 @@ function getTemplateDescription(templateName: string): string {
     enterprise: "Enterprise-grade with maximum security and scalability",
   };
   
-  return descriptions[templateName] || "Custom configuration template";
+  return descriptions[templateName] ?? "Custom configuration template";
 }
 
-function getValueByPath(obj: any, path: string): any {
+function getValueByPath(obj: ConfigObject, path: string): ConfigValue | undefined {
   const parts = path.split(".");
-  let current = obj;
+  let current: ConfigValue = obj;
   
   for (const part of parts) {
-    if (current && typeof current === "object" && part in current) {
-      current = current[part];
+    if (current && typeof current === "object" && !Array.isArray(current) && part in current) {
+      current = (current as ConfigObject)[part];
     } else {
       return undefined;
     }

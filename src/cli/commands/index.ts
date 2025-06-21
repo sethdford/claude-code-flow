@@ -14,6 +14,25 @@ import { enterpriseCommands } from "./enterprise.js";
 
 // Import enhanced orchestration commands
 
+// Type definitions for workflows
+interface ClaudeWorkflow {
+  id?: string;
+  name?: string;
+  description?: string;
+  tasks?: Array<{
+    id?: string;
+    name?: string;
+    description?: string;
+    type?: string;
+    tools?: string[] | string;
+    dangerouslySkipPermissions?: boolean;
+    skipPermissions?: boolean;
+    config?: string;
+  }>;
+  parallel?: boolean;
+  agents?: unknown[];
+}
+
 let orchestrator: Orchestrator | null = null;
 let configManager: ConfigManager | null = null;
 let persistence: JsonPersistenceManager | null = null;
@@ -72,7 +91,7 @@ export function setupCommands(cli: CLI): void {
         
         // Check if files already exist
         const files = ["CLAUDE.md", "memory-bank.md", "coordination.md"];
-        const existingFiles = [];
+        const existingFiles: string[] = [];
         
         for (const file of files) {
           const { access } = await import("fs/promises");
@@ -126,7 +145,7 @@ export function setupCommands(cli: CLI): void {
             await mkdir(dir, { recursive: true });
             console.log(`  ✓ Created ${dir}/ directory`);
           } catch (err) {
-            if ((err as any).code !== "EEXIST") {
+            if ((err as NodeJS.ErrnoException).code !== "EEXIST") {
               throw err;
             }
           }
@@ -340,7 +359,7 @@ export function setupCommands(cli: CLI): void {
           try {
             const { readFile } = await import("fs/promises");
             const content = await readFile(workflowFile, "utf-8");
-            const workflow = JSON.parse(content);
+            const workflow = JSON.parse(content) as ClaudeWorkflow;
             
             success("Workflow loaded:");
             console.log(`📋 Name: ${workflow.name || "Unnamed"}`);
@@ -1056,8 +1075,8 @@ You are running within the Claude-Flow orchestration system, which provides powe
 2. **During Execution**:
    - Store findings: \`npx claude-flow memory store findings "your data here"\`
    - Save checkpoints: \`npx claude-flow memory store progress_${task.replace(/\s+/g, "_")} "current status"\`
-   ${ctx.flags.parallel ? '- Spawn agents: `npx claude-flow agent spawn researcher --name "research-agent"`' : ""}
-   ${ctx.flags.parallel ? '- Create tasks: `npx claude-flow task create implementation "implement feature X"`' : ""}
+   ${ctx.flags.parallel ? "- Spawn agents: `npx claude-flow agent spawn researcher --name \"research-agent\"`" : ""}
+   ${ctx.flags.parallel ? "- Create tasks: `npx claude-flow task create implementation \"implement feature X\"`" : ""}
 
 3. **Best Practices**:
    - Use the Bash tool to run \`npx claude-flow\` commands
@@ -1065,7 +1084,7 @@ You are running within the Claude-Flow orchestration system, which provides powe
    - Query memory before starting to check for existing work
    - Use descriptive keys for memory storage
    ${ctx.flags.parallel ? "- Coordinate with other agents through shared memory" : ""}
-   ${ctx.flags.research ? '- Store research findings: `npx claude-flow memory store research_findings "data"`' : ""}
+   ${ctx.flags.research ? "- Store research findings: `npx claude-flow memory store research_findings \"data\"`" : ""}
 
 ## Configuration
 - Instance ID: ${instanceId}
@@ -1186,7 +1205,7 @@ Now, please proceed with the task: ${task}`;
           try {
             const { readFile } = await import("fs/promises");
             const content = await readFile(workflowFile, "utf-8");
-            const workflow = JSON.parse(content);
+            const workflow = JSON.parse(content) as ClaudeWorkflow;
             
             success(`Loading workflow: ${workflow.name || "Unnamed"}`);
             console.log(`📋 Tasks: ${workflow.tasks?.length || 0}`);
@@ -1196,7 +1215,7 @@ Now, please proceed with the task: ${task}`;
               return;
             }
             
-            const promises = [];
+            const promises: Array<Promise<{ success: boolean; code: number | null }>> = [];
             
             for (const task of workflow.tasks) {
               const claudeCmd = ["claude", `"${task.description || task.name}"`];
@@ -2203,7 +2222,7 @@ function createFullClaudeMd(): string {
 
 ## Code Style Preferences
 - Use ES modules (import/export) syntax, not CommonJS (require)
-- Destructure imports when possible (e.g., \`import { foo } from 'bar'\`)
+- Destructure imports when possible (e.g., \`import { foo } from "bar"\`)
 - Use TypeScript for all new code
 - Follow existing naming conventions (camelCase for variables, PascalCase for classes)
 - Add JSDoc comments for public APIs

@@ -9,7 +9,7 @@ import { ClaudeConnectionPool } from "./connection-pool.js";
 import { AsyncFileManager } from "./async-file-manager.js";
 import { TTLMap } from "./ttl-map.js";
 import { CircularBuffer } from "./circular-buffer.js";
-// import PQueue from 'p-queue'; // Disabled - using simplified queue
+// import PQueue from "p-queue"; // Disabled - using simplified queue
 import { 
   TaskDefinition, 
   TaskResult, 
@@ -301,7 +301,7 @@ export class OptimizedExecutor extends EventEmitter {
   }
   
   private buildMessages(task: TaskDefinition): Array<{ role: string; content: string }> {
-    const messages = [];
+    const messages: Array<{ role: string; content: string }> = [];
     
     // Add system message if needed
     const taskWithMetadata = task as TaskDefinition & { metadata?: { systemPrompt?: string } };

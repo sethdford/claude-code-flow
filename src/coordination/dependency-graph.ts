@@ -364,7 +364,11 @@ export class DependencyGraph {
     ];
 
     while (queue.length > 0) {
-      const { taskId, path } = queue.shift()!;
+      const item = queue.shift();
+      if (!item) {
+        break; // This should never happen, but TypeScript needs this check
+      }
+      const { taskId, path } = item;
       
       if (visited.has(taskId)) {
         continue;

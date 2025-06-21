@@ -16,9 +16,33 @@ import type { AgentManager } from "../../agents/agent-manager.js";
 import type { 
   AgentInfo, 
   AgentListOptions, 
-  AgentSpawnOptions, 
-  AgentTemplate 
+  AgentSpawnOptions,
+  AgentStartOptions,
+  AgentTemplate, 
 } from "./types.js";
+
+// Type definitions for better type safety
+interface PoolOptions {
+  create?: string;
+  template?: string;
+  minSize?: number;
+  maxSize?: number;
+  autoScale?: boolean;
+  scale?: string;
+  size?: number;
+  list?: boolean;
+  json?: boolean;
+}
+
+interface PoolInfo {
+  name: string;
+  id: string;
+  type: string;
+  currentSize: number;
+  availableAgents: { length: number };
+  busyAgents: { length: number };
+  autoScale: boolean;
+}
 
 // Global agent manager instance
 let agentManager: AgentManager | null = null;
@@ -28,7 +52,7 @@ function initializeAgentManager(): AgentManager {
   if (agentManager) return agentManager;
   
   // Simplified mock agent manager to avoid complex dependencies
-  agentManager = {
+  const mockManager = {
     getAllAgents: () => [],
     getAgent: (_id: string) => null,
     createAgent: async (_template: string, _options: any) => generateId("agent"),
@@ -53,7 +77,7 @@ function initializeAgentManager(): AgentManager {
         description: "Research and analysis agent",
         capabilities: ["research", "analysis", "web-search"],
         config: {},
-        environment: {}
+        environment: {},
       },
       { 
         name: "developer", 
@@ -61,7 +85,7 @@ function initializeAgentManager(): AgentManager {
         description: "Software development agent", 
         capabilities: ["coding", "testing", "debugging"],
         config: {},
-        environment: {}
+        environment: {},
       },
       { 
         name: "analyzer", 
@@ -69,17 +93,21 @@ function initializeAgentManager(): AgentManager {
         description: "Data analysis agent",
         capabilities: ["data-analysis", "visualization", "reporting"],
         config: {},
-        environment: {}
+        environment: {},
       },
     ],
     getAllPools: () => [],
     createAgentPool: async (_name: string, _template: string, _config: any) => generateId("pool"),
     scalePool: async (_id: string, _size: number) => {},
     memory: { 
-      store: async () => generateId("memory") 
+      store: async () => generateId("memory"), 
     },
-  } as any; // Cast to any to avoid complex interface matching
+  } as any as AgentManager;
   
+  agentManager = mockManager;
+  if (!agentManager) {
+    throw new Error("Failed to initialize agent manager");
+  }
   return agentManager;
 }
 
@@ -109,7 +137,7 @@ agentCommand
         console.log(JSON.stringify({
           agents: [],
           stats: manager.getSystemStats(),
-          message: "No agents currently running"
+          message: "No agents currently running",
         }, null, 2));
         return;
       }
@@ -169,7 +197,7 @@ agentCommand
         agentConfig = await interactiveAgentConfiguration(manager);
       } else {
         // Use template or command line options
-        const templateName = template || options.template;
+        const templateName = template ?? options.template;
         if (!templateName) {
           console.error(chalk.red("Error: Template name is required. Use --interactive for guided setup."));
           return;
@@ -204,7 +232,7 @@ agentCommand
       // Mock agent creation
       const agentId = await manager.createAgent(agentConfig.template, agentConfig);
       console.log(chalk.green(`✅ Agent created successfully with ID: ${agentId}`));
-      console.log(`Name: ${agentConfig.name || "Unnamed"}`);
+      console.log(`Name: ${agentConfig.name ?? "Unnamed"}`);
       console.log(`Template: ${agentConfig.template}`);
       
       if (options.start) {
@@ -258,7 +286,7 @@ agentCommand
         console.log(JSON.stringify({ 
           error: "Agent not found", 
           agentId,
-          message: "This is a mock implementation for CLI demonstration"
+          message: "This is a mock implementation for CLI demonstration",
         }, null, 2));
         return;
       }
@@ -283,7 +311,7 @@ agentCommand
   .command("start")
   .description("Start a created agent")
   .arguments("<agent-id>")
-  .action(async (options: Record<string, any>, agentId: string) => {
+  .action(async (options: AgentStartOptions, agentId: string) => {
     try {
       const manager = initializeAgentManager();
       console.log(chalk.cyan(`🚀 Starting agent ${agentId}...`));
@@ -298,7 +326,7 @@ agentCommand
   .description("Restart an agent")
   .arguments("<agent-id>")
   .option("--reason <reason>", "Restart reason")
-  .action(async (options: Record<string, any>, agentId: string) => {
+  .action(async (options: AgentStartOptions & { reason?: string }, agentId: string) => {
     try {
       const manager = initializeAgentManager();
       console.log(chalk.cyan(`🔄 Restarting agent ${agentId}...`));
@@ -319,7 +347,7 @@ agentCommand
   .option("--list", "List all pools")
   .option("--scale <pool>", "Scale a pool")
   .option("--size <size:number>", "Target size for scaling")
-  .action(async (options: any) => {
+  .action(async (options: PoolOptions) => {
     try {
       const manager = initializeAgentManager();
         
@@ -329,7 +357,7 @@ agentCommand
           return;
         }
           
-        const poolId = await manager.createAgentPool(options.create, options.template, {
+        const poolId = await (manager as any).createAgentPool(options.create, options.template, {
           minSize: options.minSize,
           maxSize: options.maxSize,
           autoScale: options.autoScale,
@@ -339,20 +367,20 @@ agentCommand
       }
         
       if (options.scale && options.size !== undefined) {
-        const pools = manager.getAllPools();
-        const pool = pools.find((p: any) => p.name === options.scale || p.id === options.scale);
+        const pools = (manager as any).getAllPools() as PoolInfo[];
+        const pool = pools.find((p: PoolInfo) => p.name === options.scale || p.id === options.scale);
           
         if (!pool) {
           console.error(chalk.red(`Pool '${options.scale}' not found`));
           return;
         }
           
-        await manager.scalePool(pool.id, options.size);
+        await (manager as any).scalePool(pool.id, options.size);
         console.log(chalk.green(`✅ Pool scaled to ${options.size} agents`));
       }
         
       if (options.list) {
-        const pools = manager.getAllPools();
+        const pools = (manager as any).getAllPools() as PoolInfo[];
         if (pools.length === 0) {
           console.log(chalk.yellow("No pools found"));
           return;
@@ -364,7 +392,7 @@ agentCommand
           style: { head: [], border: [] },
         });
           
-        pools.forEach((pool: any) => {
+        pools.forEach((pool: PoolInfo) => {
           table.push([
             pool.name,
             pool.type,
@@ -388,7 +416,7 @@ agentCommand
   .option("--watch", "Continuously monitor health")
   .option("--threshold <threshold>", "Health threshold for alerts", "0.7")
   .option("--agent <agent-id>", "Monitor specific agent")
-  .action(async (options: any) => {
+  .action(async (options: { watch?: boolean; threshold?: number; agent?: string }) => {
     try {
       const manager = initializeAgentManager();
         
@@ -416,16 +444,34 @@ agentCommand
 
 // === HELPER FUNCTIONS ===
 
-async function interactiveAgentConfiguration(manager: any): Promise<Record<string, any>> {
+interface AgentConfigAnswers {
+  template: string;
+  name: string;
+  autonomy: number;
+  maxTasks: number;
+}
+
+async function interactiveAgentConfiguration(manager: AgentManager): Promise<{
+  template: string;
+  name: string;
+  config: {
+    autonomyLevel: number;
+    maxConcurrentTasks: number;
+    timeoutThreshold: number;
+  };
+  environment: {
+    maxMemoryUsage: number;
+  };
+}> {
   console.log(chalk.cyan("\n🛠️ Interactive Agent Configuration"));
   
   const templates = [
     { name: "researcher", type: "researcher", description: "Research and analysis agent" },
     { name: "developer", type: "developer", description: "Software development agent" },
-    { name: "analyzer", type: "analyzer", description: "Data analysis agent" }
+    { name: "analyzer", type: "analyzer", description: "Data analysis agent" },
   ];
 
-  const answers = await inquirer.prompt([
+  const answers = await inquirer.prompt<AgentConfigAnswers>([
     {
       type: "list",
       name: "template",
@@ -538,7 +584,7 @@ function displayAgentHealthDetails(agentId: string, manager: any): void {
 function displayAgentTaskHistory(agent: AgentInfo): void {
   console.log(`\n${  chalk.cyan("Task History:")}`);
   if (agent.taskHistory && agent.taskHistory.length > 0) {
-    (agent as any).taskHistory.slice(-5).forEach((task: any, index: number) => {
+    agent.taskHistory.slice(-5).forEach((task, index) => {
       console.log(`  ${index + 1}. ${task.type} - ${task.status} (${formatRelativeTime(task.timestamp)})`);
     });
   } else {
@@ -551,7 +597,7 @@ function displayAgentLogs(agentId: string): void {
   console.log(chalk.gray("No logs available in mock implementation"));
 }
 
-function displayHealthDashboard(manager: AgentManager, threshold: number, specificAgent?: string): void {
+function displayHealthDashboard(manager: AgentManager, threshold = 0.7, specificAgent?: string): void {
   const agents = specificAgent ? 
     [manager.getAgent(specificAgent)].filter(Boolean) : 
     manager.getAllAgents();
@@ -592,7 +638,7 @@ function getAgentLogs(_agentId: string): any[] {
 function getDetailedMetrics(agentId: string, manager: AgentManager): any {
   // This would fetch detailed metrics
   const agent = manager.getAgent(agentId);
-  return agent?.metrics || {};
+  return agent?.metrics ?? {};
 }
 
 function getStatusColor(status: string): (text: string) => string {

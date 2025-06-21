@@ -1,8 +1,8 @@
-const { TestHarness } = require('../test-harness');
-const assert = require('assert');
-const os = require('os');
+const { TestHarness } = require("../test-harness");
+const assert = require("assert");
+const os = require("os");
 
-describe('Resource Usage Tests', () => {
+describe("Resource Usage Tests", () => {
   let harness;
 
   beforeEach(() => {
@@ -14,8 +14,8 @@ describe('Resource Usage Tests', () => {
     if (global.gc) global.gc(); // Force garbage collection if available
   });
 
-  describe('Memory Usage Patterns', () => {
-    it('should maintain stable memory usage during batch operations', async () => {
+  describe("Memory Usage Patterns", () => {
+    it("should maintain stable memory usage during batch operations", async () => {
       const iterations = 5;
       const memorySnapshots = [];
       
@@ -23,7 +23,7 @@ describe('Resource Usage Tests', () => {
         // Create and process files
         const fileCount = 100;
         for (let j = 0; j < fileCount; j++) {
-          harness.mockFS.set(`iteration${i}_file${j}.txt`, 'x'.repeat(10000)); // 10KB per file
+          harness.mockFS.set(`iteration${i}_file${j}.txt`, "x".repeat(10000)); // 10KB per file
         }
         
         const files = Array.from({ length: fileCount }, (_, j) => `iteration${i}_file${j}.txt`);
@@ -43,12 +43,12 @@ describe('Resource Usage Tests', () => {
         files.forEach(f => harness.mockFS.delete(f));
       }
       
-      console.log('\n=== Memory Stability Test ===');
-      console.log('Iteration | Before (MB) | After (MB) | Delta (MB)');
-      console.log('----------|-------------|------------|------------');
+      console.log("\n=== Memory Stability Test ===");
+      console.log("Iteration | Before (MB) | After (MB) | Delta (MB)");
+      console.log("----------|-------------|------------|------------");
       
       memorySnapshots.forEach(snapshot => {
-        console.log(`${snapshot.iteration.toString().padEnd(9)} | ${snapshot.before.toFixed(2).padEnd(11)} | ${snapshot.after.toFixed(2).padEnd(10)} | ${snapshot.delta > 0 ? '+' : ''}${snapshot.delta.toFixed(2)}`);
+        console.log(`${snapshot.iteration.toString().padEnd(9)} | ${snapshot.before.toFixed(2).padEnd(11)} | ${snapshot.after.toFixed(2).padEnd(10)} | ${snapshot.delta > 0 ? "+" : ""}${snapshot.delta.toFixed(2)}`);
       });
       
       // Check for memory leaks (memory shouldn't grow significantly)
@@ -59,7 +59,7 @@ describe('Resource Usage Tests', () => {
       assert(totalGrowth < 50, `Memory grew by ${totalGrowth.toFixed(2)}MB, possible leak`);
     });
 
-    it('should efficiently handle large data volumes', async () => {
+    it("should efficiently handle large data volumes", async () => {
       const dataSizes = [
         { files: 10, sizeKB: 100 },
         { files: 50, sizeKB: 100 },
@@ -72,7 +72,7 @@ describe('Resource Usage Tests', () => {
       
       for (const config of dataSizes) {
         // Create files
-        const content = 'x'.repeat(config.sizeKB * 1024);
+        const content = "x".repeat(config.sizeKB * 1024);
         for (let i = 0; i < config.files; i++) {
           harness.mockFS.set(`large${i}.dat`, content);
         }
@@ -98,9 +98,9 @@ describe('Resource Usage Tests', () => {
         harness.reset();
       }
       
-      console.log('\n=== Large Data Volume Handling ===');
-      console.log('Files | Size/File | Total Data | Memory Used | Efficiency | Throughput');
-      console.log('------|-----------|------------|-------------|------------|------------');
+      console.log("\n=== Large Data Volume Handling ===");
+      console.log("Files | Size/File | Total Data | Memory Used | Efficiency | Throughput");
+      console.log("------|-----------|------------|-------------|------------|------------");
       
       results.forEach(r => {
         console.log(`${r.files.toString().padEnd(5)} | ${r.sizePerFile.toString().padEnd(9)}KB | ${r.totalData.toFixed(1).padEnd(10)}MB | ${r.memoryUsed.toFixed(1).padEnd(11)}MB | ${r.memoryEfficiency.toFixed(2).padEnd(10)} | ${r.throughputMBps.toFixed(1)}MB/s`);
@@ -113,8 +113,8 @@ describe('Resource Usage Tests', () => {
     });
   });
 
-  describe('CPU Usage Optimization', () => {
-    it('should distribute CPU load effectively across workers', async () => {
+  describe("CPU Usage Optimization", () => {
+    it("should distribute CPU load effectively across workers", async () => {
       const cpuIntensiveTasks = Array.from({ length: 20 }, (_, i) => async () => {
         // Simulate CPU-intensive work
         let result = 0;
@@ -153,9 +153,9 @@ describe('Resource Usage Tests', () => {
         });
       }
       
-      console.log('\n=== CPU Load Distribution ===');
-      console.log('Concurrency | Wall Time | CPU Time | CPU Efficiency | Parallel Efficiency');
-      console.log('------------|-----------|----------|----------------|-------------------');
+      console.log("\n=== CPU Load Distribution ===");
+      console.log("Concurrency | Wall Time | CPU Time | CPU Efficiency | Parallel Efficiency");
+      console.log("------------|-----------|----------|----------------|-------------------");
       
       cpuResults.forEach(r => {
         console.log(`${r.concurrency.toString().padEnd(11)} | ${r.wallTime.toString().padEnd(9)}ms | ${r.cpuTime.toFixed(0).padEnd(8)}ms | ${(r.cpuEfficiency * 100).toFixed(1).padEnd(14)}% | ${(r.parallelEfficiency * 100).toFixed(1)}%`);
@@ -166,23 +166,23 @@ describe('Resource Usage Tests', () => {
       assert(optimalConcurrency.cpuEfficiency > 0.5, `Low CPU efficiency: ${(optimalConcurrency.cpuEfficiency * 100).toFixed(1)}%`);
     });
 
-    it('should handle mixed IO and CPU workloads efficiently', async () => {
+    it("should handle mixed IO and CPU workloads efficiently", async () => {
       const mixedTasks = Array.from({ length: 30 }, (_, i) => {
-        const taskType = i % 3 === 0 ? 'io' : i % 3 === 1 ? 'cpu' : 'mixed';
+        const taskType = i % 3 === 0 ? "io" : i % 3 === 1 ? "cpu" : "mixed";
         
         return async () => {
-          if (taskType === 'io') {
+          if (taskType === "io") {
             // IO-bound task
             await harness.simulateDelay(50);
-            const data = await harness.mockReadFile('package.json');
-            return { task: i, type: 'io', dataSize: data.length };
-          } else if (taskType === 'cpu') {
+            const data = await harness.mockReadFile("package.json");
+            return { task: i, type: "io", dataSize: data.length };
+          } else if (taskType === "cpu") {
             // CPU-bound task
             let result = 0;
             for (let j = 0; j < 500000; j++) {
               result += Math.sqrt(j);
             }
-            return { task: i, type: 'cpu', result: result > 0 };
+            return { task: i, type: "cpu", result: result > 0 };
           } else {
             // Mixed task
             await harness.simulateDelay(20);
@@ -190,13 +190,13 @@ describe('Resource Usage Tests', () => {
             for (let j = 0; j < 250000; j++) {
               result += Math.sqrt(j);
             }
-            return { task: i, type: 'mixed', result: result > 0 };
+            return { task: i, type: "mixed", result: result > 0 };
           }
         };
       });
       
       // Add test file
-      harness.mockFS.set('package.json', JSON.stringify({ name: 'test', version: '1.0.0' }));
+      harness.mockFS.set("package.json", JSON.stringify({ name: "test", version: "1.0.0" }));
       
       const { result, metrics } = await harness.measureResourceUsage(async () => {
         harness.concurrencyLimit = os.cpus().length;
@@ -208,7 +208,7 @@ describe('Resource Usage Tests', () => {
         return acc;
       }, {});
       
-      console.log('\n=== Mixed Workload Performance ===');
+      console.log("\n=== Mixed Workload Performance ===");
       console.log(`Total tasks: ${mixedTasks.length}`);
       console.log(`Task distribution: IO=${taskTypes.io}, CPU=${taskTypes.cpu}, Mixed=${taskTypes.mixed}`);
       console.log(`Total duration: ${metrics.duration.toFixed(2)}ms`);
@@ -222,15 +222,15 @@ describe('Resource Usage Tests', () => {
     });
   });
 
-  describe('Resource Limits and Constraints', () => {
-    it('should respect memory constraints during batch operations', async () => {
+  describe("Resource Limits and Constraints", () => {
+    it("should respect memory constraints during batch operations", async () => {
       // Simulate memory-constrained environment
       const memoryLimit = 100; // MB
       const fileSize = 5; // MB per file
       const totalFiles = 50;
       
       // Create large files
-      const largeContent = 'x'.repeat(fileSize * 1024 * 1024);
+      const largeContent = "x".repeat(fileSize * 1024 * 1024);
       for (let i = 0; i < totalFiles; i++) {
         harness.mockFS.set(`constrained${i}.dat`, largeContent);
       }
@@ -245,7 +245,7 @@ describe('Resource Usage Tests', () => {
         batches.push(files.slice(i, i + batchSize));
       }
       
-      console.log('\n=== Memory-Constrained Processing ===');
+      console.log("\n=== Memory-Constrained Processing ===");
       console.log(`Memory limit: ${memoryLimit}MB`);
       console.log(`File size: ${fileSize}MB`);
       console.log(`Total files: ${totalFiles}`);
@@ -274,39 +274,39 @@ describe('Resource Usage Tests', () => {
         if (global.gc) global.gc();
       }
       
-      console.log('\nBatch | Files | Memory Used | Within Limit');
-      console.log('------|-------|-------------|-------------');
+      console.log("\nBatch | Files | Memory Used | Within Limit");
+      console.log("------|-------|-------------|-------------");
       
       batchResults.forEach(r => {
-        console.log(`${r.batch.toString().padEnd(5)} | ${r.filesProcessed.toString().padEnd(5)} | ${r.memoryUsed.toFixed(2).padEnd(11)}MB | ${r.withinLimit ? 'YES' : 'NO'}`);
+        console.log(`${r.batch.toString().padEnd(5)} | ${r.filesProcessed.toString().padEnd(5)} | ${r.memoryUsed.toFixed(2).padEnd(11)}MB | ${r.withinLimit ? "YES" : "NO"}`);
       });
       
       // Verify all batches stayed within memory limit
-      assert(batchResults.every(r => r.withinLimit), 'Some batches exceeded memory limit');
+      assert(batchResults.every(r => r.withinLimit), "Some batches exceeded memory limit");
     });
 
-    it('should handle resource exhaustion gracefully', async () => {
+    it("should handle resource exhaustion gracefully", async () => {
       // Simulate resource exhaustion scenarios
       const scenarios = [
         {
-          name: 'High concurrency',
+          name: "High concurrency",
           concurrency: 100,
           tasks: 200,
-          expectedBehavior: 'throttle'
+          expectedBehavior: "throttle"
         },
         {
-          name: 'Large data volume',
+          name: "Large data volume",
           concurrency: 10,
           tasks: 50,
           dataSize: 10000000, // 10MB per task
-          expectedBehavior: 'batch'
+          expectedBehavior: "batch"
         },
         {
-          name: 'CPU intensive',
+          name: "CPU intensive",
           concurrency: os.cpus().length * 2,
           tasks: 50,
           cpuIntensive: true,
-          expectedBehavior: 'queue'
+          expectedBehavior: "queue"
         }
       ];
       
@@ -325,7 +325,7 @@ describe('Resource Usage Tests', () => {
             return { task: i, result };
           } else if (scenario.dataSize) {
             // Memory-intensive work
-            const data = 'x'.repeat(scenario.dataSize);
+            const data = "x".repeat(scenario.dataSize);
             return { task: i, processed: data.length };
           } else {
             // Regular task
@@ -359,9 +359,9 @@ describe('Resource Usage Tests', () => {
         }
       }
       
-      console.log('\n=== Resource Exhaustion Handling ===');
-      console.log('Scenario         | Success | Duration | Memory Δ | Throughput | Success Rate');
-      console.log('-----------------|---------|----------|----------|------------|-------------');
+      console.log("\n=== Resource Exhaustion Handling ===");
+      console.log("Scenario         | Success | Duration | Memory Δ | Throughput | Success Rate");
+      console.log("-----------------|---------|----------|----------|------------|-------------");
       
       scenarioResults.forEach(r => {
         if (r.success) {
@@ -372,12 +372,12 @@ describe('Resource Usage Tests', () => {
       });
       
       // All scenarios should complete successfully
-      assert(scenarioResults.every(r => r.success), 'Some scenarios failed to handle resource constraints');
+      assert(scenarioResults.every(r => r.success), "Some scenarios failed to handle resource constraints");
     });
   });
 
-  describe('Resource Monitoring', () => {
-    it('should track resource usage over time', async () => {
+  describe("Resource Monitoring", () => {
+    it("should track resource usage over time", async () => {
       const duration = 5000; // 5 seconds
       const sampleInterval = 500; // Sample every 500ms
       const samples = [];
@@ -430,21 +430,21 @@ describe('Resource Usage Tests', () => {
         avg: samples.reduce((sum, s) => sum + s.memory.heapUsed, 0) / samples.length
       };
       
-      console.log('\n=== Resource Usage Over Time ===');
+      console.log("\n=== Resource Usage Over Time ===");
       console.log(`Monitoring duration: ${endTime - startTime}ms`);
       console.log(`Samples collected: ${samples.length}`);
-      console.log(`\nMemory Usage (MB):`);
+      console.log("\nMemory Usage (MB):");
       console.log(`  Min: ${memoryStats.min.toFixed(2)}`);
       console.log(`  Max: ${memoryStats.max.toFixed(2)}`);
       console.log(`  Avg: ${memoryStats.avg.toFixed(2)}`);
       console.log(`  Range: ${(memoryStats.max - memoryStats.min).toFixed(2)}`);
       
       // Verify resource usage stayed reasonable
-      assert(memoryStats.max - memoryStats.min < 100, 'Memory usage fluctuated too much');
-      assert(memoryStats.avg < 200, 'Average memory usage too high');
+      assert(memoryStats.max - memoryStats.min < 100, "Memory usage fluctuated too much");
+      assert(memoryStats.avg < 200, "Average memory usage too high");
     });
 
-    it('should provide resource usage predictions', async () => {
+    it("should provide resource usage predictions", async () => {
       // Test resource usage with different input sizes
       const testSizes = [10, 25, 50, 100, 200];
       const measurements = [];
@@ -453,7 +453,7 @@ describe('Resource Usage Tests', () => {
         // Create tasks of varying complexity
         const tasks = Array.from({ length: size }, (_, i) => async () => {
           const dataSize = 1000 * (i % 10 + 1); // 1-10KB
-          const data = 'x'.repeat(dataSize);
+          const data = "x".repeat(dataSize);
           
           await harness.simulateDelay(10);
           
@@ -489,9 +489,9 @@ describe('Resource Usage Tests', () => {
       const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
       const intercept = (sumY - slope * sumX) / n;
       
-      console.log('\n=== Resource Usage Scaling ===');
-      console.log('Input Size | Duration (ms) | Memory (MB) | Throughput');
-      console.log('-----------|---------------|-------------|------------');
+      console.log("\n=== Resource Usage Scaling ===");
+      console.log("Input Size | Duration (ms) | Memory (MB) | Throughput");
+      console.log("-----------|---------------|-------------|------------");
       
       measurements.forEach(m => {
         console.log(`${m.inputSize.toString().padEnd(10)} | ${m.duration.toFixed(2).padEnd(13)} | ${m.memory.toFixed(2).padEnd(11)} | ${m.throughput.toFixed(2)}`);
@@ -501,7 +501,7 @@ describe('Resource Usage Tests', () => {
       
       // Predict for larger sizes
       const predictions = [500, 1000];
-      console.log('\nPredictions:');
+      console.log("\nPredictions:");
       predictions.forEach(size => {
         const predictedDuration = slope * size + intercept;
         console.log(`  ${size} items: ~${predictedDuration.toFixed(0)}ms`);
@@ -514,7 +514,7 @@ describe('Resource Usage Tests', () => {
         return sum + error * error;
       }, 0);
       
-      assert(r2 < 100000, 'Resource usage not scaling linearly');
+      assert(r2 < 100000, "Resource usage not scaling linearly");
     });
   });
 });

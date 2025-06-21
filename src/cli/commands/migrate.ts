@@ -29,7 +29,12 @@ interface AnalyzeOptions {
   verbose?: boolean;
 }
 
-// RollbackOptions interface removed - not used
+interface RollbackOptions {
+  backup: string;
+  timestamp?: string;
+  force?: boolean;
+  list?: boolean;
+}
 
 export function createMigrateCommand(): Command {
   const command = new Command("migrate");
@@ -45,7 +50,7 @@ export function createMigrateCommand(): Command {
     .option("--skip-validation", "Skip post-migration validation")
     .option("--analyze-only", "Only analyze project without migrating")
     .option("--verbose", "Show detailed output")
-    .action(async (options) => {
+    .action(async (options: MigrateOptions) => {
       try {
         const projectPath = path.resolve(options.path);
         
@@ -67,7 +72,7 @@ export function createMigrateCommand(): Command {
     .description("Analyze project for migration readiness")
     .option("-d, --detailed", "Show detailed analysis")
     .option("-o, --output <file>", "Output analysis to file")
-    .action(async (projectPath = ".", options) => {
+    .action(async (projectPath = ".", options: AnalyzeOptions) => {
       await analyzeProject(path.resolve(projectPath), options);
     });
 
@@ -78,7 +83,7 @@ export function createMigrateCommand(): Command {
     .option("-t, --timestamp <time>", "Restore from specific timestamp")
     .option("-f, --force", "Force rollback without prompts")
     .option("--list", "List available backups")
-    .action(async (projectPath = ".", options) => {
+    .action(async (projectPath = ".", options: RollbackOptions) => {
       const rollbackManager = new RollbackManager(path.resolve(projectPath), options.backup);
       
       if (options.list) {

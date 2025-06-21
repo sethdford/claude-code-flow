@@ -157,12 +157,12 @@ export class LoadBalancer extends EventEmitter {
     });
 
     this.eventBus.on("task:queued", (data) => {
-      const payload = data as { agentId: string; task: any };
+      const payload = data as { agentId: string; task: TaskDefinition };
       this.updateTaskQueue(payload.agentId, payload.task, "add");
     });
 
     this.eventBus.on("task:started", (data) => {
-      const payload = data as { agentId: string; task: any };
+      const payload = data as { agentId: string; task: TaskDefinition };
       this.updateTaskQueue(payload.agentId, payload.task, "remove");
     });
 
@@ -172,12 +172,12 @@ export class LoadBalancer extends EventEmitter {
     });
 
     this.eventBus.on("agent:performance-update", (data) => {
-      const payload = data as { agentId: string; metrics: any };
+      const payload = data as { agentId: string; metrics: PerformanceMetrics };
       this.updatePerformanceBaseline(payload.agentId, payload.metrics);
     });
   }
 
-  async initialize(): Promise<void> {
+  initialize(): void {
     this.logger.info("Initializing load balancer", {
       strategy: this.config.strategy,
       workStealing: this.config.enableWorkStealing,
@@ -194,7 +194,7 @@ export class LoadBalancer extends EventEmitter {
     this.emit("loadbalancer:initialized");
   }
 
-  async shutdown(): Promise<void> {
+  shutdown(): void {
     this.logger.info("Shutting down load balancer");
 
     // Stop monitoring
@@ -202,7 +202,7 @@ export class LoadBalancer extends EventEmitter {
     if (this.rebalanceInterval) clearInterval(this.rebalanceInterval);
 
     // Shutdown work stealer
-    await this.workStealer.shutdown();
+    this.workStealer.shutdown();
 
     this.emit("loadbalancer:shutdown");
   }
@@ -759,7 +759,7 @@ export class LoadBalancer extends EventEmitter {
     });
   }
 
-  private updatePerformanceBaseline(agentId: string, metrics: any): void {
+  private updatePerformanceBaseline(agentId: string, metrics: PerformanceMetrics): void {
     const baseline = this.performanceBaselines.get(agentId) ?? {
       expectedThroughput: 10,
       expectedResponseTime: 5000,
@@ -992,4 +992,10 @@ interface PerformanceBaseline {
   expectedThroughput: number;
   expectedResponseTime: number;
   expectedQuality: number;
+}
+
+interface PerformanceMetrics {
+  throughput: number;
+  responseTime: number;
+  quality?: number;
 }

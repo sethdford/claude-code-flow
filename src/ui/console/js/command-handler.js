@@ -11,29 +11,29 @@ export class CommandHandler {
     
     // Built-in commands
     this.builtinCommands = {
-      'help': this.showHelp.bind(this),
-      'clear': this.clearConsole.bind(this),
-      'status': this.showStatus.bind(this),
-      'connect': this.connectToServer.bind(this),
-      'disconnect': this.disconnectFromServer.bind(this),
-      'tools': this.listTools.bind(this),
-      'health': this.checkHealth.bind(this),
-      'history': this.showHistory.bind(this),
-      'export': this.exportSession.bind(this),
-      'theme': this.changeTheme.bind(this),
-      'version': this.showVersion.bind(this)
+      "help": this.showHelp.bind(this),
+      "clear": this.clearConsole.bind(this),
+      "status": this.showStatus.bind(this),
+      "connect": this.connectToServer.bind(this),
+      "disconnect": this.disconnectFromServer.bind(this),
+      "tools": this.listTools.bind(this),
+      "health": this.checkHealth.bind(this),
+      "history": this.showHistory.bind(this),
+      "export": this.exportSession.bind(this),
+      "theme": this.changeTheme.bind(this),
+      "version": this.showVersion.bind(this)
     };
     
     // Claude Flow commands
     this.claudeFlowCommands = {
-      'claude-flow': this.executeClaudeFlow.bind(this),
-      'swarm': this.executeSwarm.bind(this),
-      'init': this.initializeProject.bind(this),
-      'config': this.manageConfig.bind(this),
-      'memory': this.manageMemory.bind(this),
-      'agents': this.manageAgents.bind(this),
-      'benchmark': this.runBenchmark.bind(this),
-      'sparc': this.executeSparc.bind(this)
+      "claude-flow": this.executeClaudeFlow.bind(this),
+      "swarm": this.executeSwarm.bind(this),
+      "init": this.initializeProject.bind(this),
+      "config": this.manageConfig.bind(this),
+      "memory": this.manageMemory.bind(this),
+      "agents": this.manageAgents.bind(this),
+      "benchmark": this.runBenchmark.bind(this),
+      "sparc": this.executeSparc.bind(this)
     };
     
     this.allCommands = { ...this.builtinCommands, ...this.claudeFlowCommands };
@@ -44,7 +44,7 @@ export class CommandHandler {
    */
   async processCommand(command) {
     if (this.isProcessing) {
-      this.terminal.writeWarning('Another command is still processing. Please wait...');
+      this.terminal.writeWarning("Another command is still processing. Please wait...");
       return;
     }
     
@@ -61,7 +61,7 @@ export class CommandHandler {
       }
     } catch (error) {
       this.terminal.writeError(error.message);
-      console.error('Command execution error:', error);
+      console.error("Command execution error:", error);
     } finally {
       this.isProcessing = false;
       this.terminal.setLocked(false);
@@ -93,23 +93,23 @@ export class CommandHandler {
       return;
     }
     
-    this.terminal.writeInfo('Claude Code Console Commands:');
-    this.terminal.writeLine('');
+    this.terminal.writeInfo("Claude Code Console Commands:");
+    this.terminal.writeLine("");
     
-    this.terminal.writeInfo('Built-in Commands:');
+    this.terminal.writeInfo("Built-in Commands:");
     Object.keys(this.builtinCommands).forEach(cmd => {
       this.terminal.writeLine(`  ${cmd.padEnd(12)} - ${this.getCommandDescription(cmd)}`);
     });
     
-    this.terminal.writeLine('');
-    this.terminal.writeInfo('Claude Flow Commands:');
+    this.terminal.writeLine("");
+    this.terminal.writeInfo("Claude Flow Commands:");
     Object.keys(this.claudeFlowCommands).forEach(cmd => {
       this.terminal.writeLine(`  ${cmd.padEnd(12)} - ${this.getCommandDescription(cmd)}`);
     });
     
-    this.terminal.writeLine('');
-    this.terminal.writeInfo('Use "help <command>" for detailed information about a specific command.');
-    this.terminal.writeInfo('Use Ctrl+L to clear console, Ctrl+C to interrupt, Tab for autocomplete.');
+    this.terminal.writeLine("");
+    this.terminal.writeInfo("Use \"help <command>\" for detailed information about a specific command.");
+    this.terminal.writeInfo("Use Ctrl+L to clear console, Ctrl+C to interrupt, Tab for autocomplete.");
   }
   
   /**
@@ -117,28 +117,28 @@ export class CommandHandler {
    */
   getCommandDescription(command) {
     const descriptions = {
-      'help': 'Show help information',
-      'clear': 'Clear console output',
-      'status': 'Show connection and system status',
-      'connect': 'Connect to Claude Code server',
-      'disconnect': 'Disconnect from server',
-      'tools': 'List available tools',
-      'health': 'Check server health',
-      'history': 'Show command history',
-      'export': 'Export session data',
-      'theme': 'Change console theme',
-      'version': 'Show version information',
-      'claude-flow': 'Execute Claude Flow commands',
-      'swarm': 'Manage and execute swarms',
-      'init': 'Initialize new project',
-      'config': 'Manage configuration',
-      'memory': 'Manage memory and data',
-      'agents': 'Manage agents',
-      'benchmark': 'Run benchmarks',
-      'sparc': 'Execute SPARC mode commands'
+      "help": "Show help information",
+      "clear": "Clear console output",
+      "status": "Show connection and system status",
+      "connect": "Connect to Claude Code server",
+      "disconnect": "Disconnect from server",
+      "tools": "List available tools",
+      "health": "Check server health",
+      "history": "Show command history",
+      "export": "Export session data",
+      "theme": "Change console theme",
+      "version": "Show version information",
+      "claude-flow": "Execute Claude Flow commands",
+      "swarm": "Manage and execute swarms",
+      "init": "Initialize new project",
+      "config": "Manage configuration",
+      "memory": "Manage memory and data",
+      "agents": "Manage agents",
+      "benchmark": "Run benchmarks",
+      "sparc": "Execute SPARC mode commands"
     };
     
-    return descriptions[command] || 'No description available';
+    return descriptions[command] || "No description available";
   }
   
   /**
@@ -146,7 +146,7 @@ export class CommandHandler {
    */
   showCommandHelp(command) {
     const helpText = {
-      'help': `
+      "help": `
 Usage: help [command]
 Show help information for all commands or a specific command.
 
@@ -154,11 +154,11 @@ Examples:
   help              - Show all commands
   help claude-flow  - Show help for claude-flow command`,
       
-      'clear': `
+      "clear": `
 Usage: clear
 Clear the console output. You can also use Ctrl+L.`,
       
-      'connect': `
+      "connect": `
 Usage: connect [url] [token]
 Connect to Claude Code server.
 
@@ -171,7 +171,7 @@ Examples:
   connect ws://localhost:3000/ws
   connect ws://localhost:3000/ws my-auth-token`,
       
-      'claude-flow': `
+      "claude-flow": `
 Usage: claude-flow <subcommand> [options]
 Execute Claude Flow commands.
 
@@ -186,7 +186,7 @@ Examples:
   claude-flow status
   claude-flow modes`,
       
-      'swarm': `
+      "swarm": `
 Usage: swarm <action> [options]
 Manage and execute swarms.
 
@@ -215,7 +215,7 @@ Examples:
    */
   async clearConsole() {
     this.terminal.clear();
-    this.terminal.writeSuccess('Console cleared');
+    this.terminal.writeSuccess("Console cleared");
   }
   
   /**
@@ -225,18 +225,18 @@ Examples:
     const wsStatus = this.wsClient.getStatus();
     const terminalStats = this.terminal.getStats();
     
-    this.terminal.writeInfo('System Status:');
-    this.terminal.writeLine('');
+    this.terminal.writeInfo("System Status:");
+    this.terminal.writeLine("");
     
-    this.terminal.writeInfo('Connection:');
-    this.terminal.writeLine(`  Status: ${wsStatus.connected ? 'Connected' : 'Disconnected'}`);
-    this.terminal.writeLine(`  URL: ${wsStatus.url || 'Not set'}`);
+    this.terminal.writeInfo("Connection:");
+    this.terminal.writeLine(`  Status: ${wsStatus.connected ? "Connected" : "Disconnected"}`);
+    this.terminal.writeLine(`  URL: ${wsStatus.url || "Not set"}`);
     this.terminal.writeLine(`  Reconnect attempts: ${wsStatus.reconnectAttempts}`);
     this.terminal.writeLine(`  Queued messages: ${wsStatus.queuedMessages}`);
     this.terminal.writeLine(`  Pending requests: ${wsStatus.pendingRequests}`);
     
-    this.terminal.writeLine('');
-    this.terminal.writeInfo('Terminal:');
+    this.terminal.writeLine("");
+    this.terminal.writeInfo("Terminal:");
     this.terminal.writeLine(`  Total lines: ${terminalStats.totalLines}`);
     this.terminal.writeLine(`  History size: ${terminalStats.historySize}`);
     this.terminal.writeLine(`  Input locked: ${terminalStats.isLocked}`);
@@ -245,9 +245,9 @@ Examples:
     if (wsStatus.connected) {
       try {
         const healthStatus = await this.wsClient.getHealthStatus();
-        this.terminal.writeLine('');
-        this.terminal.writeInfo('Server Health:');
-        this.terminal.writeLine(`  Status: ${healthStatus.healthy ? 'Healthy' : 'Unhealthy'}`);
+        this.terminal.writeLine("");
+        this.terminal.writeInfo("Server Health:");
+        this.terminal.writeLine(`  Status: ${healthStatus.healthy ? "Healthy" : "Unhealthy"}`);
         
         if (healthStatus.metrics) {
           Object.entries(healthStatus.metrics).forEach(([key, value]) => {
@@ -255,7 +255,7 @@ Examples:
           });
         }
       } catch (error) {
-        this.terminal.writeWarning('Failed to get server health status');
+        this.terminal.writeWarning("Failed to get server health status");
       }
     }
   }
@@ -264,8 +264,8 @@ Examples:
    * Connect to server
    */
   async connectToServer(args) {
-    const url = args[0] || 'ws://localhost:3000/ws';
-    const token = args[1] || '';
+    const url = args[0] || "ws://localhost:3000/ws";
+    const token = args[1] || "";
     
     this.terminal.writeInfo(`Connecting to ${url}...`);
     
@@ -275,8 +275,8 @@ Examples:
       // Initialize session
       await this.wsClient.initializeSession();
       
-      this.terminal.writeSuccess('Connected successfully');
-      this.terminal.setPrompt('claude-flow>');
+      this.terminal.writeSuccess("Connected successfully");
+      this.terminal.setPrompt("claude-flow>");
     } catch (error) {
       this.terminal.writeError(`Connection failed: ${error.message}`);
     }
@@ -287,8 +287,8 @@ Examples:
    */
   async disconnectFromServer() {
     this.wsClient.disconnect();
-    this.terminal.writeSuccess('Disconnected from server');
-    this.terminal.setPrompt('offline>');
+    this.terminal.writeSuccess("Disconnected from server");
+    this.terminal.setPrompt("offline>");
   }
   
   /**
@@ -296,22 +296,22 @@ Examples:
    */
   async listTools() {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
     try {
       const tools = await this.wsClient.getAvailableTools();
       
-      this.terminal.writeInfo('Available Tools:');
-      this.terminal.writeLine('');
+      this.terminal.writeInfo("Available Tools:");
+      this.terminal.writeLine("");
       
       if (tools && tools.length > 0) {
         tools.forEach(tool => {
-          this.terminal.writeLine(`  ${tool.name.padEnd(20)} - ${tool.description || 'No description'}`);
+          this.terminal.writeLine(`  ${tool.name.padEnd(20)} - ${tool.description || "No description"}`);
         });
       } else {
-        this.terminal.writeWarning('No tools available');
+        this.terminal.writeWarning("No tools available");
       }
     } catch (error) {
       this.terminal.writeError(`Failed to list tools: ${error.message}`);
@@ -323,7 +323,7 @@ Examples:
    */
   async checkHealth() {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
@@ -331,14 +331,14 @@ Examples:
       const health = await this.wsClient.getHealthStatus();
       
       if (health.healthy) {
-        this.terminal.writeSuccess('Server is healthy');
+        this.terminal.writeSuccess("Server is healthy");
       } else {
-        this.terminal.writeError(`Server is unhealthy: ${health.error || 'Unknown error'}`);
+        this.terminal.writeError(`Server is unhealthy: ${health.error || "Unknown error"}`);
       }
       
       if (health.metrics) {
-        this.terminal.writeLine('');
-        this.terminal.writeInfo('Metrics:');
+        this.terminal.writeLine("");
+        this.terminal.writeInfo("Metrics:");
         Object.entries(health.metrics).forEach(([key, value]) => {
           this.terminal.writeLine(`  ${key}: ${value}`);
         });
@@ -355,11 +355,11 @@ Examples:
     const history = this.terminal.history;
     
     if (history.length === 0) {
-      this.terminal.writeInfo('No command history');
+      this.terminal.writeInfo("No command history");
       return;
     }
     
-    this.terminal.writeInfo('Command History:');
+    this.terminal.writeInfo("Command History:");
     history.forEach((cmd, index) => {
       this.terminal.writeLine(`  ${(index + 1).toString().padStart(3)}: ${cmd}`);
     });
@@ -369,7 +369,7 @@ Examples:
    * Export session data
    */
   async exportSession(args) {
-    const format = args[0] || 'json';
+    const format = args[0] || "json";
     
     const sessionData = {
       timestamp: new Date().toISOString(),
@@ -378,10 +378,10 @@ Examples:
       status: this.wsClient.getStatus()
     };
     
-    if (format === 'json') {
-      const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+    if (format === "json") {
+      const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: "application/json" });
       this.downloadFile(blob, `console-session-${Date.now()}.json`);
-      this.terminal.writeSuccess('Session exported as JSON');
+      this.terminal.writeSuccess("Session exported as JSON");
     } else {
       this.terminal.writeError(`Unsupported export format: ${format}`);
     }
@@ -392,10 +392,10 @@ Examples:
    */
   async changeTheme(args) {
     const theme = args[0];
-    const validThemes = ['dark', 'light', 'classic', 'matrix'];
+    const validThemes = ["dark", "light", "classic", "matrix"];
     
     if (!theme) {
-      this.terminal.writeInfo(`Available themes: ${validThemes.join(', ')}`);
+      this.terminal.writeInfo(`Available themes: ${validThemes.join(", ")}`);
       return;
     }
     
@@ -404,8 +404,8 @@ Examples:
       return;
     }
     
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('console_theme', theme);
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("console_theme", theme);
     this.terminal.writeSuccess(`Theme changed to: ${theme}`);
   }
   
@@ -413,9 +413,9 @@ Examples:
    * Show version information
    */
   async showVersion() {
-    this.terminal.writeInfo('Claude Code Console v1.0.0');
-    this.terminal.writeLine('Part of Claude Code CLI tool');
-    this.terminal.writeLine('Built with modern web technologies');
+    this.terminal.writeInfo("Claude Code Console v1.0.0");
+    this.terminal.writeLine("Part of Claude Code CLI tool");
+    this.terminal.writeLine("Built with modern web technologies");
   }
   
   /**
@@ -423,12 +423,12 @@ Examples:
    */
   async executeClaudeFlow(args) {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
     if (args.length === 0) {
-      this.terminal.writeError('Usage: claude-flow <subcommand> [options]');
+      this.terminal.writeError("Usage: claude-flow <subcommand> [options]");
       return;
     }
     
@@ -436,7 +436,7 @@ Examples:
     const subArgs = args.slice(1);
     
     try {
-      const result = await this.wsClient.executeCommand('claude-flow', {
+      const result = await this.wsClient.executeCommand("claude-flow", {
         subcommand,
         args: subArgs
       });
@@ -455,12 +455,12 @@ Examples:
    */
   async executeSwarm(args) {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
     // Implementation would call the swarm coordination system
-    this.terminal.writeWarning('Swarm commands not yet implemented in web console');
+    this.terminal.writeWarning("Swarm commands not yet implemented in web console");
   }
   
   /**
@@ -468,18 +468,18 @@ Examples:
    */
   async initializeProject(args) {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
-    this.terminal.writeWarning('Project initialization not yet implemented in web console');
+    this.terminal.writeWarning("Project initialization not yet implemented in web console");
   }
   
   /**
    * Manage configuration
    */
   async manageConfig(args) {
-    this.terminal.writeInfo('Use the Settings panel (⚙️ button) to manage configuration');
+    this.terminal.writeInfo("Use the Settings panel (⚙️ button) to manage configuration");
   }
   
   /**
@@ -487,11 +487,11 @@ Examples:
    */
   async manageMemory(args) {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
-    this.terminal.writeWarning('Memory management not yet implemented in web console');
+    this.terminal.writeWarning("Memory management not yet implemented in web console");
   }
   
   /**
@@ -499,11 +499,11 @@ Examples:
    */
   async manageAgents(args) {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
-    this.terminal.writeWarning('Agent management not yet implemented in web console');
+    this.terminal.writeWarning("Agent management not yet implemented in web console");
   }
   
   /**
@@ -511,11 +511,11 @@ Examples:
    */
   async runBenchmark(args) {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
-    this.terminal.writeWarning('Benchmarking not yet implemented in web console');
+    this.terminal.writeWarning("Benchmarking not yet implemented in web console");
   }
   
   /**
@@ -523,21 +523,21 @@ Examples:
    */
   async executeSparc(args) {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server');
+      this.terminal.writeError("Not connected to server");
       return;
     }
     
     if (args.length === 0) {
-      this.terminal.writeInfo('Available SPARC modes:');
-      const modes = ['coder', 'architect', 'analyzer', 'researcher', 'reviewer', 
-                    'tester', 'debugger', 'documenter', 'optimizer', 'designer'];
+      this.terminal.writeInfo("Available SPARC modes:");
+      const modes = ["coder", "architect", "analyzer", "researcher", "reviewer", 
+                    "tester", "debugger", "documenter", "optimizer", "designer"];
       modes.forEach(mode => {
         this.terminal.writeLine(`  ${mode}`);
       });
       return;
     }
     
-    this.terminal.writeWarning('SPARC mode execution not yet implemented in web console');
+    this.terminal.writeWarning("SPARC mode execution not yet implemented in web console");
   }
   
   /**
@@ -545,7 +545,7 @@ Examples:
    */
   async executeRemoteCommand(command, args) {
     if (!this.wsClient.isConnected) {
-      this.terminal.writeError('Not connected to server. Use "connect" command first.');
+      this.terminal.writeError("Not connected to server. Use \"connect\" command first.");
       return;
     }
     
@@ -557,7 +557,7 @@ Examples:
       if (result && result.output) {
         this.terminal.writeLine(result.output);
       } else {
-        this.terminal.writeSuccess('Command executed successfully');
+        this.terminal.writeSuccess("Command executed successfully");
       }
     } catch (error) {
       this.terminal.writeError(`Remote command failed: ${error.message}`);
@@ -569,7 +569,7 @@ Examples:
    */
   downloadFile(blob, filename) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);

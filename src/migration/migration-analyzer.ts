@@ -200,11 +200,11 @@ export class MigrationAnalyzer {
     // Strategy recommendations
     if (analysis.customCommands.length > 0 || analysis.conflictingFiles.length > 0) {
       analysis.recommendations.push(
-        'Use "selective" or "merge" strategy to preserve customizations',
+        "Use \"selective\" or \"merge\" strategy to preserve customizations",
       );
     } else if (!analysis.hasClaudeFolder) {
       analysis.recommendations.push(
-        'Use "full" strategy for clean installation',
+        "Use \"full\" strategy for clean installation",
       );
     }
 

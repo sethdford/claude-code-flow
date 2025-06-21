@@ -11,34 +11,34 @@ export class TerminalEmulator {
     this.historyIndex = -1;
     this.maxHistorySize = 1000;
     this.maxOutputLines = 1000;
-    this.currentPrompt = 'claude-flow>';
+    this.currentPrompt = "claude-flow>";
     this.isLocked = false;
     
     // Command suggestions
     this.commands = [
-      'help', 'clear', 'status', 'connect', 'disconnect',
-      'claude-flow', 'swarm', 'init', 'config', 'memory',
-      'tools', 'agents', 'benchmark', 'sparc'
+      "help", "clear", "status", "connect", "disconnect",
+      "claude-flow", "swarm", "init", "config", "memory",
+      "tools", "agents", "benchmark", "sparc"
     ];
     
     // ANSI color codes mapping
     this.ansiColors = {
-      '30': '#000000', // Black
-      '31': '#ff5555', // Red
-      '32': '#50fa7b', // Green
-      '33': '#f1fa8c', // Yellow
-      '34': '#bd93f9', // Blue
-      '35': '#ff79c6', // Magenta
-      '36': '#8be9fd', // Cyan
-      '37': '#f8f8f2', // White
-      '90': '#6272a4', // Bright Black (Gray)
-      '91': '#ff6e6e', // Bright Red
-      '92': '#69ff94', // Bright Green
-      '93': '#ffffa5', // Bright Yellow
-      '94': '#d6acff', // Bright Blue
-      '95': '#ff92df', // Bright Magenta
-      '96': '#a4ffff', // Bright Cyan
-      '97': '#ffffff'  // Bright White
+      "30": "#000000", // Black
+      "31": "#ff5555", // Red
+      "32": "#50fa7b", // Green
+      "33": "#f1fa8c", // Yellow
+      "34": "#bd93f9", // Blue
+      "35": "#ff79c6", // Magenta
+      "36": "#8be9fd", // Cyan
+      "37": "#f8f8f2", // White
+      "90": "#6272a4", // Bright Black (Gray)
+      "91": "#ff6e6e", // Bright Red
+      "92": "#69ff94", // Bright Green
+      "93": "#ffffa5", // Bright Yellow
+      "94": "#d6acff", // Bright Blue
+      "95": "#ff92df", // Bright Magenta
+      "96": "#a4ffff", // Bright Cyan
+      "97": "#ffffff"  // Bright White
     };
     
     this.setupInputHandlers();
@@ -48,7 +48,7 @@ export class TerminalEmulator {
   /**
    * Write output to terminal
    */
-  write(content, type = 'output', timestamp = true) {
+  write(content, type = "output", timestamp = true) {
     const entry = this.createOutputEntry(content, type, timestamp);
     this.outputElement.appendChild(entry);
     this.limitOutputLines();
@@ -59,51 +59,51 @@ export class TerminalEmulator {
   /**
    * Write line to terminal
    */
-  writeLine(content, type = 'output', timestamp = true) {
-    return this.write(content + '\n', type, timestamp);
+  writeLine(content, type = "output", timestamp = true) {
+    return this.write(content + "\n", type, timestamp);
   }
   
   /**
    * Write command to terminal
    */
   writeCommand(command) {
-    return this.write(`${this.currentPrompt} ${command}`, 'command', true);
+    return this.write(`${this.currentPrompt} ${command}`, "command", true);
   }
   
   /**
    * Write error message
    */
   writeError(message) {
-    return this.writeLine(`Error: ${message}`, 'error');
+    return this.writeLine(`Error: ${message}`, "error");
   }
   
   /**
    * Write success message
    */
   writeSuccess(message) {
-    return this.writeLine(message, 'success');
+    return this.writeLine(message, "success");
   }
   
   /**
    * Write warning message
    */
   writeWarning(message) {
-    return this.writeLine(`Warning: ${message}`, 'warning');
+    return this.writeLine(`Warning: ${message}`, "warning");
   }
   
   /**
    * Write info message
    */
   writeInfo(message) {
-    return this.writeLine(message, 'info');
+    return this.writeLine(message, "info");
   }
   
   /**
    * Write raw HTML content
    */
-  writeHTML(html, type = 'output') {
-    const entry = document.createElement('div');
-    entry.className = 'output-entry';
+  writeHTML(html, type = "output") {
+    const entry = document.createElement("div");
+    entry.className = "output-entry";
     entry.innerHTML = html;
     
     if (type) {
@@ -120,7 +120,7 @@ export class TerminalEmulator {
    * Clear terminal output
    */
   clear() {
-    this.outputElement.innerHTML = '';
+    this.outputElement.innerHTML = "";
     this.showWelcomeMessage();
   }
   
@@ -128,8 +128,8 @@ export class TerminalEmulator {
    * Show welcome message
    */
   showWelcomeMessage() {
-    const welcome = document.createElement('div');
-    welcome.className = 'welcome-message';
+    const welcome = document.createElement("div");
+    welcome.className = "welcome-message";
     welcome.innerHTML = `
       <div class="ascii-art">
    ╔═══════════════════════════════════════════════════════════╗
@@ -151,7 +151,7 @@ export class TerminalEmulator {
    */
   setPrompt(prompt) {
     this.currentPrompt = prompt;
-    const promptElement = document.getElementById('promptText');
+    const promptElement = document.getElementById("promptText");
     if (promptElement) {
       promptElement.textContent = prompt;
     }
@@ -165,9 +165,9 @@ export class TerminalEmulator {
     this.inputElement.disabled = locked;
     
     if (locked) {
-      this.inputElement.placeholder = 'Processing...';
+      this.inputElement.placeholder = "Processing...";
     } else {
-      this.inputElement.placeholder = 'Enter command...';
+      this.inputElement.placeholder = "Enter command...";
       this.inputElement.focus();
     }
   }
@@ -199,7 +199,7 @@ export class TerminalEmulator {
    * Clear input
    */
   clearInput() {
-    this.inputElement.value = '';
+    this.inputElement.value = "";
   }
   
   /**
@@ -223,13 +223,13 @@ export class TerminalEmulator {
   navigateHistory(direction) {
     if (this.history.length === 0) return;
     
-    if (direction === 'up') {
+    if (direction === "up") {
       if (this.historyIndex === -1) {
         this.historyIndex = this.history.length - 1;
       } else if (this.historyIndex > 0) {
         this.historyIndex--;
       }
-    } else if (direction === 'down') {
+    } else if (direction === "down") {
       if (this.historyIndex < this.history.length - 1) {
         this.historyIndex++;
       } else {
@@ -238,7 +238,7 @@ export class TerminalEmulator {
     }
     
     if (this.historyIndex === -1) {
-      this.setInput('');
+      this.setInput("");
     } else {
       this.setInput(this.history[this.historyIndex]);
     }
@@ -248,26 +248,26 @@ export class TerminalEmulator {
    * Create output entry element
    */
   createOutputEntry(content, type, timestamp) {
-    const entry = document.createElement('div');
-    entry.className = 'output-entry';
+    const entry = document.createElement("div");
+    entry.className = "output-entry";
     
-    const line = document.createElement('div');
-    line.className = 'output-line';
+    const line = document.createElement("div");
+    line.className = "output-line";
     
     // Add timestamp if enabled
     if (timestamp && this.shouldShowTimestamp()) {
-      const timeElement = document.createElement('span');
-      timeElement.className = 'output-timestamp';
+      const timeElement = document.createElement("span");
+      timeElement.className = "output-timestamp";
       timeElement.textContent = this.formatTimestamp(new Date());
       line.appendChild(timeElement);
     }
     
     // Add content
-    const contentElement = document.createElement('span');
+    const contentElement = document.createElement("span");
     contentElement.className = `output-content ${type}`;
     
     // Process ANSI codes if present
-    if (typeof content === 'string' && content.includes('\x1b[')) {
+    if (typeof content === "string" && content.includes("\x1b[")) {
       contentElement.innerHTML = this.processAnsiCodes(content);
     } else {
       contentElement.textContent = content;
@@ -286,8 +286,8 @@ export class TerminalEmulator {
     // Simple ANSI processing - convert color codes to HTML
     return text
       .replace(/\x1b\[(\d+)m/g, (match, code) => {
-        if (code === '0' || code === '00') {
-          return '</span>'; // Reset
+        if (code === "0" || code === "00") {
+          return "</span>"; // Reset
         }
         
         const color = this.ansiColors[code];
@@ -295,21 +295,21 @@ export class TerminalEmulator {
           return `<span style="color: ${color}">`;
         }
         
-        return '';
+        return "";
       })
-      .replace(/\x1b\[[\d;]*m/g, '') // Remove other ANSI codes
-      + '</span>'; // Ensure we close any open spans
+      .replace(/\x1b\[[\d;]*m/g, "") // Remove other ANSI codes
+      + "</span>"; // Ensure we close any open spans
   }
   
   /**
    * Format timestamp
    */
   formatTimestamp(date) {
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString("en-US", {
       hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
     });
   }
   
@@ -317,20 +317,20 @@ export class TerminalEmulator {
    * Check if timestamps should be shown
    */
   shouldShowTimestamp() {
-    const showTimestamps = localStorage.getItem('console_show_timestamps');
-    return showTimestamps !== 'false';
+    const showTimestamps = localStorage.getItem("console_show_timestamps");
+    return showTimestamps !== "false";
   }
   
   /**
    * Limit output lines
    */
   limitOutputLines() {
-    const entries = this.outputElement.querySelectorAll('.output-entry');
+    const entries = this.outputElement.querySelectorAll(".output-entry");
     
     if (entries.length > this.maxOutputLines) {
       const excessCount = entries.length - this.maxOutputLines;
       for (let i = 0; i < excessCount; i++) {
-        if (entries[i] && !entries[i].classList.contains('welcome-message')) {
+        if (entries[i] && !entries[i].classList.contains("welcome-message")) {
           entries[i].remove();
         }
       }
@@ -350,49 +350,49 @@ export class TerminalEmulator {
    * Check if auto-scroll is enabled
    */
   shouldAutoScroll() {
-    const autoScroll = localStorage.getItem('console_auto_scroll');
-    return autoScroll !== 'false';
+    const autoScroll = localStorage.getItem("console_auto_scroll");
+    return autoScroll !== "false";
   }
   
   /**
    * Setup input event handlers
    */
   setupInputHandlers() {
-    this.inputElement.addEventListener('keydown', (event) => {
+    this.inputElement.addEventListener("keydown", (event) => {
       if (this.isLocked) {
         event.preventDefault();
         return;
       }
       
       switch (event.key) {
-        case 'Enter':
+        case "Enter":
           event.preventDefault();
           this.handleEnter();
           break;
           
-        case 'ArrowUp':
+        case "ArrowUp":
           event.preventDefault();
-          this.navigateHistory('up');
+          this.navigateHistory("up");
           break;
           
-        case 'ArrowDown':
+        case "ArrowDown":
           event.preventDefault();
-          this.navigateHistory('down');
+          this.navigateHistory("down");
           break;
           
-        case 'Tab':
+        case "Tab":
           event.preventDefault();
           this.handleTab();
           break;
           
-        case 'l':
+        case "l":
           if (event.ctrlKey) {
             event.preventDefault();
             this.clear();
           }
           break;
           
-        case 'c':
+        case "c":
           if (event.ctrlKey) {
             event.preventDefault();
             this.handleInterrupt();
@@ -401,7 +401,7 @@ export class TerminalEmulator {
       }
     });
     
-    this.inputElement.addEventListener('input', () => {
+    this.inputElement.addEventListener("input", () => {
       if (!this.isLocked) {
         this.handleInput();
       }
@@ -420,7 +420,7 @@ export class TerminalEmulator {
       this.clearInput();
       
       // Emit command event
-      this.emit('command', command);
+      this.emit("command", command);
     }
   }
   
@@ -432,9 +432,9 @@ export class TerminalEmulator {
     const matches = this.commands.filter(cmd => cmd.startsWith(input));
     
     if (matches.length === 1) {
-      this.setInput(matches[0] + ' ');
+      this.setInput(matches[0] + " ");
     } else if (matches.length > 1) {
-      this.writeLine(`Available commands: ${matches.join(', ')}`, 'info');
+      this.writeLine(`Available commands: ${matches.join(", ")}`, "info");
     }
   }
   
@@ -443,16 +443,16 @@ export class TerminalEmulator {
    */
   handleInput() {
     // Could be used for live suggestions in the future
-    this.emit('input_change', this.getInput());
+    this.emit("input_change", this.getInput());
   }
   
   /**
    * Handle Ctrl+C interrupt
    */
   handleInterrupt() {
-    this.writeLine('^C', 'warning');
+    this.writeLine("^C", "warning");
     this.clearInput();
-    this.emit('interrupt');
+    this.emit("interrupt");
   }
   
   /**
@@ -462,7 +462,7 @@ export class TerminalEmulator {
     let isUserScrolling = false;
     let scrollTimeout;
     
-    this.outputElement.addEventListener('scroll', () => {
+    this.outputElement.addEventListener("scroll", () => {
       isUserScrolling = true;
       
       clearTimeout(scrollTimeout);
@@ -482,10 +482,10 @@ export class TerminalEmulator {
    * Stream text output with typing effect
    */
   async streamText(text, delay = 10) {
-    const entry = this.createOutputEntry('', 'output', true);
+    const entry = this.createOutputEntry("", "output", true);
     this.outputElement.appendChild(entry);
     
-    const contentElement = entry.querySelector('.output-content');
+    const contentElement = entry.querySelector(".output-content");
     
     for (let i = 0; i < text.length; i++) {
       contentElement.textContent += text[i];
@@ -526,7 +526,7 @@ export class TerminalEmulator {
       try {
         callback(data);
       } catch (error) {
-        console.error('Error in terminal event listener:', error);
+        console.error("Error in terminal event listener:", error);
       }
     });
   }
@@ -543,7 +543,7 @@ export class TerminalEmulator {
    * Get terminal statistics
    */
   getStats() {
-    const entries = this.outputElement.querySelectorAll('.output-entry');
+    const entries = this.outputElement.querySelectorAll(".output-entry");
     
     return {
       totalLines: entries.length,
@@ -557,12 +557,12 @@ export class TerminalEmulator {
    * Export terminal history
    */
   exportHistory() {
-    const entries = Array.from(this.outputElement.querySelectorAll('.output-entry'));
+    const entries = Array.from(this.outputElement.querySelectorAll(".output-entry"));
     
     return entries.map(entry => {
-      const timestamp = entry.querySelector('.output-timestamp')?.textContent || '';
-      const content = entry.querySelector('.output-content')?.textContent || '';
-      const type = entry.querySelector('.output-content')?.className.split(' ').find(c => c.startsWith('output-')) || '';
+      const timestamp = entry.querySelector(".output-timestamp")?.textContent || "";
+      const content = entry.querySelector(".output-content")?.textContent || "";
+      const type = entry.querySelector(".output-content")?.className.split(" ").find(c => c.startsWith("output-")) || "";
       
       return { timestamp, content, type };
     });
@@ -575,7 +575,7 @@ export class TerminalEmulator {
     this.clear();
     
     history.forEach(({ timestamp, content, type }) => {
-      this.write(content, type.replace('output-', ''), false);
+      this.write(content, type.replace("output-", ""), false);
     });
   }
 }

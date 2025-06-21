@@ -5,7 +5,7 @@
 
 import chalk from "chalk";
 import { ProcessManager } from "./process-manager.js";
-import { ProcessInfo, ProcessStatus, SystemStats } from "./types.js";
+import { ProcessInfo, ProcessStatus } from "./types.js";
 
 
 // Color compatibility
@@ -32,7 +32,7 @@ export class ProcessUI {
   }
 
   private setupEventListeners(): void {
-    this.processManager.on("statusChanged", ({ processId, status }: { processId: string; status: ProcessStatus }) => {
+    this.processManager.on("statusChanged", ({ processId: _processId, status: _status }: { processId: string; status: ProcessStatus }) => {
       if (this.running) {
         this.render();
       }
@@ -56,7 +56,7 @@ export class ProcessUI {
 
     // Simple input loop
     const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
+    const _encoder = new TextEncoder();
     
     while (this.running) {
       // Show prompt
@@ -81,7 +81,7 @@ export class ProcessUI {
     }
   }
 
-  async stop(): Promise<void> {
+  stop(): void {
     this.running = false;
     console.clear();
   }
@@ -117,16 +117,17 @@ export class ProcessUI {
         this.showHelp();
         break;
         
-      default:
+      default: {
         // Check if it's a number (process selection)
         const num = parseInt(input);
         if (!isNaN(num) && num >= 1 && num <= processes.length) {
           this.selectedIndex = num - 1;
           await this.showProcessMenu(processes[this.selectedIndex]);
         } else {
-          console.log(colors.yellow('Invalid command. Type "h" for help.'));
+          console.log(colors.yellow("Invalid command. Type \"h\" for help."));
         }
         break;
+      }
     }
   }
 
@@ -270,7 +271,7 @@ export class ProcessUI {
   }
 
   private async waitForKey(): Promise<void> {
-    const buf = new Uint8Array(1);
+    const _buf = new Uint8Array(1);
     await new Promise((resolve) => {
       process.stdin.once("data", () => resolve(undefined));
     });

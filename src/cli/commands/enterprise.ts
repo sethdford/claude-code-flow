@@ -95,10 +95,10 @@ export const enterpriseCommands: Command[] = [
           try {
             const project = await manager.createProject({
               name,
-              description: ctx.flags.description as string || `Project: ${name}`,
-              type: (ctx.flags.type as any) || "custom",
-              priority: (ctx.flags.priority as any) || "medium",
-              owner: ctx.flags.owner as string || "system",
+              description: ctx.flags.description as string ?? `Project: ${name}`,
+              type: (ctx.flags.type as any) ?? "custom",
+              priority: (ctx.flags.priority as any) ?? "medium",
+              owner: ctx.flags.owner as string ?? "system",
               stakeholders: ctx.flags.stakeholders ? 
                 (ctx.flags.stakeholders as string).split(",") : [],
             });
@@ -188,7 +188,7 @@ export const enterpriseCommands: Command[] = [
             console.log(`\n${bold("Timeline:")}`);
             console.log(`  Planned: ${project.timeline.plannedStart.toLocaleDateString()} - ${project.timeline.plannedEnd.toLocaleDateString()}`);
             if (project.timeline.actualStart) {
-              console.log(`  Actual: ${project.timeline.actualStart.toLocaleDateString()} - ${project.timeline.actualEnd?.toLocaleDateString() || "In Progress"}`);
+              console.log(`  Actual: ${project.timeline.actualStart.toLocaleDateString()} - ${project.timeline.actualEnd?.toLocaleDateString() ?? "In Progress"}`);
             }
 
             console.log(`\n${bold("Budget:")}`);
@@ -650,7 +650,7 @@ export const enterpriseCommands: Command[] = [
                   },
                   metadata: {
                     environment: ctx.flags.environment as string || "development",
-                    owner: ctx.flags.owner as string || "system",
+                    owner: ctx.flags.owner as string ?? "system",
                     purpose: ctx.flags.purpose as string || "general",
                   },
                 });

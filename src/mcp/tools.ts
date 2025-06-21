@@ -219,7 +219,7 @@ export class ToolRegistry extends EventEmitter {
    */
   private validateInput(tool: MCPTool, input: unknown): void {
     // Simple validation - in production, use a JSON Schema validator
-    const schema = tool.inputSchema as Record<string, unknown>;
+    const schema = tool.inputSchema;
 
     if (schema.type === "object" && schema.properties) {
       if (typeof input !== "object" || input === null) {
@@ -329,7 +329,7 @@ export class ToolRegistry extends EventEmitter {
     // Check required permissions
     if (capability.requiredPermissions && context?.permissions) {
       const hasAllPermissions = capability.requiredPermissions.every(
-        permission => context.permissions.includes(permission),
+        permission => context.permissions!.includes(permission),
       );
       
       if (!hasAllPermissions) {
@@ -342,12 +342,12 @@ export class ToolRegistry extends EventEmitter {
     // Check protocol version compatibility
     if (context?.protocolVersion) {
       const isCompatible = capability.supportedProtocolVersions.some(
-        version => this.isProtocolVersionCompatible(context.protocolVersion, version),
+        version => this.isProtocolVersionCompatible(context.protocolVersion!, version),
       );
       
       if (!isCompatible) {
         throw new MCPError(
-          `Tool ${toolName} is not compatible with protocol version ${context.protocolVersion.major}.${context.protocolVersion.minor}.${context.protocolVersion.patch}`,
+          `Tool ${toolName} is not compatible with protocol version ${context.protocolVersion!.major}.${context.protocolVersion!.minor}.${context.protocolVersion!.patch}`,
         );
       }
     }

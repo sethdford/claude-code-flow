@@ -205,7 +205,7 @@ export async function retrieveCoordinationData(
 export const USAGE_EXAMPLES = {
   todoWrite: `
 // Example: Using TodoWrite for task coordination
-import { createTaskTodos } from './task';
+import { createTaskTodos } from "./task";
 
 const todos = await createTaskTodos(
   "Build e-commerce platform",
@@ -227,7 +227,7 @@ const todos = await createTaskTodos(
 
   taskTool: `
 // Example: Using Task tool pattern for parallel agents
-import { launchParallelAgents } from './task';
+import { launchParallelAgents } from "./task";
 
 const agentIds = await launchParallelAgents([
   {
@@ -256,7 +256,7 @@ const agentIds = await launchParallelAgents([
 
   memoryCoordination: `
 // Example: Using Memory for cross-agent coordination
-import { storeCoordinationData, retrieveCoordinationData } from './task';
+import { storeCoordinationData, retrieveCoordinationData } from "./task";
 
 // Store research findings for other agents
 await storeCoordinationData(
@@ -283,7 +283,7 @@ const findings = await retrieveCoordinationData(
 
   batchOperations: `
 // Example: Coordinated batch operations
-import { TaskCoordinator } from './task';
+import { TaskCoordinator } from "./task";
 
 const results = await coordinator.coordinateBatchOperations([
   {
@@ -306,7 +306,7 @@ const results = await coordinator.coordinateBatchOperations([
 
   swarmCoordination: `
 // Example: Swarm coordination patterns
-import { TaskCoordinator } from './task';
+import { TaskCoordinator } from "./task";
 
 await coordinator.coordinateSwarm(
   "Comprehensive system development",

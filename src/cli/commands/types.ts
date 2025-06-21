@@ -48,6 +48,13 @@ export interface AgentSpawnOptions extends BaseCommandOptions {
   };
 }
 
+export interface AgentStartOptions extends BaseCommandOptions {
+  detached?: boolean;
+  interactive?: boolean;
+  config?: string;
+  env?: Record<string, string>;
+}
+
 export interface AgentInfo {
   id: { id: string; instance: string };
   name: string;
@@ -173,6 +180,19 @@ export interface SwarmOptions extends BaseCommandOptions {
   timeout?: number;
   checkpoint?: boolean;
   resume?: string;
+  // Additional properties used in swarm.ts
+  dryRun?: boolean;
+  research?: boolean;
+  review?: boolean;
+  memoryNamespace?: string;
+  simulate?: boolean;
+  background?: boolean;
+  distributed?: boolean;
+  persistence?: boolean;
+  ui?: boolean;
+  coordinator?: boolean;
+  config?: string;
+  maxDepth?: number;
 }
 
 // Task command options

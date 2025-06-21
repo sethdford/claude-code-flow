@@ -128,7 +128,7 @@ export class SwarmMemoryManager extends EventEmitter {
     // Start sync timer
     if (this.config.syncInterval > 0) {
       this.syncTimer = setInterval(() => {
-        this.syncMemoryState();
+        void this.syncMemoryState();
       }, this.config.syncInterval);
     }
 
@@ -198,7 +198,7 @@ export class SwarmMemoryManager extends EventEmitter {
         shareLevel: entry.metadata.shareLevel,
       },
       timestamp: entry.timestamp,
-      tags: entry.metadata.tags || [],
+      tags: entry.metadata.tags ?? [],
       version: 1,
       metadata: {
         type: "swarm-memory",
@@ -244,16 +244,16 @@ export class SwarmMemoryManager extends EventEmitter {
     if (query.tags && query.tags.length > 0) {
       results = results.filter(e => 
         e.metadata.tags && 
-        query.tags.some(tag => e.metadata.tags?.includes(tag)),
+        query.tags!.some(tag => e.metadata.tags?.includes(tag)),
       );
     }
 
     if (query.since) {
-      results = results.filter(e => e.timestamp >= query.since);
+      results = results.filter(e => e.timestamp >= query.since!);
     }
 
     if (query.before) {
-      results = results.filter(e => e.timestamp <= query.before);
+      results = results.filter(e => e.timestamp <= query.before!);
     }
 
     if (query.shareLevel) {
@@ -325,7 +325,7 @@ export class SwarmMemoryManager extends EventEmitter {
       throw new Error("Cannot broadcast private memory");
     }
 
-    const targets = agentIds || Array.from(this.agentMemories.keys())
+    const targets = agentIds ?? Array.from(this.agentMemories.keys())
       .filter(id => id !== entry.agentId);
 
     for (const targetId of targets) {
@@ -374,7 +374,7 @@ export class SwarmMemoryManager extends EventEmitter {
     const relevantKBs = Array.from(this.knowledgeBases.values())
       .filter(kb => {
         // Simple matching based on tags and content
-        const tags = entry.metadata.tags || [];
+        const tags = entry.metadata.tags ?? [];
         return tags.some(tag => 
           kb.metadata.expertise.some(exp => 
             exp.toLowerCase().includes(tag.toLowerCase()) ||
@@ -431,7 +431,7 @@ export class SwarmMemoryManager extends EventEmitter {
     knowledgeContributions: number;
     sharedEntries: number;
   }> {
-    const agentEntryIds = this.agentMemories.get(agentId) || new Set();
+    const agentEntryIds = this.agentMemories.get(agentId) ?? new Set();
     const agentEntries = Array.from(agentEntryIds)
       .map(id => this.entries.get(id))
       .filter(Boolean) as SwarmMemoryEntry[];
@@ -547,7 +547,7 @@ export class SwarmMemoryManager extends EventEmitter {
 
     // Remove oldest entries that are not marked as important
     const entries = Array.from(this.entries.values())
-      .filter(e => (e.metadata.priority || 1) <= 1) // Only remove low priority
+      .filter(e => (e.metadata.priority ?? 1) <= 1) // Only remove low priority
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
     const toRemove = entries.slice(0, this.entries.size - this.config.maxEntries);
@@ -580,8 +580,8 @@ export class SwarmMemoryManager extends EventEmitter {
     const entriesByAgent: Record<string, number> = {};
 
     for (const entry of entries) {
-      entriesByType[entry.type] = (entriesByType[entry.type] || 0) + 1;
-      entriesByAgent[entry.agentId] = (entriesByAgent[entry.agentId] || 0) + 1;
+      entriesByType[entry.type] = (entriesByType[entry.type] ?? 0) + 1;
+      entriesByAgent[entry.agentId] = (entriesByAgent[entry.agentId] ?? 0) + 1;
     }
 
     // Rough memory usage calculation
@@ -616,7 +616,7 @@ export class SwarmMemoryManager extends EventEmitter {
   async clearMemory(agentId?: string): Promise<void> {
     if (agentId) {
       // Clear specific agent's memory
-      const entryIds = this.agentMemories.get(agentId) || new Set();
+      const entryIds = this.agentMemories.get(agentId) ?? new Set();
       for (const entryId of entryIds) {
         this.entries.delete(entryId);
       }

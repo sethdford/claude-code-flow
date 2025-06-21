@@ -14,7 +14,7 @@ export * from "./prompt-manager";
 export * from "./prompt-cli";
 
 // Optimizations
-// export * from './optimizations/index.ts';
+// export * from "./optimizations/index.ts";
 
 // Utility function to get all exports
 export function getSwarmComponents() {

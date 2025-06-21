@@ -180,7 +180,7 @@ export class TerminalSession {
     }
 
     // Set up command prompt
-    await this.terminal.executeCommand('export PS1="[claude-flow]$ "');
+    await this.terminal.executeCommand("export PS1=\"[claude-flow]$ \"");
   }
 
   private async runCleanupCommands(): Promise<void> {
@@ -200,7 +200,7 @@ export class TerminalSession {
   private async performHealthCheck(): Promise<void> {
     try {
       const result = await timeout(
-        this.terminal.executeCommand('echo "HEALTH_CHECK_OK"'),
+        this.terminal.executeCommand("echo \"HEALTH_CHECK_OK\""),
         5000,
         "Health check timeout",
       );

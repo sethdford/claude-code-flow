@@ -12,7 +12,7 @@ import { promises as fs } from "node:fs";
 
 // Simple prompt wrappers
 const Confirm = async (message: string): Promise<boolean> => {
-  const answer = await inquirer.prompt([{
+  const answer = await inquirer.prompt<{ result: boolean }>([{
     type: "confirm",
     name: "result",
     message,
@@ -174,7 +174,7 @@ async function runWorkflow(workflowFile: string, options: RunWorkflowOptions): P
     // Override variables if provided
     if (options.variables) {
       try {
-        const vars = JSON.parse(options.variables);
+        const vars = JSON.parse(options.variables) as Record<string, unknown>;
         workflow.variables = { ...workflow.variables, ...vars };
       } catch (error) {
         throw new Error(`Invalid variables JSON: ${(error as Error).message}`);
@@ -214,7 +214,7 @@ async function validateWorkflow(workflowFile: string, options: ValidateWorkflowO
     console.log(colors.green("✓ Workflow validation passed"));
     console.log(`${colors.white("Name:")} ${workflow.name}`);
     console.log(`${colors.white("Tasks:")} ${workflow.tasks.length}`);
-    console.log(`${colors.white("Agents:")} ${workflow.agents?.length || 0}`);
+    console.log(`${colors.white("Agents:")} ${workflow.agents?.length ?? 0}`);
     
     if (workflow.dependencies) {
       const depCount = Object.values(workflow.dependencies).flat().length;
@@ -452,7 +452,7 @@ async function generateTemplate(templateType: string, options: GenerateTemplateO
     return;
   }
 
-  const outputFile = options.output || `${templateType}-workflow.${options.format}`;
+  const outputFile = options.output ?? `${templateType}-workflow.${options.format}`;
   
   let content: string;
   if (options.format === "yaml") {
@@ -469,7 +469,7 @@ async function generateTemplate(templateType: string, options: GenerateTemplateO
   console.log(`${colors.white("Template:")} ${templateType}`);
   console.log(`${colors.white("File:")} ${outputFile}`);
   console.log(`${colors.white("Tasks:")} ${template.tasks.length}`);
-  console.log(`${colors.white("Agents:")} ${template.agents?.length || 0}`);
+  console.log(`${colors.white("Agents:")} ${template.agents?.length ?? 0}`);
 }
 
 async function loadWorkflow(workflowFile: string): Promise<WorkflowDefinition> {
@@ -496,7 +496,7 @@ async function validateWorkflowDefinition(workflow: WorkflowDefinition, strict =
 
   // Task validation
   const taskIds = new Set<string>();
-  for (const task of workflow.tasks || []) {
+  for (const task of workflow.tasks ?? []) {
     if (!task.id) errors.push("Task ID is required");
     if (taskIds.has(task.id)) errors.push(`Duplicate task ID: ${task.id}`);
     taskIds.add(task.id);
@@ -543,7 +543,7 @@ async function validateWorkflowDefinition(workflow: WorkflowDefinition, strict =
     // Check for circular dependencies
     const graph = new Map<string, string[]>();
     for (const task of workflow.tasks) {
-      graph.set(task.id, task.depends || []);
+      graph.set(task.id, task.depends ?? []);
     }
     
     if (hasCircularDependencies(graph)) {
@@ -586,7 +586,11 @@ async function executeWorkflow(execution: WorkflowExecution, workflow: WorkflowD
   // Mock execution - in production, this would use the orchestrator
   for (let i = 0; i < execution.tasks.length; i++) {
     const taskExec = execution.tasks[i];
-    const taskDef = workflow.tasks.find(t => t.id === taskExec.taskId)!;
+    const taskDef = workflow.tasks.find(t => t.id === taskExec.taskId);
+    
+    if (!taskDef) {
+      throw new Error(`Task definition not found for taskId: ${taskExec.taskId}`);
+    }
     
     console.log(`${colors.cyan("→")} Starting task: ${taskDef.description}`);
     
@@ -664,7 +668,7 @@ async function watchWorkflowStatus(workflowId: string): Promise<void> {
   console.log(colors.cyan("Watching workflow status..."));
   console.log(colors.gray("Press Ctrl+C to stop\n"));
 
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     try {
       console.clear();
@@ -733,7 +737,7 @@ function displayWorkflowStatus(execution: WorkflowExecution): void {
       colors.white(taskExec.taskId),
       `${statusIcon} ${taskExec.status}`,
       duration,
-      taskExec.assignedAgent || "-",
+      taskExec.assignedAgent ?? "-",
     ]);
   }
   
@@ -796,7 +800,7 @@ function hasCircularDependencies(graph: Map<string, string[]>): boolean {
     visited.add(node);
     recursionStack.add(node);
     
-    const dependencies = graph.get(node) || [];
+    const dependencies = graph.get(node) ?? [];
     for (const dep of dependencies) {
       if (hasCycle(dep)) return true;
     }

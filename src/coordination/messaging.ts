@@ -32,14 +32,14 @@ export class MessageRouter {
     private logger: ILogger,
   ) {}
 
-  async initialize(): Promise<void> {
+  initialize(): void {
     this.logger.info("Initializing message router");
     
     // Set up periodic cleanup
     setInterval(() => this.cleanup(), 60000); // Every minute
   }
 
-  async shutdown(): Promise<void> {
+  shutdown(): void {
     this.logger.info("Shutting down message router");
     
     // Reject all pending responses
@@ -128,10 +128,10 @@ export class MessageRouter {
     }
   }
 
-  async sendResponse(
+  sendResponse(
     originalMessageId: string,
     response: unknown,
-  ): Promise<void> {
+  ): void {
     const pending = this.pendingResponses.get(originalMessageId);
     if (!pending) {
       this.logger.warn("No pending response found", { messageId: originalMessageId });
@@ -143,11 +143,11 @@ export class MessageRouter {
     pending.resolve(response);
   }
 
-  async getHealthStatus(): Promise<{ 
+  getHealthStatus(): { 
     healthy: boolean; 
     error?: string; 
     metrics?: Record<string, number>;
-  }> {
+  } {
     const totalQueues = this.queues.size;
     let totalMessages = 0;
     let totalHandlers = 0;
@@ -234,16 +234,18 @@ export class MessageRouter {
   }
 
   private ensureQueue(agentId: string): MessageQueue {
-    if (!this.queues.has(agentId)) {
-      this.queues.set(agentId, {
+    let queue = this.queues.get(agentId);
+    if (!queue) {
+      queue = {
         messages: [],
         handlers: new Map(),
-      });
+      };
+      this.queues.set(agentId, queue);
     }
-    return this.queues.get(agentId)!;
+    return queue;
   }
 
-  async performMaintenance(): Promise<void> {
+  performMaintenance(): void {
     this.logger.debug("Performing message router maintenance");
     this.cleanup();
   }

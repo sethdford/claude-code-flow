@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, test, jest } from '@jest/globals';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import * as os from 'os';
-import { PromptCopier, copyPrompts } from '../prompt-copier';
-import { EnhancedPromptCopier, copyPromptsEnhanced } from '../prompt-copier-enhanced';
-import { PromptConfigManager, PromptValidator } from '../prompt-utils';
+import { describe, it, expect, beforeEach, afterEach, test, jest } from "@jest/globals";
+import * as fs from "fs/promises";
+import * as path from "path";
+import * as os from "os";
+import { PromptCopier, copyPrompts } from "../prompt-copier";
+import { EnhancedPromptCopier, copyPromptsEnhanced } from "../prompt-copier-enhanced";
+import { PromptConfigManager, PromptValidator } from "../prompt-utils";
 
 // Increase Jest timeout for all tests in this file
 jest.setTimeout(30000);
@@ -539,7 +539,7 @@ Content here`;
 
   test('should warn about large files', async () => {
     const filePath = path.join(tempDir, 'large.md');
-    const largeContent = '# Large Prompt\n' + 'x'.repeat(200 * 1024); // 200KB
+    const largeContent = "# Large Prompt\n" + 'x'.repeat(200 * 1024); // 200KB
     
     await fs.writeFile(filePath, largeContent);
 

@@ -34,7 +34,7 @@ export function getVersion(): string {
       }
     } catch {
       // Fallback to normal file system lookup
-      if (!import.meta.url || import.meta.url === 'undefined') {
+      if (!import.meta.url || import.meta.url === "undefined") {
         // If import.meta.url is not available, use hardcoded fallback
         cachedVersion = "1.0.81";
         return cachedVersion;
@@ -84,7 +84,7 @@ export function getVersion(): string {
     }
     
     cachedVersion = packageJson.version;
-    return cachedVersion;
+    return cachedVersion as string;
     
   } catch (error) {
     // Fallback version if package.json can't be read

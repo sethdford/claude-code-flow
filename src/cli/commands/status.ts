@@ -9,6 +9,7 @@ import { formatDuration, formatStatusIndicator } from "../formatter.js";
 import { existsSync } from "node:fs";
 import { promises as fs } from "node:fs";
 import { getVersion } from "../../utils/version.js";
+import type { StatusOptions } from "./types.js";
 
 // Color compatibility
 const colors = {
@@ -25,14 +26,21 @@ const colors = {
 // Export functions for use by other modules
 export { showStatus, getSystemStatus };
 
+interface StatusCommandOptions extends StatusOptions {
+  watch?: boolean;
+  interval?: string;
+  component?: string;
+  json?: boolean;
+}
+
 export const statusCommand = new Command()
   .name("status")
-  .description('Show Claude-Flow system status')
-  .option('-w, --watch', 'Watch mode - continuously update status')
-  .option('-i, --interval <seconds>', 'Update interval in seconds', '5')
-  .option('-c, --component <name>', 'Show status for specific component')
-  .option('--json', 'Output in JSON format')
-  .action(async (options: any) => {
+  .description("Show Claude-Flow system status")
+  .option("-w, --watch", "Watch mode - continuously update status")
+  .option("-i, --interval <seconds>", "Update interval in seconds", "5")
+  .option("-c, --component <name>", "Show status for specific component")
+  .option("--json", "Output in JSON format")
+  .action(async (options: StatusCommandOptions) => {
     if (options.watch) {
       console.log(colors.yellow("Watch mode not yet implemented"));
       await showStatus(options);
@@ -41,7 +49,7 @@ export const statusCommand = new Command()
     }
   });
 
-async function showStatus(options: any): Promise<void> {
+async function showStatus(options: StatusCommandOptions): Promise<void> {
   try {
     // In a real implementation, this would connect to the running orchestrator
     const status = await getSystemStatus(options);
@@ -68,7 +76,74 @@ async function showStatus(options: any): Promise<void> {
 
 // watchStatus function removed - not used
 
-function showFullStatus(status: any): void {
+interface Agent {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  activeTasks: number;
+}
+
+interface Task {
+  id: string;
+  type: string;
+  status: string;
+  agent?: string;
+  duration?: number;
+}
+
+interface ErrorInfo {
+  message: string;
+  timestamp: Date;
+}
+
+interface SystemStatus {
+  overall: string;
+  uptime: number;
+  version: string;
+  startTime: number;
+  components: Record<string, ComponentHealthStatus>;
+  resources: Record<string, Resource> | Resource[];
+  errorCount: number;
+  healthChecks?: HealthCheckResult[];
+  agents?: Agent[];
+  recentTasks?: Task[];
+  errors?: ErrorInfo[];
+  warnings?: unknown[];
+  performance?: unknown;
+}
+
+interface ComponentHealthStatus {
+  name: string;
+  status: string;
+  health?: number;
+  uptime?: number;
+  errorCount?: number;
+  lastError?: string;
+  cpu?: number;
+  memory?: number;
+  responseTime?: number;
+  requestCount?: number;
+  details?: string;
+  metrics?: Record<string, unknown>;
+  errors?: ErrorInfo[];
+}
+
+interface Resource {
+  type: string;
+  usage: number;
+  total: number;
+  unit?: string;
+}
+
+interface HealthCheckResult {
+  check: string;
+  status: string;
+  message?: string;
+  duration?: number;
+}
+
+function showFullStatus(status: SystemStatus): void {
   // System overview
   console.log(colors.cyan.bold("System Overview"));
   console.log("─".repeat(50));
@@ -90,7 +165,7 @@ function showFullStatus(status: any): void {
   });
 
   for (const [name, component] of Object.entries(status.components)) {
-    const comp = component as any;
+    const comp = component;
     const statusIcon = formatStatusIndicator(comp.status);
     const statusText = getStatusColor(comp.status)(comp.status.toUpperCase());
     
@@ -98,7 +173,7 @@ function showFullStatus(status: any): void {
       colors.white(name),
       `${statusIcon} ${statusText}`,
       formatDuration(comp.uptime || 0),
-      comp.details || "-",
+      comp.details ?? "-",
     ]);
   }
   
@@ -115,15 +190,18 @@ function showFullStatus(status: any): void {
       style: { head: ["cyan"] },
     });
 
-    for (const [name, resource] of Object.entries(status.resources)) {
-      const res = resource as any;
-      const percentage = ((res.used / res.total) * 100).toFixed(1);
+    const resourceEntries = Array.isArray(status.resources) 
+      ? status.resources.map(r => [r.type, r] as [string, Resource])
+      : Object.entries(status.resources);
+    
+    for (const [name, resource] of resourceEntries) {
+      const percentage = ((resource.usage / resource.total) * 100).toFixed(1);
       const color = getResourceColor(parseFloat(percentage));
       
       resourceTable.push([
         colors.white(name),
-        res.used.toString(),
-        res.total.toString(),
+        resource.usage.toString(),
+        resource.total.toString(),
         color(`${percentage}%`),
       ]);
     }
@@ -134,10 +212,10 @@ function showFullStatus(status: any): void {
 
   // Active agents
   if (status.agents) {
-    console.log(colors.cyan.bold(`Active Agents (${status.agents.length})`));
+    console.log(colors.cyan.bold(`Active Agents (${(status.agents).length})`));
     console.log("─".repeat(50));
     
-    if (status.agents.length > 0) {
+    if ((status.agents).length > 0) {
       const agentTable = new Table({
         head: ["ID", "Name", "Type", "Status", "Tasks"],
         style: { head: ["cyan"] },
@@ -165,16 +243,16 @@ function showFullStatus(status: any): void {
 
   // Recent tasks
   if (status.recentTasks) {
-    console.log(colors.cyan.bold(`Recent Tasks (${status.recentTasks.length})`));
+    console.log(colors.cyan.bold(`Recent Tasks (${(status.recentTasks).length})`));
     console.log("─".repeat(50));
     
-    if (status.recentTasks.length > 0) {
+    if ((status.recentTasks).length > 0) {
       const taskTable = new Table({
         head: ["ID", "Type", "Status", "Agent", "Duration"],
         style: { head: ["cyan"] },
       });
 
-      for (const task of status.recentTasks.slice(0, 10)) { // Show last 10
+      for (const task of (status.recentTasks).slice(0, 10)) { // Show last 10
         const statusIcon = formatStatusIndicator(task.status);
         const statusText = getStatusColor(task.status)(task.status);
         
@@ -194,7 +272,7 @@ function showFullStatus(status: any): void {
   }
 }
 
-function showComponentStatus(status: any, componentName: string): void {
+function showComponentStatus(status: SystemStatus, componentName: string): void {
   const component = status.components[componentName];
   
   if (!component) {
@@ -230,52 +308,58 @@ function showComponentStatus(status: any, componentName: string): void {
     console.log(`\n${  colors.red.bold("Recent Errors")}`);
     console.log("─".repeat(20));
     
-    for (const error of component.errors.slice(0, 5)) {
+    for (const error of (component.errors).slice(0, 5)) {
       console.log(colors.red(`• ${error.message}`));
       console.log(colors.gray(`  ${new Date(error.timestamp).toLocaleString()}`));
     }
   }
 }
 
-async function getSystemStatus(options: any = {}): Promise<any> {
+async function getSystemStatus(options: Partial<StatusCommandOptions> = {}): Promise<SystemStatus> {
   // Mock status for now - in production, this would call the orchestrator API
-  const baseStatus = {
+  const baseStatus: SystemStatus = {
     overall: "healthy",
     version: getVersion(),
     uptime: Date.now() - (Date.now() - 3600000), // 1 hour ago
-    startTime: new Date(Date.now() - 3600000),
+    startTime: Date.now() - 3600000,
+    errorCount: 0,
     components: {
       orchestrator: {
+        name: "Orchestrator",
         status: "healthy",
         uptime: 3600000,
         details: "Managing 3 agents",
       },
       terminal: {
+        name: "Terminal Manager",
         status: "healthy",
         uptime: 3600000,
         details: "Pool: 2/5 active sessions",
       },
       memory: {
+        name: "Memory Manager",
         status: "healthy",
         uptime: 3600000,
         details: "SQLite + 95MB cache",
       },
       coordination: {
+        name: "Coordination Manager",
         status: "healthy",
         uptime: 3600000,
         details: "12 active tasks",
       },
       mcp: {
+        name: "MCP Server",
         status: "healthy",
         uptime: 3600000,
         details: "Listening on stdio",
       },
     },
     resources: {
-      "Memory (MB)": { used: 256, total: 1024 },
-      "CPU (%)": { used: 15, total: 100 },
-      "Agents": { used: 3, total: 10 },
-      "Tasks": { used: 12, total: 100 },
+      "Memory (MB)": { type: "Memory (MB)", usage: 256, total: 1024 },
+      "CPU (%)": { type: "CPU (%)", usage: 15, total: 100 },
+      "Agents": { type: "Agents", usage: 3, total: 10 },
+      "Tasks": { type: "Tasks", usage: 12, total: 100 },
     },
     agents: [
       {
@@ -313,19 +397,19 @@ async function getSystemStatus(options: any = {}): Promise<any> {
         type: "coordination",
         status: "running",
         agent: "agent-001",
-        duration: null,
-        priority: "high",
+        duration: undefined,
       },
     ],
-    errors: generateRecentErrors(),
+    errors: generateRecentErrors().map(error => ({
+      message: error.message,
+      timestamp: new Date(error.timestamp),
+    })),
     warnings: generateHealthWarnings(),
-    performance: options.detailed ? generatePerformanceMetrics() : undefined,
+    performance: generatePerformanceMetrics(),
   };
   
-  // Add health check results if requested
-  if (options.healthCheck) {
-    (baseStatus as any).healthChecks = await performSystemHealthChecks();
-  }
+  // Add health check results
+  baseStatus.healthChecks = await performSystemHealthChecks();
   
   return baseStatus;
 }
@@ -357,7 +441,7 @@ function getResourceColor(percentage: number) {
   return colors.green;
 }
 
-function getPriorityColor(priority: string) {
+function _getPriorityColor(priority: string) {
   switch (priority.toLowerCase()) {
     case "high": return colors.red;
     case "medium": return colors.yellow;
@@ -366,7 +450,7 @@ function getPriorityColor(priority: string) {
   }
 }
 
-function getMetricStatus(metric: string, value: any): string {
+function _getMetricStatus(metric: string, value: number | string): string {
   // Simple heuristic for metric status
   if (typeof value === "string" && value.includes("%")) {
     const percentage = parseFloat(value);
@@ -378,14 +462,14 @@ function getMetricStatus(metric: string, value: any): string {
   return "normal";
 }
 
-function calculateTrend(history: number[]): number {
+function _calculateTrend(history: number[]): number {
   if (history.length < 2) return 0;
   const recent = history.slice(-5).reduce((a, b) => a + b, 0) / Math.min(5, history.length);
   const older = history.slice(0, -5).reduce((a, b) => a + b, 0) / Math.max(1, history.length - 5);
   return (recent - older) / older;
 }
 
-async function getRealSystemStatus(): Promise<any | null> {
+async function _getRealSystemStatus(): Promise<any | null> {
   try {
     // Try to connect to running orchestrator
     // This would be implemented based on actual IPC/HTTP communication
@@ -399,8 +483,8 @@ async function getPidFromFile(): Promise<number | null> {
   try {
     if (existsSync(".claude-flow.pid")) {
       const pidData = await fs.readFile(".claude-flow.pid", "utf-8");
-      const data = JSON.parse(pidData);
-      return data.pid || null;
+      const data = JSON.parse(pidData) as { pid?: number };
+      return data.pid ?? null;
     }
   } catch {
     // Ignore errors
@@ -408,7 +492,7 @@ async function getPidFromFile(): Promise<number | null> {
   return null;
 }
 
-async function getLastKnownStatus(): Promise<any | null> {
+async function _getLastKnownStatus(): Promise<any | null> {
   try {
     if (existsSync(".claude-flow-last-status.json")) {
       const statusData = await fs.readFile(".claude-flow-last-status.json", "utf-8");
@@ -420,7 +504,7 @@ async function getLastKnownStatus(): Promise<any | null> {
   return null;
 }
 
-function generateRecentTasks() {
+function _generateRecentTasks() {
   const types = ["research", "implementation", "analysis", "coordination", "testing"];
   const statuses = ["running", "pending", "completed", "failed"];
   const priorities = ["high", "medium", "low"];
@@ -445,7 +529,7 @@ function generateRecentErrors() {
     "Configuration invalid",
   ];
   
-  return Array.from({ length: Math.floor(Math.random() * 3) }, (_, i) => ({
+  return Array.from({ length: Math.floor(Math.random() * 3) }, (_, _i) => ({
     component: components[Math.floor(Math.random() * components.length)],
     message: errorTypes[Math.floor(Math.random() * errorTypes.length)],
     timestamp: Date.now() - (Math.random() * 3600000), // Last hour
@@ -488,7 +572,7 @@ function generatePerformanceMetrics() {
   };
 }
 
-async function performSystemHealthChecks(): Promise<any> {
+async function performSystemHealthChecks(): Promise<HealthCheckResult[]> {
   const checks = {
     "Disk Space": await checkDiskSpace(),
     "Memory Usage": await checkMemoryUsage(),
@@ -496,7 +580,11 @@ async function performSystemHealthChecks(): Promise<any> {
     "Process Health": await checkProcessHealth(),
   };
   
-  return checks;
+  return Object.entries(checks).map(([check, result]) => ({
+    check,
+    status: result.status,
+    message: result.details,
+  }));
 }
 
 async function checkDiskSpace(): Promise<{ status: string; details: string }> {

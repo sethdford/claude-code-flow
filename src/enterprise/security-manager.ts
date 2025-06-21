@@ -920,7 +920,7 @@ export class SecurityManager extends EventEmitter {
           {
             name: "API Key Detection",
             description: "Detect exposed API keys",
-            condition: 'category == "secret" && type == "api-key"',
+            condition: "category == \"secret\" && type == \"api-key\"",
             action: "deny" as const,
             severity: "high" as const,
             parameters: {},
@@ -1021,7 +1021,7 @@ export class SecurityManager extends EventEmitter {
             component: "libxml2@2.9.10",
           },
           evidence: {
-            snippet: '"libxml2": "2.9.10"',
+            snippet: "\"libxml2\": \"2.9.10\"",
             context: "Dependency declaration",
             references: ["https://nvd.nist.gov/vuln/detail/CVE-2023-12345"],
           },
@@ -1102,7 +1102,7 @@ export class SecurityManager extends EventEmitter {
           column: 20,
         },
         evidence: {
-          snippet: 'const accessKey = "AKIA123456789..."',
+          snippet: "const accessKey = \"AKIA123456789...\"",
           context: "Hardcoded AWS credentials",
         },
         impact: "Unauthorized access to AWS resources",

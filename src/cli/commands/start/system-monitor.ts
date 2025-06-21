@@ -7,11 +7,43 @@ import { ProcessManager } from "./process-manager.js";
 import { SystemEvents } from "../../../utils/types.js";
 import { eventBus } from "../../../core/event-bus.js";
 
+interface SystemEvent {
+  type: string;
+  timestamp: number;
+  data: EventData;
+  level: "info" | "warning" | "success" | "error";
+}
+
+interface EventData {
+  processId?: string;
+  processName?: string;
+  name?: string;
+  type?: string;
+  agentId?: string;
+  taskId?: string;
+  reason?: string;
+  component?: string;
+  profile?: { type?: string };
+  error?: Error | string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+interface MetricData {
+  timestamp: number;
+  cpu: number;
+  memory: number;
+  activeProcesses: number;
+  queuedTasks: number;
+  completedTasks: number;
+  errorCount: number;
+}
+
 export class SystemMonitor {
   private processManager: ProcessManager;
-  private events: any[] = [];
+  private events: SystemEvent[] = [];
   private maxEvents = 100;
-  private metricsInterval?: any;
+  private metricsInterval?: NodeJS.Timeout;
 
   constructor(processManager: ProcessManager) {
     this.processManager = processManager;
@@ -20,7 +52,7 @@ export class SystemMonitor {
 
   private setupEventListeners(): void {
     // System events
-    eventBus.on(SystemEvents.AGENT_SPAWNED, (data: any) => {
+    eventBus.on(SystemEvents.AGENT_SPAWNED, (data: EventData) => {
       this.addEvent({
         type: "agent_spawned",
         timestamp: Date.now(),
@@ -29,7 +61,7 @@ export class SystemMonitor {
       });
     });
 
-    eventBus.on(SystemEvents.AGENT_TERMINATED, (data: any) => {
+    eventBus.on(SystemEvents.AGENT_TERMINATED, (data: EventData) => {
       this.addEvent({
         type: "agent_terminated",
         timestamp: Date.now(),
@@ -38,7 +70,7 @@ export class SystemMonitor {
       });
     });
 
-    eventBus.on(SystemEvents.TASK_ASSIGNED, (data: any) => {
+    eventBus.on(SystemEvents.TASK_ASSIGNED, (data: EventData) => {
       this.addEvent({
         type: "task_assigned",
         timestamp: Date.now(),
@@ -47,7 +79,7 @@ export class SystemMonitor {
       });
     });
 
-    eventBus.on(SystemEvents.TASK_COMPLETED, (data: any) => {
+    eventBus.on(SystemEvents.TASK_COMPLETED, (data: EventData) => {
       this.addEvent({
         type: "task_completed",
         timestamp: Date.now(),
@@ -56,7 +88,7 @@ export class SystemMonitor {
       });
     });
 
-    eventBus.on(SystemEvents.TASK_FAILED, (data: any) => {
+    eventBus.on(SystemEvents.TASK_FAILED, (data: EventData) => {
       this.addEvent({
         type: "task_failed",
         timestamp: Date.now(),
@@ -65,7 +97,7 @@ export class SystemMonitor {
       });
     });
 
-    eventBus.on(SystemEvents.SYSTEM_ERROR, (data: any) => {
+    eventBus.on(SystemEvents.SYSTEM_ERROR, (data: EventData) => {
       this.addEvent({
         type: "system_error",
         timestamp: Date.now(),
@@ -103,7 +135,7 @@ export class SystemMonitor {
     });
   }
 
-  private addEvent(event: any): void {
+  private addEvent(event: SystemEvent): void {
     this.events.unshift(event);
     if (this.events.length > this.maxEvents) {
       this.events.pop();
@@ -140,7 +172,7 @@ export class SystemMonitor {
     }
   }
 
-  getRecentEvents(count: number = 10): any[] {
+  getRecentEvents(count: number = 10): SystemEvent[] {
     return this.events.slice(0, count);
   }
 
@@ -194,7 +226,13 @@ export class SystemMonitor {
     }
   }
 
-  private formatEventMessage(event: any): string {
+  private formatEventMessage(event: SystemEvent): string {
+    const getErrorMessage = (error: Error | string | undefined): string => {
+      if (!error) return "Unknown error";
+      if (typeof error === "string") return error;
+      return error.message || "Unknown error";
+    };
+
     switch (event.type) {
       case "agent_spawned":
         return `Agent spawned: ${event.data.agentId} (${event.data.profile?.type || "unknown"})`;
@@ -205,15 +243,15 @@ export class SystemMonitor {
       case "task_completed":
         return `Task completed: ${event.data.taskId}`;
       case "task_failed":
-        return `Task failed: ${event.data.taskId} - ${event.data.error?.message}`;
+        return `Task failed: ${event.data.taskId} - ${getErrorMessage(event.data.error)}`;
       case "system_error":
-        return `System error in ${event.data.component}: ${event.data.error?.message}`;
+        return `System error in ${event.data.component}: ${getErrorMessage(event.data.error)}`;
       case "process_started":
         return `Process started: ${event.data.processName}`;
       case "process_stopped":
         return `Process stopped: ${event.data.processId}`;
       case "process_error":
-        return `Process error: ${event.data.processId} - ${event.data.error}`;
+        return `Process error: ${event.data.processId} - ${getErrorMessage(event.data.error)}`;
       default:
         return JSON.stringify(event.data);
     }

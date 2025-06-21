@@ -259,12 +259,12 @@ export class DistributedMemorySystem extends EventEmitter {
       name,
       type,
       entries: [],
-      maxSize: options.maxSize || this.config.maxMemorySize / 10,
+      maxSize: options.maxSize ?? this.config.maxMemorySize / 10,
       ttl: options.ttl,
-      readOnly: options.readOnly || false,
+      readOnly: options.readOnly ?? false,
       shared: options.shared !== false, // Default to shared
-      indexed: options.indexed || false,
-      compressed: options.compressed || this.config.compressionEnabled,
+      indexed: options.indexed ?? false,
+      compressed: options.compressed ?? this.config.compressionEnabled,
     };
 
     this.partitions.set(partitionId, partition);
@@ -342,7 +342,7 @@ export class DistributedMemorySystem extends EventEmitter {
       const now = new Date();
       
       // Determine partition
-      const partitionId = options.partition || this.selectPartition(options.type || "knowledge");
+      const partitionId = options.partition ?? this.selectPartition(options.type ?? "knowledge");
       const partition = this.partitions.get(partitionId);
       
       if (!partition) {
@@ -363,10 +363,10 @@ export class DistributedMemorySystem extends EventEmitter {
         id: entryId,
         key,
         value: await this.processValue(value, partition),
-        type: options.type || "data",
-        tags: options.tags || [],
-        owner: options.owner || { id: "system", swarmId: "", type: "coordinator", instance: 0 },
-        accessLevel: options.accessLevel || "swarm",
+        type: options.type ?? "data",
+        tags: options.tags ?? [],
+        owner: options.owner ?? { id: "system", swarmId: "", type: "coordinator", instance: 0 },
+        accessLevel: options.accessLevel ?? "swarm",
         createdAt: now,
         updatedAt: now,
         expiresAt: options.ttl ? new Date(now.getTime() + options.ttl) : undefined,
@@ -620,8 +620,8 @@ export class DistributedMemorySystem extends EventEmitter {
       }
 
       // Apply pagination
-      const offset = query.offset || 0;
-      const limit = query.limit || results.length;
+      const offset = query.offset ?? 0;
+      const limit = query.limit ?? results.length;
       results = results.slice(offset, offset + limit);
 
       this.recordMetric("query", Date.now() - startTime);
@@ -637,7 +637,7 @@ export class DistributedMemorySystem extends EventEmitter {
 
   private startSynchronization(): void {
     this.syncInterval = setInterval(() => {
-      this.performSync();
+      void this.performSync();
     }, this.config.syncInterval);
 
     this.logger.info("Started synchronization", { 
@@ -758,7 +758,7 @@ export class DistributedMemorySystem extends EventEmitter {
   }
 
   private getCachedEntry(key: string): { entry: MemoryEntry; expiry: number } | null {
-    return this.cache.get(key) || null;
+    return this.cache.get(key) ?? null;
   }
 
   private isCacheValid(cached: { entry: MemoryEntry; expiry: number }): boolean {
@@ -813,7 +813,7 @@ export class DistributedMemorySystem extends EventEmitter {
   }
 
   private incrementVectorClock(nodeId: string): void {
-    const current = this.vectorClock.get(nodeId) || 0;
+    const current = this.vectorClock.get(nodeId) ?? 0;
     this.vectorClock.set(nodeId, current + 1);
   }
 

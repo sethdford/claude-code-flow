@@ -12,15 +12,15 @@ export class SettingsManager {
     // Default settings
     this.defaults = {
       // Connection settings
-      serverUrl: 'ws://localhost:3000/ws',
-      authToken: '',
+      serverUrl: "ws://localhost:3000/ws",
+      authToken: "",
       autoConnect: false,
       
       // Appearance settings
-      theme: 'dark',
+      theme: "dark",
       fontSize: 14,
       lineHeight: 1.4,
-      fontFamily: 'JetBrains Mono',
+      fontFamily: "JetBrains Mono",
       
       // Behavior settings
       autoScroll: true,
@@ -29,9 +29,9 @@ export class SettingsManager {
       maxLines: 1000,
       
       // Claude Flow settings
-      defaultMode: 'coder',
-      swarmStrategy: 'development',
-      coordinationMode: 'centralized',
+      defaultMode: "coder",
+      swarmStrategy: "development",
+      coordinationMode: "centralized",
       
       // Advanced settings
       reconnectAttempts: 5,
@@ -49,7 +49,7 @@ export class SettingsManager {
    * Initialize settings panel
    */
   init() {
-    this.settingsPanel = document.getElementById('settingsPanel');
+    this.settingsPanel = document.getElementById("settingsPanel");
     this.setupSettingsPanel();
     this.applySettings();
   }
@@ -59,15 +59,15 @@ export class SettingsManager {
    */
   setupSettingsPanel() {
     // Toggle button
-    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsToggle = document.getElementById("settingsToggle");
     if (settingsToggle) {
-      settingsToggle.addEventListener('click', () => this.toggle());
+      settingsToggle.addEventListener("click", () => this.toggle());
     }
     
     // Close button
-    const closeButton = document.getElementById('closeSettings');
+    const closeButton = document.getElementById("closeSettings");
     if (closeButton) {
-      closeButton.addEventListener('click', () => this.hide());
+      closeButton.addEventListener("click", () => this.hide());
     }
     
     // Settings form elements
@@ -77,17 +77,17 @@ export class SettingsManager {
     this.setupActionButtons();
     
     // Click outside to close
-    document.addEventListener('click', (event) => {
+    document.addEventListener("click", (event) => {
       if (this.isVisible && 
           !this.settingsPanel.contains(event.target) && 
-          !document.getElementById('settingsToggle').contains(event.target)) {
+          !document.getElementById("settingsToggle").contains(event.target)) {
         this.hide();
       }
     });
     
     // ESC key to close
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && this.isVisible) {
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.isVisible) {
         this.hide();
       }
     });
@@ -98,79 +98,79 @@ export class SettingsManager {
    */
   setupFormElements() {
     // Connection settings
-    this.bindSetting('serverUrl', 'input');
-    this.bindSetting('authToken', 'input');
+    this.bindSetting("serverUrl", "input");
+    this.bindSetting("authToken", "input");
     
     // Appearance settings
-    this.bindSetting('fontSize', 'change', (value) => {
+    this.bindSetting("fontSize", "change", (value) => {
       this.applyFontSize(parseInt(value));
     });
     
-    this.bindSetting('theme', 'change', (value) => {
+    this.bindSetting("theme", "change", (value) => {
       this.applyTheme(value);
     });
     
-    this.bindSetting('lineHeight', 'change', (value) => {
+    this.bindSetting("lineHeight", "change", (value) => {
       this.applyLineHeight(parseFloat(value));
     });
     
     // Behavior settings
-    this.bindSetting('autoScroll', 'change', (value) => {
-      localStorage.setItem('console_auto_scroll', value);
+    this.bindSetting("autoScroll", "change", (value) => {
+      localStorage.setItem("console_auto_scroll", value);
     });
     
-    this.bindSetting('showTimestamps', 'change', (value) => {
-      localStorage.setItem('console_show_timestamps', value);
+    this.bindSetting("showTimestamps", "change", (value) => {
+      localStorage.setItem("console_show_timestamps", value);
     });
     
-    this.bindSetting('enableSounds', 'change');
+    this.bindSetting("enableSounds", "change");
     
-    this.bindSetting('maxLines', 'input', (value) => {
+    this.bindSetting("maxLines", "input", (value) => {
       const maxLines = parseInt(value);
       if (maxLines >= 100 && maxLines <= 10000) {
-        this.emit('max_lines_changed', maxLines);
+        this.emit("max_lines_changed", maxLines);
       }
     });
     
     // Claude Flow settings
-    this.bindSetting('defaultMode', 'change');
-    this.bindSetting('swarmStrategy', 'change');
-    this.bindSetting('coordinationMode', 'change');
+    this.bindSetting("defaultMode", "change");
+    this.bindSetting("swarmStrategy", "change");
+    this.bindSetting("coordinationMode", "change");
   }
   
   /**
    * Setup action buttons
    */
   setupActionButtons() {
-    const connectButton = document.getElementById('connectButton');
-    const disconnectButton = document.getElementById('disconnectButton');
+    const connectButton = document.getElementById("connectButton");
+    const disconnectButton = document.getElementById("disconnectButton");
     
     if (connectButton) {
-      connectButton.addEventListener('click', () => {
-        this.emit('connect_requested', {
-          url: this.get('serverUrl'),
-          token: this.get('authToken')
+      connectButton.addEventListener("click", () => {
+        this.emit("connect_requested", {
+          url: this.get("serverUrl"),
+          token: this.get("authToken")
         });
       });
     }
     
     if (disconnectButton) {
-      disconnectButton.addEventListener('click', () => {
-        this.emit('disconnect_requested');
+      disconnectButton.addEventListener("click", () => {
+        this.emit("disconnect_requested");
       });
     }
     
     // Add reset button
-    const resetButton = document.createElement('button');
-    resetButton.className = 'reset-settings';
-    resetButton.textContent = 'Reset to Defaults';
-    resetButton.addEventListener('click', () => {
-      if (confirm('Reset all settings to defaults? This cannot be undone.')) {
+    const resetButton = document.createElement("button");
+    resetButton.className = "reset-settings";
+    resetButton.textContent = "Reset to Defaults";
+    resetButton.addEventListener("click", () => {
+      if (confirm("Reset all settings to defaults? This cannot be undone.")) {
         this.resetToDefaults();
       }
     });
     
-    const settingsContent = document.querySelector('.settings-content');
+    const settingsContent = document.querySelector(".settings-content");
     if (settingsContent) {
       settingsContent.appendChild(resetButton);
     }
@@ -185,7 +185,7 @@ export class SettingsManager {
     
     // Set initial value
     const value = this.get(settingName);
-    if (element.type === 'checkbox') {
+    if (element.type === "checkbox") {
       element.checked = value;
     } else {
       element.value = value;
@@ -195,9 +195,9 @@ export class SettingsManager {
     element.addEventListener(eventType, (event) => {
       let newValue;
       
-      if (element.type === 'checkbox') {
+      if (element.type === "checkbox") {
         newValue = element.checked;
-      } else if (element.type === 'number') {
+      } else if (element.type === "number") {
         newValue = parseFloat(element.value);
       } else {
         newValue = element.value;
@@ -216,11 +216,11 @@ export class SettingsManager {
    */
   show() {
     if (this.settingsPanel) {
-      this.settingsPanel.classList.add('visible');
+      this.settingsPanel.classList.add("visible");
       this.isVisible = true;
       
       // Focus first input
-      const firstInput = this.settingsPanel.querySelector('input, select');
+      const firstInput = this.settingsPanel.querySelector("input, select");
       if (firstInput) {
         firstInput.focus();
       }
@@ -232,7 +232,7 @@ export class SettingsManager {
    */
   hide() {
     if (this.settingsPanel) {
-      this.settingsPanel.classList.remove('visible');
+      this.settingsPanel.classList.remove("visible");
       this.isVisible = false;
     }
   }
@@ -261,7 +261,7 @@ export class SettingsManager {
   set(key, value) {
     this.settings[key] = value;
     this.saveSettings();
-    this.emit('setting_changed', { key, value });
+    this.emit("setting_changed", { key, value });
   }
   
   /**
@@ -289,7 +289,7 @@ export class SettingsManager {
     this.saveSettings();
     this.updateFormElements();
     this.applySettings();
-    this.emit('settings_reset');
+    this.emit("settings_reset");
   }
   
   /**
@@ -297,10 +297,10 @@ export class SettingsManager {
    */
   loadSettings() {
     try {
-      const stored = localStorage.getItem('claude_console_settings');
+      const stored = localStorage.getItem("claude_console_settings");
       return stored ? JSON.parse(stored) : {};
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error("Failed to load settings:", error);
       return {};
     }
   }
@@ -310,9 +310,9 @@ export class SettingsManager {
    */
   saveSettings() {
     try {
-      localStorage.setItem('claude_console_settings', JSON.stringify(this.settings));
+      localStorage.setItem("claude_console_settings", JSON.stringify(this.settings));
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      console.error("Failed to save settings:", error);
     }
   }
   
@@ -320,35 +320,35 @@ export class SettingsManager {
    * Apply all settings to the UI
    */
   applySettings() {
-    this.applyTheme(this.get('theme'));
-    this.applyFontSize(this.get('fontSize'));
-    this.applyLineHeight(this.get('lineHeight'));
+    this.applyTheme(this.get("theme"));
+    this.applyFontSize(this.get("fontSize"));
+    this.applyLineHeight(this.get("lineHeight"));
     
     // Set individual localStorage items for terminal
-    localStorage.setItem('console_auto_scroll', this.get('autoScroll'));
-    localStorage.setItem('console_show_timestamps', this.get('showTimestamps'));
+    localStorage.setItem("console_auto_scroll", this.get("autoScroll"));
+    localStorage.setItem("console_show_timestamps", this.get("showTimestamps"));
   }
   
   /**
    * Apply theme
    */
   applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('console_theme', theme);
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("console_theme", theme);
   }
   
   /**
    * Apply font size
    */
   applyFontSize(fontSize) {
-    document.documentElement.style.setProperty('--font-size-base', `${fontSize}px`);
+    document.documentElement.style.setProperty("--font-size-base", `${fontSize}px`);
   }
   
   /**
    * Apply line height
    */
   applyLineHeight(lineHeight) {
-    document.documentElement.style.setProperty('--line-height', lineHeight);
+    document.documentElement.style.setProperty("--line-height", lineHeight);
   }
   
   /**
@@ -358,7 +358,7 @@ export class SettingsManager {
     Object.keys(this.settings).forEach(key => {
       const element = document.getElementById(key);
       if (element) {
-        if (element.type === 'checkbox') {
+        if (element.type === "checkbox") {
           element.checked = this.get(key);
         } else {
           element.value = this.get(key);
@@ -373,16 +373,16 @@ export class SettingsManager {
   exportSettings() {
     const exportData = {
       timestamp: new Date().toISOString(),
-      version: '1.0.0',
+      version: "1.0.0",
       settings: this.getAll()
     };
     
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-      type: 'application/json'
+      type: "application/json"
     });
     
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `claude-console-settings-${Date.now()}.json`;
     document.body.appendChild(a);
@@ -403,10 +403,10 @@ export class SettingsManager {
         this.setAll(data.settings);
         return true;
       } else {
-        throw new Error('Invalid settings file format');
+        throw new Error("Invalid settings file format");
       }
     } catch (error) {
-      console.error('Failed to import settings:', error);
+      console.error("Failed to import settings:", error);
       return false;
     }
   }
@@ -419,13 +419,13 @@ export class SettingsManager {
       fontSize: (v) => v >= 10 && v <= 24,
       lineHeight: (v) => v >= 1.0 && v <= 2.0,
       maxLines: (v) => v >= 100 && v <= 10000,
-      theme: (v) => ['dark', 'light', 'classic', 'matrix'].includes(v),
-      defaultMode: (v) => ['coder', 'architect', 'analyzer', 'researcher', 'reviewer', 
-                          'tester', 'debugger', 'documenter', 'optimizer', 'designer'].includes(v),
-      swarmStrategy: (v) => ['development', 'research', 'analysis', 'testing', 
-                           'optimization', 'maintenance'].includes(v),
-      coordinationMode: (v) => ['centralized', 'hierarchical', 'distributed', 
-                              'mesh', 'hybrid'].includes(v)
+      theme: (v) => ["dark", "light", "classic", "matrix"].includes(v),
+      defaultMode: (v) => ["coder", "architect", "analyzer", "researcher", "reviewer", 
+                          "tester", "debugger", "documenter", "optimizer", "designer"].includes(v),
+      swarmStrategy: (v) => ["development", "research", "analysis", "testing", 
+                           "optimization", "maintenance"].includes(v),
+      coordinationMode: (v) => ["centralized", "hierarchical", "distributed", 
+                              "mesh", "hybrid"].includes(v)
     };
     
     const validator = validators[key];
@@ -436,8 +436,8 @@ export class SettingsManager {
    * Update connection status in settings
    */
   updateConnectionStatus(status) {
-    const connectButton = document.getElementById('connectButton');
-    const disconnectButton = document.getElementById('disconnectButton');
+    const connectButton = document.getElementById("connectButton");
+    const disconnectButton = document.getElementById("disconnectButton");
     
     if (connectButton && disconnectButton) {
       if (status.connected) {
@@ -457,26 +457,26 @@ export class SettingsManager {
    * Update connection info display
    */
   updateConnectionInfo(status) {
-    let infoElement = document.getElementById('connectionInfo');
+    let infoElement = document.getElementById("connectionInfo");
     
     if (!infoElement) {
-      infoElement = document.createElement('div');
-      infoElement.id = 'connectionInfo';
-      infoElement.className = 'connection-info';
+      infoElement = document.createElement("div");
+      infoElement.id = "connectionInfo";
+      infoElement.className = "connection-info";
       
-      const connectionSection = document.querySelector('.setting-group');
+      const connectionSection = document.querySelector(".setting-group");
       if (connectionSection) {
         connectionSection.appendChild(infoElement);
       }
     }
     
-    const statusClass = status.connected ? 'connected' : 
-                       status.connecting ? 'connecting' : 'disconnected';
+    const statusClass = status.connected ? "connected" : 
+                       status.connecting ? "connecting" : "disconnected";
     
     infoElement.className = `connection-info ${statusClass}`;
     
-    const title = status.connected ? 'Connected' : 
-                 status.connecting ? 'Connecting...' : 'Disconnected';
+    const title = status.connected ? "Connected" : 
+                 status.connecting ? "Connecting..." : "Disconnected";
     
     const details = status.connected 
       ? `Connected to ${status.url}\nPending requests: ${status.pendingRequests}\nQueued messages: ${status.queuedMessages}`
@@ -484,7 +484,7 @@ export class SettingsManager {
         ? `Attempting to connect to ${status.url}`
         : status.reconnectAttempts > 0 
           ? `Disconnected. Reconnect attempts: ${status.reconnectAttempts}`
-          : 'Not connected';
+          : "Not connected";
     
     infoElement.innerHTML = `
       <div class="connection-info-title">${title}</div>
@@ -498,17 +498,17 @@ export class SettingsManager {
   setupEventListeners() {
     // Listen for theme changes from system
     if (window.matchMedia) {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      mediaQuery.addEventListener('change', (e) => {
-        if (this.get('theme') === 'auto') {
-          this.applyTheme(e.matches ? 'dark' : 'light');
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      mediaQuery.addEventListener("change", (e) => {
+        if (this.get("theme") === "auto") {
+          this.applyTheme(e.matches ? "dark" : "light");
         }
       });
     }
     
     // Listen for font size changes from browser zoom
-    window.addEventListener('resize', () => {
-      this.applyFontSize(this.get('fontSize'));
+    window.addEventListener("resize", () => {
+      this.applyFontSize(this.get("fontSize"));
     });
   }
   
@@ -539,7 +539,7 @@ export class SettingsManager {
       try {
         callback(data);
       } catch (error) {
-        console.error('Error in settings event listener:', error);
+        console.error("Error in settings event listener:", error);
       }
     });
   }
@@ -549,9 +549,9 @@ export class SettingsManager {
    */
   getClaudeFlowConfig() {
     return {
-      defaultMode: this.get('defaultMode'),
-      swarmStrategy: this.get('swarmStrategy'),
-      coordinationMode: this.get('coordinationMode')
+      defaultMode: this.get("defaultMode"),
+      swarmStrategy: this.get("swarmStrategy"),
+      coordinationMode: this.get("coordinationMode")
     };
   }
   
@@ -560,12 +560,12 @@ export class SettingsManager {
    */
   getConnectionConfig() {
     return {
-      url: this.get('serverUrl'),
-      token: this.get('authToken'),
-      autoConnect: this.get('autoConnect'),
-      reconnectAttempts: this.get('reconnectAttempts'),
-      heartbeatInterval: this.get('heartbeatInterval'),
-      commandTimeout: this.get('commandTimeout')
+      url: this.get("serverUrl"),
+      token: this.get("authToken"),
+      autoConnect: this.get("autoConnect"),
+      reconnectAttempts: this.get("reconnectAttempts"),
+      heartbeatInterval: this.get("heartbeatInterval"),
+      commandTimeout: this.get("commandTimeout")
     };
   }
 }

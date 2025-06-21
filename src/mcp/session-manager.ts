@@ -50,7 +50,7 @@ export class SessionManager implements ISessionManager {
     this.maxSessions = config.maxSessions ?? 100;
 
     // Start cleanup timer - use shorter interval in test environment
-    const cleanupInterval = process.env.NODE_ENV === 'test' ? 1000 : 60000; // 1 second in tests, 1 minute in production
+    const cleanupInterval = process.env.NODE_ENV === "test" ? 1000 : 60000; // 1 second in tests, 1 minute in production
     this.cleanupInterval = setInterval(() => {
       this.cleanupExpiredSessions();
     }, cleanupInterval);

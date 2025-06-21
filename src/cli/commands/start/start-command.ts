@@ -9,13 +9,25 @@ import { ProcessUI } from "./process-ui.js";
 import { SystemMonitor } from "./system-monitor.js";
 import { StartOptions } from "./types.js";
 import { eventBus } from "../../../core/event-bus.js";
-import { logger } from "../../../core/logger.js";
-import { formatDuration } from "../../formatter.js";
+// import { logger } from "../../../core/logger.js"; // Reserved for future logging
+// import { formatDuration } from "../../formatter.js"; // Reserved for duration formatting
 
 import inquirer from "inquirer";
 import { promises as fs } from "node:fs";
-import { platform } from "node:os";
-import { existsSync } from "node:fs";
+// import { platform } from "node:os"; // Reserved for platform-specific features
+// import { existsSync } from "node:fs"; // Reserved for file checks
+import type { ProcessInfo } from "./types.js";
+
+// Type definitions for events
+interface ProcessEvent {
+  processId: string;
+  process?: ProcessInfo;
+  error?: Error;
+}
+
+interface ProcessErrorEvent extends ProcessEvent {
+  error: Error;
+}
 
 // Color compatibility
 const colors = {
@@ -63,7 +75,7 @@ export const startCommand = new Command()
         const shouldContinue = await Confirm("Stop existing instance and restart?");
         
         if (!shouldContinue) {
-          console.log(colors.gray('Use --force to override or "claude-flow stop" first'));
+          console.log(colors.gray("Use --force to override or \"claude-flow stop\" first"));
           return;
         }
         
@@ -81,7 +93,7 @@ export const startCommand = new Command()
       console.log(colors.blue("Initializing system components..."));
       const initPromise = processManager.initialize(options.config);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Initialization timeout")), (options.timeout || 30) * 1000),
+        setTimeout(() => reject(new Error("Initialization timeout")), (options.timeout ?? 30) * 1000),
       );
       
       await Promise.race([initPromise, timeoutPromise]);
@@ -144,7 +156,7 @@ export const startCommand = new Command()
         const pidData = {
           pid,
           startTime: Date.now(),
-          config: options.config || "default",
+          config: options.config ?? "default",
           processes: processManager.getAllProcesses().map(p => ({ id: p.id, status: p.status })),
         };
         await fs.writeFile(".claude-flow.pid", JSON.stringify(pidData, null, 2), "utf-8");
@@ -154,8 +166,8 @@ export const startCommand = new Command()
         await waitForSystemReady(processManager);
         
         console.log(colors.green.bold("✓"), "Daemon started successfully");
-        console.log(colors.gray('Use "claude-flow status" to check system status'));
-        console.log(colors.gray('Use "claude-flow monitor" for real-time monitoring'));
+        console.log(colors.gray("Use \"claude-flow status\" to check system status"));
+        console.log(colors.gray("Use \"claude-flow monitor\" for real-time monitoring"));
         
         // Keep process running
         await new Promise<void>(() => {});
@@ -177,15 +189,21 @@ export const startCommand = new Command()
 
         // Handle user input
         const decoder = new TextDecoder();
+        
+        // Set stdin to raw mode for single key input
+        if (process.stdin.setRawMode) {
+          process.stdin.setRawMode(true);
+        }
+        process.stdin.resume();
+        
         while (true) {
-          const buf = new Uint8Array(1);
-          if (typeof process !== "undefined" && process.stdin && "read" in process.stdin) {
-            await (process.stdin as any).read(buf);
-          } else {
-            // Fallback for other environments
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          const key = decoder.decode(buf);
+          const key = await new Promise<string>((resolve) => {
+            const onData = (chunk: Buffer) => {
+              process.stdin.off('data', onData);
+              resolve(decoder.decode(chunk));
+            };
+            process.stdin.on('data', onData);
+          });
 
           switch (key) {
             case "1":
@@ -212,11 +230,13 @@ export const startCommand = new Command()
               systemMonitor.printEventLog(10);
               console.log();
               console.log(colors.gray("Press any key to continue..."));
-              if (typeof process !== "undefined" && process.stdin && "read" in process.stdin) {
-                await (process.stdin as any).read(new Uint8Array(1));
-              } else {
-                await new Promise(resolve => setTimeout(resolve, 100));
-              }
+              await new Promise<void>((resolve) => {
+                const onData = () => {
+                  process.stdin.off('data', onData);
+                  resolve();
+                };
+                process.stdin.on('data', onData);
+              });
               break;
 
             case "q":
@@ -374,7 +394,7 @@ async function checkDependencies(): Promise<void> {
   for (const dir of requiredDirs) {
     try {
       await fs.mkdir(dir, { recursive: true });
-    } catch (error) {
+    } catch (_error) {
       throw new Error(`Cannot create required directory: ${dir}`);
     }
   }
@@ -405,7 +425,7 @@ function setupSystemEventHandlers(
   }
   
   // Monitor for critical errors
-  processManager.on("processError", (event: any) => {
+  processManager.on("processError", (event: ProcessErrorEvent) => {
     console.error(colors.red(`Process error in ${event.processId}:`), event.error.message);
     if (event.processId === "orchestrator") {
       console.error(colors.red.bold("Critical process failed, initiating recovery..."));
@@ -493,15 +513,15 @@ function setupVerboseLogging(monitor: SystemMonitor): void {
   }, 30000);
   
   // Log critical events
-  eventBus.on("process:started", (data: any) => {
+  eventBus.on("process:started", (data: ProcessEvent) => {
     console.log(colors.green(`[VERBOSE] Process started: ${data.processId}`));
   });
   
-  eventBus.on("process:stopped", (data: any) => {
+  eventBus.on("process:stopped", (data: ProcessEvent) => {
     console.log(colors.yellow(`[VERBOSE] Process stopped: ${data.processId}`));
   });
   
-  eventBus.on("process:error", (data: any) => {
+  eventBus.on("process:error", (data: ProcessErrorEvent) => {
     console.log(colors.red(`[VERBOSE] Process error: ${data.processId} - ${data.error.message}`));
   });
 }

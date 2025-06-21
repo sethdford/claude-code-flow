@@ -7,6 +7,7 @@ import chalk from "chalk";
 import { Table } from "../cliffy-compat.js";
 
 import inquirer from "inquirer";
+import type { BaseCommandOptions } from "./types.js";
 
 // Color compatibility
 const colors = {
@@ -24,7 +25,7 @@ const colors = {
 // Select prompt wrapper
 const Select = {
   prompt: async ({ message, options }: { message: string; options: Array<{ name: string; value: string }> }) => {
-    const answer = await inquirer.prompt([{
+    const answer = await inquirer.prompt<{ result: string }>([{
       type: "list",
       name: "result",
       message,
@@ -42,7 +43,7 @@ export const helpCommand = new Command()
   .option("-e, --examples", "Show examples for the topic")
   .option("--tutorial", "Show tutorial for the topic")
   .option("--all", "Show all available help topics")
-  .action(async (topic: string | undefined, options: any) => {
+  .action(async (topic: string | undefined, options: HelpCommandOptions) => {
     if (options.interactive) {
       await startInteractiveHelp();
     } else if (options.all) {
@@ -69,6 +70,13 @@ interface HelpExample {
   explanation?: string;
 }
 
+interface HelpCommandOptions extends BaseCommandOptions {
+  interactive?: boolean;
+  examples?: boolean;
+  tutorial?: boolean;
+  all?: boolean;
+}
+
 const HELP_TOPICS: HelpTopic[] = [
   {
     name: "getting-started",
@@ -83,10 +91,10 @@ const HELP_TOPICS: HelpTopic[] = [
       "   claude-flow start",
       "",
       "3. In another terminal, spawn your first agent:",
-      '   claude-flow agent spawn researcher --name "My Research Agent"',
+      "   claude-flow agent spawn researcher --name \"My Research Agent\"",
       "",
       "4. Create a task for the agent:",
-      '   claude-flow task create research "Find information about AI trends"',
+      "   claude-flow task create research \"Find information about AI trends\"",
       "",
       "5. Monitor progress:",
       "   claude-flow status",
@@ -105,7 +113,7 @@ const HELP_TOPICS: HelpTopic[] = [
     examples: [
       {
         description: "Spawn a research agent",
-        command: 'claude-flow agent spawn researcher --name "Research Assistant"',
+        command: "claude-flow agent spawn researcher --name \"Research Assistant\"",
         explanation: "Creates a new research agent with specialized capabilities for information gathering",
       },
       {
@@ -142,7 +150,7 @@ const HELP_TOPICS: HelpTopic[] = [
       "Best Practices:",
       "• Use descriptive names for your agents",
       "• Match agent types to your workflow needs",
-      '• Monitor agent performance with "claude-flow status"',
+      "• Monitor agent performance with \"claude-flow status\"",
       "• Terminate idle agents to free resources",
     ],
     related: ["tasks", "workflows", "coordination"],
@@ -154,17 +162,17 @@ const HELP_TOPICS: HelpTopic[] = [
     examples: [
       {
         description: "Create a research task",
-        command: 'claude-flow task create research "Find papers on quantum computing" --priority 5',
+        command: "claude-flow task create research \"Find papers on quantum computing\" --priority 5",
         explanation: "Creates a high-priority research task with specific instructions",
       },
       {
         description: "Create a task with dependencies",
-        command: 'claude-flow task create analysis "Analyze research results" --dependencies task-001',
+        command: "claude-flow task create analysis \"Analyze research results\" --dependencies task-001",
         explanation: "Creates a task that waits for task-001 to complete before starting",
       },
       {
         description: "Assign task to specific agent",
-        command: 'claude-flow task create implementation "Write API client" --assign agent-003',
+        command: "claude-flow task create implementation \"Write API client\" --assign agent-003",
         explanation: "Directly assigns a task to a specific agent",
       },
       {
@@ -174,7 +182,7 @@ const HELP_TOPICS: HelpTopic[] = [
       },
       {
         description: "Cancel a running task",
-        command: 'claude-flow task cancel task-001 --reason "Requirements changed"',
+        command: "claude-flow task cancel task-001 --reason \"Requirements changed\"",
         explanation: "Stops a task and provides a reason for cancellation",
       },
     ],
@@ -212,27 +220,27 @@ const HELP_TOPICS: HelpTopic[] = [
     examples: [
       {
         description: "Spawn Claude with web research capabilities",
-        command: 'claude-flow claude spawn "implement user authentication" --research --parallel',
+        command: "claude-flow claude spawn \"implement user authentication\" --research --parallel",
         explanation: "Creates a Claude instance with WebFetchTool and BatchTool for parallel web research",
       },
       {
         description: "Spawn Claude without permission prompts",
-        command: 'claude-flow claude spawn "fix payment bug" --no-permissions',
+        command: "claude-flow claude spawn \"fix payment bug\" --no-permissions",
         explanation: "Runs Claude with --dangerously-skip-permissions flag to avoid interruptions",
       },
       {
         description: "Spawn Claude with custom tools",
-        command: 'claude-flow claude spawn "analyze codebase" --tools "View,Edit,GrepTool,LS"',
+        command: "claude-flow claude spawn \"analyze codebase\" --tools \"View,Edit,GrepTool,LS\"",
         explanation: "Specifies exactly which tools Claude can use for the task",
       },
       {
         description: "Spawn Claude with test coverage target",
-        command: 'claude-flow claude spawn "write unit tests" --coverage 95 --commit feature',
+        command: "claude-flow claude spawn \"write unit tests\" --coverage 95 --commit feature",
         explanation: "Sets test coverage goal to 95% and commits after each feature",
       },
       {
         description: "Dry run to preview command",
-        command: 'claude-flow claude spawn "build API" --mode backend-only --dry-run',
+        command: "claude-flow claude spawn \"build API\" --mode backend-only --dry-run",
         explanation: "Shows what would be executed without actually running Claude",
       },
     ],
@@ -302,25 +310,25 @@ const HELP_TOPICS: HelpTopic[] = [
       "",
       "Workflow Definition (JSON):",
       "{",
-      '  "name": "Research and Analysis",',
-      '  "description": "Multi-stage research workflow",',
-      '  "agents": [',
-      '    {"id": "researcher", "type": "researcher"},',
-      '    {"id": "analyzer", "type": "analyst"}',
+      "  \"name\": \"Research and Analysis\",",
+      "  \"description\": \"Multi-stage research workflow\",",
+      "  \"agents\": [",
+      "    {\"id\": \"researcher\", \"type\": \"researcher\"},",
+      "    {\"id\": \"analyzer\", \"type\": \"analyst\"}",
       "  ],",
-      '  "tasks": [',
+      "  \"tasks\": [",
       "    {",
-      '      "id": "research-task",',
-      '      "type": "research",',
-      '      "description": "Gather information",',
-      '      "assignTo": "researcher"',
+      "      \"id\": \"research-task\",",
+      "      \"type\": \"research\",",
+      "      \"description\": \"Gather information\",",
+      "      \"assignTo\": \"researcher\"",
       "    },",
       "    {",
-      '      "id": "analyze-task",',
-      '      "type": "analysis",',
-      '      "description": "Analyze findings",',
-      '      "assignTo": "analyzer",',
-      '      "depends": ["research-task"]',
+      "      \"id\": \"analyze-task\",",
+      "      \"type\": \"analysis\",",
+      "      \"description\": \"Analyze findings\",",
+      "      \"assignTo\": \"analyzer\",",
+      "      \"depends\": [\"research-task\"]",
       "    }",
       "  ]",
       "}",
@@ -469,7 +477,7 @@ const HELP_TOPICS: HelpTopic[] = [
     examples: [
       {
         description: "Save current session",
-        command: 'claude-flow session save "Development Session" --description "Working on API integration"',
+        command: "claude-flow session save \"Development Session\" --description \"Working on API integration\"",
         explanation: "Saves all current agents, tasks, and memory state",
       },
       {
@@ -566,9 +574,9 @@ const HELP_TOPICS: HelpTopic[] = [
       "REPL Tips:",
       "• Use tab completion extensively",
       "• Check connection status regularly",
-      '• Use "help <command>" for detailed help',
+      "• Use \"help <command>\" for detailed help",
       "• History is saved between sessions",
-      '• Ctrl+C or "exit" to quit',
+      "• Ctrl+C or \"exit\" to quit",
     ],
     related: ["completion", "interactive", "commands"],
   },
@@ -602,8 +610,8 @@ const HELP_TOPICS: HelpTopic[] = [
       "Common issues and solutions:",
       "",
       "Connection Issues:",
-      '• Problem: "Connection refused" errors',
-      '• Solution: Ensure Claude-Flow is started with "claude-flow start"',
+      "• Problem: \"Connection refused\" errors",
+      "• Solution: Ensure Claude-Flow is started with \"claude-flow start\"",
       "• Check: MCP transport settings match between client and server",
       "",
       "Agent Issues:",
@@ -673,8 +681,8 @@ function showMainHelp(): void {
   }
   
   console.log();
-  console.log(colors.gray('Use "claude-flow help <topic>" for detailed information.'));
-  console.log(colors.gray('Use "claude-flow help --all" to see all topics.'));
+  console.log(colors.gray("Use \"claude-flow help <topic>\" for detailed information."));
+  console.log(colors.gray("Use \"claude-flow help --all\" to see all topics."));
 }
 
 function showAllTopics(): void {
@@ -697,10 +705,10 @@ function showAllTopics(): void {
   console.log(table.toString());
   
   console.log();
-  console.log(colors.gray('Use "claude-flow help <topic>" for detailed information.'));
+  console.log(colors.gray("Use \"claude-flow help <topic>\" for detailed information."));
 }
 
-async function showTopicHelp(topicName: string, options: any): Promise<void> {
+function showTopicHelp(topicName: string, options: HelpCommandOptions): void {
   const topic = HELP_TOPICS.find(t => t.name === topicName);
   
   if (!topic) {
@@ -719,7 +727,7 @@ async function showTopicHelp(topicName: string, options: any): Promise<void> {
         console.log(colors.cyan(`  ${suggestion.name}`));
       }
     } else {
-      console.log(colors.gray('Use "claude-flow help --all" to see all topics.'));
+      console.log(colors.gray("Use \"claude-flow help --all\" to see all topics."));
     }
     return;
   }
@@ -827,7 +835,7 @@ async function startInteractiveHelp(): Promise<void> {
       options: categories,
     });
     
-    const choice = typeof result === "string" ? result : result.value;
+    const choice = typeof result === "string" ? result : (result as any)?.value || result;
     
     if (choice === "exit") {
       console.log(colors.gray("Goodbye!"));

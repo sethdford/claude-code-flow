@@ -51,7 +51,7 @@ function startWebUI(host: string, port: number) {
   const activeConnections: Set<any> = new Set();
   
   // CLI output capture system
-  const cliProcess: any = null;
+  const _cliProcess: any = null;
   
   const consoleHTML = `
     <!DOCTYPE html>
@@ -561,12 +561,12 @@ function startWebUI(host: string, port: number) {
     
     // For other commands, spawn a subprocess
     const args = command.split(" ");
-    const cmd = args[0];
+    const _cmd = args[0];
     const cmdArgs = args.slice(1);
     
     // Determine the correct claude-flow executable path
     const rootDir = path.resolve(__dirname, "../..");
-    const cliPath = path.join(rootDir, "bin", "claude-flow");
+    const _cliPath = path.join(rootDir, "bin", "claude-flow");
     
     // Spawn the command using the main TypeScript CLI
     const child = spawn("node", [path.join(rootDir, "dist/cli/main.js"), ...cmdArgs], {
@@ -640,15 +640,15 @@ function startWebUI(host: string, port: number) {
   function convertAnsiToHtml(text: string): string {
     return text
       .replace(/\x1b\[0m/g, "</span>")
-      .replace(/\x1b\[1m/g, '<span style="font-weight: bold;">')
-      .replace(/\x1b\[31m/g, '<span class="error">')
-      .replace(/\x1b\[32m/g, '<span class="success">')
-      .replace(/\x1b\[33m/g, '<span class="warning">')
-      .replace(/\x1b\[34m/g, '<span class="info">')
-      .replace(/\x1b\[35m/g, '<span style="color: #d946ef;">')
-      .replace(/\x1b\[36m/g, '<span style="color: #06b6d4;">')
-      .replace(/\x1b\[37m/g, '<span class="dim">')
-      .replace(/\x1b\[90m/g, '<span class="dim">')
+      .replace(/\x1b\[1m/g, "<span style=\"font-weight: bold;\">")
+      .replace(/\x1b\[31m/g, "<span class=\"error\">")
+      .replace(/\x1b\[32m/g, "<span class=\"success\">")
+      .replace(/\x1b\[33m/g, "<span class=\"warning\">")
+      .replace(/\x1b\[34m/g, "<span class=\"info\">")
+      .replace(/\x1b\[35m/g, "<span style=\"color: #d946ef;\">")
+      .replace(/\x1b\[36m/g, "<span style=\"color: #06b6d4;\">")
+      .replace(/\x1b\[37m/g, "<span class=\"dim\">")
+      .replace(/\x1b\[90m/g, "<span class=\"dim\">")
       .replace(/\x1b\[[0-9;]*m/g, "") // Remove any remaining ANSI codes
       .replace(/\n/g, "\\n")
       .replace(/</g, "&lt;")
@@ -742,8 +742,8 @@ export async function startOrchestrator(options: any) {
     console.log(`   • Web UI: Active at http://${options.host || "localhost"}:${options.port || 3000}`);
   }
 
-  console.log('\n💡 Use "claude-flow status" to check system status');
-  console.log('💡 Use "claude-flow stop" to stop the orchestrator');
+  console.log("\n💡 Use \"claude-flow status\" to check system status");
+  console.log("💡 Use \"claude-flow stop\" to stop the orchestrator");
   
   // Keep the process running
   if (!options.daemon) {

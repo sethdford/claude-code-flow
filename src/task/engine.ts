@@ -155,27 +155,27 @@ export class TaskEngine extends EventEmitter {
    */
   async createTask(taskData: Partial<WorkflowTask>): Promise<WorkflowTask> {
     const task: WorkflowTask = {
-      id: taskData.id || generateId("task"),
-      type: taskData.type || "general",
+      id: taskData.id ?? generateId("task"),
+      type: taskData.type ?? "general",
       description: taskData.description ?? "",
-      priority: taskData.priority || 0,
+      priority: taskData.priority ?? 0,
       status: "pending",
-      input: taskData.input || {},
+      input: taskData.input ?? {},
       createdAt: new Date(),
-      dependencies: taskData.dependencies || [],
-      resourceRequirements: taskData.resourceRequirements || [],
+      dependencies: taskData.dependencies ?? [],
+      resourceRequirements: taskData.resourceRequirements ?? [],
       schedule: taskData.schedule,
-      retryPolicy: taskData.retryPolicy || {
+      retryPolicy: taskData.retryPolicy ?? {
         maxAttempts: 3,
         backoffMs: 1000,
         backoffMultiplier: 2,
       },
-      timeout: taskData.timeout || 300000, // 5 minutes default
-      tags: taskData.tags || [],
+      timeout: taskData.timeout ?? 300000, // 5 minutes default
+      tags: taskData.tags ?? [],
       estimatedDurationMs: taskData.estimatedDurationMs,
       progressPercentage: 0,
       checkpoints: [],
-      rollbackStrategy: taskData.rollbackStrategy || "previous-checkpoint",
+      rollbackStrategy: taskData.rollbackStrategy ?? "previous-checkpoint",
       metadata: taskData.metadata || {},
     };
 
@@ -640,7 +640,7 @@ export class TaskEngine extends EventEmitter {
       task.description.toLowerCase().includes(searchLower) ||
       task.type.toLowerCase().includes(searchLower) ||
       task.tags.some(tag => tag.toLowerCase().includes(searchLower)) ||
-      Boolean(task.assignedAgent && task.assignedAgent.toLowerCase().includes(searchLower))
+      Boolean(task.assignedAgent?.toLowerCase().includes(searchLower))
     );
   }
 

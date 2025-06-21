@@ -1,33 +1,33 @@
-const { TestHarness } = require('../test-harness');
-const assert = require('assert');
+const { TestHarness } = require("../test-harness");
+const assert = require("assert");
 
-describe('Architect Mode Batch Integration Tests', () => {
+describe("Architect Mode Batch Integration Tests", () => {
   let harness;
 
   beforeEach(() => {
     harness = new TestHarness();
-    harness.createMockProject('complex');
+    harness.createMockProject("complex");
   });
 
   afterEach(() => {
     harness.reset();
   });
 
-  describe('Parallel Architecture Analysis', () => {
-    it('should analyze multiple components concurrently', async () => {
+  describe("Parallel Architecture Analysis", () => {
+    it("should analyze multiple components concurrently", async () => {
       const components = [
-        'src/services/auth.service.ts',
-        'src/services/user.service.ts',
-        'src/controllers/auth.controller.ts',
-        'src/models/user.model.ts'
+        "src/services/auth.service.ts",
+        "src/services/user.service.ts",
+        "src/controllers/auth.controller.ts",
+        "src/models/user.model.ts"
       ];
       
       const analysisResults = await harness.executeBatch(components, async (component) => {
         const content = await harness.mockReadFile(component);
         return {
           component,
-          type: component.includes('service') ? 'service' : 
-                component.includes('controller') ? 'controller' : 'model',
+          type: component.includes("service") ? "service" : 
+                component.includes("controller") ? "controller" : "model",
           imports: content.match(/import\s+{[^}]+}/g) || [],
           exports: content.match(/export\s+(class|interface|const)/g) || [],
           complexity: content.length
@@ -39,8 +39,8 @@ describe('Architect Mode Batch Integration Tests', () => {
       assert(analysisResults.successful.every(r => r.complexity > 0));
     });
 
-    it('should generate architecture diagrams in parallel', async () => {
-      const diagramTypes = ['component', 'sequence', 'deployment', 'data-flow'];
+    it("should generate architecture diagrams in parallel", async () => {
+      const diagramTypes = ["component", "sequence", "deployment", "data-flow"];
       
       const diagramTasks = diagramTypes.map(type => async () => {
         await harness.simulateDelay(50); // Simulate diagram generation
@@ -58,19 +58,19 @@ describe('Architect Mode Batch Integration Tests', () => {
       
       assert.strictEqual(results.successful.length, 4);
       results.successful.forEach(diagram => {
-        assert(diagram.diagram.includes('@startuml'));
+        assert(diagram.diagram.includes("@startuml"));
         assert(diagram.metadata.components >= 5);
       });
     });
 
-    it('should analyze dependencies across multiple files', async () => {
+    it("should analyze dependencies across multiple files", async () => {
       // Add more complex dependencies
-      harness.mockFS.set('src/services/auth.service.ts', 
-        'import { UserService } from "./user.service";\nimport { Logger } from "../utils/logger";\nexport class AuthService { }');
-      harness.mockFS.set('src/services/user.service.ts',
-        'import { User } from "../models/user.model";\nimport { Logger } from "../utils/logger";\nexport class UserService { }');
+      harness.mockFS.set("src/services/auth.service.ts", 
+        "import { UserService } from \"./user.service\";\nimport { Logger } from \"../utils/logger\";\nexport class AuthService { }");
+      harness.mockFS.set("src/services/user.service.ts",
+        "import { User } from \"../models/user.model\";\nimport { Logger } from \"../utils/logger\";\nexport class UserService { }");
       
-      const files = ['src/services/auth.service.ts', 'src/services/user.service.ts'];
+      const files = ["src/services/auth.service.ts", "src/services/user.service.ts"];
       
       const dependencyAnalysis = await harness.executeBatch(files, async (file) => {
         const content = await harness.mockReadFile(file);
@@ -78,41 +78,41 @@ describe('Architect Mode Batch Integration Tests', () => {
         
         return {
           file,
-          dependencies: imports.map(imp => imp.replace(/from\s+"(.+)"/, '$1')),
+          dependencies: imports.map(imp => imp.replace(/from\s+"(.+)"/, "$1")),
           dependencyCount: imports.length
         };
       });
       
       assert.strictEqual(dependencyAnalysis.successful.length, 2);
-      const authDeps = dependencyAnalysis.successful.find(r => r.file.includes('auth.service'));
+      const authDeps = dependencyAnalysis.successful.find(r => r.file.includes("auth.service"));
       assert.strictEqual(authDeps.dependencyCount, 2);
-      assert(authDeps.dependencies.includes('./user.service'));
+      assert(authDeps.dependencies.includes("./user.service"));
     });
   });
 
-  describe('Concurrent Pattern Detection', () => {
-    it('should detect design patterns across multiple files', async () => {
+  describe("Concurrent Pattern Detection", () => {
+    it("should detect design patterns across multiple files", async () => {
       // Add pattern examples
-      harness.mockFS.set('src/patterns/singleton.ts', 
-        'export class Singleton { private static instance: Singleton; }');
-      harness.mockFS.set('src/patterns/factory.ts',
-        'export abstract class Factory { abstract create(): Product; }');
-      harness.mockFS.set('src/patterns/observer.ts',
-        'export interface Observer { update(subject: Subject): void; }');
+      harness.mockFS.set("src/patterns/singleton.ts", 
+        "export class Singleton { private static instance: Singleton; }");
+      harness.mockFS.set("src/patterns/factory.ts",
+        "export abstract class Factory { abstract create(): Product; }");
+      harness.mockFS.set("src/patterns/observer.ts",
+        "export interface Observer { update(subject: Subject): void; }");
       
       const patternFiles = [
-        'src/patterns/singleton.ts',
-        'src/patterns/factory.ts',
-        'src/patterns/observer.ts'
+        "src/patterns/singleton.ts",
+        "src/patterns/factory.ts",
+        "src/patterns/observer.ts"
       ];
       
       const patternDetection = await harness.executeBatch(patternFiles, async (file) => {
         const content = await harness.mockReadFile(file);
         const patterns = [];
         
-        if (content.includes('static instance')) patterns.push('Singleton');
-        if (content.includes('abstract') && content.includes('create')) patterns.push('Factory');
-        if (content.includes('Observer') && content.includes('update')) patterns.push('Observer');
+        if (content.includes("static instance")) patterns.push("Singleton");
+        if (content.includes("abstract") && content.includes("create")) patterns.push("Factory");
+        if (content.includes("Observer") && content.includes("update")) patterns.push("Observer");
         
         return { file, patterns, confidence: patterns.length > 0 ? 0.9 : 0 };
       });
@@ -122,16 +122,16 @@ describe('Architect Mode Batch Integration Tests', () => {
       assert(patternDetection.successful.every(r => r.confidence > 0.8));
     });
 
-    it('should analyze architectural layers in parallel', async () => {
-      const layers = ['presentation', 'business', 'data', 'infrastructure'];
+    it("should analyze architectural layers in parallel", async () => {
+      const layers = ["presentation", "business", "data", "infrastructure"];
       
       const layerAnalysis = await harness.executeBatch(layers, async (layer) => {
         // Simulate analyzing each layer
         const files = Array.from(harness.mockFS.keys()).filter(f => {
-          if (layer === 'presentation') return f.includes('controller');
-          if (layer === 'business') return f.includes('service');
-          if (layer === 'data') return f.includes('model');
-          if (layer === 'infrastructure') return f.includes('config') || f.includes('utils');
+          if (layer === "presentation") return f.includes("controller");
+          if (layer === "business") return f.includes("service");
+          if (layer === "data") return f.includes("model");
+          if (layer === "infrastructure") return f.includes("config") || f.includes("utils");
           return false;
         });
         
@@ -139,23 +139,23 @@ describe('Architect Mode Batch Integration Tests', () => {
           layer,
           fileCount: files.length,
           components: files.map(f => ({ path: f, type: layer })),
-          health: files.length > 0 ? 'healthy' : 'missing'
+          health: files.length > 0 ? "healthy" : "missing"
         };
       });
       
       assert.strictEqual(layerAnalysis.successful.length, 4);
-      const healthyLayers = layerAnalysis.successful.filter(l => l.health === 'healthy');
+      const healthyLayers = layerAnalysis.successful.filter(l => l.health === "healthy");
       assert(healthyLayers.length >= 3); // At least 3 layers should have files
     });
   });
 
-  describe('Batch Documentation Generation', () => {
-    it('should generate multiple architecture documents concurrently', async () => {
+  describe("Batch Documentation Generation", () => {
+    it("should generate multiple architecture documents concurrently", async () => {
       const documentTypes = [
-        { type: 'overview', title: 'System Overview' },
-        { type: 'components', title: 'Component Architecture' },
-        { type: 'deployment', title: 'Deployment Architecture' },
-        { type: 'security', title: 'Security Architecture' }
+        { type: "overview", title: "System Overview" },
+        { type: "components", title: "Component Architecture" },
+        { type: "deployment", title: "Deployment Architecture" },
+        { type: "security", title: "Security Architecture" }
       ];
       
       const docGeneration = await harness.executeBatch(documentTypes, async (doc) => {
@@ -171,18 +171,18 @@ describe('Architect Mode Batch Integration Tests', () => {
       // Verify all documents were created
       for (const doc of docGeneration.successful) {
         const content = await harness.mockReadFile(doc.path);
-        assert(content.includes('# '));
-        assert(content.includes('architecture'));
+        assert(content.includes("# "));
+        assert(content.includes("architecture"));
       }
     });
 
-    it('should extract and analyze architectural decisions', async () => {
+    it("should extract and analyze architectural decisions", async () => {
       // Add ADR (Architecture Decision Records)
       const adrs = [
-        { id: '001', title: 'Use TypeScript', status: 'accepted' },
-        { id: '002', title: 'Microservices Architecture', status: 'proposed' },
-        { id: '003', title: 'PostgreSQL for persistence', status: 'accepted' },
-        { id: '004', title: 'Redis for caching', status: 'deprecated' }
+        { id: "001", title: "Use TypeScript", status: "accepted" },
+        { id: "002", title: "Microservices Architecture", status: "proposed" },
+        { id: "003", title: "PostgreSQL for persistence", status: "accepted" },
+        { id: "004", title: "Redis for caching", status: "deprecated" }
       ];
       
       adrs.forEach(adr => {
@@ -194,21 +194,21 @@ describe('Architect Mode Batch Integration Tests', () => {
         const content = await harness.mockReadFile(`docs/adr/ADR-${adr.id}.md`);
         return {
           ...adr,
-          hasContext: content.includes('## Context'),
-          hasDecision: content.includes('## Decision'),
+          hasContext: content.includes("## Context"),
+          hasDecision: content.includes("## Decision"),
           wordCount: content.split(/\s+/).length
         };
       });
       
       assert.strictEqual(adrAnalysis.successful.length, 4);
-      const acceptedADRs = adrAnalysis.successful.filter(a => a.status === 'accepted');
+      const acceptedADRs = adrAnalysis.successful.filter(a => a.status === "accepted");
       assert.strictEqual(acceptedADRs.length, 2);
     });
   });
 
-  describe('Performance Profiling', () => {
-    it('should profile architecture analysis performance', async () => {
-      harness.createMockProject('large'); // Create 100+ files
+  describe("Performance Profiling", () => {
+    it("should profile architecture analysis performance", async () => {
+      harness.createMockProject("large"); // Create 100+ files
       
       const allFiles = Array.from(harness.mockFS.keys());
       const batches = [10, 20, 50];
@@ -239,19 +239,19 @@ describe('Architect Mode Batch Integration Tests', () => {
       });
     });
 
-    it('should handle complex architectural queries efficiently', async () => {
+    it("should handle complex architectural queries efficiently", async () => {
       const queries = [
-        { type: 'find-circular-deps', complexity: 'high' },
-        { type: 'analyze-coupling', complexity: 'medium' },
-        { type: 'check-layer-violations', complexity: 'high' },
-        { type: 'identify-god-classes', complexity: 'medium' },
-        { type: 'detect-anti-patterns', complexity: 'high' }
+        { type: "find-circular-deps", complexity: "high" },
+        { type: "analyze-coupling", complexity: "medium" },
+        { type: "check-layer-violations", complexity: "high" },
+        { type: "identify-god-classes", complexity: "medium" },
+        { type: "detect-anti-patterns", complexity: "high" }
       ];
       
       const startTime = Date.now();
       const queryResults = await harness.executeBatch(queries, async (query) => {
         // Simulate complex analysis
-        const delay = query.complexity === 'high' ? 100 : 50;
+        const delay = query.complexity === "high" ? 100 : 50;
         await harness.simulateDelay(delay);
         
         return {
@@ -267,7 +267,7 @@ describe('Architect Mode Batch Integration Tests', () => {
       
       // With parallel execution, should complete faster than sequential
       const sequentialTime = queries.reduce((sum, q) => 
-        sum + (q.complexity === 'high' ? 100 : 50), 0);
+        sum + (q.complexity === "high" ? 100 : 50), 0);
       assert(totalTime < sequentialTime * 0.7, 
         `Parallel execution should be faster: ${totalTime}ms vs ${sequentialTime}ms sequential`);
     });

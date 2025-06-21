@@ -1,7 +1,7 @@
-const { TestHarness } = require('../test-harness');
-const assert = require('assert');
+const { TestHarness } = require("../test-harness");
+const assert = require("assert");
 
-describe('End-to-End Workflow Tests', () => {
+describe("End-to-End Workflow Tests", () => {
   let harness;
 
   beforeEach(() => {
@@ -12,30 +12,30 @@ describe('End-to-End Workflow Tests', () => {
     harness.reset();
   });
 
-  describe('Complete SPARC Workflow with Batch Operations', () => {
-    it('should execute full SPARC cycle with parallel operations', async () => {
-      const projectName = 'user-authentication-system';
+  describe("Complete SPARC Workflow with Batch Operations", () => {
+    it("should execute full SPARC cycle with parallel operations", async () => {
+      const projectName = "user-authentication-system";
       const workflowLog = [];
       
       // Phase 1: Specification with parallel analysis
-      console.log('\n=== Phase 1: Specification ===');
+      console.log("\n=== Phase 1: Specification ===");
       const specificationTasks = [
         {
-          name: 'analyze-requirements',
+          name: "analyze-requirements",
           execute: async () => {
-            await harness.mockWriteFile('specs/requirements.md', `# Requirements
+            await harness.mockWriteFile("specs/requirements.md", `# Requirements
 - User registration with email
 - Secure password storage
 - JWT-based authentication
 - Password reset functionality
 - Session management`);
-            return { analyzed: 5, priority: 'high' };
+            return { analyzed: 5, priority: "high" };
           }
         },
         {
-          name: 'define-interfaces',
+          name: "define-interfaces",
           execute: async () => {
-            await harness.mockWriteFile('specs/interfaces.ts', `export interface User {
+            await harness.mockWriteFile("specs/interfaces.ts", `export interface User {
   id: string;
   email: string;
   passwordHash: string;
@@ -51,9 +51,9 @@ export interface AuthToken {
           }
         },
         {
-          name: 'create-test-scenarios',
+          name: "create-test-scenarios",
           execute: async () => {
-            await harness.mockWriteFile('specs/test-scenarios.md', `# Test Scenarios
+            await harness.mockWriteFile("specs/test-scenarios.md", `# Test Scenarios
 1. Valid registration
 2. Duplicate email registration
 3. Invalid password format
@@ -69,7 +69,7 @@ export interface AuthToken {
         specificationTasks,
         async (task) => {
           const result = await task.execute();
-          workflowLog.push({ phase: 'specification', task: task.name, result });
+          workflowLog.push({ phase: "specification", task: task.name, result });
           return result;
         }
       );
@@ -77,12 +77,12 @@ export interface AuthToken {
       assert.strictEqual(specResults.successful.length, 3);
       
       // Phase 2: Architecture with parallel design
-      console.log('\n=== Phase 2: Architecture ===');
+      console.log("\n=== Phase 2: Architecture ===");
       const architectureTasks = [
         {
-          name: 'design-components',
+          name: "design-components",
           execute: async () => {
-            const components = ['AuthService', 'UserRepository', 'TokenManager', 'PasswordHasher'];
+            const components = ["AuthService", "UserRepository", "TokenManager", "PasswordHasher"];
             for (const component of components) {
               await harness.mockWriteFile(`architecture/${component}.diagram`, 
                 `Component: ${component}\nResponsibilities: ...`);
@@ -91,9 +91,9 @@ export interface AuthToken {
           }
         },
         {
-          name: 'plan-database',
+          name: "plan-database",
           execute: async () => {
-            await harness.mockWriteFile('architecture/database-schema.sql', `
+            await harness.mockWriteFile("architecture/database-schema.sql", `
 CREATE TABLE users (
   id UUID PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -111,9 +111,9 @@ CREATE TABLE auth_tokens (
           }
         },
         {
-          name: 'define-api-endpoints',
+          name: "define-api-endpoints",
           execute: async () => {
-            await harness.mockWriteFile('architecture/api-spec.yaml', `
+            await harness.mockWriteFile("architecture/api-spec.yaml", `
 endpoints:
   - POST /auth/register
   - POST /auth/login
@@ -129,7 +129,7 @@ endpoints:
         architectureTasks,
         async (task) => {
           const result = await task.execute();
-          workflowLog.push({ phase: 'architecture', task: task.name, result });
+          workflowLog.push({ phase: "architecture", task: task.name, result });
           return result;
         }
       );
@@ -137,12 +137,12 @@ endpoints:
       assert.strictEqual(archResults.successful.length, 3);
       
       // Phase 3: TDD Implementation with parallel test creation
-      console.log('\n=== Phase 3: TDD Implementation ===');
+      console.log("\n=== Phase 3: TDD Implementation ===");
       const tddTasks = [
         {
-          name: 'create-auth-service-tests',
+          name: "create-auth-service-tests",
           execute: async () => {
-            await harness.mockWriteFile('test/auth-service.test.ts', `
+            await harness.mockWriteFile("test/auth-service.test.ts", `
 describe('AuthService', () => {
   it('should register new user');
   it('should hash password securely');
@@ -154,9 +154,9 @@ describe('AuthService', () => {
           }
         },
         {
-          name: 'create-user-repository-tests',
+          name: "create-user-repository-tests",
           execute: async () => {
-            await harness.mockWriteFile('test/user-repository.test.ts', `
+            await harness.mockWriteFile("test/user-repository.test.ts", `
 describe('UserRepository', () => {
   it('should create user');
   it('should find user by email');
@@ -167,9 +167,9 @@ describe('UserRepository', () => {
           }
         },
         {
-          name: 'create-integration-tests',
+          name: "create-integration-tests",
           execute: async () => {
-            await harness.mockWriteFile('test/integration/auth-flow.test.ts', `
+            await harness.mockWriteFile("test/integration/auth-flow.test.ts", `
 describe('Authentication Flow', () => {
   it('should complete registration flow');
   it('should complete login flow');
@@ -184,26 +184,26 @@ describe('Authentication Flow', () => {
         tddTasks,
         async (task) => {
           const result = await task.execute();
-          workflowLog.push({ phase: 'tdd', task: task.name, result });
+          workflowLog.push({ phase: "tdd", task: task.name, result });
           return result;
         }
       );
       
       // Phase 4: Code Implementation with parallel file generation
-      console.log('\n=== Phase 4: Code Implementation ===');
+      console.log("\n=== Phase 4: Code Implementation ===");
       const implementations = [
-        'src/services/auth.service.ts',
-        'src/repositories/user.repository.ts',
-        'src/utils/token-manager.ts',
-        'src/utils/password-hasher.ts',
-        'src/controllers/auth.controller.ts'
+        "src/services/auth.service.ts",
+        "src/repositories/user.repository.ts",
+        "src/utils/token-manager.ts",
+        "src/utils/password-hasher.ts",
+        "src/controllers/auth.controller.ts"
       ];
       
       const codeResults = await harness.executeBatch(
         implementations,
         async (file) => {
-          const className = file.split('/').pop().replace('.ts', '').split('-')
-            .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+          const className = file.split("/").pop().replace(".ts", "").split("-")
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join("");
           
           await harness.mockWriteFile(file, `export class ${className} {
   // Implementation based on tests and specifications
@@ -214,7 +214,7 @@ describe('Authentication Flow', () => {
   // Methods...
 }`);
           
-          workflowLog.push({ phase: 'implementation', file, created: true });
+          workflowLog.push({ phase: "implementation", file, created: true });
           return { file, className };
         }
       );
@@ -222,38 +222,38 @@ describe('Authentication Flow', () => {
       assert.strictEqual(codeResults.successful.length, 5);
       
       // Phase 5: Security Review with parallel checks
-      console.log('\n=== Phase 5: Security Review ===');
+      console.log("\n=== Phase 5: Security Review ===");
       const securityChecks = [
         {
-          name: 'password-security',
+          name: "password-security",
           check: async () => {
-            const hasherContent = await harness.mockReadFile('src/utils/password-hasher.ts');
+            const hasherContent = await harness.mockReadFile("src/utils/password-hasher.ts");
             return {
-              check: 'password-hashing',
+              check: "password-hashing",
               secure: true,
-              recommendations: ['Use bcrypt with cost factor 12+']
+              recommendations: ["Use bcrypt with cost factor 12+"]
             };
           }
         },
         {
-          name: 'token-security',
+          name: "token-security",
           check: async () => {
-            const tokenContent = await harness.mockReadFile('src/utils/token-manager.ts');
+            const tokenContent = await harness.mockReadFile("src/utils/token-manager.ts");
             return {
-              check: 'token-management',
+              check: "token-management",
               secure: true,
-              recommendations: ['Implement token rotation', 'Add rate limiting']
+              recommendations: ["Implement token rotation", "Add rate limiting"]
             };
           }
         },
         {
-          name: 'sql-injection',
+          name: "sql-injection",
           check: async () => {
-            const repoContent = await harness.mockReadFile('src/repositories/user.repository.ts');
+            const repoContent = await harness.mockReadFile("src/repositories/user.repository.ts");
             return {
-              check: 'sql-injection',
+              check: "sql-injection",
               secure: true,
-              recommendations: ['Always use parameterized queries']
+              recommendations: ["Always use parameterized queries"]
             };
           }
         }
@@ -263,32 +263,32 @@ describe('Authentication Flow', () => {
         securityChecks,
         async (check) => {
           const result = await check.check();
-          workflowLog.push({ phase: 'security', check: check.name, result });
+          workflowLog.push({ phase: "security", check: check.name, result });
           return result;
         }
       );
       
       // Phase 6: Integration and Documentation
-      console.log('\n=== Phase 6: Integration ===');
+      console.log("\n=== Phase 6: Integration ===");
       const integrationTasks = [
         {
-          name: 'generate-api-docs',
+          name: "generate-api-docs",
           execute: async () => {
-            await harness.mockWriteFile('docs/api-reference.md', '# API Reference\n...');
+            await harness.mockWriteFile("docs/api-reference.md", "# API Reference\n...");
             return { documented: true };
           }
         },
         {
-          name: 'create-deployment-config',
+          name: "create-deployment-config",
           execute: async () => {
-            await harness.mockWriteFile('deploy/docker-compose.yml', 'version: "3.8"\n...');
+            await harness.mockWriteFile("deploy/docker-compose.yml", "version: \"3.8\"\n...");
             return { deployable: true };
           }
         },
         {
-          name: 'setup-ci-pipeline',
+          name: "setup-ci-pipeline",
           execute: async () => {
-            await harness.mockWriteFile('.github/workflows/ci.yml', 'name: CI\n...');
+            await harness.mockWriteFile(".github/workflows/ci.yml", "name: CI\n...");
             return { ci: true };
           }
         }
@@ -298,7 +298,7 @@ describe('Authentication Flow', () => {
         integrationTasks,
         async (task) => {
           const result = await task.execute();
-          workflowLog.push({ phase: 'integration', task: task.name, result });
+          workflowLog.push({ phase: "integration", task: task.name, result });
           return result;
         }
       );
@@ -319,7 +319,7 @@ describe('Authentication Flow', () => {
         success: true
       };
       
-      console.log('\n=== Workflow Summary ===');
+      console.log("\n=== Workflow Summary ===");
       console.log(JSON.stringify(summary, null, 2));
       
       // Assertions
@@ -328,25 +328,25 @@ describe('Authentication Flow', () => {
       assert.strictEqual(summary.totalTasks, 17);
     });
 
-    it('should handle cross-mode parallel execution', async () => {
+    it("should handle cross-mode parallel execution", async () => {
       // Simulate running multiple SPARC modes concurrently
       const modes = {
         architect: [
-          { task: 'analyze-structure', duration: 100 },
-          { task: 'create-diagrams', duration: 150 }
+          { task: "analyze-structure", duration: 100 },
+          { task: "create-diagrams", duration: 150 }
         ],
         code: [
-          { task: 'generate-interfaces', duration: 80 },
-          { task: 'implement-services', duration: 120 },
-          { task: 'create-utilities', duration: 60 }
+          { task: "generate-interfaces", duration: 80 },
+          { task: "implement-services", duration: 120 },
+          { task: "create-utilities", duration: 60 }
         ],
         tdd: [
-          { task: 'write-unit-tests', duration: 90 },
-          { task: 'write-integration-tests', duration: 110 }
+          { task: "write-unit-tests", duration: 90 },
+          { task: "write-integration-tests", duration: 110 }
         ],
         security: [
-          { task: 'scan-vulnerabilities', duration: 200 },
-          { task: 'review-auth-flow', duration: 100 }
+          { task: "scan-vulnerabilities", duration: 200 },
+          { task: "review-auth-flow", duration: 100 }
         ]
       };
       
@@ -377,7 +377,7 @@ describe('Authentication Flow', () => {
         }))
       );
       
-      console.log(`\n=== Cross-Mode Parallel Execution ===`);
+      console.log("\n=== Cross-Mode Parallel Execution ===");
       console.log(`Total tasks across modes: ${allTasks.length}`);
       
       harness.concurrencyLimit = 8; // High concurrency for parallel modes
@@ -405,7 +405,7 @@ describe('Authentication Flow', () => {
         return stats;
       }, {});
       
-      console.log('\n=== Mode Execution Statistics ===');
+      console.log("\n=== Mode Execution Statistics ===");
       Object.entries(modeStats).forEach(([mode, stats]) => {
         console.log(`${mode}: ${stats.tasks} tasks, ${stats.totalTime}ms total`);
       });
@@ -428,17 +428,17 @@ describe('Authentication Flow', () => {
     });
   });
 
-  describe('Real-World Project Scenarios', () => {
-    it('should build a microservices architecture with parallel processing', async () => {
+  describe("Real-World Project Scenarios", () => {
+    it("should build a microservices architecture with parallel processing", async () => {
       const microservices = [
-        { name: 'user-service', port: 3001, dependencies: ['database', 'cache'] },
-        { name: 'auth-service', port: 3002, dependencies: ['user-service', 'jwt'] },
-        { name: 'product-service', port: 3003, dependencies: ['database', 'search'] },
-        { name: 'order-service', port: 3004, dependencies: ['user-service', 'product-service', 'payment'] },
-        { name: 'notification-service', port: 3005, dependencies: ['queue', 'email'] }
+        { name: "user-service", port: 3001, dependencies: ["database", "cache"] },
+        { name: "auth-service", port: 3002, dependencies: ["user-service", "jwt"] },
+        { name: "product-service", port: 3003, dependencies: ["database", "search"] },
+        { name: "order-service", port: 3004, dependencies: ["user-service", "product-service", "payment"] },
+        { name: "notification-service", port: 3005, dependencies: ["queue", "email"] }
       ];
       
-      console.log('\n=== Building Microservices Architecture ===');
+      console.log("\n=== Building Microservices Architecture ===");
       
       // Phase 1: Create service structures in parallel
       const structureResults = await harness.executeBatch(
@@ -467,13 +467,13 @@ describe('Authentication Flow', () => {
             name: service.name,
             port: service.port,
             dependencies: service.dependencies,
-            version: '1.0.0'
+            version: "1.0.0"
           }, null, 2));
           
           return {
             service: service.name,
             filesCreated: files.length + 1,
-            structure: 'created'
+            structure: "created"
           };
         }
       );
@@ -494,7 +494,7 @@ describe('Authentication Flow', () => {
               execute: async () => {
                 const clientPath = `services/${service.name}/src/clients/${depService.name}-client.ts`;
                 await harness.mockWriteFile(clientPath, `
-export class ${depService.name.replace('-', '')}Client {
+export class ${depService.name.replace("-", "")}Client {
   private baseUrl = 'http://${depService.name}:${depService.port}';
   
   async request(endpoint: string, options?: RequestOptions) {
@@ -515,10 +515,10 @@ export class ${depService.name.replace('-', '')}Client {
       
       // Phase 3: Create shared libraries
       const sharedLibraries = [
-        { name: 'common-types', exports: ['User', 'Product', 'Order'] },
-        { name: 'auth-middleware', exports: ['authenticate', 'authorize'] },
-        { name: 'error-handling', exports: ['ErrorHandler', 'CustomError'] },
-        { name: 'logging', exports: ['Logger', 'LogLevel'] }
+        { name: "common-types", exports: ["User", "Product", "Order"] },
+        { name: "auth-middleware", exports: ["authenticate", "authorize"] },
+        { name: "error-handling", exports: ["ErrorHandler", "CustomError"] },
+        { name: "logging", exports: ["Logger", "LogLevel"] }
       ];
       
       const libResults = await harness.executeBatch(
@@ -528,12 +528,12 @@ export class ${depService.name.replace('-', '')}Client {
           
           await harness.mockWriteFile(`${libPath}/package.json`, JSON.stringify({
             name: `@project/${lib.name}`,
-            version: '1.0.0',
-            main: 'index.ts'
+            version: "1.0.0",
+            main: "index.ts"
           }));
           
           await harness.mockWriteFile(`${libPath}/index.ts`, 
-            lib.exports.map(exp => `export { ${exp} } from './${exp}';`).join('\n')
+            lib.exports.map(exp => `export { ${exp} } from './${exp}';`).join("\n")
           );
           
           return { library: lib.name, exports: lib.exports.length };
@@ -543,7 +543,7 @@ export class ${depService.name.replace('-', '')}Client {
       // Phase 4: Setup orchestration
       const orchestrationTasks = [
         {
-          name: 'docker-compose',
+          name: "docker-compose",
           execute: async () => {
             const services = {};
             microservices.forEach(service => {
@@ -556,14 +556,14 @@ export class ${depService.name.replace('-', '')}Client {
               };
             });
             
-            await harness.mockWriteFile('docker-compose.yml', 
+            await harness.mockWriteFile("docker-compose.yml", 
               `version: '3.8'\nservices:\n${JSON.stringify(services, null, 2)}`
             );
-            return { file: 'docker-compose.yml' };
+            return { file: "docker-compose.yml" };
           }
         },
         {
-          name: 'kubernetes',
+          name: "kubernetes",
           execute: async () => {
             for (const service of microservices) {
               await harness.mockWriteFile(`k8s/${service.name}-deployment.yaml`, 
@@ -574,11 +574,11 @@ export class ${depService.name.replace('-', '')}Client {
           }
         },
         {
-          name: 'api-gateway',
+          name: "api-gateway",
           execute: async () => {
-            await harness.mockWriteFile('gateway/routes.json', JSON.stringify({
+            await harness.mockWriteFile("gateway/routes.json", JSON.stringify({
               routes: microservices.map(s => ({
-                path: `/${s.name.replace('-service', '')}/*`,
+                path: `/${s.name.replace("-service", "")}/*`,
                 target: `http://${s.name}:${s.port}`
               }))
             }));
@@ -602,7 +602,7 @@ export class ${depService.name.replace('-', '')}Client {
       assert.strictEqual(orchResults.successful.length, 3);
     });
 
-    it('should perform large-scale refactoring with parallel analysis', async () => {
+    it("should perform large-scale refactoring with parallel analysis", async () => {
       // Create a legacy codebase
       const legacyFiles = {};
       for (let i = 0; i < 50; i++) {
@@ -628,7 +628,7 @@ module.exports = module${i};`;
         harness.mockFS.set(path, content);
       });
       
-      console.log('\n=== Large-Scale Refactoring ===');
+      console.log("\n=== Large-Scale Refactoring ===");
       
       // Phase 1: Analyze all files in parallel
       const analysisResults = await harness.executeBatch(
@@ -640,16 +640,16 @@ module.exports = module${i};`;
             file,
             issues: [],
             metrics: {
-              lines: content.split('\n').length,
+              lines: content.split("\n").length,
               complexity: 0
             }
           };
           
           // Detect issues
-          if (content.includes('var ')) analysis.issues.push('uses-var');
-          if (content.includes('function()')) analysis.issues.push('old-syntax');
-          if (content.includes('console.log')) analysis.issues.push('console-logs');
-          if (content.includes('module.exports')) analysis.issues.push('commonjs');
+          if (content.includes("var ")) analysis.issues.push("uses-var");
+          if (content.includes("function()")) analysis.issues.push("old-syntax");
+          if (content.includes("console.log")) analysis.issues.push("console-logs");
+          if (content.includes("module.exports")) analysis.issues.push("commonjs");
           
           analysis.metrics.complexity = analysis.issues.length;
           
@@ -662,13 +662,13 @@ module.exports = module${i};`;
       // Phase 2: Plan refactoring tasks
       const refactoringPlan = analysisResults.successful.map(analysis => ({
         file: analysis.file,
-        newFile: analysis.file.replace('/legacy/', '/modern/').replace('.js', '.ts'),
+        newFile: analysis.file.replace("/legacy/", "/modern/").replace(".js", ".ts"),
         transforms: [
-          { type: 'es6-modules', priority: 1 },
-          { type: 'arrow-functions', priority: 2 },
-          { type: 'const-let', priority: 1 },
-          { type: 'typescript', priority: 3 },
-          { type: 'remove-console', priority: 2 }
+          { type: "es6-modules", priority: 1 },
+          { type: "arrow-functions", priority: 2 },
+          { type: "const-let", priority: 1 },
+          { type: "typescript", priority: 3 },
+          { type: "remove-console", priority: 2 }
         ]
       }));
       
@@ -682,20 +682,20 @@ module.exports = module${i};`;
           // Apply transforms
           plan.transforms.sort((a, b) => a.priority - b.priority).forEach(transform => {
             switch (transform.type) {
-              case 'const-let':
-                refactored = refactored.replace(/var /g, 'const ');
+              case "const-let":
+                refactored = refactored.replace(/var /g, "const ");
                 break;
-              case 'arrow-functions':
-                refactored = refactored.replace(/function\(\)/g, '() =>');
+              case "arrow-functions":
+                refactored = refactored.replace(/function\(\)/g, "() =>");
                 break;
-              case 'es6-modules':
-                refactored = refactored.replace(/module\.exports = /, 'export default ');
+              case "es6-modules":
+                refactored = refactored.replace(/module\.exports = /, "export default ");
                 break;
-              case 'typescript':
-                refactored = refactored.replace(/= function/, ': Function = function');
+              case "typescript":
+                refactored = refactored.replace(/= function/, ": Function = function");
                 break;
-              case 'remove-console':
-                refactored = refactored.replace(/console\.log\([^)]*\);?/g, '// console removed');
+              case "remove-console":
+                refactored = refactored.replace(/console\.log\([^)]*\);?/g, "// console removed");
                 break;
             }
           });
@@ -751,43 +751,43 @@ module.exports = module${i};`;
         });
       });
       
-      console.log('\n=== Refactoring Report ===');
+      console.log("\n=== Refactoring Report ===");
       console.log(JSON.stringify(report, null, 2));
       
       // Assertions
       assert.strictEqual(refactoringResults.successful.length, 50);
       assert(report.issues.total > 150); // Each file has multiple issues
-      assert(Array.from(harness.mockFS.keys()).filter(f => f.includes('/modern/')).length === 50);
+      assert(Array.from(harness.mockFS.keys()).filter(f => f.includes("/modern/")).length === 50);
     });
   });
 
-  describe('Complex Dependency Management', () => {
-    it('should handle circular dependency resolution with parallel analysis', async () => {
+  describe("Complex Dependency Management", () => {
+    it("should handle circular dependency resolution with parallel analysis", async () => {
       // Create a complex module structure with circular dependencies
       const modules = {
-        'src/core/auth.ts': `
+        "src/core/auth.ts": `
 import { UserService } from '../services/user';
 export class AuthService {
   constructor(private userService: UserService) {}
 }`,
-        'src/services/user.ts': `
+        "src/services/user.ts": `
 import { AuthService } from '../core/auth';
 import { ProfileService } from './profile';
 export class UserService {
   constructor(private auth: AuthService, private profile: ProfileService) {}
 }`,
-        'src/services/profile.ts': `
+        "src/services/profile.ts": `
 import { UserService } from './user';
 export class ProfileService {
   constructor(private userService: UserService) {}
 }`,
-        'src/controllers/api.ts': `
+        "src/controllers/api.ts": `
 import { AuthService } from '../core/auth';
 import { UserService } from '../services/user';
 export class ApiController {
   constructor(private auth: AuthService, private user: UserService) {}
 }`,
-        'src/utils/logger.ts': `
+        "src/utils/logger.ts": `
 export class Logger {
   log(message: string) { console.log(message); }
 }`
@@ -843,7 +843,7 @@ export class Logger {
         for (const dep of deps) {
           // Resolve import path to file path
           const depFile = Object.keys(modules).find(f => 
-            f.includes(dep.from.replace('../', '').replace('./', ''))
+            f.includes(dep.from.replace("../", "").replace("./", ""))
           );
           
           if (depFile) {
@@ -863,9 +863,9 @@ export class Logger {
         }
       }
       
-      console.log('\n=== Circular Dependencies Detected ===');
+      console.log("\n=== Circular Dependencies Detected ===");
       circularDeps.forEach((cycle, i) => {
-        console.log(`Cycle ${i + 1}: ${cycle.join(' -> ')}`);
+        console.log(`Cycle ${i + 1}: ${cycle.join(" -> ")}`);
       });
       
       // Phase 3: Resolve circular dependencies
@@ -875,16 +875,16 @@ export class Logger {
           // Create interfaces to break circular dependencies
           const interfaceFile = `src/interfaces/cycle${index}-interfaces.ts`;
           const interfaces = cycle.map(file => {
-            const className = file.split('/').pop().replace('.ts', '')
-              .split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+            const className = file.split("/").pop().replace(".ts", "")
+              .split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join("");
             return `export interface I${className} {\n  // Interface definition\n}`;
-          }).join('\n\n');
+          }).join("\n\n");
           
           await harness.mockWriteFile(interfaceFile, interfaces);
           
           return {
             cycle: cycle.length,
-            resolution: 'interfaces',
+            resolution: "interfaces",
             file: interfaceFile
           };
         }
@@ -913,14 +913,14 @@ export class Logger {
       );
       
       // Assertions
-      assert(circularDeps.length > 0, 'Should detect circular dependencies');
+      assert(circularDeps.length > 0, "Should detect circular dependencies");
       assert.strictEqual(resolutionResults.successful.length, circularDeps.length);
       assert(refactorResults.successful.length > 0);
     });
   });
 
-  describe('Performance Optimization Workflow', () => {
-    it('should optimize application performance with parallel profiling', async () => {
+  describe("Performance Optimization Workflow", () => {
+    it("should optimize application performance with parallel profiling", async () => {
       // Create a performance-critical application
       const appModules = {};
       
@@ -959,7 +959,7 @@ export class Service${i} {
         harness.mockFS.set(path, content);
       });
       
-      console.log('\n=== Performance Optimization Workflow ===');
+      console.log("\n=== Performance Optimization Workflow ===");
       
       // Phase 1: Profile all modules in parallel
       const profilingResults = await harness.executeBatch(
@@ -969,21 +969,21 @@ export class Service${i} {
           
           const profile = {
             file,
-            type: file.includes('compute') ? 'cpu-intensive' : 'io-bound',
+            type: file.includes("compute") ? "cpu-intensive" : "io-bound",
             issues: [],
             complexity: 0
           };
           
           // Analyze performance issues
-          if (content.includes('for (let i = 0; i < data.length; i++)')) {
-            if (content.includes('for (let j = 0; j < data.length; j++)')) {
-              profile.issues.push({ type: 'nested-loops', severity: 'high' });
+          if (content.includes("for (let i = 0; i < data.length; i++)")) {
+            if (content.includes("for (let j = 0; j < data.length; j++)")) {
+              profile.issues.push({ type: "nested-loops", severity: "high" });
               profile.complexity = 2; // O(n²)
             }
           }
           
-          if (content.includes('await') && content.match(/await/g).length > 2) {
-            profile.issues.push({ type: 'sequential-io', severity: 'medium' });
+          if (content.includes("await") && content.match(/await/g).length > 2) {
+            profile.issues.push({ type: "sequential-io", severity: "medium" });
           }
           
           return profile;
@@ -996,17 +996,17 @@ export class Service${i} {
         .map(profile => ({
           file: profile.file,
           strategies: profile.issues.map(issue => {
-            if (issue.type === 'nested-loops') {
+            if (issue.type === "nested-loops") {
               return {
                 issue: issue.type,
-                solution: 'optimize-algorithm',
-                implementation: 'Use memoization or dynamic programming'
+                solution: "optimize-algorithm",
+                implementation: "Use memoization or dynamic programming"
               };
-            } else if (issue.type === 'sequential-io') {
+            } else if (issue.type === "sequential-io") {
               return {
                 issue: issue.type,
-                solution: 'parallelize-io',
-                implementation: 'Use Promise.all() for concurrent requests'
+                solution: "parallelize-io",
+                implementation: "Use Promise.all() for concurrent requests"
               };
             }
           })
@@ -1020,7 +1020,7 @@ export class Service${i} {
           let optimized = content;
           
           strategy.strategies.forEach(s => {
-            if (s.solution === 'optimize-algorithm') {
+            if (s.solution === "optimize-algorithm") {
               // Replace nested loops with optimized version
               optimized = optimized.replace(
                 /for \(let i = 0;.*?\n.*?for \(let j = 0;.*?\n.*?result.*?\n.*?}\n.*?}/s,
@@ -1028,7 +1028,7 @@ export class Service${i} {
     const sum = data.reduce((a, b) => a + b, 0);
     return sum * sum;`
               );
-            } else if (s.solution === 'parallelize-io') {
+            } else if (s.solution === "parallelize-io") {
               // Replace sequential awaits with Promise.all
               optimized = optimized.replace(
                 /const result1 = await.*?\n.*?const result2 = await.*?\n.*?const result3 = await.*?/s,
@@ -1041,7 +1041,7 @@ export class Service${i} {
             }
           });
           
-          const optimizedFile = strategy.file.replace('/src/', '/src/optimized/');
+          const optimizedFile = strategy.file.replace("/src/", "/src/optimized/");
           await harness.mockWriteFile(optimizedFile, optimized);
           
           return {
@@ -1057,7 +1057,7 @@ export class Service${i} {
         optimizationResults.successful,
         async (result) => {
           // Simulate benchmarking
-          const isComputeModule = result.original.includes('compute');
+          const isComputeModule = result.original.includes("compute");
           
           const benchmark = {
             module: result.original,
@@ -1072,8 +1072,8 @@ export class Service${i} {
           };
           
           benchmark.improvement = {
-            speed: (benchmark.before.executionTime / benchmark.after.executionTime).toFixed(2) + 'x',
-            memory: ((benchmark.before.memoryUsage - benchmark.after.memoryUsage) / benchmark.before.memoryUsage * 100).toFixed(1) + '%'
+            speed: (benchmark.before.executionTime / benchmark.after.executionTime).toFixed(2) + "x",
+            memory: ((benchmark.before.memoryUsage - benchmark.after.memoryUsage) / benchmark.before.memoryUsage * 100).toFixed(1) + "%"
           };
           
           return benchmark;
@@ -1098,7 +1098,7 @@ export class Service${i} {
       perfReport.improvements.avgSpeedup /= benchmarkResults.successful.length;
       perfReport.improvements.avgMemoryReduction /= benchmarkResults.successful.length;
       
-      console.log('\n=== Performance Optimization Report ===');
+      console.log("\n=== Performance Optimization Report ===");
       console.log(JSON.stringify(perfReport, null, 2));
       
       // Assertions

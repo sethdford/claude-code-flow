@@ -74,7 +74,7 @@ async function showBasicInterface(options: FallbackOptions): Promise<void> {
   console.log();
   console.log(chalk.white("2. Use non-interactive modes:"));
   console.log(chalk.gray("   ./claude-flow start (without --ui)"));
-  console.log(chalk.gray('   ./claude-flow swarm "task" --monitor'));
+  console.log(chalk.gray("   ./claude-flow swarm \"task\" --monitor"));
   console.log();
   console.log(chalk.white("3. Use external terminal:"));
   console.log(chalk.gray("   Run in a standalone terminal application"));

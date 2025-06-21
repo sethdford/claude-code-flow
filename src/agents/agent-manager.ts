@@ -583,9 +583,9 @@ export class AgentManager extends EventEmitter {
       this.logger.info("Started agent", { agentId, name: agent.name });
       this.emit("agent:started", { agent });
 
-    } catch (error) {
+    } catch (_error) {
       agent.status = "error";
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage = _error instanceof Error ? _error.message : "Unknown error occurred";
       this.addAgentError(agentId, {
         timestamp: new Date(),
         type: "startup_failed",
@@ -595,8 +595,8 @@ export class AgentManager extends EventEmitter {
         resolved: false,
       });
 
-      this.logger.error("Failed to start agent", { agentId, error });
-      throw error;
+      this.logger.error("Failed to start agent", { agentId, error: _error });
+      throw _error;
     }
   }
 
@@ -639,8 +639,8 @@ export class AgentManager extends EventEmitter {
       this.logger.info("Stopped agent", { agentId, reason });
       this.emit("agent:stopped", { agent, reason });
 
-    } catch (error) {
-      this.logger.error("Failed to stop agent gracefully", { agentId, error });
+    } catch (_error) {
+      this.logger.error("Failed to stop agent gracefully", { agentId, error: _error });
       // Force cleanup
       this.processes.delete(agentId);
       agent.status = "terminated";
@@ -854,8 +854,8 @@ export class AgentManager extends EventEmitter {
         await this.restartAgent(agentId, "health_critical");
       }
 
-    } catch (error) {
-      this.logger.error("Health check failed", { agentId, error });
+    } catch (_error) {
+      this.logger.error("Health check failed", { agentId, error: _error });
       health.overall = 0;
       health.lastCheck = now;
     }
@@ -880,7 +880,7 @@ export class AgentManager extends EventEmitter {
         return 1.0; // Responsive
       }
       
-    } catch (error) {
+    } catch (_error) {
       return 0; // Failed to respond
     }
   }
@@ -983,8 +983,8 @@ export class AgentManager extends EventEmitter {
 
         // Auto-restart if enabled
         if (this.config.autoRestart) {
-          this.restartAgent(agentId, "heartbeat_timeout").catch(error => {
-            this.logger.error("Failed to auto-restart agent", { agentId, error });
+          this.restartAgent(agentId, "heartbeat_timeout").catch(_error => {
+            this.logger.error("Failed to auto-restart agent", { agentId, error: _error });
           });
         }
       }

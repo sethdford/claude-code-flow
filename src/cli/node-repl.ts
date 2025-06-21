@@ -9,7 +9,7 @@ import path from "path";
 import { spawn } from "child_process";
 import colors from "chalk";
 import Table from "cli-table3";
-import inquirer from "inquirer";
+// import inquirer from "inquirer"; // Reserved for future interactive features
 
 interface REPLCommand {
   name: string;
@@ -230,7 +230,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
       usage: "agent <subcommand> [options]",
       examples: [
         "agent list",
-        'agent spawn researcher --name "Research Agent"',
+        "agent spawn researcher --name \"Research Agent\"",
         "agent info agent-001",
         "agent terminate agent-001",
       ],
@@ -244,7 +244,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
       usage: "task <subcommand> [options]",
       examples: [
         "task list",
-        'task create research "Find quantum computing papers"',
+        "task create research \"Find quantum computing papers\"",
         "task status task-001",
         "task cancel task-001",
       ],
@@ -271,7 +271,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
       usage: "session <subcommand> [options]",
       examples: [
         "session list",
-        'session save "Development Session"',
+        "session save \"Development Session\"",
         "session restore session-001",
       ],
       handler: async (args, ctx) => {
@@ -297,7 +297,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
       description: "Start monitoring mode",
       usage: "monitor [--interval seconds]",
       examples: ["monitor", "monitor --interval 5"],
-      handler: async (args) => {
+      handler: async (_args) => {
         console.log(colors.cyan("Starting monitor mode..."));
         console.log(colors.gray("(This would start the live dashboard)"));
       },
@@ -367,7 +367,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
       name: "echo",
       description: "Echo arguments",
       usage: "echo <text>",
-      examples: ['echo "Hello, world!"'],
+      examples: ["echo \"Hello, world!\""],
       handler: async (args) => {
         console.log(args.join(" "));
       },
@@ -393,7 +393,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
   }
   
   await showSystemStatus(context);
-  console.log(colors.gray('Type "help" for available commands or "exit" to quit.\n'));
+  console.log(colors.gray("Type \"help\" for available commands or \"exit\" to quit.\n"));
 
   // Main REPL loop
   const processCommand = async (input: string) => {
@@ -413,7 +413,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
     // Find and execute command
     const command = commands.find(c => 
       c.name === commandName || 
-      (c.aliases && c.aliases.includes(commandName)),
+      (c.aliases?.includes(commandName)),
     );
 
     if (command) {
@@ -424,7 +424,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
       }
     } else {
       console.log(colors.red(`Unknown command: ${commandName}`));
-      console.log(colors.gray('Type "help" for available commands'));
+      console.log(colors.gray("Type \"help\" for available commands"));
       
       // Suggest similar commands
       const suggestions = findSimilarCommands(commandName, commands);
@@ -456,7 +456,7 @@ export async function startNodeREPL(options: any = {}): Promise<void> {
   });
 
   rl.on("SIGINT", () => {
-    console.log(`\n${  colors.gray('Use "exit" to quit or Ctrl+D')}`);
+    console.log(`\n${  colors.gray("Use \"exit\" to quit or Ctrl+D")}`);
     showPrompt();
   });
 
@@ -508,7 +508,7 @@ function parseCommand(input: string): string[] {
         current += char;
       }
     } else {
-      if (char === '"' || char === "'") {
+      if (char === "\"" || char === "'") {
         inQuotes = true;
         quoteChar = char;
       } else if (char === " " || char === "\t") {
@@ -555,15 +555,15 @@ function showHelp(commands: REPLCommand[]): void {
   
   console.log(colors.gray("Tips:"));
   console.log(colors.gray("• Use TAB for command completion"));
-  console.log(colors.gray('• Use "help <command>" for detailed help'));
+  console.log(colors.gray("• Use \"help <command>\" for detailed help"));
   console.log(colors.gray("• Use UP/DOWN arrows for command history"));
-  console.log(colors.gray('• Use Ctrl+C or "exit" to quit'));
+  console.log(colors.gray("• Use Ctrl+C or \"exit\" to quit"));
 }
 
 function showCommandHelp(commands: REPLCommand[], commandName: string): void {
   const command = commands.find(c => 
     c.name === commandName || 
-    (c.aliases && c.aliases.includes(commandName)),
+    (c.aliases?.includes(commandName)),
   );
   
   if (!command) {
@@ -610,7 +610,7 @@ async function showSystemStatus(context: REPLContext, component?: string): Promi
   if (context.connectionStatus === "disconnected") {
     console.log();
     console.log(colors.yellow("⚠ Not connected to orchestrator"));
-    console.log(colors.gray('Use "connect" command to establish connection'));
+    console.log(colors.gray("Use \"connect\" command to establish connection"));
   }
 }
 
@@ -634,7 +634,7 @@ async function connectToOrchestrator(context: REPLContext, target?: string): Pro
       console.log(colors.red("✗ Connection failed"));
       console.log(colors.gray("Make sure Claude-Flow is running with: npx claude-flow start"));
     }
-  } catch (error) {
+  } catch (_error) {
     context.connectionStatus = "disconnected";
     console.log(colors.red("✗ Connection failed"));
     console.log(colors.gray("Make sure Claude-Flow is running with: npx claude-flow start"));
@@ -678,7 +678,7 @@ async function executeCliCommand(args: string[]): Promise<{ success: boolean; ou
 async function handleAgentCommand(args: string[], context: REPLContext): Promise<void> {
   if (context.connectionStatus !== "connected") {
     console.log(colors.yellow("⚠ Not connected to orchestrator"));
-    console.log(colors.gray('Use "connect" to establish connection first'));
+    console.log(colors.gray("Use \"connect\" to establish connection first"));
     return;
   }
 

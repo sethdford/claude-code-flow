@@ -74,7 +74,7 @@ class SessionManager implements ISessionManager {
     private config: Config,
   ) {
     this.persistencePath = join(
-      config.orchestrator.dataDir || "./data",
+      config.orchestrator.dataDir ?? "./data",
       "sessions.json",
     );
     
@@ -766,7 +766,7 @@ export class Orchestrator implements IOrchestrator {
       this.logger.error("Deadlock detected", { agents, resources });
       
       // Implement deadlock resolution
-      this.resolveDeadlock(agents, resources);
+      void this.resolveDeadlock(agents, resources);
     });
   }
 
@@ -791,7 +791,7 @@ export class Orchestrator implements IOrchestrator {
   private startMaintenanceTasks(): void {
     this.maintenanceInterval = setInterval(async () => {
       await this.performMaintenance();
-    }, this.config.orchestrator.maintenanceInterval || 300000); // 5 minutes default
+    }, this.config.orchestrator.maintenanceInterval ?? 300000); // 5 minutes default
   }
 
   private startMetricsCollection(): void {
@@ -805,7 +805,7 @@ export class Orchestrator implements IOrchestrator {
       } catch (error) {
         this.logger.error("Metrics collection error", error);
       }
-    }, this.config.orchestrator.metricsInterval || 60000); // 1 minute default
+    }, this.config.orchestrator.metricsInterval ?? 60000); // 1 minute default
   }
 
   private stopBackgroundTasks(): void {
@@ -924,7 +924,7 @@ export class Orchestrator implements IOrchestrator {
       let score = agent.priority * 10;
       
       // Check capability match
-      const requiredCapabilities = (task.metadata?.requiredCapabilities as string[]) || [];
+      const requiredCapabilities = (task.metadata?.requiredCapabilities as string[]) ?? [];
       const matchedCapabilities = requiredCapabilities.filter(
         cap => agent.capabilities.includes(cap),
       ).length;
@@ -998,7 +998,7 @@ export class Orchestrator implements IOrchestrator {
         name: componentName,
         status: "unhealthy",
         lastCheck: new Date(),
-        error: result.reason?.message || "Health check failed",
+        error: result.reason?.message ?? "Health check failed",
       };
     }
   }
@@ -1091,7 +1091,7 @@ export class Orchestrator implements IOrchestrator {
     }
 
     const retryCount = (task.metadata?.retryCount as number) ?? 0;
-    const maxRetries = this.config.orchestrator.taskMaxRetries || 3;
+    const maxRetries = this.config.orchestrator.taskMaxRetries ?? 3;
 
     if (retryCount < maxRetries) {
       // Retry task
@@ -1102,7 +1102,7 @@ export class Orchestrator implements IOrchestrator {
       // Add back to queue with delay
       setTimeout(() => {
         this.taskQueue.push(task);
-        this.processTaskQueue();
+        void this.processTaskQueue();
       }, Math.pow(2, retryCount) * 1000); // Exponential backoff
       
       this.logger.info("Task queued for retry", { taskId, retryCount: retryCount + 1 });
@@ -1194,21 +1194,20 @@ export class Orchestrator implements IOrchestrator {
 
   private async cleanupTerminatedSessions(): Promise<void> {
     const allSessions = this.sessionManager.getActiveSessions();
-    const terminatedSessions = allSessions.filter(s => (s as any).status === "terminated");
+    const terminatedSessions = allSessions.filter(s => s.status === "terminated");
     
-    const cutoffTime = Date.now() - (this.config.orchestrator.sessionRetentionMs || 3600000); // 1 hour default
+    const cutoffTime = Date.now() - (this.config.orchestrator.sessionRetentionMs ?? 3600000); // 1 hour default
     
     for (const session of terminatedSessions) {
-      const typedSession = session as any;
-      if (typedSession.endTime && typedSession.endTime.getTime() < cutoffTime) {
-        await this.sessionManager.terminateSession(typedSession.id);
-        this.logger.debug("Cleaned up old session", { sessionId: typedSession.id });
+      if (session.endTime && session.endTime.getTime() < cutoffTime) {
+        await this.sessionManager.terminateSession(session.id);
+        this.logger.debug("Cleaned up old session", { sessionId: session.id });
       }
     }
   }
 
   private async cleanupTaskHistory(): Promise<void> {
-    const cutoffTime = Date.now() - (this.config.orchestrator.taskHistoryRetentionMs || 86400000); // 24 hours default
+    const cutoffTime = Date.now() - (this.config.orchestrator.taskHistoryRetentionMs ?? 86400000); // 24 hours default
     
     for (const [taskId, task] of this.taskHistory.entries()) {
       if (task.completedAt && task.completedAt.getTime() < cutoffTime) {

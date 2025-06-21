@@ -32,9 +32,16 @@ export interface ConflictResolution {
   timestamp: Date;
 }
 
+export interface ResolutionContext {
+  agentPriorities?: Map<string, number>;
+  requestTimestamps?: Map<string, Date>;
+  votes?: Map<string, string[]>;
+  [key: string]: unknown;
+}
+
 export interface ConflictResolutionStrategy {
   name: string;
-  resolve(conflict: ResourceConflict | TaskConflict, context: any): Promise<ConflictResolution>;
+  resolve(conflict: ResourceConflict | TaskConflict, context: ResolutionContext): ConflictResolution;
 }
 
 /**
@@ -43,13 +50,13 @@ export interface ConflictResolutionStrategy {
 export class PriorityResolutionStrategy implements ConflictResolutionStrategy {
   name = "priority";
 
-  async resolve(
+  resolve(
     conflict: ResourceConflict | TaskConflict,
-    context: { agentPriorities: Map<string, number> },
-  ): Promise<ConflictResolution> {
+    context: ResolutionContext,
+  ): ConflictResolution {
     const priorities = conflict.agents.map(agentId => ({
       agentId,
-      priority: context.agentPriorities.get(agentId) ?? 0,
+      priority: context.agentPriorities?.get(agentId) ?? 0,
     }));
 
     // Sort by priority (descending)
@@ -74,13 +81,13 @@ export class PriorityResolutionStrategy implements ConflictResolutionStrategy {
 export class TimestampResolutionStrategy implements ConflictResolutionStrategy {
   name = "timestamp";
 
-  async resolve(
+  resolve(
     conflict: ResourceConflict | TaskConflict,
-    context: { requestTimestamps: Map<string, Date> },
-  ): Promise<ConflictResolution> {
+    context: ResolutionContext,
+  ): ConflictResolution {
     const timestamps = conflict.agents.map(agentId => ({
       agentId,
-      timestamp: context.requestTimestamps.get(agentId) ?? new Date(),
+      timestamp: context.requestTimestamps?.get(agentId) ?? new Date(),
     }));
 
     // Sort by timestamp (ascending - earliest first)
@@ -105,14 +112,14 @@ export class TimestampResolutionStrategy implements ConflictResolutionStrategy {
 export class VotingResolutionStrategy implements ConflictResolutionStrategy {
   name = "vote";
 
-  async resolve(
+  resolve(
     conflict: ResourceConflict | TaskConflict,
-    context: { votes: Map<string, string[]> }, // agentId -> votes for that agent
-  ): Promise<ConflictResolution> {
+    context: ResolutionContext, // agentId -> votes for that agent
+  ): ConflictResolution {
     const voteCounts = new Map<string, number>();
     
     // Count votes
-    for (const [agentId, voters] of context.votes) {
+    for (const [agentId, voters] of context.votes || new Map()) {
       voteCounts.set(agentId, voters.length);
     }
 
@@ -172,10 +179,10 @@ export class ConflictResolver {
   /**
    * Report a resource conflict
    */
-  async reportResourceConflict(
+  reportResourceConflict(
     resourceId: string,
     agents: string[],
-  ): Promise<ResourceConflict> {
+  ): ResourceConflict {
     const conflict: ResourceConflict = {
       id: `conflict-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       resourceId,
@@ -196,11 +203,11 @@ export class ConflictResolver {
   /**
    * Report a task conflict
    */
-  async reportTaskConflict(
+  reportTaskConflict(
     taskId: string,
     agents: string[],
     type: TaskConflict["type"],
-  ): Promise<TaskConflict> {
+  ): TaskConflict {
     const conflict: TaskConflict = {
       id: `conflict-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       taskId,
@@ -225,7 +232,7 @@ export class ConflictResolver {
   async resolveConflict(
     conflictId: string,
     strategyName: string,
-    context: any,
+    context: ResolutionContext,
   ): Promise<ConflictResolution> {
     const conflict = this.conflicts.get(conflictId);
     if (!conflict) {
@@ -279,7 +286,7 @@ export class ConflictResolver {
     }
 
     // Build context based on conflict type
-    const context: any = {};
+    const context: ResolutionContext = {};
 
     if (preferredStrategy === "priority") {
       // In a real implementation, fetch agent priorities from configuration

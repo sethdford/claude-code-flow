@@ -438,7 +438,7 @@ export class BackgroundExecutor extends EventEmitter {
     });
   }
 
-  async killTask(taskId: string): Promise<void> {
+  killTask(taskId: string): void {
     const task = this.tasks.get(taskId);
     if (!task) {
       throw new Error("Task not found");

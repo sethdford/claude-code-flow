@@ -62,7 +62,7 @@ function printSuccess(message: string) {
   console.log(colors.green(`✅ ${  message}`));
 }
 
-function printError(message: string) {
+function _printError(message: string) {
   console.log(colors.red(`❌ ${  message}`));
 }
 
@@ -73,7 +73,7 @@ function printWarning(message: string) {
 function main() {
   const args = process.argv.slice(2);
   const command = args[0] || "help";
-  const subArgs = args.slice(1);
+  const _subArgs = args.slice(1);
 
   switch (command) {
     case "--help":

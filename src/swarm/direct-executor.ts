@@ -312,8 +312,8 @@ export class DirectTaskExecutor {
 module.exports = Calculator;
 `,
       "cli.js": `#!/usr/bin/env node
-const Calculator = require('./calculator');
-const readline = require('readline');
+const Calculator = require("./calculator");
+const readline = require("readline");
 
 const calc = new Calculator();
 const rl = readline.createInterface({
@@ -385,8 +385,8 @@ function prompt() {
 
 prompt();
 `,
-      "test.js": `const Calculator = require('./calculator');
-const assert = require('assert');
+      "test.js": `const Calculator = require("./calculator");
+const assert = require("assert");
 
 const calc = new Calculator();
 
@@ -449,7 +449,7 @@ node cli.js
 
 ### Programmatic Usage
 \`\`\`javascript
-const Calculator = require('./calculator');
+const Calculator = require("./calculator");
 const calc = new Calculator();
 
 console.log(calc.add(5, 3)); // 8
@@ -654,9 +654,9 @@ See the generated API documentation.
 
   // Helper methods for generating code
   private generateRestAPIServer(task: TaskDefinition): string {
-    return `const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+    return `const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT ?? 3000;
@@ -667,7 +667,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/users', require('./routes/users'));
+app.use('/api/users', require("./routes/users"));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -689,7 +689,7 @@ module.exports = app;
   }
 
   private generateUserRoutes(): string {
-    return `const express = require('express');
+    return `const express = require("express");
 const router = express.Router();
 
 // In-memory storage (replace with database)
@@ -747,10 +747,10 @@ module.exports = router;
 
   private generateTodoApp(task: TaskDefinition): string {
     return `#!/usr/bin/env node
-const { program } = require('commander');
-const chalk = require('chalk');
-const fs = require('fs').promises;
-const path = require('path');
+const { program } = require("commander");
+const chalk = require("chalk");
+const fs = require("fs").promises;
+const path = require("path");
 
 const TODO_FILE = path.join(__dirname, 'todos.json');
 
@@ -843,10 +843,10 @@ program.parse(process.argv);
   }
 
   private generateChatServer(task: TaskDefinition): string {
-    return `const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const path = require('path');
+    return `const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -989,10 +989,10 @@ function updateUserCount(count) {
   }
 
   private generateAuthServer(task: TaskDefinition): string {
-    return `const express = require('express');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-require('dotenv').config();
+    return `const express = require("express");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT ?? 3000;
@@ -1068,7 +1068,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Protected route example
-app.get('/api/profile', require('./middleware/auth'), (req, res) => {
+app.get('/api/profile', require("./middleware/auth"), (req, res) => {
   res.json({ user: req.user });
 });
 
@@ -1079,7 +1079,7 @@ app.listen(port, () => {
   }
 
   private generateAuthMiddleware(): string {
-    return `const jwt = require('jsonwebtoken');
+    return `const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -1113,7 +1113,7 @@ module.exports = (req, res, next) => {
       scripts: {
         start: "node server.js",
         dev: "nodemon server.js",
-        test: 'echo "No tests yet"',
+        test: "echo \"No tests yet\"",
       },
       keywords: ["swarm", "claude-flow"],
       author: "Claude Flow Swarm",
@@ -1174,7 +1174,7 @@ module.exports = { main };
 
   // Analysis helper methods
   private extractRequirements(description: string): string[] {
-    const requirements = [];
+    const requirements: string[] = [];
     
     if (description.includes("rest api") || description.includes("crud")) {
       requirements.push("RESTful API endpoints", "CRUD operations", "Data validation");
@@ -1193,7 +1193,7 @@ module.exports = { main };
   }
 
   private identifyComponents(description: string): string[] {
-    const components = [];
+    const components: string[] = [];
     
     if (description.includes("api")) components.push("API Server", "Route Handlers");
     if (description.includes("auth")) components.push("Auth Middleware", "Token Manager");
@@ -1204,7 +1204,7 @@ module.exports = { main };
   }
 
   private suggestTechnologies(description: string): string[] {
-    const tech = [];
+    const tech: string[] = [];
     
     if (description.includes("rest") || description.includes("api")) {
       tech.push("Express.js", "Node.js");

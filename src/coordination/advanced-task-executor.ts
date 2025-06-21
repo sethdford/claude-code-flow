@@ -7,7 +7,7 @@ import { spawn, ChildProcess } from "node:child_process";
 import { TaskDefinition, TaskResult, AgentState, TaskError } from "../swarm/types.js";
 import { ILogger } from "../core/logger.js";
 import { IEventBus } from "../core/event-bus.js";
-import { CircuitBreaker, CircuitBreakerManager } from "./circuit-breaker.js";
+import { CircuitBreaker, CircuitBreakerManager, CircuitBreakerMetrics } from "./circuit-breaker.js";
 
 export interface TaskExecutorConfig {
   maxConcurrentTasks: number;
@@ -142,11 +142,9 @@ export class AdvancedTaskExecutor extends EventEmitter {
     }
 
     // Cancel all running tasks
-    const cancelPromises = Array.from(this.runningTasks.values()).map(ctx =>
+    Array.from(this.runningTasks.values()).forEach(ctx =>
       this.cancelTask(ctx.taskId, "Shutdown requested"),
     );
-
-    await Promise.all(cancelPromises);
 
     this.emit("executor-shutdown");
   }
@@ -460,7 +458,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
     return { cmd, args, env };
   }
 
-  private async cancelTask(taskId: string, reason: string): Promise<void> {
+  private cancelTask(taskId: string, reason: string): void {
     const context = this.runningTasks.get(taskId);
     if (!context) {
       return;
@@ -499,9 +497,9 @@ export class AdvancedTaskExecutor extends EventEmitter {
 
   private async updateResourceUsage(): Promise<void> {
     for (const [taskId, context] of this.runningTasks) {
-      if (context.process) {
+      if (context.process && context.process.pid !== undefined) {
         try {
-          const usage = await this.getProcessResourceUsage(context.process.pid!);
+          const usage = this.getProcessResourceUsage(context.process.pid);
           context.resources = {
             ...usage,
             lastUpdated: new Date(),
@@ -519,7 +517,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
     }
   }
 
-  private async getProcessResourceUsage(_pid: number): Promise<ResourceUsage> {
+  private getProcessResourceUsage(_pid: number): ResourceUsage {
     // In a real implementation, this would use system APIs
     // For now, return mock data
     return {
@@ -618,8 +616,12 @@ export class AdvancedTaskExecutor extends EventEmitter {
     queuedTasks: number;
     maxConcurrentTasks: number;
     totalCapacity: number;
-    resourceLimits: any;
-    circuitBreakers: Record<string, any>;
+    resourceLimits: {
+      memory: number;
+      cpu: number;
+      disk: number;
+    };
+    circuitBreakers: Record<string, CircuitBreakerMetrics>;
     } {
     return {
       runningTasks: this.runningTasks.size,

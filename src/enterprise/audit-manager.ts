@@ -1517,7 +1517,7 @@ export class AuditManager extends EventEmitter {
   }
 
   private convertToXML(entries: AuditEntry[]): string {
-    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<auditEntries>\n';
+    let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<auditEntries>\n";
     
     for (const entry of entries) {
       xml += `  <entry id="${entry.id}">\n`;

@@ -66,7 +66,7 @@ program
       // Create progress bar
       let progressBar: ReturnType<typeof createProgressBar> | null = null;
       
-      (copyOptions as any).progressCallback = (progress: any) => {
+      (copyOptions).progressCallback = (progress: any) => {
         if (!progressBar) {
           progressBar = createProgressBar(progress.total);
         }

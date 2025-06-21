@@ -1,7 +1,7 @@
-const { TestHarness } = require('../test-harness');
-const assert = require('assert');
+const { TestHarness } = require("../test-harness");
+const assert = require("assert");
 
-describe('Parallel Utilities Unit Tests', () => {
+describe("Parallel Utilities Unit Tests", () => {
   let harness;
 
   beforeEach(() => {
@@ -12,8 +12,8 @@ describe('Parallel Utilities Unit Tests', () => {
     harness.reset();
   });
 
-  describe('Concurrency Control', () => {
-    it('should limit concurrent operations to specified limit', async () => {
+  describe("Concurrency Control", () => {
+    it("should limit concurrent operations to specified limit", async () => {
       const operations = [];
       let activeCount = 0;
       let maxActive = 0;
@@ -34,7 +34,7 @@ describe('Parallel Utilities Unit Tests', () => {
       assert(maxActive <= 3, `Max active operations (${maxActive}) exceeded limit (3)`);
     });
 
-    it('should dynamically adjust concurrency based on system resources', async () => {
+    it("should dynamically adjust concurrency based on system resources", async () => {
       // Simulate different concurrency limits
       const testCases = [1, 3, 5, 10];
       const results = {};
@@ -54,13 +54,13 @@ describe('Parallel Utilities Unit Tests', () => {
       }
       
       // Higher concurrency should result in faster completion
-      assert(results[10] < results[1], 'Higher concurrency should be faster');
-      assert(results[5] < results[3], 'Concurrency scaling should improve performance');
+      assert(results[10] < results[1], "Higher concurrency should be faster");
+      assert(results[5] < results[3], "Concurrency scaling should improve performance");
     });
   });
 
-  describe('Error Recovery', () => {
-    it('should continue processing after individual failures', async () => {
+  describe("Error Recovery", () => {
+    it("should continue processing after individual failures", async () => {
       const items = Array.from({ length: 10 }, (_, i) => i);
       const operation = async (item) => {
         if (item % 3 === 0) {
@@ -80,12 +80,12 @@ describe('Parallel Utilities Unit Tests', () => {
       assert.deepStrictEqual(results.successful, expectedSuccessful);
     });
 
-    it('should provide detailed error information', async () => {
-      const items = ['valid', 'error', 'valid'];
+    it("should provide detailed error information", async () => {
+      const items = ["valid", "error", "valid"];
       const operation = async (item) => {
-        if (item === 'error') {
-          const error = new Error('Detailed error message');
-          error.code = 'TEST_ERROR';
+        if (item === "error") {
+          const error = new Error("Detailed error message");
+          error.code = "TEST_ERROR";
           error.details = { item, timestamp: Date.now() };
           throw error;
         }
@@ -97,14 +97,14 @@ describe('Parallel Utilities Unit Tests', () => {
       assert.strictEqual(results.failed.length, 1);
       const failure = results.failed[0];
       assert.strictEqual(failure.index, 1);
-      assert.strictEqual(failure.error.message, 'Detailed error message');
-      assert.strictEqual(failure.error.code, 'TEST_ERROR');
+      assert.strictEqual(failure.error.message, "Detailed error message");
+      assert.strictEqual(failure.error.code, "TEST_ERROR");
       assert(failure.error.details);
     });
   });
 
-  describe('Batch Chunking', () => {
-    it('should process items in correct chunk sizes', async () => {
+  describe("Batch Chunking", () => {
+    it("should process items in correct chunk sizes", async () => {
       const processedChunks = [];
       let currentChunk = [];
       
@@ -130,7 +130,7 @@ describe('Parallel Utilities Unit Tests', () => {
       assert.strictEqual(processedChunks[3].length, 2);
     });
 
-    it('should maintain order within chunks', async () => {
+    it("should maintain order within chunks", async () => {
       const items = Array.from({ length: 25 }, (_, i) => i);
       const results = await harness.executeBatch(items, async (item) => {
         await harness.simulateDelay(Math.random() * 20);
@@ -144,8 +144,8 @@ describe('Parallel Utilities Unit Tests', () => {
     });
   });
 
-  describe('Promise Management', () => {
-    it('should handle mixed sync/async operations', async () => {
+  describe("Promise Management", () => {
+    it("should handle mixed sync/async operations", async () => {
       const items = Array.from({ length: 10 }, (_, i) => i);
       const operation = (item) => {
         // Mix of sync and async operations
@@ -167,13 +167,13 @@ describe('Parallel Utilities Unit Tests', () => {
       });
     });
 
-    it('should handle promise rejection properly', async () => {
-      const items = ['resolve', 'reject', 'resolve'];
+    it("should handle promise rejection properly", async () => {
+      const items = ["resolve", "reject", "resolve"];
       const operation = (item) => {
         return new Promise((resolve, reject) => {
           setTimeout(() => {
-            if (item === 'reject') {
-              reject(new Error('Promise rejected'));
+            if (item === "reject") {
+              reject(new Error("Promise rejected"));
             } else {
               resolve(item.toUpperCase());
             }
@@ -185,13 +185,13 @@ describe('Parallel Utilities Unit Tests', () => {
       
       assert.strictEqual(results.successful.length, 2);
       assert.strictEqual(results.failed.length, 1);
-      assert.deepStrictEqual(results.successful, ['RESOLVE', 'RESOLVE']);
-      assert.strictEqual(results.failed[0].error.message, 'Promise rejected');
+      assert.deepStrictEqual(results.successful, ["RESOLVE", "RESOLVE"]);
+      assert.strictEqual(results.failed[0].error.message, "Promise rejected");
     });
   });
 
-  describe('Performance Optimization', () => {
-    it('should show linear scaling with concurrency', async () => {
+  describe("Performance Optimization", () => {
+    it("should show linear scaling with concurrency", async () => {
       const itemCounts = [10, 20, 40];
       const measurements = {};
       
@@ -218,7 +218,7 @@ describe('Parallel Utilities Unit Tests', () => {
       assert(Math.abs(ratio2 - 2) < 0.5, `Scaling ratio 40/20: ${ratio2.toFixed(2)}`);
     });
 
-    it('should efficiently handle empty batches', async () => {
+    it("should efficiently handle empty batches", async () => {
       const results = await harness.executeBatch([], async (item) => item);
       
       assert.strictEqual(results.successful.length, 0);
@@ -227,11 +227,11 @@ describe('Parallel Utilities Unit Tests', () => {
       assert.isNaN(results.successRate); // 0/0
     });
 
-    it('should handle single item batches efficiently', async () => {
-      const results = await harness.executeBatch(['single'], async (item) => item.toUpperCase());
+    it("should handle single item batches efficiently", async () => {
+      const results = await harness.executeBatch(["single"], async (item) => item.toUpperCase());
       
       assert.strictEqual(results.successful.length, 1);
-      assert.strictEqual(results.successful[0], 'SINGLE');
+      assert.strictEqual(results.successful[0], "SINGLE");
       assert.strictEqual(results.successRate, 1);
     });
   });

@@ -7,6 +7,23 @@ import chalk from "chalk";
 import { Task } from "../../utils/types.js";
 import { generateId } from "../../utils/helpers.js";
 import * as fs from "node:fs/promises";
+import type { BaseCommandOptions, TaskOptions } from "./types.js";
+
+interface TaskCreateOptions extends BaseCommandOptions {
+  priority?: string;
+  dependencies?: string;
+  input?: string;
+  assign?: string;
+}
+
+interface TaskListOptions extends BaseCommandOptions {
+  status?: string;
+  agent?: string;
+}
+
+interface TaskCancelOptions extends BaseCommandOptions {
+  reason?: string;
+}
 
 export const taskCommand = new Command()
   .name("task")
@@ -19,7 +36,7 @@ export const taskCommand = new Command()
     console.log("  get       Get task details");
     console.log("  update    Update task status");
     console.log("  cancel    Cancel a task");
-    console.log('\nRun "claude-flow task <command> --help" for more information');
+    console.log("\nRun \"claude-flow task <command> --help\" for more information");
   })
   .command("create")
   .description("Create a new task")
@@ -28,12 +45,12 @@ export const taskCommand = new Command()
   .option("-d, --dependencies <deps>", "Comma-separated list of dependency task IDs")
   .option("-i, --input <input>", "Task input as JSON")
   .option("-a, --assign <agent>", "Assign to specific agent")
-  .action(async (options: any, type: string, description: string) => {
+  .action(async (options: TaskCreateOptions, type: string, description: string) => {
     const task: Task = {
       id: generateId("task"),
       type,
       description,
-      priority: options.priority,
+      priority: parseInt(options.priority || "0", 10),
       dependencies: options.dependencies ? options.dependencies.split(",") : [],
       assignedAgent: options.assign,
       status: "pending",
@@ -49,32 +66,32 @@ export const taskCommand = new Command()
   .description("List all tasks")
   .option("-s, --status <status>", "Filter by status")
   .option("-a, --agent <agent>", "Filter by assigned agent")
-  .action(async (_options: any) => {
+  .action(async (_options: TaskListOptions) => {
     console.log(chalk.yellow("Task listing requires a running Claude-Flow instance"));
   })
   .command("status")
   .description("Get task status")
   .arguments("<task-id>")
-  .action(async (_options: any, _taskId: string) => {
+  .action(async (_options: BaseCommandOptions, _taskId: string) => {
     console.log(chalk.yellow("Task status requires a running Claude-Flow instance"));
   })
   .command("cancel")
   .description("Cancel a task")
   .arguments("<task-id>")
   .option("-r, --reason <reason>", "Cancellation reason")
-  .action(async (options: any, taskId: string) => {
+  .action(async (options: TaskCancelOptions, taskId: string) => {
     console.log(chalk.yellow(`Cancelling task ${taskId} requires a running Claude-Flow instance`));
   })
   .command("workflow")
   .description("Execute a workflow from file")
   .arguments("<workflow-file>")
-  .action(async (options: any, workflowFile: string) => {
+  .action(async (options: BaseCommandOptions, workflowFile: string) => {
     try {
       const content = await fs.readFile(workflowFile, "utf-8");
       const workflow = JSON.parse(content);
         
       console.log(chalk.green("Workflow loaded:"));
-      console.log(`- Name: ${workflow.name || "Unnamed"}`);
+      console.log(`- Name: ${workflow.name ?? "Unnamed"}`);
       console.log(`- Tasks: ${workflow.tasks?.length || 0}`);
       console.log(chalk.yellow("\nTo execute this workflow, ensure Claude-Flow is running"));
     } catch (error) {

@@ -80,7 +80,7 @@ export { LoadBalancer, type ILoadBalancer, RequestQueue } from "./load-balancer.
 
 // Tool Implementations
 export { createClaudeFlowTools, type ClaudeFlowToolContext } from "./claude-flow-tools.js";
-// export { createSwarmTools, type SwarmToolContext } from './swarm-tools.js'; // File missing, temporarily disabled
+// export { createSwarmTools, type SwarmToolContext } from "./swarm-tools.js"; // File missing, temporarily disabled
 
 /**
  * MCP Integration Factory

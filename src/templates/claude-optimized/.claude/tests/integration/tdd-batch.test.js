@@ -1,25 +1,25 @@
-const { TestHarness } = require('../test-harness');
-const assert = require('assert');
+const { TestHarness } = require("../test-harness");
+const assert = require("assert");
 
-describe('TDD Mode Batch Integration Tests', () => {
+describe("TDD Mode Batch Integration Tests", () => {
   let harness;
 
   beforeEach(() => {
     harness = new TestHarness();
-    harness.createMockProject('complex');
+    harness.createMockProject("complex");
   });
 
   afterEach(() => {
     harness.reset();
   });
 
-  describe('Parallel Test Generation', () => {
-    it('should generate multiple test files concurrently', async () => {
+  describe("Parallel Test Generation", () => {
+    it("should generate multiple test files concurrently", async () => {
       const componentsToTest = [
-        { name: 'AuthService', type: 'service', methods: ['login', 'logout', 'refresh'] },
-        { name: 'UserService', type: 'service', methods: ['create', 'update', 'delete'] },
-        { name: 'ValidationHelper', type: 'util', methods: ['isEmail', 'isPhone', 'isDate'] },
-        { name: 'Calculator', type: 'util', methods: ['add', 'subtract', 'multiply', 'divide'] }
+        { name: "AuthService", type: "service", methods: ["login", "logout", "refresh"] },
+        { name: "UserService", type: "service", methods: ["create", "update", "delete"] },
+        { name: "ValidationHelper", type: "util", methods: ["isEmail", "isPhone", "isDate"] },
+        { name: "Calculator", type: "util", methods: ["add", "subtract", "multiply", "divide"] }
       ];
 
       const testGeneration = await harness.executeBatch(componentsToTest, async (component) => {
@@ -34,7 +34,7 @@ describe('TDD Mode Batch Integration Tests', () => {
       const input = /* test data */;
       
       // Act
-      const result = ${component.type === 'service' ? 'service' : 'helper'}.${method}(input);
+      const result = ${component.type === "service" ? "service" : "helper"}.${method}(input);
       
       // Assert
       expect(result).toBeDefined();
@@ -45,7 +45,7 @@ describe('TDD Mode Batch Integration Tests', () => {
       const invalidInput = /* invalid test data */;
       
       // Act & Assert
-      expect(() => ${component.type === 'service' ? 'service' : 'helper'}.${method}(invalidInput))
+      expect(() => ${component.type === "service" ? "service" : "helper"}.${method}(invalidInput))
         .toThrow();
     });
   });`);
@@ -54,13 +54,13 @@ describe('TDD Mode Batch Integration Tests', () => {
         const testContent = `import { ${component.name} } from '../src/${component.type}s/${component.name}';
 
 describe('${component.name}', () => {
-  let ${component.type === 'service' ? 'service' : 'helper'};
+  let ${component.type === "service" ? "service" : "helper"};
   
   beforeEach(() => {
-    ${component.type === 'service' ? 'service' : 'helper'} = new ${component.name}();
+    ${component.type === "service" ? "service" : "helper"} = new ${component.name}();
   });
   
-  ${testCases.join('\n')}
+  ${testCases.join("\n")}
 });`;
         
         const path = `test/${component.type}s/${component.name}.test.ts`;
@@ -70,7 +70,7 @@ describe('${component.name}', () => {
           component: component.name,
           path,
           testCount: component.methods.length * 2, // 2 tests per method
-          coverage: 'pending'
+          coverage: "pending"
         };
       });
 
@@ -79,19 +79,19 @@ describe('${component.name}', () => {
       assert.strictEqual(totalTests, 24); // 4 components * 3 methods * 2 tests each
       
       // Verify test structure
-      const authTests = await harness.mockReadFile('test/services/AuthService.test.ts');
+      const authTests = await harness.mockReadFile("test/services/AuthService.test.ts");
       assert(authTests.includes("describe('login'"));
-      assert(authTests.includes('should login successfully'));
-      assert(authTests.includes('should handle errors'));
+      assert(authTests.includes("should login successfully"));
+      assert(authTests.includes("should handle errors"));
     });
 
-    it('should run multiple test suites in parallel', async () => {
+    it("should run multiple test suites in parallel", async () => {
       // Create test files
       const testSuites = [
-        { file: 'test/auth.test.js', tests: 5, duration: 100 },
-        { file: 'test/user.test.js', tests: 8, duration: 150 },
-        { file: 'test/api.test.js', tests: 12, duration: 200 },
-        { file: 'test/utils.test.js', tests: 3, duration: 50 }
+        { file: "test/auth.test.js", tests: 5, duration: 100 },
+        { file: "test/user.test.js", tests: 8, duration: 150 },
+        { file: "test/api.test.js", tests: 12, duration: 200 },
+        { file: "test/utils.test.js", tests: 3, duration: 50 }
       ];
       
       testSuites.forEach(suite => {
@@ -126,19 +126,19 @@ describe('${component.name}', () => {
       assert(totalPassed / totalTests > 0.85); // Overall pass rate > 85%
     });
 
-    it('should generate parameterized tests for multiple scenarios', async () => {
+    it("should generate parameterized tests for multiple scenarios", async () => {
       const testScenarios = [
         {
-          function: 'validateEmail',
+          function: "validateEmail",
           cases: [
-            { input: 'test@example.com', expected: true },
-            { input: 'invalid.email', expected: false },
-            { input: 'user@domain.co.uk', expected: true },
-            { input: '@example.com', expected: false }
+            { input: "test@example.com", expected: true },
+            { input: "invalid.email", expected: false },
+            { input: "user@domain.co.uk", expected: true },
+            { input: "@example.com", expected: false }
           ]
         },
         {
-          function: 'calculateDiscount',
+          function: "calculateDiscount",
           cases: [
             { input: { price: 100, discount: 10 }, expected: 90 },
             { input: { price: 50, discount: 20 }, expected: 40 },
@@ -151,13 +151,13 @@ describe('${component.name}', () => {
       const parameterizedTests = await harness.executeBatch(testScenarios, async (scenario) => {
         const testCases = scenario.cases.map((testCase, index) => `
     it.each([
-      ${scenario.cases.map(c => `[${JSON.stringify(c.input)}, ${c.expected}]`).join(',\n      ')}
+      ${scenario.cases.map(c => `[${JSON.stringify(c.input)}, ${c.expected}]`).join(",\n      ")}
     ])('should return %p when input is %p', (input, expected) => {
       expect(${scenario.function}(input)).toBe(expected);
     });`);
         
         const content = `describe('${scenario.function}', () => {
-  ${testCases.join('\n')}
+  ${testCases.join("\n")}
 });`;
         
         const path = `test/parameterized/${scenario.function}.test.ts`;
@@ -177,13 +177,13 @@ describe('${component.name}', () => {
     });
   });
 
-  describe('Concurrent Test Execution', () => {
-    it('should run unit tests across multiple files in parallel', async () => {
+  describe("Concurrent Test Execution", () => {
+    it("should run unit tests across multiple files in parallel", async () => {
       // Setup test files with different execution times
       const unitTests = Array.from({ length: 10 }, (_, i) => ({
         file: `test/unit/module${i}.test.js`,
         testCount: Math.floor(Math.random() * 10) + 5,
-        complexity: Math.random() > 0.5 ? 'simple' : 'complex'
+        complexity: Math.random() > 0.5 ? "simple" : "complex"
       }));
       
       unitTests.forEach(test => {
@@ -193,10 +193,10 @@ describe('${component.name}', () => {
       const startTime = Date.now();
       const results = await harness.executeBatch(unitTests, async (test) => {
         // Complex tests take longer
-        const duration = test.complexity === 'complex' ? 100 : 50;
+        const duration = test.complexity === "complex" ? 100 : 50;
         await harness.simulateDelay(duration);
         
-        const passRate = test.complexity === 'simple' ? 0.95 : 0.85;
+        const passRate = test.complexity === "simple" ? 0.95 : 0.85;
         const passed = Math.floor(test.testCount * passRate);
         
         return {
@@ -213,19 +213,19 @@ describe('${component.name}', () => {
       
       // Calculate expected sequential time
       const expectedSequential = unitTests.reduce((sum, test) => 
-        sum + (test.complexity === 'complex' ? 100 : 50), 0);
+        sum + (test.complexity === "complex" ? 100 : 50), 0);
       
       // Parallel execution should be significantly faster
       assert(totalTime < expectedSequential * 0.4, 
         `Parallel execution too slow: ${totalTime}ms vs ${expectedSequential}ms sequential`);
     });
 
-    it('should run integration tests with proper isolation', async () => {
+    it("should run integration tests with proper isolation", async () => {
       const integrationTests = [
-        { name: 'API Integration', requires: ['database', 'server'] },
-        { name: 'Database Integration', requires: ['database'] },
-        { name: 'External Service Integration', requires: ['network', 'auth'] },
-        { name: 'Cache Integration', requires: ['redis'] }
+        { name: "API Integration", requires: ["database", "server"] },
+        { name: "Database Integration", requires: ["database"] },
+        { name: "External Service Integration", requires: ["network", "auth"] },
+        { name: "Cache Integration", requires: ["redis"] }
       ];
       
       const testExecution = await harness.executeBatch(integrationTests, async (test) => {
@@ -261,19 +261,19 @@ describe('${component.name}', () => {
     });
   });
 
-  describe('Test Coverage Analysis', () => {
-    it('should analyze coverage for multiple modules in parallel', async () => {
+  describe("Test Coverage Analysis", () => {
+    it("should analyze coverage for multiple modules in parallel", async () => {
       const modules = [
-        'src/services/auth.service.ts',
-        'src/services/user.service.ts',
-        'src/controllers/auth.controller.ts',
-        'src/utils/validation.ts',
-        'src/models/user.model.ts'
+        "src/services/auth.service.ts",
+        "src/services/user.service.ts",
+        "src/controllers/auth.controller.ts",
+        "src/utils/validation.ts",
+        "src/models/user.model.ts"
       ];
       
       const coverageAnalysis = await harness.executeBatch(modules, async (module) => {
         const content = await harness.mockReadFile(module);
-        const lines = content.split('\n').filter(l => l.trim().length > 0);
+        const lines = content.split("\n").filter(l => l.trim().length > 0);
         
         // Simulate coverage analysis
         const totalLines = lines.length;
@@ -308,10 +308,10 @@ describe('${component.name}', () => {
       assert(linesCoverage > 60, `Overall line coverage too low: ${linesCoverage.toFixed(1)}%`);
     });
 
-    it('should identify uncovered code paths across files', async () => {
+    it("should identify uncovered code paths across files", async () => {
       // Add files with different coverage scenarios
       const filesToAnalyze = {
-        'src/partial-coverage.ts': `export function processData(data) {
+        "src/partial-coverage.ts": `export function processData(data) {
           if (data.type === 'A') {
             return handleTypeA(data); // covered
           } else if (data.type === 'B') {
@@ -320,10 +320,10 @@ describe('${component.name}', () => {
             throw new Error('Unknown type'); // not covered
           }
         }`,
-        'src/full-coverage.ts': `export function simpleAdd(a, b) {
+        "src/full-coverage.ts": `export function simpleAdd(a, b) {
           return a + b; // fully covered
         }`,
-        'src/no-coverage.ts': `export function unusedFunction() {
+        "src/no-coverage.ts": `export function unusedFunction() {
           // This function is never called in tests
           return 'unused';
         }`
@@ -337,19 +337,19 @@ describe('${component.name}', () => {
         Object.keys(filesToAnalyze),
         async (file) => {
           const content = await harness.mockReadFile(file);
-          const lines = content.split('\n');
+          const lines = content.split("\n");
           const uncovered = [];
           
           // Simulate coverage analysis
-          if (file.includes('partial')) {
+          if (file.includes("partial")) {
             uncovered.push(
-              { line: 5, code: 'return handleTypeB(data);', reason: 'branch not taken' },
-              { line: 7, code: "throw new Error('Unknown type');", reason: 'branch not taken' }
+              { line: 5, code: "return handleTypeB(data);", reason: "branch not taken" },
+              { line: 7, code: "throw new Error('Unknown type');", reason: "branch not taken" }
             );
-          } else if (file.includes('no-coverage')) {
+          } else if (file.includes("no-coverage")) {
             lines.forEach((line, index) => {
               if (line.trim()) {
-                uncovered.push({ line: index + 1, code: line.trim(), reason: 'never executed' });
+                uncovered.push({ line: index + 1, code: line.trim(), reason: "never executed" });
               }
             });
           }
@@ -358,8 +358,8 @@ describe('${component.name}', () => {
             file,
             uncoveredCount: uncovered.length,
             uncoveredLines: uncovered,
-            coverageStatus: uncovered.length === 0 ? 'full' : 
-                          uncovered.length === lines.filter(l => l.trim()).length ? 'none' : 'partial'
+            coverageStatus: uncovered.length === 0 ? "full" : 
+                          uncovered.length === lines.filter(l => l.trim()).length ? "none" : "partial"
           };
         }
       );
@@ -367,24 +367,24 @@ describe('${component.name}', () => {
       assert.strictEqual(uncoveredAnalysis.successful.length, 3);
       
       const statuses = uncoveredAnalysis.successful.map(r => r.coverageStatus);
-      assert(statuses.includes('full'));
-      assert(statuses.includes('partial'));
-      assert(statuses.includes('none'));
+      assert(statuses.includes("full"));
+      assert(statuses.includes("partial"));
+      assert(statuses.includes("none"));
     });
   });
 
-  describe('Test Optimization', () => {
-    it('should identify and run only affected tests in parallel', async () => {
+  describe("Test Optimization", () => {
+    it("should identify and run only affected tests in parallel", async () => {
       // Simulate changed files
-      const changedFiles = ['src/services/user.service.ts', 'src/utils/validation.ts'];
+      const changedFiles = ["src/services/user.service.ts", "src/utils/validation.ts"];
       
       // Map of test dependencies
       const testDependencies = {
-        'test/user.test.ts': ['src/services/user.service.ts', 'src/models/user.model.ts'],
-        'test/auth.test.ts': ['src/services/auth.service.ts', 'src/services/user.service.ts'],
-        'test/validation.test.ts': ['src/utils/validation.ts'],
-        'test/api.test.ts': ['src/controllers/auth.controller.ts', 'src/services/auth.service.ts'],
-        'test/integration.test.ts': ['src/services/user.service.ts', 'src/utils/validation.ts']
+        "test/user.test.ts": ["src/services/user.service.ts", "src/models/user.model.ts"],
+        "test/auth.test.ts": ["src/services/auth.service.ts", "src/services/user.service.ts"],
+        "test/validation.test.ts": ["src/utils/validation.ts"],
+        "test/api.test.ts": ["src/controllers/auth.controller.ts", "src/services/auth.service.ts"],
+        "test/integration.test.ts": ["src/services/user.service.ts", "src/utils/validation.ts"]
       };
       
       // Add test files
@@ -403,23 +403,23 @@ describe('${component.name}', () => {
         return {
           test,
           executed: true,
-          reason: 'file dependency changed',
+          reason: "file dependency changed",
           duration: 80,
           results: { passed: 10, failed: 0 }
         };
       });
       
       assert.strictEqual(testExecution.successful.length, 4); // 4 tests affected
-      assert(testExecution.successful.some(r => r.test === 'test/user.test.ts'));
-      assert(testExecution.successful.some(r => r.test === 'test/validation.test.ts'));
+      assert(testExecution.successful.some(r => r.test === "test/user.test.ts"));
+      assert(testExecution.successful.some(r => r.test === "test/validation.test.ts"));
     });
 
-    it('should parallelize test setup and teardown operations', async () => {
+    it("should parallelize test setup and teardown operations", async () => {
       const testSuites = [
-        { name: 'Database Tests', setupTime: 200, teardownTime: 100 },
-        { name: 'API Tests', setupTime: 150, teardownTime: 50 },
-        { name: 'Service Tests', setupTime: 100, teardownTime: 50 },
-        { name: 'Unit Tests', setupTime: 50, teardownTime: 20 }
+        { name: "Database Tests", setupTime: 200, teardownTime: 100 },
+        { name: "API Tests", setupTime: 150, teardownTime: 50 },
+        { name: "Service Tests", setupTime: 100, teardownTime: 50 },
+        { name: "Unit Tests", setupTime: 50, teardownTime: 20 }
       ];
       
       const suiteExecution = await harness.executeBatch(testSuites, async (suite) => {
@@ -463,13 +463,13 @@ describe('${component.name}', () => {
     });
   });
 
-  describe('Test Reporting', () => {
-    it('should generate test reports for multiple suites concurrently', async () => {
+  describe("Test Reporting", () => {
+    it("should generate test reports for multiple suites concurrently", async () => {
       const testSuites = [
-        { name: 'Unit Tests', tests: 50, passed: 48, failed: 2 },
-        { name: 'Integration Tests', tests: 20, passed: 18, failed: 2 },
-        { name: 'E2E Tests', tests: 10, passed: 9, failed: 1 },
-        { name: 'Performance Tests', tests: 5, passed: 5, failed: 0 }
+        { name: "Unit Tests", tests: 50, passed: 48, failed: 2 },
+        { name: "Integration Tests", tests: 20, passed: 18, failed: 2 },
+        { name: "E2E Tests", tests: 10, passed: 9, failed: 1 },
+        { name: "Performance Tests", tests: 5, passed: 5, failed: 0 }
       ];
       
       const reportGeneration = await harness.executeBatch(testSuites, async (suite) => {
@@ -479,7 +479,7 @@ describe('${component.name}', () => {
             total: suite.tests,
             passed: suite.passed,
             failed: suite.failed,
-            passRate: (suite.passed / suite.tests * 100).toFixed(1) + '%'
+            passRate: (suite.passed / suite.tests * 100).toFixed(1) + "%"
           },
           report: `# ${suite.name} Report\n\n` +
                   `Total Tests: ${suite.tests}\n` +
@@ -487,9 +487,9 @@ describe('${component.name}', () => {
                   `Failed: ${suite.failed}\n` +
                   `Pass Rate: ${(suite.passed / suite.tests * 100).toFixed(1)}%\n`,
           artifacts: {
-            html: `${suite.name.toLowerCase().replace(' ', '-')}-report.html`,
-            json: `${suite.name.toLowerCase().replace(' ', '-')}-results.json`,
-            coverage: `${suite.name.toLowerCase().replace(' ', '-')}-coverage.json`
+            html: `${suite.name.toLowerCase().replace(" ", "-")}-report.html`,
+            json: `${suite.name.toLowerCase().replace(" ", "-")}-results.json`,
+            coverage: `${suite.name.toLowerCase().replace(" ", "-")}-coverage.json`
           }
         };
         
@@ -514,7 +514,7 @@ describe('${component.name}', () => {
       assert.strictEqual(totals.failed, 5);
       
       // Verify report files were created
-      const unitReport = await harness.mockReadFile('reports/unit-tests-results.json');
+      const unitReport = await harness.mockReadFile("reports/unit-tests-results.json");
       const unitSummary = JSON.parse(unitReport);
       assert.strictEqual(unitSummary.total, 50);
     });

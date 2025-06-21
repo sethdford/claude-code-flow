@@ -209,7 +209,7 @@ class VSCodeTerminalWrapper implements Terminal {
 
   private async waitForReady(): Promise<void> {
     // Send a test command to ensure terminal is ready
-    this.vscodeTerminal!.sendText('echo "READY"', true);
+    this.vscodeTerminal!.sendText("echo \"READY\"", true);
     
     const startTime = Date.now();
     while (Date.now() - startTime < 5000) {

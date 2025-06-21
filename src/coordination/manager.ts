@@ -227,7 +227,7 @@ export class CoordinationManager implements ICoordinationManager {
         // Release all resources held by the agent
         this.resourceManager.releaseAllForAgent(agentId),
         // Cancel all tasks assigned to the agent
-        this.scheduler.cancelAgentTasks(agentId)
+        this.scheduler.cancelAgentTasks(agentId),
       ]).catch((error) => {
         this.logger.error("Error handling agent termination", { agentId, error });
       });
@@ -236,29 +236,26 @@ export class CoordinationManager implements ICoordinationManager {
 
   private startDeadlockDetection(): void {
     this.deadlockCheckInterval = setInterval(() => {
-      this.detectDeadlock()
-        .then((deadlock) => {
-          if (deadlock) {
-            this.logger.error("Deadlock detected", deadlock);
-            
-            // Emit deadlock event
-            this.eventBus.emit(SystemEvents.DEADLOCK_DETECTED, deadlock);
-            
-            // Attempt to resolve deadlock
-            return this.resolveDeadlock(deadlock);
-          }
-          return Promise.resolve();
-        })
-        .catch((error) => {
-          this.logger.error("Error during deadlock detection", error);
-        });
+      const deadlock = this.detectDeadlock();
+      if (deadlock) {
+        this.logger.error("Deadlock detected", deadlock);
+        
+        // Emit deadlock event
+        this.eventBus.emit(SystemEvents.DEADLOCK_DETECTED, deadlock);
+        
+        // Attempt to resolve deadlock
+        this.resolveDeadlock(deadlock)
+          .catch((error) => {
+            this.logger.error("Error resolving deadlock", error);
+          });
+      }
     }, 10000); // Check every 10 seconds
   }
 
-  private async detectDeadlock(): Promise<{ 
+  private detectDeadlock(): { 
     agents: string[]; 
     resources: string[];
-  } | null> {
+  } | null {
     // Get resource allocation graph
     const allocations = this.resourceManager.getAllocations();
     const waitingFor = this.resourceManager.getWaitingRequests();
@@ -268,15 +265,17 @@ export class CoordinationManager implements ICoordinationManager {
     
     // Add edges for resources agents are waiting for
     for (const [agentId, resources] of waitingFor) {
-      if (!graph.has(agentId)) {
-        graph.set(agentId, new Set());
+      let agentDependencies = graph.get(agentId);
+      if (!agentDependencies) {
+        agentDependencies = new Set();
+        graph.set(agentId, agentDependencies);
       }
       
       // Find who owns these resources
       for (const resource of resources) {
         const owner = allocations.get(resource);
         if (owner && owner !== agentId) {
-          graph.get(agentId)!.add(owner);
+          agentDependencies.add(owner);
         }
       }
     }
@@ -375,7 +374,7 @@ export class CoordinationManager implements ICoordinationManager {
       throw new CoordinationError("Coordination manager not initialized");
     }
 
-    await this.scheduler.cancelTask(taskId, reason || "User requested cancellation");
+    await this.scheduler.cancelTask(taskId, reason ?? "User requested cancellation");
   }
 
   async performMaintenance(): Promise<void> {

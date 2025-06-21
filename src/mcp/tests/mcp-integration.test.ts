@@ -2,18 +2,18 @@
  * Comprehensive MCP Integration Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import type { Mock } from 'jest-mock';
-import { MCPServer } from '../server';
-import { MCPLifecycleManager, LifecycleState } from '../lifecycle-manager';
-import { MCPPerformanceMonitor } from '../performance-monitor';
-import { MCPProtocolManager } from '../protocol-manager';
-import { MCPOrchestrationIntegration } from '../orchestration-integration';
-import { ToolRegistry } from '../tools';
-import { AuthManager } from '../auth';
-import { ILogger } from '../../core/logger';
-import { MCPConfig, MCPInitializeParams, MCPRequest, MCPSession } from '../../utils/types';
-import { EventEmitter } from 'node:events';
+import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
+import type { Mock } from "jest-mock";
+import { MCPServer } from "../server";
+import { MCPLifecycleManager, LifecycleState } from "../lifecycle-manager";
+import { MCPPerformanceMonitor } from "../performance-monitor";
+import { MCPProtocolManager } from "../protocol-manager";
+import { MCPOrchestrationIntegration } from "../orchestration-integration";
+import { ToolRegistry } from "../tools";
+import { AuthManager } from "../auth";
+import { ILogger } from "../../core/logger";
+import { MCPConfig, MCPInitializeParams, MCPRequest, MCPSession } from "../../utils/types";
+import { EventEmitter } from "node:events";
 
 // Mock logger
 const mockLogger: ILogger = {

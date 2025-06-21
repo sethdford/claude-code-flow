@@ -9,7 +9,7 @@ function printSuccess(message: string) {
   console.log(`✅ ${message}`);
 }
 
-function printError(message: string) {
+function _printError(message: string) {
   console.error(`❌ Error: ${message}`);
 }
 
@@ -51,7 +51,7 @@ export function createMCPCommand() {
       console.log("  • mcp status - Show MCP server status");
       console.log("  • mcp tools - List available MCP tools");
       console.log("  • mcp stop - Stop the MCP server");
-      console.log('\n💡 Use "mcp start --port 3001" to use a different port');
+      console.log("\n💡 Use \"mcp start --port 3001\" to use a different port");
     });
 
   mcpCmd
@@ -60,7 +60,7 @@ export function createMCPCommand() {
     .option("--port <port>", "Port for MCP server", "3000")
     .option("--host <host>", "Host for MCP server", "localhost")
     .option("--transport <transport>", "Transport type (stdio, http)", "http")
-    .action(async (options) => {
+    .action(async (_options) => {
       // This is handled by the actual MCP implementation
       console.log("Starting MCP server...");
       console.log("(This command is handled by the MCP module)");
@@ -86,9 +86,9 @@ export function createMCPCommand() {
         console.log("🔐 Authentication: Disabled");
         console.log("🔧 Tools: System, Health, Tools");
         console.log("📡 Transport: http");
-        console.log('\n💡 Use "mcp tools" to see available tools');
+        console.log("\n💡 Use \"mcp tools\" to see available tools");
       } else {
-        console.log('🟡 Status: Not running (use "mcp start" to start)');
+        console.log("🟡 Status: Not running (use \"mcp start\" to start)");
         console.log(`📍 Checked address: ${host}:${port}`);
         console.log("🔐 Authentication: Disabled");
         console.log("🔧 Tools: System, Health, Tools (when running)");
@@ -115,7 +115,7 @@ export function createMCPCommand() {
     .action(() => {
       printSuccess("Stopping MCP server...");
       console.log("🛑 MCP server stop requested");
-      console.log('💡 Use Ctrl+C in the terminal running "mcp start" to stop');
+      console.log("💡 Use Ctrl+C in the terminal running \"mcp start\" to stop");
     });
 
   return mcpCmd;

@@ -231,7 +231,7 @@ export function createAdvancedMemoryCommand(): Command {
             for (const entry of entries) {
               console.log([
                 entry.key,
-                JSON.stringify(entry.value).replace(/"/g, '""'),
+                JSON.stringify(entry.value).replace(/"/g, "\"\""),
                 entry.type,
                 entry.namespace,
                 "", // tags not supported
@@ -313,7 +313,7 @@ export function createAdvancedMemoryCommand(): Command {
             const _filtering = JSON.parse(options.filterQuery) as QueryOptions;
             // Filtering options are not implemented in simplified version
             void _filtering; // Acknowledge unused variable
-          } catch (error) {
+          } catch (_error) {
             printError("Invalid filter query JSON format");
             return;
           }
@@ -649,7 +649,7 @@ export function createAdvancedMemoryCommand(): Command {
             const _retentionPolicies = JSON.parse(options.retentionPolicies) as Record<string, unknown>;
             // Retention policies are not implemented in simplified version
             void _retentionPolicies; // Acknowledge unused variable
-          } catch (error) {
+          } catch (_error) {
             printError("Invalid retention policies JSON format");
             return;
           }
@@ -686,7 +686,7 @@ export function createAdvancedMemoryCommand(): Command {
         if (result.actions.length > 0) {
           console.log(chalk.cyan("\n📋 Actions Performed:"));
           result.actions.forEach(action => {
-            console.log(`   • ${action.type}: ${action.id || "unknown"}${action.reason ? ` (${action.reason})` : ""}${action.message ? ` - ${action.message}` : ""}`);
+            console.log(`   • ${action.type}: ${action.id ?? "unknown"}${action.reason ? ` (${action.reason})` : ""}${action.message ? ` - ${action.message}` : ""}`);
           });
         }
 
@@ -736,7 +736,7 @@ export function createAdvancedMemoryCommand(): Command {
             const _metadata = JSON.parse(options.metadata) as Record<string, unknown>;
             // Metadata is not used in simplified version
             void _metadata; // Acknowledge unused variable
-          } catch (error) {
+          } catch (_error) {
             printError("Invalid metadata JSON format");
             return;
           }
@@ -879,7 +879,7 @@ export function createAdvancedMemoryCommand(): Command {
         console.log(chalk.cyan(`\n📋 Memory Entries (${total} total):\n`));
 
         for (const [i, entry] of entries.entries()) {
-          const num = options.offset + i + 1;
+          const num = (options.offset || 0) + i + 1;
           console.log(chalk.blue(`${num}. ${entry.key}`));
           console.log(`   Namespace: ${entry.namespace} | Type: ${entry.type}`);
           console.log(`   Updated: ${entry.updatedAt.toLocaleString()}`);
@@ -981,7 +981,7 @@ export function createAdvancedMemoryCommand(): Command {
             const updates = JSON.parse(options.set) as Record<string, unknown>;
             await manager.updateConfiguration(updates);
             printSuccess("Configuration updated");
-          } catch (error) {
+          } catch (_error) {
             printError("Invalid configuration JSON format");
             return;
           }

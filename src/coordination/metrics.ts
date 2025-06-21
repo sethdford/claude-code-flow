@@ -268,11 +268,18 @@ export class CoordinationMetricsCollector {
     return Array.from(byMetric.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, limit)
-      .map(([metric, value]) => ({
-        metric,
-        value,
-        timestamp: timestamps.get(metric)!,
-      }));
+      .map(([metric, value]) => {
+        const timestamp = timestamps.get(metric);
+        // This should never happen since we populate both maps together
+        if (!timestamp) {
+          throw new Error(`Missing timestamp for metric: ${metric}`);
+        }
+        return {
+          metric,
+          value,
+          timestamp,
+        };
+      });
   }
 
   /**
@@ -576,17 +583,17 @@ export class CoordinationMetricsCollector {
     
     // Reset counters
     for (const key in this.counters) {
-      (this.counters as any)[key] = 0;
+      this.counters[key as keyof typeof this.counters] = 0;
     }
     
     // Reset gauges
     for (const key in this.gauges) {
-      (this.gauges as any)[key] = 0;
+      this.gauges[key as keyof typeof this.gauges] = 0;
     }
     
     // Clear histograms
     for (const key in this.histograms) {
-      (this.histograms as any)[key] = [];
+      this.histograms[key as keyof typeof this.histograms] = [];
     }
     
     this.logger.info("Coordination metrics cleared");

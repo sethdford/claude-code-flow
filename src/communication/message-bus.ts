@@ -383,8 +383,8 @@ export class MessageBus extends EventEmitter {
       },
       timestamp: now,
       expiresAt: options.ttl ? new Date(now.getTime() + options.ttl) : undefined,
-      priority: options.priority || "normal",
-      reliability: options.reliability || "best-effort",
+      priority: options.priority ?? "normal",
+      reliability: options.reliability ?? "best-effort",
     };
 
     // Validate message
@@ -463,8 +463,8 @@ export class MessageBus extends EventEmitter {
       topic,
       subscriber,
       filter: options.filter,
-      ackRequired: options.ackRequired || false,
-      qos: options.qos || 0,
+      ackRequired: options.ackRequired ?? false,
+      qos: options.qos ?? 0,
       createdAt: new Date(),
     };
 
@@ -767,7 +767,7 @@ export class MessageBus extends EventEmitter {
     const route = await this.router.calculateRoute(message, preferredChannel);
     
     // Update message route
-    message.metadata.route = [...(message.metadata.route || []), ...route.hops];
+    message.metadata.route = [...(message.metadata.route ?? []), ...route.hops];
 
     // Deliver to targets
     for (const target of route.targets) {
@@ -925,11 +925,11 @@ export class MessageBus extends EventEmitter {
   }
 
   private insertByTimestamp(messages: Message[], message: Message): void {
-    const targetTime = message.expiresAt || message.timestamp;
+    const targetTime = message.expiresAt ?? message.timestamp;
     
     let insertIndex = messages.length;
     for (let i = 0; i < messages.length; i++) {
-      const currentTime = messages[i].expiresAt || messages[i].timestamp;
+      const currentTime = messages[i].expiresAt ?? messages[i].timestamp;
       if (targetTime <= currentTime) {
         insertIndex = i;
         break;
@@ -1115,7 +1115,7 @@ export class MessageBus extends EventEmitter {
     });
 
     // Send to dead letter queue if configured
-    this.sendToDeadLetterQueue("system-dlq", data.message, "retry_exhausted");
+    void this.sendToDeadLetterQueue("system-dlq", data.message, "retry_exhausted");
   }
 
   private async sendToDeadLetterQueue(queueId: string, message: Message, reason: string): Promise<void> {
@@ -1341,7 +1341,7 @@ class RetryManager extends EventEmitter {
 
   private startRetryProcessor(): void {
     this.retryInterval = setInterval(() => {
-      this.processRetries();
+      void this.processRetries();
     }, 5000); // Process retries every 5 seconds
   }
 

@@ -101,7 +101,7 @@ export const sessionCommand = new Command()
   .description("List all sessions")
   .option("-a, --archived", "Include archived sessions")
   .option("--json", "Output in JSON format")
-  .action(async (options) => {
+  .action(async (options: { archived?: boolean; json?: boolean }) => {
     try {
       const sessions = await getAllSessions();
       
@@ -151,7 +151,7 @@ export const sessionCommand = new Command()
   .description("Save current session state")
   .arguments("<session-id>")
   .option("-m, --message <msg>", "Save message")
-  .action(async (options, sessionId) => {
+  .action(async (options: { message?: string }, sessionId: string) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -184,7 +184,7 @@ export const sessionCommand = new Command()
   .description("Restore a saved session")
   .arguments("<session-id>")
   .option("-f, --force", "Force restore without confirmation")
-  .action(async (options, sessionId) => {
+  .action(async (options: { force?: boolean }, sessionId: string) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -211,7 +211,7 @@ export const sessionCommand = new Command()
   .description("Delete a session")
   .arguments("<session-id>")
   .option("-f, --force", "Force delete without confirmation")
-  .action(async (options, sessionId) => {
+  .action(async (options: { force?: boolean }, sessionId: string) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -237,7 +237,7 @@ export const sessionCommand = new Command()
   .description("Export session to file")
   .arguments("<session-id> <output-file>")
   .option("--format <fmt>", "Export format (json, yaml)", "json")
-  .action(async (options, sessionId, outputFile) => {
+  .action(async (options: { format?: string }, sessionId: string, outputFile: string) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -274,7 +274,7 @@ export const sessionCommand = new Command()
   .arguments("<input-file>")
   .option("-n, --name <name>", "Override session name")
   .option("-f, --force", "Force import even if session exists")
-  .action(async (options, inputFile) => {
+  .action(async (options: { name?: string; force?: boolean }, inputFile: string) => {
     try {
       const content = await fs.readFile(inputFile, "utf-8");
       const importData: SessionExportData = JSON.parse(content);
@@ -316,7 +316,7 @@ export const sessionCommand = new Command()
   .description("Show detailed session information")
   .arguments("<session-id>")
   .option("--json", "Output in JSON format")
-  .action(async (options, sessionId) => {
+  .action(async (options: { json?: boolean }, sessionId: string) => {
     try {
       const session = await loadSession(sessionId);
       if (!session) {
@@ -377,11 +377,11 @@ export const sessionCommand = new Command()
   .option("--days <days>", "Delete sessions older than N days", "30")
   .option("--archived-only", "Only clean archived sessions")
   .option("--dry-run", "Show what would be deleted without deleting")
-  .action(async (options) => {
+  .action(async (options: { days?: string; archivedOnly?: boolean; dryRun?: boolean }) => {
     try {
       const sessions = await getAllSessions();
       const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - parseInt(options.days));
+      cutoffDate.setDate(cutoffDate.getDate() - parseInt(options.days || "30", 10));
 
       const sessionsToDelete = sessions.filter(session => {
         const isOld = session.createdAt < cutoffDate;
@@ -435,7 +435,7 @@ async function loadSession(sessionId: string): Promise<Session | null> {
   try {
     const filePath = join(SESSION_DIR, `${sessionId}.json`);
     const content = await fs.readFile(filePath, "utf-8");
-    const session = JSON.parse(content);
+    const session = JSON.parse(content) as Session;
     
     // Convert date strings back to Date objects
     session.createdAt = new Date(session.createdAt);
@@ -460,7 +460,7 @@ async function getAllSessions(): Promise<Session[]> {
       if (entry.isFile() && entry.name.endsWith(".json")) {
         try {
           const content = await fs.readFile(join(SESSION_DIR, entry.name), "utf-8");
-          const session = JSON.parse(content);
+          const session = JSON.parse(content) as Session;
           
           // Convert date strings back to Date objects
           session.createdAt = new Date(session.createdAt);

@@ -558,7 +558,7 @@ class HybridBackend implements IMemoryBackend {
       this.secondary.getHealthStatus(),
     ]);
 
-    const error = primaryHealth.error || secondaryHealth.error;
+    const error = primaryHealth.error ?? secondaryHealth.error;
     return {
       healthy: primaryHealth.healthy && secondaryHealth.healthy,
       ...(error && { error }),
