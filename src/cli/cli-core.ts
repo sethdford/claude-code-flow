@@ -15,7 +15,7 @@ import { configCommand } from "./commands/config.js";
 import { statusCommand } from "./commands/status.js";
 import { monitorCommand } from "./commands/monitor.js";
 import { sessionCommand } from "./commands/session.js";
-import { workflowCommand } from "./commands/workflow.js";
+import { createWorkflowCommand } from "./commands/workflow.js";
 import { helpCommand } from "./commands/help.js";
 import { mcpCommand } from "./commands/mcp.js";
 import { claudeCommand } from "./commands/claude.js";
@@ -102,7 +102,7 @@ export function createCLI(): Command {
     .addCommand(statusCommand)
     .addCommand(monitorCommand)
     .addCommand(sessionCommand)
-    .addCommand(workflowCommand)
+    .addCommand(createWorkflowCommand())
     .addCommand(mcpCommand)
     .addCommand(claudeCommand)
     .addCommand(swarmCommand)
