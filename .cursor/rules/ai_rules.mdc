@@ -1,0 +1,83 @@
+---
+description: AI Integration Rules for Enhanced Multi-Model Architecture
+globs: src/**/*.ts, src/**/*.js, docs/**/*.md
+alwaysApply: true
+---
+
+# AI Integration Rules for Claude Code Flow
+
+## Hierarchical Model Strategy
+
+- **Use appropriate models for task complexity**
+  - Simple tasks (typos, imports, comments) → Apply model (claude-3-haiku)
+  - Medium tasks (functions, refactoring) → Primary model (claude-3-5-sonnet)
+  - Complex tasks (architecture, security) → Primary + Review model
+
+```typescript
+// ✅ DO: Implement hierarchical model selection
+interface HierarchicalModelConfig {
+  primary: string;    // Complex reasoning
+  apply: string;      // Fast, precise edits
+  review: string;     // Quality assurance
+  threshold: number;  // Lines of code threshold
+}
+
+// ❌ DON'T: Use same model for all tasks
+const singleModel = "claude-3-5-sonnet"; // Inefficient
+```
+
+## Context-Aware Code Generation
+
+- **Gather relevant context before code generation**
+  - Analyze file dependencies and relationships
+  - Include related types, interfaces, and imports
+  - Consider project structure and conventions
+  - Cache context for performance
+
+## Task Complexity Analysis
+
+- **Analyze task complexity before execution**
+  - Parse task description for complexity indicators
+  - Estimate token requirements and context needs
+  - Select appropriate model and strategy
+  - Consider file size and modification scope
+
+## Enhanced Error Recovery
+
+- **Implement progressive error recovery**
+  - Retry with different models on failure
+  - Break down complex tasks into smaller subtasks
+  - Provide contextual error messages and suggestions
+  - Learn from previous errors to improve future attempts
+
+## Multi-Agent Coordination
+
+- **Coordinate agents based on capabilities**
+  - Match tasks to agent specializations
+  - Share context between related agents
+  - Avoid resource conflicts and duplication
+  - Monitor agent performance and adjust assignments
+
+## Performance Optimization
+
+- **Optimize AI model usage for cost and speed**
+  - Cache frequently used context and results
+  - Batch similar operations when possible
+  - Monitor token usage and optimize prompts
+  - Use streaming for long-running operations
+
+## AWS Bedrock Integration
+
+- **Support enterprise AI deployments**
+  - Use proper Bedrock model mappings
+  - Handle inference profiles for newer models
+  - Implement proper error handling for access issues
+  - Support both direct and profiled model access
+
+## Code Quality Standards
+
+- **Maintain high code quality in AI-generated code**
+  - Follow project linting and formatting rules
+  - Include proper error handling and validation
+  - Add appropriate comments and documentation
+  - Ensure type safety and proper imports

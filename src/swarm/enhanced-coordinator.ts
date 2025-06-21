@@ -1,6 +1,7 @@
 /**
  * Enhanced Swarm Coordinator
  * Implements hierarchical model strategy with intelligent task decomposition
+ * Provides advanced AI-powered coordination for multi-agent systems
  */
 
 import { EventEmitter } from "events";
@@ -38,7 +39,7 @@ export interface TaskComplexityAnalysis {
   agentType: AgentType;
 }
 
-// Extended metadata for our custom properties
+// Extended metadata for enhanced task properties
 export interface ExtendedTaskMetadata {
   complexity?: "simple" | "medium" | "complex";
   suggestedModel?: string;
@@ -46,6 +47,14 @@ export interface ExtendedTaskMetadata {
   requiredContext?: string[];
 }
 
+/**
+ * Enhanced Swarm Coordinator with AI-powered task management
+ * Features:
+ * - Hierarchical model selection based on task complexity
+ * - Intelligent context window management
+ * - Advanced task decomposition and analysis
+ * - Multi-agent coordination with specialized roles
+ */
 export class EnhancedSwarmCoordinator extends EventEmitter {
   private agents: Map<string, BaseAgent> = new Map();
   private taskQueue: TaskDefinition[] = [];

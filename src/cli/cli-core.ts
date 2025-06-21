@@ -28,6 +28,8 @@ import { formatError, displayBanner, displayVersion } from "./formatter.js";
 import { startNodeREPL as startREPL } from "./node-repl.js";
 import { CompletionGenerator } from "./completion.js";
 import { getVersion, getBuildDate } from "../utils/version.js";
+import { bedrockTestCommand } from "./commands/bedrock-test.js";
+import { tokenMonitorCommand } from "./commands/token-monitor.js";
 
 import chalk from "chalk";
 
@@ -108,6 +110,8 @@ export function createCLI(): Command {
     .addCommand(enterpriseCommand)
     .addCommand(modelsCommand)
     .addCommand(helpCommand)
+    .addCommand(bedrockTestCommand)
+    .addCommand(tokenMonitorCommand)
     .command("batch")
     .description("Spawn multiple Claude instances from workflow")
     .arguments("<workflow-file>")

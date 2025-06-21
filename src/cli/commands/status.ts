@@ -18,6 +18,8 @@ import { DistributedMemorySystem } from "../../memory/distributed-memory.js";
 import { CoordinationManager } from "../../coordination/manager.js";
 import { RealTimeMonitor } from "../../monitoring/real-time-monitor.js";
 import { SystemEvents } from "../../utils/types.js";
+import { ClaudeTokenMonitor } from "../../monitoring/claude-token-monitor.js";
+import { TokenMonitorWidget } from "../../monitoring/token-display.js";
 
 // Color compatibility
 const colors = {
@@ -41,6 +43,8 @@ let logger: Logger | null = null;
 let memorySystem: DistributedMemorySystem | null = null;
 let coordinationManager: CoordinationManager | null = null;
 let realTimeMonitor: RealTimeMonitor | null = null;
+let tokenMonitor: ClaudeTokenMonitor | null = null;
+let tokenWidget: TokenMonitorWidget | null = null;
 
 // Track start time for uptime calculation
 const startTime = Date.now();
@@ -176,6 +180,24 @@ async function initializeStatusSystem(): Promise<void> {
     );
     
     await orchestrator.initialize();
+    
+    // Initialize token monitor if ccusage is available
+    try {
+      tokenMonitor = new ClaudeTokenMonitor({
+        plan: 'pro',
+        timezone: 'UTC',
+        updateInterval: 10 // Slower updates for status display
+      });
+      tokenWidget = new TokenMonitorWidget(tokenMonitor);
+      // Start silently - don't await to avoid blocking status
+      tokenMonitor.start().catch(() => {
+        // Silently handle startup failures
+      });
+    } catch (error) {
+      // Token monitor is optional - continue without it if ccusage not available
+      tokenMonitor = null;
+      tokenWidget = null;
+    }
     
     console.log(colors.green("✓ Real system components initialized"));
   } catch (error) {
@@ -387,6 +409,19 @@ function showFullStatus(status: SystemStatus): void {
     }
     
     console.log(resourceTable.toString());
+    console.log();
+  }
+
+  // Claude Token Usage (if available)
+  if (tokenWidget) {
+    console.log(colors.cyan.bold("Claude Token Usage"));
+    console.log("─".repeat(50));
+    
+    const compactDisplay = tokenWidget.getCompactDisplay();
+    const statusLine = tokenWidget.getStatusLine();
+    
+    console.log(`${compactDisplay}`);
+    console.log(`${colors.gray("Status:")} ${statusLine}`);
     console.log();
   }
 

@@ -8,6 +8,12 @@
 
 Claude-Flow is a **next-generation AI agent orchestration platform** that enables sophisticated multi-agent coordination, advanced process management, and intelligent task distribution. Built with modern TypeScript and featuring native MCP integration, it represents the evolution of AI-powered development workflows.
 
+## 🎬 **See Claude Code in Action**
+
+![Claude Code Demo](./demo.gif)
+
+*Watch Claude Code seamlessly handle complex development tasks with intelligent code generation, real-time editing, and autonomous problem-solving capabilities.*
+
 ---
 
 ## 🚀 **Quick Start - Get Running in 60 Seconds**

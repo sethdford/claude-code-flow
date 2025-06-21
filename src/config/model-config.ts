@@ -327,4 +327,95 @@ export function createModelHierarchy(config: Partial<ModelHierarchyConfig>): Mod
     ...DEFAULT_MODEL_CONFIG,
     ...config,
   };
+}
+
+// Bedrock Model Mappings
+// Maps standard Anthropic model IDs to their Bedrock equivalents
+export const BEDROCK_MODEL_MAPPINGS: Record<string, string> = {
+  // Common name mappings (for convenience)
+  "claude-4": "anthropic.claude-sonnet-4-20250514-v1:0",
+  "claude-3.7-sonnet": "anthropic.claude-3-7-sonnet-20250219-v1:0",
+  "claude-3.5-sonnet": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "claude-3.5-haiku": "anthropic.claude-3-5-haiku-20241022-v1:0",
+  "claude-3-opus": "anthropic.claude-3-opus-20240229-v1:0",
+  "claude-3-sonnet": "anthropic.claude-3-sonnet-20240229-v1:0",
+  "claude-3-haiku": "anthropic.claude-3-haiku-20240307-v1:0",
+
+  // Claude 4 Models (Latest - require inference profiles)
+  "claude-opus-4-20250514": "anthropic.claude-opus-4-20250514-v1:0",
+  "claude-sonnet-4-20250514": "anthropic.claude-sonnet-4-20250514-v1:0",
+  
+  // Claude 3.7 Models
+  "claude-3-7-sonnet-20250219": "anthropic.claude-3-7-sonnet-20250219-v1:0",
+  
+  // Claude 3.5 Models (Active)
+  "claude-3-5-sonnet-20241022": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+  "claude-3-5-sonnet-20240620": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+  "claude-3-5-haiku-20241022": "anthropic.claude-3-5-haiku-20241022-v1:0",
+  
+  // Claude 3 Models (Active)
+  "claude-3-opus-20240229": "anthropic.claude-3-opus-20240229-v1:0",
+  "claude-3-sonnet-20240229": "anthropic.claude-3-sonnet-20240229-v1:0",
+  "claude-3-haiku-20240307": "anthropic.claude-3-haiku-20240307-v1:0",
+  
+  // Legacy models (for backward compatibility)
+  "claude-instant-v1": "anthropic.claude-instant-v1",
+  "claude-v2": "anthropic.claude-v2",
+  "claude-v2:1": "anthropic.claude-v2:1",
+};
+
+// Bedrock Inference Profiles (for newer models that require them)
+export const BEDROCK_INFERENCE_PROFILES: Record<string, string> = {
+  // Common name mappings
+  "claude-4": "anthropic.claude-sonnet-4",
+  "claude-3.7-sonnet": "anthropic.claude-3-7-sonnet",
+  "claude-3.5-sonnet": "anthropic.claude-3-5-sonnet-v2",
+  "claude-3.5-haiku": "anthropic.claude-3-5-haiku",
+
+  // Claude 4 models typically require inference profiles
+  "claude-opus-4-20250514": "anthropic.claude-opus-4",
+  "claude-sonnet-4-20250514": "anthropic.claude-sonnet-4",
+  
+  // Claude 3.7 models
+  "claude-3-7-sonnet-20250219": "anthropic.claude-3-7-sonnet",
+  
+  // Claude 3.5 models
+  "claude-3-5-sonnet-20241022": "anthropic.claude-3-5-sonnet-v2",
+  "claude-3-5-haiku-20241022": "anthropic.claude-3-5-haiku",
+};
+
+/**
+ * Get the Bedrock model ID for a given Anthropic model
+ */
+export function getBedrockModelId(anthropicModelId: string): string {
+  return BEDROCK_MODEL_MAPPINGS[anthropicModelId] || anthropicModelId;
+}
+
+/**
+ * Get the Bedrock inference profile for a model (if required)
+ */
+export function getBedrockInferenceProfile(anthropicModelId: string): string | undefined {
+  return BEDROCK_INFERENCE_PROFILES[anthropicModelId];
+}
+
+/**
+ * Check if a model requires an inference profile for Bedrock
+ */
+export function requiresInferenceProfile(anthropicModelId: string): boolean {
+  return anthropicModelId in BEDROCK_INFERENCE_PROFILES;
+}
+
+/**
+ * Get Bedrock-compatible model configuration
+ */
+export function getBedrockModelConfig(anthropicModelId: string): {
+  modelId: string;
+  inferenceProfile?: string;
+  requiresProfile: boolean;
+} {
+  return {
+    modelId: getBedrockModelId(anthropicModelId),
+    inferenceProfile: getBedrockInferenceProfile(anthropicModelId),
+    requiresProfile: requiresInferenceProfile(anthropicModelId),
+  };
 } 
