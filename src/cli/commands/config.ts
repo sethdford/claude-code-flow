@@ -239,7 +239,7 @@ export const configCommand = new Command()
         templateName = templateAnswer.template;
       }
         
-      const config = configManager.createTemplate(templateName || 'default');
+      const config = configManager.createTemplate(templateName || "default");
         
       // Detect format from file extension or use option
       const ext = outputFile.split(".").pop()?.toLowerCase();
@@ -611,7 +611,7 @@ function getValueByPath(obj: ConfigObject, path: string): ConfigValue | undefine
   
   for (const part of parts) {
     if (current && typeof current === "object" && !Array.isArray(current) && part in current) {
-      current = (current as ConfigObject)[part];
+      current = (current)[part];
     } else {
       return undefined;
     }

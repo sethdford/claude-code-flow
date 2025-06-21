@@ -229,7 +229,7 @@ export class AgentRegistry extends EventEmitter {
     }
 
     if (query.tags && query.tags.length > 0) {
-      const tags = query.tags;
+      const { tags } = query;
       const entries = Array.from(this.cache.values());
       const matchingEntries = entries.filter(entry => 
         tags.some(tag => entry.tags.includes(tag)),
@@ -238,7 +238,7 @@ export class AgentRegistry extends EventEmitter {
     }
 
     if (query.createdAfter) {
-      const createdAfter = query.createdAfter;
+      const { createdAfter } = query;
       const entries = Array.from(this.cache.values());
       const matchingEntries = entries.filter(entry => 
         entry.createdAt >= createdAfter,
@@ -247,7 +247,7 @@ export class AgentRegistry extends EventEmitter {
     }
 
     if (query.lastActiveAfter) {
-      const lastActiveAfter = query.lastActiveAfter;
+      const { lastActiveAfter } = query;
       agents = agents.filter(agent => 
         agent.metrics.lastActivity >= lastActiveAfter,
       );

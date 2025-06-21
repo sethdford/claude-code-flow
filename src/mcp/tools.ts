@@ -347,7 +347,7 @@ export class ToolRegistry extends EventEmitter {
       
       if (!isCompatible) {
         throw new MCPError(
-          `Tool ${toolName} is not compatible with protocol version ${context.protocolVersion!.major}.${context.protocolVersion!.minor}.${context.protocolVersion!.patch}`,
+          `Tool ${toolName} is not compatible with protocol version ${context.protocolVersion.major}.${context.protocolVersion.minor}.${context.protocolVersion.patch}`,
         );
       }
     }

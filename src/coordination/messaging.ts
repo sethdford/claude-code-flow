@@ -147,7 +147,7 @@ export class MessageRouter {
     healthy: boolean; 
     error?: string; 
     metrics?: Record<string, number>;
-  } {
+    } {
     const totalQueues = this.queues.size;
     let totalMessages = 0;
     let totalHandlers = 0;

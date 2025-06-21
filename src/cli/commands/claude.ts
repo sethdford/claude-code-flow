@@ -173,7 +173,7 @@ export const claudeCommand = new Command()
       }
         
       for (const task of workflow.tasks) {
-        const claudeArgs = [task.description ?? task.name ?? 'unnamed-task'];
+        const claudeArgs = [task.description ?? task.name ?? "unnamed-task"];
           
         // Add tools
         if (task.tools) {

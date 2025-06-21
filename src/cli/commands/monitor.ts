@@ -176,35 +176,35 @@ class Dashboard {
           status: "healthy", 
           load: Math.random() * 100, 
           uptime: Date.now() - this.startTime.getTime(),
-          errorCount: 0
+          errorCount: 0,
         },
         terminal: { 
           name: "terminal", 
           status: "healthy", 
           load: Math.random() * 100, 
           uptime: Date.now() - this.startTime.getTime(),
-          errorCount: 0
+          errorCount: 0,
         },
         memory: { 
           name: "memory", 
           status: "healthy", 
           load: Math.random() * 100, 
           uptime: Date.now() - this.startTime.getTime(),
-          errorCount: 0
+          errorCount: 0,
         },
         coordination: { 
           name: "coordination", 
           status: "healthy", 
           load: Math.random() * 100, 
           uptime: Date.now() - this.startTime.getTime(),
-          errorCount: 0
+          errorCount: 0,
         },
         mcp: { 
           name: "mcp", 
           status: "healthy", 
           load: Math.random() * 100, 
           uptime: Date.now() - this.startTime.getTime(),
-          errorCount: 0
+          errorCount: 0,
         },
       },
       agents: this.generateMockAgents(),
@@ -677,7 +677,7 @@ async function startMonitorDashboard(options: MonitorCommandOptions): Promise<vo
   const normalizedOptions: MonitorCommandOptions & { threshold: number } = {
     ...options,
     interval: String(interval),
-    threshold: threshold,
+    threshold,
   };
   
   const dashboard = new Dashboard(normalizedOptions);

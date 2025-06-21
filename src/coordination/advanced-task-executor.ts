@@ -497,7 +497,7 @@ export class AdvancedTaskExecutor extends EventEmitter {
 
   private async updateResourceUsage(): Promise<void> {
     for (const [taskId, context] of this.runningTasks) {
-      if (context.process && context.process.pid !== undefined) {
+      if (context.process?.pid !== undefined) {
         try {
           const usage = this.getProcessResourceUsage(context.process.pid);
           context.resources = {

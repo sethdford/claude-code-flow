@@ -14,6 +14,21 @@ import * as fs from "node:fs/promises";
 import type { BaseCommandOptions } from "./types.js";
 // path and existsSync imports removed - not used
 
+interface CursorModelHierarchy {
+  primary: string;    // Complex reasoning, architecture decisions (e.g., claude-3-5-sonnet)
+  apply: string;      // Fast, precise edits (e.g., claude-3-haiku)  
+  review: string;     // Quality assurance (e.g., claude-3-5-sonnet)
+  threshold: number;  // Lines of code threshold for using apply model
+}
+
+interface TaskComplexityAnalysis {
+  complexity: "simple" | "medium" | "complex";
+  suggestedModel: string;
+  estimatedTokens: number;
+  requiredContext: string[];
+  reasoning: string;
+}
+
 interface SwarmConfig {
   strategy: SwarmStrategy;
   mode: SwarmMode;
@@ -24,6 +39,7 @@ interface SwarmConfig {
   monitoring: boolean;
   persistence: boolean;
   memoryNamespace: string;
+  modelHierarchy?: CursorModelHierarchy;
 }
 
 interface SwarmAgent {
@@ -184,10 +200,26 @@ class SwarmCoordinator {
     avgTaskTime: 0,
     successRate: 0,
   };
+  private modelHierarchy: CursorModelHierarchy;
 
   constructor(config: SwarmConfig) {
     this.config = config;
     this.swarmId = generateId("swarm");
+    
+    // Initialize Cursor-inspired model hierarchy with defaults
+    this.modelHierarchy = config.modelHierarchy || {
+      primary: "claude-3-5-sonnet-20241022",    // Complex reasoning
+      apply: "claude-3-haiku-20240307",         // Fast edits
+      review: "claude-3-5-sonnet-20241022",     // Quality assurance
+      threshold: 50,                             // Lines of code threshold
+    };
+    
+    this.modelHierarchy = config.modelHierarchy || {
+      primary: "claude-3-5-sonnet-20241022",    // Complex reasoning
+      apply: "claude-3-haiku-20240307",         // Fast edits
+      review: "claude-3-5-sonnet-20241022",     // Quality assurance
+      threshold: 50,                             // Lines of code threshold
+    };
   }
 
   initialize(): void {
@@ -593,7 +625,7 @@ export async function swarmAction(ctx: CommandContext) {
 function parseSwarmOptions(flags: SwarmFlags): ParsedSwarmOptions {
   // Handle boolean true value for strategy
   let { strategy } = flags;
-  if (typeof strategy === 'boolean' && strategy === true) {
+  if (typeof strategy === "boolean" && strategy === true) {
     strategy = "auto";
   } else if (strategy === "true") {
     strategy = "auto";

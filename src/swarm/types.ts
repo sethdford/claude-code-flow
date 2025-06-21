@@ -1269,7 +1269,7 @@ export function isResourceHints(obj: unknown): obj is ResourceHints {
     (resourceObj.memoryIntensive === undefined || typeof resourceObj.memoryIntensive === "boolean") &&
     (resourceObj.computeIntensive === undefined || typeof resourceObj.computeIntensive === "boolean") &&
     (resourceObj.networkIntensive === undefined || typeof resourceObj.networkIntensive === "boolean") &&
-    (resourceObj.storageIntensive === undefined || typeof resourceObj.storageIntensive === "boolean")
+    (resourceObj.storageIntensive === undefined || typeof resourceObj.storageIntensive === "boolean"),
   );
 }
 
@@ -1468,3 +1468,24 @@ export default {
   isTaskDefinition,
   isAgentState,
 };
+
+export interface ModelHierarchy {
+  primary: "claude-4.0-sonnet" | "gpt-4.1" | "o4-mini" | "gemini-2.5-pro";
+  apply: "claude-3-haiku" | "gpt-3.5-turbo" | "gemini-1.5-flash";
+  review: "claude-4.0-sonnet" | "gpt-4.1";
+}
+
+export interface CodeEditInstruction {
+  type: "create" | "modify" | "delete";
+  filePath: string;
+  content?: string;
+  instructions: string;
+  context?: string[];
+  applyModel?: boolean; // Use faster model for simple edits
+}
+
+export interface AgentModelConfig {
+  hierarchy: ModelHierarchy;
+  useApplyModel: boolean;
+  editThreshold: number; // Lines of code threshold for using apply model
+}

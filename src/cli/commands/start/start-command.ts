@@ -199,10 +199,10 @@ export const startCommand = new Command()
         while (true) {
           const key = await new Promise<string>((resolve) => {
             const onData = (chunk: Buffer) => {
-              process.stdin.off('data', onData);
+              process.stdin.off("data", onData);
               resolve(decoder.decode(chunk));
             };
-            process.stdin.on('data', onData);
+            process.stdin.on("data", onData);
           });
 
           switch (key) {
@@ -232,10 +232,10 @@ export const startCommand = new Command()
               console.log(colors.gray("Press any key to continue..."));
               await new Promise<void>((resolve) => {
                 const onData = () => {
-                  process.stdin.off('data', onData);
+                  process.stdin.off("data", onData);
                   resolve();
                 };
-                process.stdin.on('data', onData);
+                process.stdin.on("data", onData);
               });
               break;
 
