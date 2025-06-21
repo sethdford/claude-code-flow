@@ -36,7 +36,7 @@ export function getVersion(): string {
       // Fallback to normal file system lookup
       if (!import.meta.url || import.meta.url === "undefined") {
         // If import.meta.url is not available, use hardcoded fallback
-        cachedVersion = "1.0.81";
+        cachedVersion = "1.5.1";
         return cachedVersion;
       }
 
@@ -52,7 +52,15 @@ export function getVersion(): string {
       }
       
       if (!existsSync(packageJsonPath)) {
-        // Strategy 3: Search upwards from current directory
+        // Strategy 3: For global npm installations, check in node_modules
+        const nodeModulesPath = resolve(currentDir, "..", "..", "..", "..", "@sethdouglasford", "claude-flow", "package.json");
+        if (existsSync(nodeModulesPath)) {
+          packageJsonPath = nodeModulesPath;
+        }
+      }
+      
+      if (!existsSync(packageJsonPath)) {
+        // Strategy 4: Search upwards from current directory
         let searchDir = currentDir;
         let found = false;
         
@@ -90,7 +98,7 @@ export function getVersion(): string {
     // Fallback version if package.json can't be read
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.warn(`Warning: Could not read version from package.json (${errorMessage}), using fallback`);
-    cachedVersion = "1.0.0-fallback";
+    cachedVersion = "1.5.1";
     return cachedVersion;
   }
 }

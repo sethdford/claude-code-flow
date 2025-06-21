@@ -82,9 +82,43 @@ export function createCLI(): Command {
       const hasNonStartSubcommand = args.some(arg => 
         !arg.startsWith("-") && 
         arg !== "start" && 
-        ["init", "agent", "task", "memory", "config", "status", "monitor", "session", "workflow", "mcp", "claude", "swarm", "sparc", "enterprise", "models", "help", "batch", "repl", "version", "completion"].includes(arg),
+        ["init", "agent", "task", "memory", "config", "status", "monitor", "session", "workflow", "mcp", "claude", "swarm", "swarm-strategies", "meta-frameworks", "orchestration", "startup", "synthesis", "sparc", "enterprise", "models", "help", "batch", "repl", "version", "completion", "analyze", "bedrock-test", "token-monitor"].includes(arg),
       );
       const helpRequested = args.includes("--help") || args.includes("-h");
+      
+      // If no subcommand provided (just options or nothing), show help
+      if (args.length === 0 || (args.every(arg => arg.startsWith("-")) && !helpRequested)) {
+        displayBanner(VERSION);
+        console.log();
+        console.log(chalk.cyan("🎯 Available Commands:"));
+        console.log();
+        console.log(chalk.yellow("  Core Commands:"));
+        console.log(chalk.gray("    meta-frameworks  ") + "Game-theoretic development protocols");
+        console.log(chalk.gray("    orchestration    ") + "Advanced workflow coordination systems");
+        console.log(chalk.gray("    startup          ") + "Capability activation and system orientation");
+        console.log(chalk.gray("    synthesis        ") + "Pattern analysis and meta-learning");
+        console.log(chalk.gray("    swarm            ") + "Multi-agent coordination and execution");
+        console.log(chalk.gray("    swarm-strategies ") + "View and manage swarm strategies");
+        console.log(chalk.gray("    analyze          ") + "AI-powered task and workflow analysis");
+        console.log(chalk.gray("    workflow         ") + "Workflow management and execution");
+        console.log();
+        console.log(chalk.yellow("  System Commands:"));
+        console.log(chalk.gray("    start            ") + "Start the full orchestration system");
+        console.log(chalk.gray("    init             ") + "Initialize a new project");
+        console.log(chalk.gray("    config           ") + "Manage configuration");
+        console.log(chalk.gray("    status           ") + "Show system status");
+        console.log(chalk.gray("    help             ") + "Show detailed help");
+        console.log();
+        console.log(chalk.yellow("  Examples:"));
+        console.log(chalk.gray("    claude-flow meta-frameworks list"));
+        console.log(chalk.gray("    claude-flow swarm \"Create a REST API\" --strategy development"));
+        console.log(chalk.gray("    claude-flow analyze task \"Build user authentication\""));
+        console.log(chalk.gray("    claude-flow startup check"));
+        console.log();
+        console.log(chalk.cyan("💡 Use 'claude-flow <command> --help' for detailed command information"));
+        console.log(chalk.cyan("💡 Use 'claude-flow help' for comprehensive documentation"));
+        return;
+      }
       
       if (hasNonStartSubcommand || helpRequested) {
         return;
