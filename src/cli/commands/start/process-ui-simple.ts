@@ -43,47 +43,182 @@ export class ProcessUI {
         console.log(colors.red(`\nProcess ${processId} error: ${error.message}`));
       }
     });
+
+    // Setup graceful shutdown handlers
+    process.on("SIGINT", () => {
+      this.stop();
+      process.exit(0);
+    });
+    
+    process.on("SIGTERM", () => {
+      this.stop();
+      process.exit(0);
+    });
   }
 
   async start(): Promise<void> {
     this.running = true;
+    this.setupEventListeners();
     
-    // Clear screen
-    console.clear();
-
-    // Initial render
+    // Set raw mode for single character input
+    if (process.stdin.setRawMode) {
+      process.stdin.setRawMode(true);
+    }
+    process.stdin.resume();
+    
     this.render();
-
-    // Simple input loop
-    const decoder = new TextDecoder();
-    const _encoder = new TextEncoder();
     
+    // Check for auto-launch to Claude interactive shell
+    await this.checkAutoLaunchClaude();
+    
+    // Main input loop
     while (this.running) {
-      // Show prompt
-      process.stdout.write("\nCommand: ");
+      const input = await this.readInput();
+      await this.handleCommand(input);
       
-      // Read single character
-      const buf = new Uint8Array(1024);
-      const n = await new Promise<number>((resolve) => {
-        process.stdin.once("data", (data) => {
-          const bytes = Buffer.from(data);
-          bytes.copy(buf);
-          resolve(bytes.length);
-        });
-      });
-      if (n === null) break;
-      
-      const input = decoder.decode(buf.subarray(0, n)).trim();
-      
-      if (input.length > 0) {
-        await this.handleCommand(input);
+      if (this.running) {
+        this.render();
       }
+    }
+    
+    // Cleanup
+    if (process.stdin.setRawMode) {
+      process.stdin.setRawMode(false);
+    }
+    process.stdin.pause();
+  }
+
+  private async checkAutoLaunchClaude(): Promise<void> {
+    const stats = this.processManager.getSystemStats();
+    
+    // Check if all processes are running successfully
+    if (stats.runningProcesses === stats.totalProcesses && stats.errorProcesses === 0) {
+      console.log();
+      console.log(colors.green.bold("🎉 All processes started successfully!"));
+      console.log();
+      console.log(colors.cyan("Auto-launching Claude interactive shell in 5 seconds..."));
+      console.log(colors.gray("Press any key to stay in process manager"));
+      
+      // Countdown with ability to cancel
+      let countdown = 5;
+      let cancelled = false;
+      
+      const countdownInterval = setInterval(() => {
+        if (cancelled) {
+          clearInterval(countdownInterval);
+          return;
+        }
+        
+        process.stdout.write(`\r${colors.cyan(`Launching in ${countdown}...`)} ${colors.gray("(Press any key to cancel)")}`);
+        countdown--;
+        
+        if (countdown < 0) {
+          clearInterval(countdownInterval);
+          if (!cancelled) {
+            console.log();
+            this.launchClaudeInteractiveShell();
+          }
+        }
+      }, 1000);
+      
+      // Listen for any key press to cancel
+      const cancelPromise = new Promise<void>((resolve) => {
+        const onData = () => {
+          cancelled = true;
+          clearInterval(countdownInterval);
+          process.stdin.off("data", onData);
+          console.log();
+          console.log(colors.yellow("Auto-launch cancelled. Staying in process manager."));
+          console.log();
+          resolve();
+        };
+        process.stdin.once("data", onData);
+      });
+      
+      // Wait for either countdown or cancellation
+      await Promise.race([
+        cancelPromise,
+        new Promise(resolve => setTimeout(resolve, 6000))
+      ]);
+    }
+  }
+
+  private async launchClaudeInteractiveShell(): Promise<void> {
+    try {
+      console.log(colors.green.bold("🚀 Launching Claude Interactive Shell..."));
+      console.log(colors.gray("─".repeat(60)));
+      
+      // Import and start Claude interactive shell
+      const { spawn } = await import("child_process");
+      
+      // Try different Claude command variations
+      const claudeCommands = [
+        "claude",
+        "npx claude",
+        "npx @anthropic-ai/claude",
+        "npx claude-ai"
+      ];
+      
+      let claudeLaunched = false;
+      
+      for (const cmd of claudeCommands) {
+        try {
+          console.log(colors.blue(`Trying: ${cmd}`));
+          
+          const [command, ...args] = cmd.split(" ");
+          const claudeProcess = spawn(command, args, {
+            stdio: "inherit",
+            shell: true,
+            env: {
+              ...process.env,
+              CLAUDE_FLOW_ACTIVE: "true",
+              CLAUDE_FLOW_PORT: "3000"
+            }
+          });
+          
+          claudeProcess.on("error", (error) => {
+            console.log(colors.yellow(`${cmd} not available: ${error.message}`));
+          });
+          
+          claudeProcess.on("exit", (code) => {
+            if (code === 0) {
+              console.log(colors.green("Claude session ended successfully"));
+            } else {
+              console.log(colors.yellow(`Claude exited with code ${code}`));
+            }
+            
+            // Return to process manager
+            console.log(colors.cyan("Returning to Claude-Flow Process Manager..."));
+            this.render();
+          });
+          
+          claudeLaunched = true;
+          break;
+          
+        } catch (error) {
+          continue; // Try next command
+        }
+      }
+      
+      if (!claudeLaunched) {
+        console.log(colors.yellow("⚠️  Claude CLI not found. Install with: npm install -g @anthropic-ai/claude"));
+        console.log(colors.gray("Alternatively, you can:"));
+        console.log(colors.gray("• Use the MCP server at http://localhost:3000"));
+        console.log(colors.gray("• Connect your preferred Claude client to the running services"));
+        console.log();
+        console.log(colors.gray("Press any key to continue..."));
+        await this.waitForKey();
+      }
+      
+    } catch (error) {
+      console.log(colors.red(`Failed to launch Claude: ${(error as Error).message}`));
+      console.log(colors.gray("Press any key to continue..."));
+      await this.waitForKey();
     }
   }
 
   stop(): void {
     this.running = false;
-    console.clear();
   }
 
   private async handleCommand(input: string): Promise<void> {
@@ -417,5 +552,17 @@ export class ProcessUI {
     }
     
     await this.stop();
+  }
+
+  private async readInput(): Promise<string> {
+    return new Promise((resolve) => {
+      const decoder = new TextDecoder();
+      const onData = (data: Buffer) => {
+        process.stdin.off("data", onData);
+        const input = decoder.decode(data).trim();
+        resolve(input);
+      };
+      process.stdin.once("data", onData);
+    });
   }
 }
