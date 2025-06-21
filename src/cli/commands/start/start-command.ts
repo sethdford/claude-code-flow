@@ -9,7 +9,7 @@ import { ProcessUI } from "./process-ui.js";
 import { SystemMonitor } from "./system-monitor.js";
 import { StartOptions } from "./types.js";
 import { eventBus } from "../../../core/event-bus.js";
-// import { logger } from "../../../core/logger.js"; // Reserved for future logging
+import { logger } from "../../../core/logger.js";
 // import { formatDuration } from "../../formatter.js"; // Reserved for duration formatting
 
 import inquirer from "inquirer";
@@ -69,6 +69,23 @@ export const startCommand = new Command()
     console.log(colors.gray("─".repeat(60)));
 
     try {
+      // Configure cleaner logging for start command
+      await logger.configure({
+        level: options.verbose ? "debug" : "info",
+        format: options.verbose ? "json" : "text", // Use text format by default for cleaner output
+        destination: "console",
+      });
+
+      // Initialize process manager with timeout
+      const processManager = new ProcessManager();
+      console.log(colors.blue("Initializing system components..."));
+      const initPromise = processManager.initialize(options.config);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Initialization timeout")), (options.timeout ?? 30) * 1000),
+      );
+      
+      await Promise.race([initPromise, timeoutPromise]);
+
       // Check if already running
       if (!options.force && await isSystemRunning()) {
         console.log(colors.yellow("⚠ Claude-Flow is already running"));
@@ -87,16 +104,6 @@ export const startCommand = new Command()
         console.log(colors.blue("Running pre-flight health checks..."));
         await performHealthChecks();
       }
-
-      // Initialize process manager with timeout
-      const processManager = new ProcessManager();
-      console.log(colors.blue("Initializing system components..."));
-      const initPromise = processManager.initialize(options.config);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Initialization timeout")), (options.timeout ?? 30) * 1000),
-      );
-      
-      await Promise.race([initPromise, timeoutPromise]);
 
       // Initialize system monitor with enhanced monitoring
       const systemMonitor = new SystemMonitor(processManager);
@@ -128,6 +135,14 @@ export const startCommand = new Command()
 
       // Launch UI mode
       if (options.ui) {
+        // Auto-start processes if specified before launching UI
+        if (options.autoStart) {
+          console.log(colors.blue("Auto-starting all processes..."));
+          await startWithProgress(processManager, "all");
+          console.log(colors.green.bold("✓"), "All processes started");
+          console.log();
+        }
+        
         const ui = new ProcessUI(processManager);
         await ui.start();
         

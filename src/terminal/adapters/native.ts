@@ -2,7 +2,7 @@
  * Native terminal adapter implementation
  */
 
-import { spawn, ChildProcess } from "child_process";
+import { spawn, ChildProcess, spawnSync } from "child_process";
 import { platform } from "os";
 import { ITerminalAdapter, Terminal } from "./base.js";
 import { ILogger } from "../../core/logger.js";
@@ -383,7 +383,6 @@ export class NativeAdapter implements ITerminalAdapter {
     // Verify shell is available with more robust testing
     try {
       const testConfig = this.getTestCommand();
-      const { spawnSync } = require("child_process");
       const result = spawnSync(testConfig.cmd, testConfig.args, { 
         stdio: "ignore",
         timeout: 5000 // 5 second timeout
@@ -407,7 +406,6 @@ export class NativeAdapter implements ITerminalAdapter {
       
       // Test fallback shell
       try {
-        const { spawnSync } = require("child_process");
         const fallbackResult = spawnSync("sh", ["-c", "echo test"], { 
           stdio: "ignore",
           timeout: 5000 
@@ -458,7 +456,6 @@ export class NativeAdapter implements ITerminalAdapter {
       
       // Check if PowerShell is available
       try {
-        const { spawnSync } = require("child_process");
         const result = spawnSync("powershell", ["-Version"], { stdio: "ignore" });
         if (result.status === 0) {
           return "powershell";
@@ -482,7 +479,6 @@ export class NativeAdapter implements ITerminalAdapter {
       const shells = ["bash", "zsh", "sh"];
       for (const shell of shells) {
         try {
-          const { spawnSync } = require("child_process");
           const result = spawnSync("which", [shell], { stdio: "ignore" });
           if (result.status === 0) {
             return shell;

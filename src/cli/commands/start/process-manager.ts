@@ -20,6 +20,7 @@ import { eventBus } from "../../../core/event-bus.js";
 import { logger, ILogger } from "../../../core/logger.js";
 import { ConfigManager } from "../../../config/config-manager.js";
 import { type Config, type MemoryConfig, type TerminalConfig, type CoordinationConfig, type MCPConfig } from "../../../utils/types.js";
+import { Logger } from "../../../core/logger.js";
 
 
 // Color compatibility
@@ -41,10 +42,18 @@ export class ProcessManager extends EventEmitter {
   private coordinationManager: CoordinationManager | undefined;
   private mcpServer: MCPServer | undefined;
   private config: Config;
+  private cleanLogger: ILogger;
 
   constructor() {
     super();
     this.initializeProcesses();
+    
+    // Create a cleaner logger for component initialization
+    this.cleanLogger = new Logger({
+      level: "info",
+      format: "text", // Use text format for cleaner output
+      destination: "console",
+    });
   }
 
   private initializeProcesses(): void {
@@ -94,6 +103,19 @@ export class ProcessManager extends EventEmitter {
       throw new Error(`Process ${processId} is already running`);
     }
 
+    // Check dependencies for orchestrator
+    if (processId === "orchestrator") {
+      const requiredDeps = ["memory-manager", "terminal-pool", "coordinator", "mcp-server"];
+      const missingDeps = requiredDeps.filter(dep => {
+        const depProcess = this.processes.get(dep);
+        return !depProcess || depProcess.status !== ProcessStatus.RUNNING;
+      });
+      
+      if (missingDeps.length > 0) {
+        throw new Error(`Cannot start orchestrator: missing dependencies: ${missingDeps.join(", ")}. Use "Start All" to start in proper order.`);
+      }
+    }
+
     this.updateProcessStatus(processId, ProcessStatus.STARTING);
 
     try {
@@ -107,7 +129,7 @@ export class ProcessManager extends EventEmitter {
           this.memoryManager = new MemoryManager(
             this.config.memory,
             eventBus,
-            logger,
+            this.cleanLogger, // Use cleaner logger
           );
           await this.memoryManager.initialize();
           break;
@@ -116,7 +138,7 @@ export class ProcessManager extends EventEmitter {
           this.terminalManager = new TerminalManager(
             this.config.terminal,
             eventBus,
-            logger,
+            this.cleanLogger, // Use cleaner logger
           );
           await this.terminalManager.initialize();
           break;
@@ -125,7 +147,7 @@ export class ProcessManager extends EventEmitter {
           this.coordinationManager = new CoordinationManager(
             this.config.coordination,
             eventBus,
-            logger,
+            this.cleanLogger, // Use cleaner logger
           );
           await this.coordinationManager.initialize();
           break;
@@ -143,7 +165,7 @@ export class ProcessManager extends EventEmitter {
           this.mcpServer = new MCPServer(
             this.config.mcp,
             eventBus,
-            logger,
+            this.cleanLogger, // Use cleaner logger
           );
           await this.mcpServer.start();
           break;
@@ -154,20 +176,6 @@ export class ProcessManager extends EventEmitter {
             throw new Error("Required components not initialized");
           }
           
-          // Create silent logger for orchestrator initialization to prevent UI clutter
-          const silentLogger: ILogger = {
-            info: () => {},
-            debug: () => {},
-            warn: () => {},
-            error: (message: string, error?: any) => {
-              // Only log errors to maintain error visibility
-              if (error) {
-                console.error(`Orchestrator error: ${error.message || error}`);
-              }
-            },
-            configure: async () => {} // No-op for silent logger
-          };
-          
           this.orchestrator = new Orchestrator(
             this.config,
             this.terminalManager,
@@ -175,7 +183,7 @@ export class ProcessManager extends EventEmitter {
             this.coordinationManager,
             this.mcpServer,
             eventBus,
-            silentLogger,
+            this.cleanLogger, // Use clean logger instead of silent logger
           );
           await this.orchestrator.initialize();
           break;
