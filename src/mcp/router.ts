@@ -6,6 +6,7 @@ import { MCPRequest } from "../utils/types.js";
 import { ILogger } from "../core/logger.js";
 import { MCPMethodNotFoundError } from "../utils/errors.js";
 import { ToolRegistry } from "./tools.js";
+import { PromptRegistry } from "./prompts.js";
 
 /**
  * Request router implementation
@@ -17,6 +18,7 @@ export class RequestRouter {
 
   constructor(
     private toolRegistry: ToolRegistry,
+    private promptRegistry: PromptRegistry,
     private logger: ILogger,
   ) {}
 
@@ -36,8 +38,13 @@ export class RequestRouter {
       }
 
       // Handle tool invocations
-      if (method.startsWith("tools.")) {
+      if (method.startsWith("tools/")) {
         return await this.handleToolMethod(method, params);
+      }
+
+      // Handle prompt methods
+      if (method.startsWith("prompts/")) {
+        return await this.handlePromptMethod(method, params);
       }
 
       // Try to execute as a tool directly
@@ -95,14 +102,32 @@ export class RequestRouter {
    */
   private async handleToolMethod(method: string, params: unknown): Promise<unknown> {
     switch (method) {
-      case "tools.list":
+      case "tools/list":
         return this.toolRegistry.listTools();
 
-      case "tools.invoke":
+      case "tools/call":
         return await this.invokeTool(params);
 
-      case "tools.describe":
+      case "tools/describe":
         return this.describeTool(params);
+
+      default:
+        throw new MCPMethodNotFoundError(method);
+    }
+  }
+
+  /**
+   * Handles prompt-related methods
+   */
+  private async handlePromptMethod(method: string, params: unknown): Promise<unknown> {
+    switch (method) {
+      case "prompts/list":
+        return {
+          prompts: this.promptRegistry.listPrompts()
+        };
+
+      case "prompts/get":
+        return await this.getPrompt(params);
 
       default:
         throw new MCPMethodNotFoundError(method);
@@ -117,14 +142,21 @@ export class RequestRouter {
       "rpc.discover": "Discover all available methods",
       "rpc.ping": "Ping the server",
       "rpc.describe": "Describe a specific method",
-      "tools.list": "List all available tools",
-      "tools.invoke": "Invoke a specific tool",
-      "tools.describe": "Describe a specific tool",
+      "tools/list": "List all available tools",
+      "tools/call": "Call a specific tool",
+      "tools/describe": "Describe a specific tool",
+      "prompts/list": "List all available prompts",
+      "prompts/get": "Get a specific prompt",
     };
 
     // Add all registered tools
     for (const tool of this.toolRegistry.listTools()) {
       methods[tool.name] = tool.description;
+    }
+
+    // Add all registered prompts
+    for (const prompt of this.promptRegistry.listPrompts()) {
+      methods[`prompt/${prompt.name}`] = prompt.description || "Custom prompt";
     }
 
     return methods;
@@ -150,6 +182,16 @@ export class RequestRouter {
       };
     }
 
+    // Check if it's a prompt
+    const prompt = this.promptRegistry.getPrompt(method);
+    if (prompt) {
+      return {
+        name: prompt.name,
+        description: prompt.description,
+        arguments: prompt.arguments,
+      };
+    }
+
     // Check built-in methods
     const builtInMethods: Record<string, unknown> = {
       "rpc.discover": {
@@ -170,29 +212,44 @@ export class RequestRouter {
           required: ["method"],
         },
       },
-      "tools.list": {
+      "tools/list": {
         description: "List all available tools",
         inputSchema: { type: "object", properties: {} },
       },
-      "tools.invoke": {
-        description: "Invoke a specific tool",
+      "tools/call": {
+        description: "Call a specific tool",
         inputSchema: {
           type: "object",
           properties: {
-            tool: { type: "string" },
-            input: { type: "object" },
+            name: { type: "string" },
+            arguments: { type: "object" },
           },
-          required: ["tool", "input"],
+          required: ["name"],
         },
       },
-      "tools.describe": {
+      "tools/describe": {
         description: "Describe a specific tool",
         inputSchema: {
           type: "object",
           properties: {
-            tool: { type: "string" },
+            name: { type: "string" },
           },
-          required: ["tool"],
+          required: ["name"],
+        },
+      },
+      "prompts/list": {
+        description: "List all available prompts",
+        inputSchema: { type: "object", properties: {} },
+      },
+      "prompts/get": {
+        description: "Get a specific prompt",
+        inputSchema: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            arguments: { type: "object" },
+          },
+          required: ["name"],
         },
       },
     };
@@ -205,30 +262,54 @@ export class RequestRouter {
   }
 
   /**
-   * Invokes a tool
+   * Invokes a tool with the given parameters
    */
   private async invokeTool(params: unknown): Promise<unknown> {
-    if (!params || typeof params !== "object" || !("tool" in params)) {
-      throw new Error("Invalid params: tool required");
+    if (!params || typeof params !== "object" || !("name" in params)) {
+      throw new Error("Invalid params: name required");
     }
 
-    const { tool, input } = params as { tool: string; input?: unknown };
-    return await this.toolRegistry.executeTool(tool, input || {});
+    const { name, arguments: args } = params as { name: string; arguments?: unknown };
+    return await this.toolRegistry.executeTool(name, args);
   }
 
   /**
-   * Describes a specific tool
+   * Gets a prompt with the given parameters
    */
-  private describeTool(params: unknown): unknown {
-    if (!params || typeof params !== "object" || !("tool" in params)) {
-      throw new Error("Invalid params: tool required");
+  private async getPrompt(params: unknown): Promise<unknown> {
+    if (!params || typeof params !== "object" || !("name" in params)) {
+      throw new Error("Invalid params: name required");
     }
 
-    const { tool: toolName } = params as { tool: string };
-    const tool = this.toolRegistry.getTool(toolName);
+    const { name, arguments: args } = params as { name: string; arguments?: Record<string, unknown> };
+    const promptContent = await this.promptRegistry.executePrompt(name, args || {});
+    
+    return {
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: promptContent
+          }
+        }
+      ]
+    };
+  }
 
+  /**
+   * Describes a tool
+   */
+  private describeTool(params: unknown): unknown {
+    if (!params || typeof params !== "object" || !("name" in params)) {
+      throw new Error("Invalid params: name required");
+    }
+
+    const { name } = params as { name: string };
+    const tool = this.toolRegistry.getTool(name);
+    
     if (!tool) {
-      throw new Error(`Tool not found: ${toolName}`);
+      throw new Error(`Tool not found: ${name}`);
     }
 
     return {
