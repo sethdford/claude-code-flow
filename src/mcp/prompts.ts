@@ -258,7 +258,7 @@ export class PromptRegistry {
   }
 
   /**
-   * Execute a Claude command (simulated - in real implementation this would call the actual command)
+   * Execute a Claude command - returns instructions for Claude to follow
    */
   private async executeClaudeCommand(
     filePath: string, 
@@ -274,18 +274,121 @@ export class PromptRegistry {
       processedBody = processedBody.replace(/\$ARGUMENTS/g, args.task);
     }
 
-    // Create the command execution instruction
-    const instruction = `Execute Claude-Flow command: ${promptName}
+    // Extract the command name from promptName (remove category prefix)
+    const commandName = promptName.replace(/^[^_]+_/, '');
+    
+    // Create focused instruction based on the command category and content
+    let instruction = "";
+    
+    if (category === 'swarm') {
+      instruction = `🔄 **Claude-Flow Swarm: ${commandName.toUpperCase()}**
 
-Category: ${category || 'general'}
-File: ${filePath}
-
-Command Content:
 ${processedBody}
 
-${args.task ? `Task Arguments: ${args.task}` : ''}
+**Current Task**: ${args.task || 'General swarm operation'}
 
-Please execute this command according to the Claude-Flow workflow specifications.`;
+**Action Required**: 
+Execute this swarm operation using Claude-Flow's integrated capabilities. Focus on:
+- AI-powered analysis and coordination
+- Batch processing optimization  
+- Memory integration for state persistence
+- Task coordination across multiple agents
+
+Proceed with the swarm operation based on the specifications above.`;
+
+    } else if (category === 'sparc') {
+      instruction = `🎯 **SPARC Mode: ${commandName.toUpperCase()}**
+
+${processedBody}
+
+**Current Task**: ${args.task || 'SPARC development operation'}
+
+**Action Required**:
+Execute this SPARC development mode using the Claude-Flow methodology. Apply:
+- Systematic Problem Analysis
+- Rapid Prototyping
+- Automated Refinement  
+- Continuous Integration
+
+Proceed with the SPARC operation as specified.`;
+
+    } else if (category === 'meta-frameworks') {
+      instruction = `🎮 **Meta-Framework: ${commandName.replace(/-/g, ' ').toUpperCase()}**
+
+${processedBody}
+
+**Current Task**: ${args.task || 'Meta-framework operation'}
+
+**Action Required**:
+Execute this game-theoretic development protocol. Focus on:
+- Strategic thinking and pattern recognition
+- Collaborative problem-solving approaches
+- Systematic improvement methodologies
+- Knowledge distillation and transfer
+
+Proceed with the meta-framework protocol as outlined.`;
+
+    } else if (category === 'orchestration') {
+      instruction = `🎼 **Orchestration: ${commandName.toUpperCase()}**
+
+${processedBody}
+
+**Current Task**: ${args.task || 'Orchestration operation'}
+
+**Action Required**:
+Execute this orchestration pattern using MCP and swarm intelligence. Coordinate:
+- Multi-agent collaboration
+- Resource allocation and scheduling
+- Workflow optimization
+- System integration
+
+Proceed with orchestration as specified.`;
+
+    } else if (category === 'startup') {
+      instruction = `🚀 **Startup: ${commandName.toUpperCase()}**
+
+${processedBody}
+
+**Current Task**: ${args.task || 'System startup operation'}
+
+**Action Required**:
+Execute this startup sequence for capability activation. Initialize:
+- System orientation and configuration
+- Core component activation
+- Capability discovery and registration
+- Environment preparation
+
+Proceed with startup operation as outlined.`;
+
+    } else if (category === 'synthesis') {
+      instruction = `🧠 **Synthesis: ${commandName.toUpperCase()}**
+
+${processedBody}
+
+**Current Task**: ${args.task || 'Pattern synthesis operation'}
+
+**Action Required**:
+Execute this synthesis operation for pattern analysis and meta-learning. Focus on:
+- Pattern recognition and extraction
+- Knowledge synthesis and integration
+- Meta-learning and adaptation
+- Insight generation and application
+
+Proceed with synthesis as specified.`;
+
+    } else {
+      // General command
+      instruction = `⚡ **Claude-Flow Command: ${promptName.toUpperCase()}**
+
+${processedBody}
+
+**Current Task**: ${args.task || 'General operation'}
+
+**Action Required**:
+Execute this Claude-Flow command using the integrated development workflow capabilities.
+
+Proceed with the operation as specified above.`;
+    }
 
     return instruction;
   }
