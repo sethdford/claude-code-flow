@@ -1,13 +1,13 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.5",
   "project": {
     "name": "claude-code-flow",
     "type": "claude-flow",
-    "created": "2025-06-21T20:01:37.237Z"
+    "created": "2025-06-22T00:25:04.851Z"
   },
   "features": {
     "swarm": true,
-    "sparc": true,
+    "sparc": false,
     "memory": true,
     "terminal": true,
     "mcp": true,

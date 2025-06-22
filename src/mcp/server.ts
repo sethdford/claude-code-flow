@@ -64,8 +64,8 @@ export class MCPServer implements IMCPServer {
   private currentSession?: MCPSession | undefined;
 
   private readonly serverInfo = {
-    name: "Claude-Flow MCP Server",
-    version: "1.0.0",
+    name: "claude-flow",
+    version: "1.5.5",
   };
 
   private readonly supportedProtocolVersion: MCPProtocolVersion = {
@@ -365,6 +365,7 @@ export class MCPServer implements IMCPServer {
         protocolVersion: params.protocolVersion,
         tools: this.toolRegistry.listTools().length,
         prompts: this.promptRegistry.listPrompts().length,
+        availableSlashCommands: this.promptRegistry.listPrompts().map(p => `/mcp__claude-flow__${p.name}`),
       });
 
       return {
