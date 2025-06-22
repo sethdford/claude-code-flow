@@ -1,6 +1,6 @@
 {
   "name": "@sethdouglasford/claude-flow",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Advanced AI agent orchestration system with multi-agent coordination",
   "main": "dist/cli/index.js",
   "bin": {
