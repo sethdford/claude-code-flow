@@ -9,7 +9,7 @@ import chalk from "chalk";
 export const initCommand = new Command()
   .name("init")
   .description("Initialize Claude-Flow project structure with SPARC environment")
-  .option("--sparc", "Initialize with full SPARC environment including .roomodes and enhanced features")
+  .option("--sparc", "Initialize with enhanced SPARC features and additional documentation")
   .option("--force", "Force initialization even if files exist")
   .action(async (options: InitOptions) => {
     try {
@@ -21,13 +21,18 @@ export const initCommand = new Command()
       // Additional success messaging
       console.log(chalk.green("\n✨ Initialization complete!"));
       
+      console.log(chalk.blue("\n🚀 SPARC Environment Ready:"));
+      console.log("   • .claude/ directory with full configuration");
+      console.log("   • CLAUDE.md with project instructions");
+      console.log("   • .roomodes with 17 pre-configured SPARC modes");
+      console.log("   • Comprehensive swarm command documentation");
+      console.log("   • Local ./claude-flow wrapper script");
+      
       if (options.sparc) {
-        console.log(chalk.blue("\n🚀 SPARC Environment Ready:"));
-        console.log("   • .claude/ directory with full configuration");
-        console.log("   • CLAUDE.md with project instructions");
-        console.log("   • .roomodes with 17 pre-configured SPARC modes");
-        console.log("   • Comprehensive swarm command documentation");
-        console.log("   • Local ./claude-flow wrapper script");
+        console.log(chalk.blue("\n🎯 Enhanced SPARC Features:"));
+        console.log("   • Extended documentation and examples");
+        console.log("   • Additional workflow templates");
+        console.log("   • Advanced coordination patterns");
       }
       
       console.log(chalk.yellow("\n📋 Quick Start:"));

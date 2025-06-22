@@ -55,6 +55,43 @@ const VERSION = getVersion();
 const BUILD_DATE = getBuildDate();
 
 /**
+ * Check if project is initialized and auto-initialize if needed
+ */
+async function checkAndAutoInitialize(): Promise<boolean> {
+  try {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    
+    // Check if .roomodes and .claude directory exist
+    const roomodesExists = await fs.access(".roomodes").then(() => true).catch(() => false);
+    const claudeExists = await fs.access(".claude").then(() => true).catch(() => false);
+    
+    if (!roomodesExists || !claudeExists) {
+      console.log(chalk.yellow("🔍 Claude-Flow project not initialized in current directory"));
+      console.log(chalk.cyan("🚀 Auto-initializing project..."));
+      console.log();
+      
+      // Import and run init
+      const { initCommand: runInit } = await import("./init/index.js");
+      await runInit({ sparc: false, force: false });
+      
+      console.log();
+      console.log(chalk.green("✅ Project auto-initialized successfully!"));
+      console.log(chalk.gray("You can now use all claude-flow commands."));
+      console.log();
+      
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    // If auto-init fails, just warn and continue
+    console.log(chalk.yellow("⚠️  Auto-initialization failed, continuing anyway..."));
+    return false;
+  }
+}
+
+/**
  * Create the main CLI command with all subcommands
  */
 export function createCLI(): Command {
@@ -88,6 +125,9 @@ export function createCLI(): Command {
       
       // If no subcommand provided (just options or nothing), show help
       if (args.length === 0 || (args.every(arg => arg.startsWith("-")) && !helpRequested)) {
+        // Check and auto-initialize before showing help
+        await checkAndAutoInitialize();
+        
         displayBanner(VERSION);
         console.log();
         console.log(chalk.cyan("🎯 Available Commands:"));
@@ -163,6 +203,9 @@ export function createCLI(): Command {
     .arguments("<workflow-file>")
     .option("--dry-run", "Show what would be executed without running")
     .action(async (workflowFile: string, options: { dryRun?: boolean }) => {
+      // Auto-initialize if needed
+      await checkAndAutoInitialize();
+      
       try {
         const fs = await import("fs/promises");
         const content = await fs.readFile(workflowFile, "utf-8");
@@ -247,6 +290,9 @@ export function createCLI(): Command {
     .option("--no-banner", "Skip welcome banner")
     .option("--history-file <path>", "Custom history file path")
     .action(async (options) => {
+      // Auto-initialize if needed
+      await checkAndAutoInitialize();
+      
       await setupLogging(options);
       if (options.banner !== false) {
         displayBanner(VERSION);
@@ -267,7 +313,7 @@ export function createCLI(): Command {
     .description("Generate shell completion scripts")
     .arguments("[shell]")
     .option("--install", "Install completion script automatically")
-    .action(async (options, shell) => {
+    .action(async (shell: string, options: { install?: boolean }) => {
       const generator = new CompletionGenerator();
       await generator.generate(shell || "detect", options.install === true);
     });

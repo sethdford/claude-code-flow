@@ -37,11 +37,9 @@ export async function initCommand(options: InitOptions = {}) {
     console.log("\n🔧 Phase 4: Creating batch tools guides...");
     await createBatchToolsGuide();
     
-    // Phase 5: SPARC environment (if requested)
-    if (options.sparc) {
-      console.log("\n🚀 Phase 5: Creating SPARC environment...");
-      await createSparcEnvironment();
-    }
+    // Phase 5: SPARC environment (always create .roomodes for custom commands)
+    console.log("\n🚀 Phase 5: Creating SPARC environment and custom commands...");
+    await createSparcEnvironment();
     
     // Success summary
     console.log("\n🎉 Project initialized successfully!");
@@ -49,18 +47,16 @@ export async function initCommand(options: InitOptions = {}) {
     console.log("   📋 Created comprehensive swarm command documentation");
     console.log("   🔧 Created batch tools coordination guides");
     console.log("   📖 Created detailed usage examples with orchestration");
+    console.log("   🎯 Created .roomodes with 17 custom SPARC modes");
     
     console.log("\n   Next steps:");
     console.log("   1. Run \"claude-flow swarm --help\" to see swarm options");
     console.log("   2. Check .claude/commands/swarm/ for detailed documentation");
     console.log("   3. Review batch tools guide for orchestration patterns");
     console.log("   4. Run \"claude-flow help\" for all available commands");
-    
-    if (options.sparc) {
-      console.log("   5. Run \"claude-flow sparc modes\" to see available SPARC modes");
-      console.log("   6. Use TodoWrite/TodoRead for task coordination");
-      console.log("   7. Use Task tool for parallel agent execution");
-    }
+    console.log("   5. Run \"claude-flow sparc modes\" to see available SPARC modes");
+    console.log("   6. Use TodoWrite/TodoRead for task coordination");
+    console.log("   7. Use Task tool for parallel agent execution");
     
   } catch (error) {
     printError(`Failed to initialize project: ${(error as Error).message}`);

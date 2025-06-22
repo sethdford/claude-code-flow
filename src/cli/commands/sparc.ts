@@ -57,6 +57,11 @@ async function loadSparcConfig(): Promise<SparcConfig> {
 }
 
 export async function sparcAction(ctx: CommandContext): Promise<void> {
+  // Auto-initialize if needed (except for help)
+  if (ctx.args[0] !== "help" && ctx.args.length > 0) {
+    await checkAndAutoInitialize();
+  }
+  
   const subcommand = ctx.args[0];
 
   switch (subcommand) {
@@ -78,6 +83,42 @@ export async function sparcAction(ctx: CommandContext): Promise<void> {
     default:
       await showSparcHelp();
       break;
+  }
+}
+
+/**
+ * Check if project is initialized and auto-initialize if needed
+ */
+async function checkAndAutoInitialize(): Promise<boolean> {
+  try {
+    const fs = await import("fs/promises");
+    
+    // Check if .roomodes and .claude directory exist
+    const roomodesExists = await fs.access(".roomodes").then(() => true).catch(() => false);
+    const claudeExists = await fs.access(".claude").then(() => true).catch(() => false);
+    
+    if (!roomodesExists || !claudeExists) {
+      console.log(yellow("🔍 Claude-Flow project not initialized in current directory"));
+      console.log(cyan("🚀 Auto-initializing project..."));
+      console.log();
+      
+      // Import and run init
+      const { initCommand: runInit } = await import("../init/index.js");
+      await runInit({ sparc: false, force: false });
+      
+      console.log();
+      console.log(green("✅ Project auto-initialized successfully!"));
+      console.log(colors.gray("You can now use all claude-flow commands."));
+      console.log();
+      
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    // If auto-init fails, just warn and continue
+    console.log(yellow("⚠️  Auto-initialization failed, continuing anyway..."));
+    return false;
   }
 }
 
