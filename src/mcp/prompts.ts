@@ -30,6 +30,15 @@ export class PromptRegistry {
    * Register a prompt that will become a slash command
    */
   registerPrompt(prompt: RegisteredPrompt): void {
+    // Check for duplicates and skip if already registered
+    if (this.prompts.has(prompt.name)) {
+      this.logger.debug("Skipping duplicate prompt registration", { 
+        name: prompt.name, 
+        slashCommand: `/mcp__${this.serverName}__${prompt.name}` 
+      });
+      return;
+    }
+
     this.prompts.set(prompt.name, prompt);
     this.logger.debug("Registered MCP prompt", { 
       name: prompt.name, 
@@ -81,19 +90,32 @@ export class PromptRegistry {
   /**
    * Load prompts from .claude directory structure
    * Creates MCP prompts that become slash commands like /mcp__claude-flow__<command>
+   * Only loads from the current working directory (user's project), not package directory
    */
   async loadClaudePrompts(): Promise<void> {
     try {
-      const claudeDir = ".claude";
+      // Always use current working directory to avoid loading package commands
+      const projectRoot = process.cwd();
+      const claudeDir = path.join(projectRoot, ".claude");
       const commandsDir = path.join(claudeDir, "commands");
 
-      // Check if .claude/commands directory exists
+      this.logger.debug("Loading Claude prompts from project directory", { 
+        projectRoot, 
+        commandsDir 
+      });
+
+      // Check if .claude/commands directory exists in the user's project
       try {
         await fs.access(commandsDir);
       } catch {
-        this.logger.info("No .claude/commands directory found, skipping prompt loading");
+        this.logger.info("No .claude/commands directory found in project, skipping prompt loading", {
+          searchPath: commandsDir
+        });
         return;
       }
+
+      // Clear any existing prompts to avoid duplicates
+      this.prompts.clear();
 
       // Load prompts from different command categories
       await this.loadPromptsFromDirectory(path.join(commandsDir, "sparc"), "sparc");
@@ -106,7 +128,9 @@ export class PromptRegistry {
       // Load root level commands
       await this.loadPromptsFromDirectory(commandsDir, "");
 
-      this.logger.info(`Loaded ${this.prompts.size} MCP prompts as slash commands`, {
+      this.logger.info(`Loaded ${this.prompts.size} MCP prompts as slash commands from project`, {
+        projectRoot,
+        commandsDir,
         prompts: Array.from(this.prompts.keys()).map(name => `/mcp__${this.serverName}__${name}`)
       });
 
