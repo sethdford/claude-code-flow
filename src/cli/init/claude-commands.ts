@@ -14,37 +14,45 @@ const EMBEDDED_COMMANDS = {
     "mcp-orchestrate.md",
     "swarm-intelligence.md"
   ],
-  "sparc": [
+    "sparc": [
     "analyzer.md",
-    "architect.md", 
+    "architect.md",
     "batch-executor.md",
     "coder.md",
     "debugger.md",
     "designer.md",
     "documenter.md",
+    "execute.md",
     "innovator.md",
+    "integration.md",
     "memory-manager.md",
+    "modes.md",
     "optimizer.md",
     "orchestrator.md",
     "researcher.md",
     "reviewer.md",
     "sparc-modes.md",
+    "status.md",
     "swarm-coordinator.md",
     "tdd.md",
     "tester.md",
-    "workflow-manager.md"
+    "workflow-manager.md",
+    "workflows.md"
   ],
   "startup": [
     "metaclaude.md"
   ],
   "swarm": [
     "analysis.md",
+    "auto.md",
     "batch-tools-guide.md",
     "development.md",
-    "examples.md", 
+    "examples.md",
+    "execute.md", 
     "maintenance.md",
     "optimization.md",
     "research.md",
+    "strategies.md",
     "testing.md"
   ],
   "synthesis": [
@@ -243,12 +251,15 @@ Specialized development modes:
 System initialization and orientation:
 - **metaclaude**: Capability activation and system setup
 
-### Swarm (8 commands)
+### Swarm (11 commands)
 Multi-agent coordination strategies:
+- **auto**: Intelligent strategy selection
 - **development**: Coordinated development workflows
 - **research**: Collaborative research and analysis
 - **testing**: Distributed testing strategies
 - **optimization**: Performance and efficiency improvements
+- **execute**: Direct swarm execution with parameters
+- **strategies**: Strategy overview and selection guide
 - And 4 more coordination patterns...
 
 ### Synthesis (2 commands)
