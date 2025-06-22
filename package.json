@@ -1,6 +1,6 @@
 {
   "name": "@sethdouglasford/claude-flow",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "description": "Claude Code Flow - Advanced AI-powered development workflows with SPARC methodology",
   "main": "dist/cli/index.js",
   "bin": {
